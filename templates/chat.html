@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Support{% endblock %}
+
+{% block extra_css %}
+<style>
+    .support-container {
+        max-width: 800px;
+        margin: 0 auto;
+    }
+
+    .support-header {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 24px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .support-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1E2329;
+    }
+
+    .support-header p {
+        font-size: 14px;
+        color: #707A8A;
+    }
+
+    .messages-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        margin-bottom: 20px;
+        max-height: 500px;
+        overflow-y: auto;
+    }
+
+    .message-item {
+        padding: 16px;
+        border-bottom: 1px solid #E2E4E8;
+        display: flex;
+        gap: 12px;
+    }
+
+    .message-avatar {
+        width: 40px;
+        height: 40px;
+        background: #F8F9FA;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+    }
+
+    .message-content {
+        flex: 1;
+    }
+
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 6px;
+    }
+
+    .message-user {
+        font-weight: 600;
+        font-size: 13px;
+        color: #1E2329;
+    }
+
+    .message-time {
+        font-size: 11px;
+        color: #707A8A;
+    }
+
+    .message-text {
+        font-size: 13px;
+        color: #1E2329;
+        line-height: 1.5;
+    }
+
+    .message-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 500;
+        margin-left: 8px;
+    }
+
+    .badge-admin {
+        background: #F0B90B;
+        color: white;
+    }
+
+    .badge-user {
+        background: #E2E4E8;
+        color: #707A8A;
+    }
+
+    .message-form {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+    }
+
+    .message-input {
+        width: 100%;
+        padding: 12px;
+        border: 1px solid #E2E4E8;
+        border-radius: 8px;
+        font-size: 14px;
+        resize: vertical;
+        font-family: inherit;
+    }
+
+    .message-input:focus {
+        outline: none;
+        border-color: #F0B90B;
+    }
+
+    .send-btn {
+        background: #F0B90B;
+        color: #1E2329;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 12px;
+        width: 100%;
+    }
+
+    .send-btn:hover {
+        background: #E0A800;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: #707A8A;
+    }
+
+    @media (max-width: 768px) {
+        .message-item {
+            padding: 12px;
+        }
+        .message-header {
+            flex-direction: column;
+            gap: 4px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="support-container">
+    <div class="support-header">
+        <h1>💬 Customer Support</h1>
+        <p>Our support team will respond within 24 hours</p>
+    </div>
+
+    <div class="messages-container" id="messagesContainer">
+        <div class="empty-state">Loading messages...</div>
+    </div>
+
+    <div class="message-form">
+        <textarea id="messageInput" class="message-input" rows="3" placeholder="Type your message here..."></textarea>
+        <button class="send-btn" onclick="sendMessage()">Send Message</button>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method: method,
+            headers: headers,
+        };
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+        if (response.status === 401) {
+            window.location.href = '/login/';
+            throw new Error('Session expired');
+        }
+
+        return response.json();
+    }
+
+    function formatCurrency(num) {
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    async function loadMessages() {
+        try {
+            const response = await apiCall('/chat/messages/');
+            const container = document.getElementById('messagesContainer');
+
+            if (!response || response.length === 0) {
+                container.innerHTML = '<div class="empty-state">No messages yet. Send us a message!</div>';
+                return;
+            }
+
+            let html = '';
+            for (const msg of response) {
+                const isAdmin = msg.is_admin;
+                const avatar = isAdmin ? '👨‍💼' : '👤';
+                const badge = isAdmin ? '<span class="message-badge badge-admin">Support</span>' : '<span class="message-badge badge-user">You</span>';
+                const userClass = isAdmin ? 'Support' : 'You';
+
+                html += `
+                    <div class="message-item">
+                        <div class="message-avatar">${avatar}</div>
+                        <div class="message-content">
+                            <div class="message-header">
+                                <span class="message-user">${userClass} ${badge}</span>
+                                <span class="message-time">${msg.time || msg.date || 'Just now'}</span>
+                            </div>
+                            <div class="message-text">${escapeHtml(msg.message)}</div>
+                        </div>
+                    </div>
+                `;
+            }
+            container.innerHTML = html;
+
+            // Scroll to bottom
+            container.scrollTop = container.scrollHeight;
+
+        } catch (e) {
+            console.error('Error loading messages:', e);
+            document.getElementById('messagesContainer').innerHTML = '<div class="empty-state">Unable to load messages. Please refresh the page.</div>';
+        }
+    }
+
+    async function sendMessage() {
+        const input = document.getElementById('messageInput');
+        const message = input.value.trim();
+
+        if (!message) {
+            alert('Please enter a message');
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const result = await apiCall('/chat/send/', 'POST', { message: message });
+
+            if (result.success) {
+                input.value = '';
+                await loadMessages();
+            } else {
+                alert('Failed to send message: ' + (result.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error sending message: ' + e.message);
+        }
+
+        hideLoading();
+    }
+
+    function escapeHtml(text) {
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showLoading() {
+        // Simple loading indicator
+        const btn = document.querySelector('.send-btn');
+        if (btn) {
+            btn.textContent = 'Sending...';
+            btn.disabled = true;
+        }
+    }
+
+    function hideLoading() {
+        const btn = document.querySelector('.send-btn');
+        if (btn) {
+            btn.textContent = 'Send Message';
+            btn.disabled = false;
+        }
+    }
+
+    loadMessages();
+    setInterval(loadMessages, 10000);
+</script>
+{% endblock %}

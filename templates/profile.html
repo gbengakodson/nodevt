@@ -1,0 +1,394 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Profile{% endblock %}
+
+{% block extra_css %}
+<style>
+    .profile-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .profile-header {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 24px;
+        margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .profile-title h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #1E2329;
+    }
+
+    .profile-title p {
+        font-size: 13px;
+        color: #707A8A;
+        margin: 0;
+    }
+
+    .profile-badge {
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 20px;
+        padding: 6px 14px;
+        font-size: 12px;
+        color: #0ECB81;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        transition: transform 0.2s;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+
+    .stat-icon {
+        width: 40px;
+        height: 40px;
+        background: #F8F9FA;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 12px;
+        font-size: 20px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #707A8A;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 22px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .two-column {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 24px;
+        margin-bottom: 24px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
+    }
+
+    .card-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #E2E4E8;
+        background: #F8F9FA;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .card-header h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0;
+        color: #1E2329;
+    }
+
+    .card-body {
+        padding: 20px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .info-row:last-child {
+        border-bottom: none;
+    }
+
+    .info-label {
+        font-size: 13px;
+        color: #707A8A;
+    }
+
+    .info-value {
+        font-size: 13px;
+        font-weight: 500;
+        color: #1E2329;
+        word-break: break-all;
+        text-align: right;
+        max-width: 60%;
+        font-family: monospace;
+    }
+
+    .address-box {
+        background: #F8F9FA;
+        border-radius: 8px;
+        padding: 12px;
+        font-family: monospace;
+        font-size: 12px;
+        word-break: break-all;
+        text-align: center;
+        border: 1px solid #E2E4E8;
+        margin: 12px 0;
+    }
+
+    .copy-btn {
+        width: 100%;
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 8px;
+        padding: 10px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #1E2329;
+        margin-top: 8px;
+    }
+
+    .copy-btn:hover {
+        background: #EFF2F5;
+        border-color: #D9DDE2;
+    }
+
+    .warning-box {
+        background: rgba(246, 70, 93, 0.08);
+        border-left: 3px solid #F6465D;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+    }
+
+    .warning-text {
+        font-size: 11px;
+        color: #F6465D;
+        line-height: 1.5;
+    }
+
+    .action-btn {
+        background: none;
+        border: 1px solid #E2E4E8;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 11px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #1E2329;
+    }
+
+    .action-btn:hover {
+        background: #F8F9FA;
+        border-color: #D9DDE2;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+        .two-column {
+            grid-template-columns: 1fr;
+        }
+        .info-value {
+            max-width: 50%;
+            font-size: 11px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <div class="profile-title">
+            <h1>Account Profile</h1>
+            <p>Manage your account and security settings</p>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-chart-line"></i>
+            </div>
+            <div class="stat-label">Total Deposits</div>
+            <div class="stat-value" id="totalDeposits">$0.00</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-exchange-alt"></i>
+            </div>
+            <div class="stat-label">Total Trades</div>
+            <div class="stat-value" id="totalTrades">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon">
+                <i class="fas fa-gem"></i>
+            </div>
+            <div class="stat-label">Total Yield Earned</div>
+            <div class="stat-value" id="totalYield">$0.00</div>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <div class="info-card">
+            <div class="card-header">
+                <h3><i class="fas fa-user me-2"></i>Account Information</h3>
+                <button class="action-btn" onclick="editProfile()">Edit</button>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">Email Address</span>
+                    <span class="info-value" id="userEmail">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Username</span>
+                    <span class="info-value" id="userUsername">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Member Since</span>
+                    <span class="info-value" id="userJoined">Loading...</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Referral Code</span>
+                    <span class="info-value" id="referralCode" style="font-family: monospace; font-size: 16px; font-weight: 600; color: #F0B90B;">Loading...</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="info-card">
+            <div class="card-header">
+                <h3><i class="fas fa-wallet me-2"></i>Wallet Information</h3>
+                <button class="action-btn" onclick="copyAddress()">Copy</button>
+            </div>
+            <div class="card-body">
+                <div class="info-row">
+                    <span class="info-label">Network</span>
+                    <span class="info-value">BSC (BEP20)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Token</span>
+                    <span class="info-value">USDC</span>
+                </div>
+                <div class="address-box" id="depositAddress">Loading...</div>
+                <div class="warning-box">
+                    <div class="warning-text">
+                        ⚠️ Send only USDC on BEP20 network to this address. Sending any other token may result in permanent loss.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method: method,
+            headers: headers,
+        };
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+        if (response.status === 401) {
+            // Clear storage and redirect
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.href = '/login/';
+            throw new Error('Session expired');
+        }
+
+        return response.json();
+    }
+
+    function formatCurrency(num) {
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    async function loadProfile() {
+        try {
+            // Get user info from API
+            const userData = await apiCall('/auth/profile/');
+            console.log('User data:', userData);
+
+            document.getElementById('userEmail').innerHTML = userData.email || 'N/A';
+            document.getElementById('userUsername').innerHTML = userData.username || 'N/A';
+            document.getElementById('userJoined').innerHTML = userData.created_at ? new Date(userData.created_at).toLocaleDateString() : 'N/A';
+            document.getElementById('referralCode').innerHTML = userData.referral_code || 'N/A';
+
+            // Load balance info
+            const balance = await apiCall('/trading/my_balance/');
+            document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
+
+            // Update stats
+            document.getElementById('totalDeposits').innerHTML = formatCurrency(0);
+            document.getElementById('totalTrades').innerHTML = '0';
+            document.getElementById('totalYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+
+        } catch (e) {
+            console.error('Error loading profile:', e);
+        }
+    }
+
+    function editProfile() {
+        alert('Profile editing feature coming soon');
+    }
+
+    function copyAddress() {
+        const address = document.getElementById('depositAddress').innerText;
+        navigator.clipboard.writeText(address);
+        alert('Address copied to clipboard!');
+    }
+
+    loadProfile();
+</script>
+{% endblock %}

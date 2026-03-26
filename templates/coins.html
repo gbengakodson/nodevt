@@ -1,0 +1,642 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Coins - Market Overview{% endblock %}
+
+{% block extra_css %}
+<style>
+    .coins-container {
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    /* Header Section */
+    .market-header {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+
+    .market-title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1E2329;
+    }
+
+    .market-subtitle {
+        font-size: 13px;
+        color: #707A8A;
+    }
+
+    .last-updated {
+        font-size: 11px;
+        color: #707A8A;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .refresh-indicator {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #0ECB81;
+        animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.5; transform: scale(1.2); }
+        100% { opacity: 1; transform: scale(1); }
+    }
+
+    .search-filter {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+        margin-top: 16px;
+    }
+
+    .search-box {
+        display: flex;
+        align-items: center;
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 10px;
+        padding: 8px 16px;
+        flex: 1;
+        max-width: 320px;
+    }
+
+    .search-box i {
+        color: #707A8A;
+        margin-right: 8px;
+    }
+
+    .search-box input {
+        background: none;
+        border: none;
+        outline: none;
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .filter-buttons {
+        display: flex;
+        gap: 8px;
+    }
+
+    .filter-btn {
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 8px;
+        padding: 8px 16px;
+        font-size: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+        color: #1E2329;
+    }
+
+    .filter-btn:hover, .filter-btn.active {
+        background: #EFF2F5;
+        color: #1E2329;
+        border-color: #D9DDE2;
+    }
+
+    /* Stats Row */
+    .stats-row {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 16px;
+        text-align: center;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #707A8A;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    /* Coins Grid */
+    .coins-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+        gap: 16px;
+    }
+
+    .coin-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 16px;
+        transition: transform 0.2s, box-shadow 0.2s;
+        cursor: pointer;
+    }
+
+    .coin-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        border-color: #D9DDE2;
+    }
+
+    .coin-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
+
+    .coin-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .coin-icon {
+        width: 48px;
+        height: 48px;
+        background: #EFF2F5;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .coin-details h3 {
+        font-size: 16px;
+        font-weight: 600;
+        margin: 0 0 4px 0;
+        color: #1E2329;
+    }
+
+    .coin-details p {
+        font-size: 11px;
+        color: #707A8A;
+        margin: 0;
+    }
+
+    .coin-rank {
+        background: #F8F9FA;
+        border-radius: 20px;
+        padding: 4px 8px;
+        font-size: 10px;
+        font-weight: 500;
+        color: #707A8A;
+    }
+
+    .coin-price-section {
+        text-align: right;
+        margin-bottom: 12px;
+    }
+
+    .coin-current-price {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .coin-change {
+        font-size: 12px;
+        font-weight: 500;
+        margin-top: 4px;
+    }
+
+    .price-up {
+        color: #0ECB81;
+    }
+
+    .price-down {
+        color: #F6465D;
+    }
+
+    .coin-stats {
+        display: flex;
+        justify-content: space-between;
+        padding-top: 12px;
+        border-top: 1px solid #E2E4E8;
+        margin-top: 12px;
+    }
+
+    .coin-stat {
+        text-align: center;
+        flex: 1;
+    }
+
+    .coin-stat-label {
+        font-size: 10px;
+        color: #707A8A;
+        margin-bottom: 4px;
+    }
+
+    .coin-stat-value {
+        font-size: 12px;
+        font-weight: 500;
+        color: #1E2329;
+    }
+
+    .trade-btn {
+        width: 100%;
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        color: #1E2329;
+        border-radius: 8px;
+        padding: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        cursor: pointer;
+        margin-top: 12px;
+        transition: all 0.2s;
+    }
+
+    .trade-btn:hover {
+        background: #EFF2F5;
+        border-color: #D9DDE2;
+    }
+
+    .loading-state, .empty-state {
+        text-align: center;
+        padding: 60px;
+        color: #707A8A;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+    }
+
+    @media (max-width: 768px) {
+        .stats-row {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .coins-grid {
+            grid-template-columns: 1fr;
+        }
+        .search-filter {
+            flex-direction: column;
+            align-items: stretch;
+        }
+        .search-box {
+            max-width: none;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="coins-container">
+    <!-- Header -->
+    <div class="market-header">
+        <div class="market-title">📊 Cryptocurrency volatility Market</div>
+        <div class="market-subtitle">Real-time prices and market data</div>
+        <div class="last-updated">
+            <span class="refresh-indicator"></span>
+            <span id="lastUpdated">Updating...</span>
+        </div>
+        <div class="search-filter">
+            <div class="search-box">
+                <i class="fas fa-search"></i>
+                <input type="text" id="searchInput" placeholder="Search by name or symbol...">
+            </div>
+            <div class="filter-buttons">
+                <button class="filter-btn active" data-filter="all">All</button>
+                <button class="filter-btn" data-filter="gainers">Top Gainers</button>
+                <button class="filter-btn" data-filter="losers">Top Losers</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Stats -->
+    <div class="stats-row">
+        <div class="stat-card">
+            <div class="stat-label">Total Market Cap</div>
+            <div class="stat-value" id="totalMarketCap">$0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">24h Volume</div>
+            <div class="stat-value" id="totalVolume">$0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Active Coins</div>
+            <div class="stat-value" id="activeCoins">0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">BTC Dominance</div>
+            <div class="stat-value" id="btcDominance">0%</div>
+        </div>
+    </div>
+
+    <!-- Coins Grid -->
+    <div id="coinsGrid" class="coins-grid"></div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+
+    let allCoins = [];
+    let currentFilter = 'all';
+    let isLoading = false;
+    let lastUpdateTime = 0;
+    const CACHE_DURATION = 120000; // 2 minutes cache
+
+    // Map our symbols to CoinGecko IDs
+    const symbolToId = {
+        'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+        'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+        'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap',
+        'ATOM': 'cosmos', 'LTC': 'litecoin', 'NEAR': 'near', 'ALGO': 'algorand',
+        'VET': 'vechain', 'FTM': 'fantom', 'EGLD': 'elrond-erd-2', 'THETA': 'theta-token'
+    };
+
+    function getToken() { return localStorage.getItem('access_token'); }
+
+    function formatCurrency(num) {
+        if (!num) return '$0.00';
+        if (num < 0.01) return `$${parseFloat(num).toFixed(6)}`;
+        if (num > 1e12) return `$${(num / 1e12).toFixed(2)}T`;
+        if (num > 1e9) return `$${(num / 1e9).toFixed(2)}B`;
+        if (num > 1e6) return `$${(num / 1e6).toFixed(2)}M`;
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function formatNumber(num) {
+        if (!num) return '0';
+        if (num > 1e12) return `${(num / 1e12).toFixed(2)}T`;
+        if (num > 1e9) return `${(num / 1e9).toFixed(2)}B`;
+        if (num > 1e6) return `${(num / 1e6).toFixed(2)}M`;
+        if (num > 1e3) return `${(num / 1e3).toFixed(2)}K`;
+        return num.toLocaleString();
+    }
+
+    function getIcon(symbol) {
+        const icons = {
+            'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
+            'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'PEPE': '🐸',
+            'LINK': '🔗', 'UNI': '🦄', 'ATOM': '⚛️', 'LTC': 'Ł', 'NEAR': 'Ⓝ',
+            'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎', 'THETA': 'θ'
+        };
+        return icons[symbol] || '🪙';
+    }
+
+    // Show loading skeleton
+    function showSkeleton() {
+        const container = document.getElementById('coinsGrid');
+        container.innerHTML = `
+            <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i> Loading market data...
+            </div>
+        `;
+    }
+
+    // Update last updated time
+    function updateLastUpdated() {
+        const now = new Date();
+        document.getElementById('lastUpdated').innerHTML = `Last updated: ${now.toLocaleTimeString()}`;
+    }
+
+    // Fetch market data with caching
+    async function fetchMarketData() {
+        const now = Date.now();
+
+        // Check if we have cached data
+        const cachedData = localStorage.getItem('coins_market_data');
+        const cachedTime = localStorage.getItem('coins_market_time');
+
+        if (cachedData && cachedTime && (now - parseInt(cachedTime)) < CACHE_DURATION) {
+            console.log('Using cached data');
+            return JSON.parse(cachedData);
+        }
+
+        console.log('Fetching fresh data from CoinGecko');
+        try {
+            const ids = Object.values(symbolToId).join(',');
+            const response = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h`);
+            const data = await response.json();
+
+            // Cache the data
+            localStorage.setItem('coins_market_data', JSON.stringify(data));
+            localStorage.setItem('coins_market_time', now.toString());
+
+            return data;
+        } catch (error) {
+            console.error('Error fetching market data:', error);
+            return null;
+        }
+    }
+
+    async function updateMarketData() {
+        if (isLoading) return;
+
+        isLoading = true;
+        showSkeleton();
+
+        try {
+            const marketData = await fetchMarketData();
+
+            if (marketData && marketData.length > 0) {
+                // Convert to our format
+                const coins = [];
+                for (const [symbol, id] of Object.entries(symbolToId)) {
+                    const coinData = marketData.find(c => c.id === id);
+                    if (coinData) {
+                        coins.push({
+                            symbol: symbol,
+                            name: coinData.name,
+                            current_price: coinData.current_price,
+                            price_change_percentage_24h: coinData.price_change_percentage_24h || 0,
+                            market_cap: coinData.market_cap,
+                            total_volume: coinData.total_volume
+                        });
+                    }
+                }
+
+                allCoins = coins;
+                renderCoins(allCoins);
+                updateMarketStats(coins);
+                updateLastUpdated();
+            } else {
+                // Fallback to local data if API fails
+                loadLocalData();
+            }
+        } catch (e) {
+            console.error('Error:', e);
+            loadLocalData();
+        }
+
+        isLoading = false;
+    }
+
+    async function loadLocalData() {
+        try {
+            const localTokens = await apiCall('/trading/');
+            allCoins = localTokens.map(token => ({
+                symbol: token.symbol,
+                name: token.name,
+                current_price: token.current_price,
+                price_change_percentage_24h: (Math.random() - 0.5) * 20,
+                market_cap: token.current_price * 1000000,
+                total_volume: token.current_price * 500000
+            }));
+            renderCoins(allCoins);
+            updateMarketStats(allCoins);
+        } catch (e) {
+            console.error('Error loading local data:', e);
+        }
+    }
+
+    function updateMarketStats(coins) {
+        const totalMarketCap = coins.reduce((sum, c) => sum + (c.market_cap || 0), 0);
+        const totalVolume = coins.reduce((sum, c) => sum + (c.total_volume || 0), 0);
+        const btc = coins.find(c => c.symbol === 'BTC');
+        const btcDominance = btc && totalMarketCap > 0 ? (btc.market_cap / totalMarketCap) * 100 : 0;
+
+        document.getElementById('totalMarketCap').innerHTML = formatCurrency(totalMarketCap);
+        document.getElementById('totalVolume').innerHTML = formatCurrency(totalVolume);
+        document.getElementById('activeCoins').innerHTML = coins.length;
+        document.getElementById('btcDominance').innerHTML = btcDominance.toFixed(1) + '%';
+    }
+
+    function renderCoins(coins) {
+        const container = document.getElementById('coinsGrid');
+
+        if (!coins || coins.length === 0) {
+            container.innerHTML = '<div class="empty-state">No coins found</div>';
+            return;
+        }
+
+        let filtered = [...coins];
+        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+
+        if (searchTerm) {
+            filtered = filtered.filter(coin =>
+                coin.symbol.toLowerCase().includes(searchTerm) ||
+                coin.name.toLowerCase().includes(searchTerm)
+            );
+        }
+
+        if (currentFilter === 'gainers') {
+            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0).sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
+        } else if (currentFilter === 'losers') {
+            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0).sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
+        }
+
+        container.innerHTML = filtered.map((coin, index) => {
+            const change = coin.price_change_percentage_24h || 0;
+            const changeClass = change >= 0 ? 'price-up' : 'price-down';
+            const changeSymbol = change >= 0 ? '+' : '';
+
+            return `
+                <div class="coin-card" onclick="location.href='/trading/'">
+                    <div class="coin-card-header">
+                        <div class="coin-info">
+                            <div class="coin-icon">${getIcon(coin.symbol)}</div>
+                            <div class="coin-details">
+                                <h3>${coin.symbol}</h3>
+                                <p>${coin.name}</p>
+                            </div>
+                        </div>
+                        <div class="coin-rank">#${index + 1}</div>
+                    </div>
+                    <div class="coin-price-section">
+                        <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
+                        <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
+                    </div>
+                    <div class="coin-stats">
+                        <div class="coin-stat">
+                            <div class="coin-stat-label">Market Cap</div>
+                            <div class="coin-stat-value">${formatCurrency(coin.market_cap)}</div>
+                        </div>
+                        <div class="coin-stat">
+                            <div class="coin-stat-label">24h Volume</div>
+                            <div class="coin-stat-value">${formatCurrency(coin.total_volume)}</div>
+                        </div>
+                    </div>
+                    <button class="trade-btn" onclick="event.stopPropagation(); location.href='/trading/'">Trade ${coin.symbol}</button>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterCoins() {
+        renderCoins(allCoins);
+    }
+
+    // Event Listeners
+    document.getElementById('searchInput').addEventListener('input', filterCoins);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentFilter = this.getAttribute('data-filter');
+            filterCoins();
+        });
+    });
+
+    // Initial load - show skeleton immediately
+    showSkeleton();
+
+    // Load data - this will show cached data first if available
+    async function init() {
+        // Check if we have cached data to show immediately
+        const cachedData = localStorage.getItem('coins_market_data');
+        if (cachedData) {
+            try {
+                const marketData = JSON.parse(cachedData);
+                const coins = [];
+                for (const [symbol, id] of Object.entries(symbolToId)) {
+                    const coinData = marketData.find(c => c.id === id);
+                    if (coinData) {
+                        coins.push({
+                            symbol: symbol,
+                            name: coinData.name,
+                            current_price: coinData.current_price,
+                            price_change_percentage_24h: coinData.price_change_percentage_24h || 0,
+                            market_cap: coinData.market_cap,
+                            total_volume: coinData.total_volume
+                        });
+                    }
+                }
+                if (coins.length > 0) {
+                    allCoins = coins;
+                    renderCoins(allCoins);
+                    updateMarketStats(coins);
+                    updateLastUpdated();
+                }
+            } catch(e) {}
+        }
+
+        // Then fetch fresh data in background
+        await updateMarketData();
+    }
+
+    init();
+
+    // Auto-refresh every 2 minutes in background
+    setInterval(() => {
+        updateMarketData();
+    }, 120000);
+</script>
+{% endblock %}

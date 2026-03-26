@@ -1,0 +1,344 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Referral Program{% endblock %}
+
+{% block extra_css %}
+<style>
+    .referral-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .referral-header {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 24px;
+        margin-bottom: 24px;
+        text-align: center;
+    }
+
+    .referral-header h1 {
+        font-size: 28px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: #1E2329;
+    }
+
+    .referral-header p {
+        font-size: 14px;
+        color: #707A8A;
+    }
+
+    .referral-link-box {
+        background: #F8F9FA;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .referral-link {
+        flex: 1;
+        font-family: monospace;
+        font-size: 14px;
+        color: #1E2329;
+        word-break: break-all;
+        background: white;
+        padding: 12px 16px;
+        border-radius: 8px;
+        border: 1px solid #E2E4E8;
+    }
+
+    .copy-btn {
+        background: #F0B90B;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 24px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .stat-value {
+        font-size: 28px;
+        font-weight: 700;
+        color: #F0B90B;
+        margin-bottom: 8px;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #707A8A;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .info-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 16px;
+    }
+
+    .distribution-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .distribution-table th, .distribution-table td {
+        padding: 12px;
+        text-align: center;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .distribution-table th {
+        background: #F8F9FA;
+        font-size: 12px;
+        font-weight: 600;
+        color: #707A8A;
+    }
+
+    .level-badge {
+        display: inline-block;
+        width: 32px;
+        height: 32px;
+        background: #F8F9FA;
+        border-radius: 50%;
+        line-height: 32px;
+        text-align: center;
+        font-weight: 600;
+        color: #F0B90B;
+    }
+
+    .earnings-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+    .earnings-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background: #F8F9FA;
+        font-size: 11px;
+        color: #707A8A;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .earnings-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #E2E4E8;
+        font-size: 13px;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #707A8A;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="referral-container">
+    <div class="referral-header">
+        <h1>🤝 Referral Program</h1>
+        <p>Earn up to 50% of node fees from your referrals! Share your link and earn commissions from 7 generations.</p>
+        <div class="referral-link-box">
+            <div class="referral-link" id="referralLink">Loading your referral link...</div>
+            <button class="copy-btn" onclick="copyReferralLink()">📋 Copy Link</button>
+        </div>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-value" id="totalReferrals">0</div>
+            <div class="stat-label">Total Referrals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="activeReferrals">0</div>
+            <div class="stat-label">Active Referrals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="totalCommissions">$0</div>
+            <div class="stat-label">Total Commissions</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-value" id="pendingCommissions">$0</div>
+            <div class="stat-label">Pending Commissions</div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-title">📊 Commission Distribution (10% Node Fee)</div>
+        <table class="distribution-table">
+            <thead>
+                <tr><th>Generation</th><th>Referral Level</th><th>Commission</th><th>Example ($100 Purchase)</th></thead>
+            <tbody>
+                <tr><td><span class="level-badge">1</span></td><td>Level 1 (Direct)</td><td class="price-up">50% of fee</td><td>$10 fee → $5 to you</td></tr>
+                <tr><td><span class="level-badge">2</span></td><td>Level 2</td><td class="price-up">25% of fee</td><td>$10 fee → $2.50 to you</td></tr>
+                <tr><td><span class="level-badge">3</span></td><td>Level 3</td><td class="price-up">12.5% of fee</td><td>$10 fee → $1.25 to you</td></tr>
+                <tr><td><span class="level-badge">4</span></td><td>Level 4</td><td class="price-up">6.25% of fee</td><td>$10 fee → $0.625 to you</td></tr>
+                <tr><td><span class="level-badge">5</span></td><td>Level 5</td><td class="price-up">3.125% of fee</td><td>$10 fee → $0.3125 to you</td></tr>
+                <tr><td><span class="level-badge">6</span></td><td>Level 6</td><td class="price-up">1.5625% of fee</td><td>$10 fee → $0.15625 to you</td></tr>
+                <tr><td><span class="level-badge">7</span></td><td>Level 7</td><td class="price-up">0.78125% of fee</td><td>$10 fee → $0.078125 to you</td></tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="info-card">
+        <div class="info-title">💰 Your Referral Earnings</div>
+        <div id="earningsContainer">
+            <div class="empty-state">Loading earnings...</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method: method,
+            headers: headers,
+        };
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+        if (response.status === 401) {
+            window.location.href = '/login/';
+            throw new Error('Session expired');
+        }
+
+        return response.json();
+    }
+
+    function formatCurrency(num) {
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    async function loadReferralData() {
+        try {
+            // Get user info from API to get referral code
+            const userData = await apiCall('/auth/profile/');
+            console.log('User data:', userData);
+
+            const referralCode = userData.referral_code;
+
+            // Set referral link with 5-digit code
+            if (referralCode) {
+                document.getElementById('referralLink').innerHTML = `${window.location.origin}/register?ref=${referralCode}`;
+            } else {
+                document.getElementById('referralLink').innerHTML = `${window.location.origin}/register`;
+            }
+
+            // Get referral stats
+            const stats = await apiCall('/trading/referral_stats/');
+            document.getElementById('totalReferrals').innerHTML = stats.total_referrals || 0;
+            document.getElementById('activeReferrals').innerHTML = stats.active_referrals || 0;
+            document.getElementById('totalCommissions').innerHTML = formatCurrency(stats.total_commissions || 0);
+            document.getElementById('pendingCommissions').innerHTML = formatCurrency(stats.pending_commissions || 0);
+
+            // Get earnings history
+            const earnings = await apiCall('/trading/referral_earnings/');
+            const container = document.getElementById('earningsContainer');
+
+            if (!earnings || earnings.length === 0) {
+                container.innerHTML = '<div class="empty-state">No referral earnings yet. Share your link to start earning!</div>';
+            } else {
+                let html = `
+                    <table class="earnings-table">
+                        <thead>
+                            <tr><th>Date</th><th>From</th><th>Level</th><th>Purchase Amount</th><th>Commission</th></thead>
+                        <tbody>
+                `;
+
+                for (const e of earnings) {
+                    html += `
+                        <tr>
+                            <td>${e.date || 'N/A'}</td>
+                            <td>${e.from_user || 'User'}</td>
+                            <td>Level ${e.level || 1}</td>
+                            <td>${formatCurrency(e.purchase_amount || 0)}</td>
+                            <td class="price-up">+${formatCurrency(e.commission || 0)}</td>
+                        </tr>
+                    `;
+                }
+
+                html += `</tbody></table>`;
+                container.innerHTML = html;
+            }
+
+        } catch (e) {
+            console.error('Error loading referral data:', e);
+            document.getElementById('referralLink').innerHTML = 'Unable to load referral link';
+            document.getElementById('earningsContainer').innerHTML = '<div class="empty-state">Unable to load referral data</div>';
+        }
+    }
+
+    function copyReferralLink() {
+        const link = document.getElementById('referralLink').innerText;
+        if (link && link !== 'Loading your referral link...' && link !== 'Unable to load referral link') {
+            navigator.clipboard.writeText(link);
+            alert('Referral link copied to clipboard!');
+        } else {
+            alert('No valid referral link available');
+        }
+    }
+
+    // Load referral data when page loads
+    document.addEventListener('DOMContentLoaded', function() {
+        loadReferralData();
+        // Refresh every 30 seconds
+        setInterval(loadReferralData, 30000);
+    });
+</script>
+{% endblock %}

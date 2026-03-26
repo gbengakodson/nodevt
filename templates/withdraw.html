@@ -1,0 +1,326 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Withdraw USDC{% endblock %}
+
+{% block extra_css %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+    }
+
+    .withdraw-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .withdraw-card {
+        background: rgba(30, 35, 41, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 28px;
+        border: 1px solid rgba(240, 185, 11, 0.2);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        transition: transform 0.3s;
+    }
+
+    .withdraw-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(240, 185, 11, 0.4);
+    }
+
+    .withdraw-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .withdraw-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 8px;
+    }
+
+    .withdraw-header p {
+        font-size: 14px;
+        color: #8A8F9E;
+    }
+
+    .balance-display {
+        background: #1E2329;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        margin-bottom: 24px;
+        border: 1px solid #2B3139;
+    }
+
+    .balance-label {
+        font-size: 11px;
+        color: #8A8F9E;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .balance-amount {
+        font-size: 32px;
+        font-weight: 700;
+        color: #F0B90B;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: #EAECEF;
+        margin-bottom: 8px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        background: #1E2329;
+        border: 1.5px solid #2B3139;
+        border-radius: 14px;
+        font-size: 14px;
+        color: #EAECEF;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #F0B90B;
+        box-shadow: 0 0 0 4px rgba(240, 185, 11, 0.1);
+    }
+
+    .form-input::placeholder {
+        color: #5E6673;
+    }
+
+    .perc-buttons {
+        display: flex;
+        gap: 8px;
+        margin-top: 12px;
+    }
+
+    .perc-btn {
+        flex: 1;
+        background: #2A2F3A;
+        border: 1px solid #2B3139;
+        border-radius: 10px;
+        padding: 8px;
+        font-size: 12px;
+        cursor: pointer;
+        color: #8A8F9E;
+        transition: all 0.2s;
+    }
+
+    .perc-btn:hover {
+        background: #F0B90B;
+        color: #0B0E11;
+        border-color: #F0B90B;
+    }
+
+    .withdraw-btn {
+        width: 100%;
+        background: #F6465D;
+        border: none;
+        color: white;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 16px;
+    }
+
+    .withdraw-btn:hover {
+        background: #E03E54;
+        transform: translateY(-2px);
+    }
+
+    .info-box {
+        background: rgba(240, 185, 11, 0.1);
+        border-left: 4px solid #F0B90B;
+        padding: 16px;
+        border-radius: 12px;
+        margin-top: 24px;
+    }
+
+    .info-text {
+        font-size: 12px;
+        color: #8A8F9E;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+        .withdraw-card {
+            padding: 32px 24px;
+        }
+        .balance-amount {
+            font-size: 24px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="withdraw-container">
+    <div class="withdraw-card">
+        <div class="withdraw-header">
+            <h2>Withdraw USDC</h2>
+            <p>Withdraw funds to your external wallet</p>
+        </div>
+
+        <div class="balance-display">
+            <div class="balance-label">Available Balance</div>
+            <div class="balance-amount" id="availableBalance">$0.00</div>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Withdrawal Address (BSC)</label>
+            <input type="text" id="withdrawAddress" class="form-input" placeholder="0x...">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label">Amount (USDC)</label>
+            <input type="number" id="withdrawAmount" class="form-input" step="0.01" placeholder="0.00">
+            <div class="perc-buttons">
+                <button class="perc-btn" onclick="setPercent(25)">25%</button>
+                <button class="perc-btn" onclick="setPercent(50)">50%</button>
+                <button class="perc-btn" onclick="setPercent(75)">75%</button>
+                <button class="perc-btn" onclick="setPercent(100)">100%</button>
+            </div>
+        </div>
+
+        <button class="withdraw-btn" onclick="withdraw()">
+            <i class="fas fa-paper-plane me-2"></i>Withdraw USDC
+        </button>
+
+        <div class="info-box">
+            <div class="info-text">
+                <i class="fas fa-info-circle me-1"></i> Minimum withdrawal: $10 USDC<br>
+                <i class="fas fa-clock me-1"></i> Processing time: 1-5 minutes<br>
+                <i class="fas fa-gas-pump me-1"></i> Network: BSC (BEP20) only
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+    let userBalance = 0;
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method: method,
+            headers: headers,
+        };
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+        if (response.status === 401) {
+            window.location.href = '/login/';
+            throw new Error('Session expired');
+        }
+
+        return response.json();
+    }
+
+    function formatCurrency(num) {
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    async function loadBalance() {
+        try {
+            const balance = await apiCall('/trading/my_balance/');
+            userBalance = parseFloat(balance.grand_balance);
+            document.getElementById('availableBalance').innerHTML = formatCurrency(userBalance);
+        } catch (e) {
+            console.error(e);
+        }
+    }
+
+    function setPercent(percent) {
+        const amount = (userBalance * percent) / 100;
+        document.getElementById('withdrawAmount').value = amount.toFixed(2);
+    }
+
+    async function withdraw() {
+        const address = document.getElementById('withdrawAddress').value;
+        const amount = parseFloat(document.getElementById('withdrawAmount').value);
+
+        if (!address) {
+            alert('Please enter a withdrawal address');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+
+        if (amount < 10) {
+            alert('Minimum withdrawal is $10 USDC');
+            return;
+        }
+
+        if (amount > userBalance) {
+            alert(`Insufficient balance. You have ${formatCurrency(userBalance)}`);
+            return;
+        }
+
+        try {
+            const result = await apiCall('/trading/withdraw/', 'POST', {
+                address: address,
+                amount: amount
+            });
+
+            if (result.success) {
+                alert(`Withdrawal of ${formatCurrency(amount)} initiated to ${address}`);
+                document.getElementById('withdrawAmount').value = '';
+                await loadBalance();
+            } else {
+                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    loadBalance();
+</script>
+{% endblock %}

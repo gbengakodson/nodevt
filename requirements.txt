@@ -1,0 +1,14 @@
+Django==4.2.0
+djangorestframework==3.14.0
+djangorestframework-simplejwt==5.2.2
+web3==6.5.0
+cryptography==41.0.0
+channels==4.0.0
+daphne==4.0.0
+celery==5.3.1
+redis==5.0.0
+django-celery-beat==2.5.0
+django-cors-headers==4.0.0
+python-dotenv==1.0.0
+psycopg2-binary==2.9.6
+requests==2.31.0

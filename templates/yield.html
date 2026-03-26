@@ -1,0 +1,288 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Yield Earnings{% endblock %}
+
+{% block extra_css %}
+<style>
+    .yield-container {
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+
+    .yield-header {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 24px;
+        margin-bottom: 24px;
+    }
+
+    .yield-header h1 {
+        font-size: 24px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        color: #1E2329;
+    }
+
+    .yield-header p {
+        font-size: 13px;
+        color: #707A8A;
+    }
+
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+    }
+
+    .stat-label {
+        font-size: 11px;
+        color: #707A8A;
+        text-transform: uppercase;
+        margin-bottom: 8px;
+    }
+
+    .stat-value {
+        font-size: 24px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .stat-sub {
+        font-size: 11px;
+        color: #0ECB81;
+        margin-top: 8px;
+    }
+
+    .info-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .info-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #1E2329;
+    }
+
+    .info-text {
+        font-size: 13px;
+        color: #707A8A;
+        line-height: 1.6;
+    }
+
+    .info-highlight {
+        color: #F0B90B;
+        font-weight: 600;
+    }
+
+    .yield-table {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
+    }
+
+    .table-header {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        padding: 12px 16px;
+        background: #F8F9FA;
+        border-bottom: 1px solid #E2E4E8;
+        font-size: 11px;
+        font-weight: 500;
+        color: #707A8A;
+        text-transform: uppercase;
+    }
+
+    .yield-row {
+        display: grid;
+        grid-template-columns: 1.5fr 1fr 1fr 1fr;
+        padding: 12px 16px;
+        border-bottom: 1px solid #E2E4E8;
+        font-size: 13px;
+    }
+
+    .yield-row:hover {
+        background: #F8F9FA;
+    }
+
+    .empty-state {
+        text-align: center;
+        padding: 40px;
+        color: #707A8A;
+    }
+
+    .withdraw-btn {
+        background: #F0B90B;
+        color: #1E2329;
+        border: none;
+        border-radius: 8px;
+        padding: 10px 20px;
+        font-weight: 600;
+        cursor: pointer;
+        margin-top: 16px;
+    }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        .table-header, .yield-row {
+            grid-template-columns: 1fr 0.8fr 0.8fr 0.8fr;
+            font-size: 11px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="yield-container">
+    <div class="yield-header">
+        <h1>💰 Yield Earnings</h1>
+        <p>Earn 20% monthly yield on your token holdings, distributed hourly</p>
+    </div>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-label">Total Yield Earned</div>
+            <div class="stat-value" id="totalYield">$0.00</div>
+            <div class="stat-sub">Lifetime earnings</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Available Yield</div>
+            <div class="stat-value" id="availableYield">$0.00</div>
+            <div class="stat-sub">Ready to withdraw</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Monthly Rate</div>
+            <div class="stat-value">20%</div>
+            <div class="stat-sub">Based on holdings value</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Hourly Distribution</div>
+            <div class="stat-value" id="hourlyYield">$0.00</div>
+            <div class="stat-sub">720 distributions/month</div>
+        </div>
+    </div>
+
+    <div class="info-card">
+        <div class="info-title">📊 How Yield Works</div>
+        <div class="info-text">
+            You earn <span class="info-highlight">20% monthly yield</span> on the current value of your token holdings.
+            Yield is distributed <span class="info-highlight">hourly (720 times per month)</span> directly to your Yield Wallet.
+            The amount varies based on your token holdings value and market prices.
+        </div>
+    </div>
+
+    <div class="yield-table">
+        <div class="table-header">
+            <span>Token</span>
+            <span>Holdings Value</span>
+            <span>Monthly Yield</span>
+            <span>Hourly Yield</span>
+        </div>
+        <div id="yieldBreakdown"></div>
+    </div>
+
+    <div style="margin-top: 20px; text-align: right;">
+        <button class="withdraw-btn" onclick="withdrawAllYield()">
+            <i class="fas fa-arrow-down me-2"></i>Withdraw All Yield
+        </button>
+    </div>
+</div>
+
+<script>
+    async function loadYieldData() {
+        try {
+            // Get user's token holdings
+            const holdings = await apiCall('/trading/my_tokens/');
+            const tokens = await apiCall('/trading/');
+            const balance = await apiCall('/trading/my_balance/');
+
+            let totalValue = 0;
+            let totalYield = 0;
+            let hourlyTotal = 0;
+
+            const container = document.getElementById('yieldBreakdown');
+
+            if (!holdings || holdings.length === 0) {
+                container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
+                document.getElementById('totalYield').innerHTML = formatCurrency(0);
+                document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+                document.getElementById('hourlyYield').innerHTML = formatCurrency(0);
+                return;
+            }
+
+            let html = '';
+            for (const holding of holdings) {
+                const currentToken = tokens.find(t => t.id === holding.token);
+                const currentPrice = currentToken ? parseFloat(currentToken.current_price) : 0;
+                const value = parseFloat(holding.quantity) * currentPrice;
+                const monthlyYield = value * 0.20;
+                const hourlyYield = monthlyYield / 720;
+
+                totalValue += value;
+                totalYield += monthlyYield;
+                hourlyTotal += hourlyYield;
+
+                html += `
+                    <div class="yield-row">
+                        <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
+                        <span>${formatCurrency(value)}</span>
+                        <span>${formatCurrency(monthlyYield)}</span>
+                        <span>${formatCurrency(hourlyYield)}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            document.getElementById('totalYield').innerHTML = formatCurrency(totalYield);
+            document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+            document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyTotal);
+
+        } catch (e) {
+            console.error('Error loading yield data:', e);
+            document.getElementById('yieldBreakdown').innerHTML = '<div class="empty-state">Unable to load yield data</div>';
+        }
+    }
+
+    async function withdrawAllYield() {
+        try {
+            const balance = await apiCall('/trading/my_balance/');
+            const amount = parseFloat(balance.yield_balance);
+
+            if (!amount || amount <= 0) {
+                alert('No yield available to withdraw');
+                return;
+            }
+
+            const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
+
+            if (result.success) {
+                alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`);
+                loadYieldData();
+            } else {
+                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+
+    loadYieldData();
+    setInterval(loadYieldData, 30000);
+</script>
+{% endblock %}

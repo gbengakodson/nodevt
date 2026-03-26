@@ -1,0 +1,264 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Deposit USDC{% endblock %}
+
+{% block extra_css %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+    }
+
+    .deposit-container {
+        min-height: calc(100vh - 200px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 40px 20px;
+    }
+
+    .deposit-card {
+        background: rgba(30, 35, 41, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 28px;
+        border: 1px solid rgba(240, 185, 11, 0.2);
+        padding: 40px;
+        max-width: 500px;
+        width: 100%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        transition: transform 0.3s;
+    }
+
+    .deposit-card:hover {
+        transform: translateY(-5px);
+        border-color: rgba(240, 185, 11, 0.4);
+    }
+
+    .deposit-header {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .deposit-header h2 {
+        font-size: 28px;
+        font-weight: 700;
+        color: #FFFFFF;
+        margin-bottom: 8px;
+    }
+
+    .deposit-header p {
+        font-size: 14px;
+        color: #8A8F9E;
+    }
+
+    .network-badge {
+        background: rgba(240, 185, 11, 0.15);
+        border: 1px solid rgba(240, 185, 11, 0.3);
+        border-radius: 40px;
+        padding: 8px 16px;
+        display: inline-block;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #F0B90B;
+    }
+
+    .address-box {
+        background: #1E2329;
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        border: 1px solid #2B3139;
+        margin: 20px 0;
+    }
+
+    .address-label {
+        font-size: 11px;
+        color: #8A8F9E;
+        text-transform: uppercase;
+        margin-bottom: 12px;
+    }
+
+    .address-value {
+        font-family: monospace;
+        font-size: 14px;
+        color: #F0B90B;
+        word-break: break-all;
+        line-height: 1.5;
+    }
+
+    .copy-btn {
+        width: 100%;
+        background: #F0B90B;
+        border: none;
+        color: #0B0E11;
+        padding: 14px;
+        font-size: 14px;
+        font-weight: 600;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 16px;
+    }
+
+    .copy-btn:hover {
+        background: #E0A800;
+        transform: translateY(-2px);
+    }
+
+    .warning-box {
+        background: rgba(246, 70, 93, 0.1);
+        border-left: 4px solid #F6465D;
+        padding: 16px;
+        border-radius: 12px;
+        margin-top: 24px;
+    }
+
+    .warning-title {
+        font-size: 12px;
+        font-weight: 600;
+        color: #F6465D;
+        margin-bottom: 8px;
+    }
+
+    .warning-text {
+        font-size: 12px;
+        color: #8A8F9E;
+        line-height: 1.5;
+    }
+
+    .info-box {
+        background: rgba(14, 203, 129, 0.1);
+        border-left: 4px solid #0ECB81;
+        padding: 16px;
+        border-radius: 12px;
+        margin-top: 16px;
+    }
+
+    .info-text {
+        font-size: 12px;
+        color: #8A8F9E;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 768px) {
+        .deposit-card {
+            padding: 32px 24px;
+        }
+        .address-value {
+            font-size: 11px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="deposit-container">
+    <div class="deposit-card">
+        <div class="deposit-header">
+            <h2>Deposit USDC</h2>
+            <p>Send USDC to your unique deposit address</p>
+        </div>
+
+        <div style="text-align: center;">
+            <div class="network-badge">
+                <i class="fas fa-network-wired me-2"></i>BSC (BEP20) Network
+            </div>
+        </div>
+
+        <div class="address-box">
+            <div class="address-label">Your Deposit Address</div>
+            <div class="address-value" id="depositAddress">Loading...</div>
+        </div>
+
+        <button class="copy-btn" onclick="copyAddress()">
+            <i class="fas fa-copy me-2"></i>Copy Address
+        </button>
+
+        <div class="warning-box">
+            <div class="warning-title">
+                <i class="fas fa-exclamation-triangle me-1"></i> Important Warning
+            </div>
+            <div class="warning-text">
+                Send only <strong>USDC</strong> on the <strong>BSC (BEP20)</strong> network to this address.<br>
+                Sending any other token or using the wrong network may result in permanent loss.
+            </div>
+        </div>
+
+        <div class="info-box">
+            <div class="info-text">
+                <i class="fas fa-clock me-1"></i> Deposits are credited after 3 confirmations (approx. 1-2 minutes)
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        }
+
+        const options = {
+            method: method,
+            headers: headers,
+        };
+
+        if (data) {
+            options.body = JSON.stringify(data);
+        }
+
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+
+        if (response.status === 401) {
+            window.location.href = '/login/';
+            throw new Error('Session expired');
+        }
+
+        return response.json();
+    }
+
+    async function loadDepositAddress() {
+        try {
+            const balance = await apiCall('/trading/my_balance/');
+            console.log('Balance data:', balance);
+
+            if (balance.deposit_address) {
+                document.getElementById('depositAddress').innerHTML = balance.deposit_address;
+            } else {
+                document.getElementById('depositAddress').innerHTML = 'No wallet address found';
+            }
+        } catch (e) {
+            console.error('Error:', e);
+            document.getElementById('depositAddress').innerHTML = 'Unable to load address';
+        }
+    }
+
+    function copyAddress() {
+        const address = document.getElementById('depositAddress').innerText;
+        if (address && address !== 'Loading...' && address !== 'Unable to load address' && address !== 'No wallet address found') {
+            navigator.clipboard.writeText(address);
+            alert('Address copied to clipboard!');
+        } else {
+            alert('No valid address available to copy');
+        }
+    }
+
+    loadDepositAddress();
+</script>
+{% endblock %}

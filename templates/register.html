@@ -1,0 +1,433 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Register{% endblock %}
+
+{% block extra_css %}
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        margin: 0 !important;
+        padding: 0 !important;
+        overflow-x: hidden;
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+    }
+
+    .register-container {
+        min-height: 100vh;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 !important;
+        margin: 0 !important;
+        position: relative;
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+        overflow: hidden;
+    }
+
+    /* Remove any possible margins from main content */
+    main {
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Animated gradient orbs */
+    .register-container::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 40%, rgba(240, 185, 11, 0.08) 0%, transparent 50%);
+        animation: rotate 30s linear infinite;
+    }
+
+    .register-container::after {
+        content: '';
+        position: absolute;
+        bottom: -50%;
+        right: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 70% 60%, rgba(240, 185, 11, 0.05) 0%, transparent 50%);
+        animation: rotate 40s linear infinite reverse;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    .register-card {
+        background: rgba(30, 35, 41, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 28px;
+        border: 1px solid rgba(240, 185, 11, 0.2);
+        padding: 44px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        transition: transform 0.3s, box-shadow 0.3s;
+        position: relative;
+        z-index: 1;
+        margin: 20px auto;
+    }
+
+    .register-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 30px 50px rgba(0,0,0,0.5);
+        border-color: rgba(240, 185, 11, 0.4);
+    }
+
+    .register-logo {
+        text-align: center;
+        margin-bottom: 32px;
+    }
+
+    .register-logo h2 {
+        font-size: 34px;
+        font-weight: 700;
+        margin: 0;
+        color: #FFFFFF;
+    }
+
+    .register-logo span {
+        color: #F0B90B;
+    }
+
+    .register-logo p {
+        font-size: 14px;
+        color: #8A8F9E;
+        margin-top: 10px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 13px;
+        font-weight: 600;
+        color: #EAECEF;
+        margin-bottom: 8px;
+    }
+
+    .form-label .required {
+        color: #F6465D;
+        margin-left: 4px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        background: #1E2329;
+        border: 1.5px solid #2B3139;
+        border-radius: 14px;
+        font-size: 14px;
+        color: #EAECEF;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #F0B90B;
+        box-shadow: 0 0 0 4px rgba(240, 185, 11, 0.1);
+        background: #2A2F3A;
+    }
+
+    .form-input::placeholder {
+        color: #5E6673;
+    }
+
+    .form-hint {
+        font-size: 11px;
+        color: #5E6673;
+        margin-top: 6px;
+    }
+
+    .btn-register {
+        width: 100%;
+        background: #F0B90B;
+        border: none;
+        color: #0B0E11;
+        padding: 14px;
+        font-size: 15px;
+        font-weight: 600;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+
+    .btn-register:hover {
+        background: #E0A800;
+        transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
+    }
+
+    .btn-transparent {
+        width: 100%;
+        background: rgba(30, 35, 41, 0.8);
+        border: 1.5px solid #2B3139;
+        color: #EAECEF;
+        padding: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        border-radius: 14px;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 12px;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+    }
+
+    .btn-transparent:hover {
+        background: #2A2F3A;
+        border-color: #F0B90B;
+        color: #F0B90B;
+    }
+
+    .divider {
+        display: flex;
+        align-items: center;
+        text-align: center;
+        margin: 24px 0;
+        color: #5E6673;
+        font-size: 12px;
+    }
+
+    .divider::before,
+    .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid #2B3139;
+    }
+
+    .divider::before {
+        margin-right: 16px;
+    }
+
+    .divider::after {
+        margin-left: 16px;
+    }
+
+    .login-link {
+        text-align: center;
+        margin-top: 24px;
+        font-size: 13px;
+        color: #8A8F9E;
+    }
+
+    .login-link a {
+        color: #F0B90B;
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .login-link a:hover {
+        text-decoration: underline;
+    }
+
+    .error-message {
+        background: rgba(246, 70, 93, 0.1);
+        border-left: 4px solid #F6465D;
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #F6465D;
+        display: none;
+    }
+
+    .success-message {
+        background: rgba(14, 203, 129, 0.1);
+        border-left: 4px solid #0ECB81;
+        padding: 14px 18px;
+        border-radius: 12px;
+        margin-bottom: 24px;
+        font-size: 13px;
+        color: #0ECB81;
+        display: none;
+    }
+
+    @media (max-width: 768px) {
+        .register-card {
+            padding: 32px 24px;
+            width: 95%;
+        }
+        .register-logo h2 {
+            font-size: 28px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="register-container">
+    <div class="register-card">
+        <div class="register-logo">
+    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 16px;">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="24" cy="24" r="22" stroke="#F0B90B" stroke-width="2" fill="none"/>
+            <polygon points="24,8 32,13 32,21 24,26 16,21 16,13 24,8" fill="none" stroke="#F0B90B" stroke-width="1.5"/>
+            <circle cx="24" cy="18" r="2.5" fill="#F0B90B"/>
+            <circle cx="19" cy="23" r="2.5" fill="#F0B90B"/>
+            <circle cx="29" cy="23" r="2.5" fill="#F0B90B"/>
+            <circle cx="24" cy="28" r="2.5" fill="#F0B90B"/>
+            <line x1="24" y1="18" x2="24" y2="28" stroke="#F0B90B" stroke-width="1.5"/>
+            <line x1="19" y1="23" x2="29" y2="23" stroke="#F0B90B" stroke-width="1.5"/>
+            <path d="M36 36 L38 34 L40 36" stroke="#F6465D" stroke-width="2" stroke-linecap="round" fill="none"/>
+            <path d="M8 12 L10 10 L12 12" stroke="#0ECB81" stroke-width="2" stroke-linecap="round" fill="none"/>
+        </svg>
+        <div>
+            <div style="font-weight: 800; font-size: 28px; letter-spacing: -1px; line-height: 1.2;">
+                <span style="color: white;">NODE</span>
+            </div>
+            <div style="font-size: 10px; color: #F0B90B; letter-spacing: 2px;">VOLATILITY</div>
+        </div>
+    </div>
+    <p style="color: #8A8F9E;">Create your account to start trading</p>
+</div>
+
+        <div id="errorMessage" class="error-message"></div>
+        <div id="successMessage" class="success-message"></div>
+
+        <form id="registerForm">
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input" placeholder="Choose a username" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" id="email" class="form-input" placeholder="your@email.com" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" placeholder="Create a strong password" required>
+                <div class="form-hint">Minimum 8 characters</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" id="password2" class="form-input" placeholder="Confirm your password" required>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Referral Code <span class="required">*</span></label>
+                <input type="text" id="referralCode" class="form-input" placeholder="Enter 5-digit referral code" maxlength="5" required>
+                <div class="form-hint">You need a valid referral code to register</div>
+            </div>
+
+            <button type="submit" class="btn-register">
+                <i class="fas fa-user-plus me-2"></i>Create Account
+            </button>
+        </form>
+
+        <div class="divider">or</div>
+
+        <a href="/login/" class="btn-transparent">
+            <i class="fas fa-sign-in-alt me-2"></i>Sign In to Existing Account
+        </a>
+
+        <div class="login-link">
+            <a href="/">← Back to Home</a>
+        </div>
+    </div>
+</div>
+
+<script>
+
+    // Auto-fill referral code from URL if present
+const urlParams = new URLSearchParams(window.location.search);
+const refCode = urlParams.get('ref');
+if (refCode && refCode.length === 5) {
+    document.getElementById('referralCode').value = refCode;
+}
+
+
+
+
+    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        const username = document.getElementById('username').value;
+        const email = document.getElementById('email').value;
+        const password = document.getElementById('password').value;
+        const password2 = document.getElementById('password2').value;
+        const referralCode = document.getElementById('referralCode').value;
+        const errorDiv = document.getElementById('errorMessage');
+        const successDiv = document.getElementById('successMessage');
+
+        errorDiv.style.display = 'none';
+        successDiv.style.display = 'none';
+
+        if (password !== password2) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Passwords do not match';
+            return;
+        }
+
+        if (password.length < 8) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Password must be at least 8 characters';
+            return;
+        }
+
+        if (referralCode.length !== 5) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Referral code must be 5 digits';
+            return;
+        }
+
+        showLoading();
+
+        try {
+            const response = await fetch('http://127.0.0.1:8000/api/auth/register/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    username: username,
+                    email: email,
+                    password: password,
+                    password2: password2,
+                    referral_code: referralCode
+                })
+            });
+
+            const data = await response.json();
+
+            if (response.status === 201) {
+                localStorage.setItem('access_token', data.access);
+                localStorage.setItem('refresh_token', data.refresh);
+                successDiv.style.display = 'block';
+                successDiv.innerHTML = '<i class="fas fa-check-circle me-2"></i>Registration successful! Redirecting...';
+                setTimeout(() => {
+                    window.location.href = '/dashboard/';
+                }, 1500);
+            } else {
+                let errorMsg = '';
+                for (const [key, value] of Object.entries(data)) {
+                    errorMsg += `${key}: ${value.join(', ')}<br>`;
+                }
+                errorDiv.style.display = 'block';
+                errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i> ' + errorMsg;
+            }
+        } catch (e) {
+            errorDiv.style.display = 'block';
+            errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>Network error. Please try again.';
+        }
+
+        hideLoading();
+    });
+</script>
+{% endblock %}

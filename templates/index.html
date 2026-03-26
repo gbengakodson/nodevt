@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NODE Volatility - Crypto Trading Platform</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            color: white;
+        }
+
+        /* Navbar */
+        .navbar {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            z-index: 1000;
+            background: rgba(11, 14, 17, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1rem 2rem;
+            border-bottom: 1px solid rgba(240, 185, 11, 0.2);
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none;
+        }
+
+        .navbar-nav .nav-link {
+            color: #8A8F9E !important;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: #F0B90B !important;
+        }
+
+        .btn-login {
+            background: transparent;
+            border: 1px solid #F0B90B;
+            color: #F0B90B;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 500;
+            transition: all 0.3s;
+        }
+
+        .btn-login:hover {
+            background: #F0B90B;
+            color: #0B0E11;
+        }
+
+        .btn-register {
+            background: #F0B90B;
+            border: none;
+            color: #0B0E11;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-weight: 600;
+            margin-left: 12px;
+            transition: all 0.3s;
+        }
+
+        .btn-register:hover {
+            background: #E0A800;
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 100px 20px 60px;
+        }
+
+        .hero-logo {
+            margin-bottom: 32px;
+        }
+
+        .hero h1 {
+            font-size: 56px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #FFFFFF 0%, #F0B90B 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 18px;
+            color: #8A8F9E;
+            max-width: 600px;
+            margin: 0 auto 32px;
+        }
+
+        .btn-hero-primary {
+            background: #F0B90B;
+            color: #0B0E11;
+            padding: 14px 36px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-hero-primary:hover {
+            background: #E0A800;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
+        }
+
+        .btn-hero-secondary {
+            background: transparent;
+            border: 1px solid #F0B90B;
+            color: #F0B90B;
+            padding: 14px 36px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            margin-left: 16px;
+            transition: all 0.3s;
+        }
+
+        .btn-hero-secondary:hover {
+            background: rgba(240, 185, 11, 0.1);
+            transform: translateY(-2px);
+        }
+
+        /* Stats Section */
+        .stats-section {
+            padding: 80px 0;
+            background: rgba(30, 35, 41, 0.5);
+            border-top: 1px solid rgba(240, 185, 11, 0.1);
+            border-bottom: 1px solid rgba(240, 185, 11, 0.1);
+        }
+
+        .stat-number {
+            font-size: 48px;
+            font-weight: 700;
+            color: #F0B90B;
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: #8A8F9E;
+        }
+
+        /* Features Section */
+        .features-section {
+            padding: 80px 0;
+        }
+
+        .section-title {
+            font-size: 36px;
+            font-weight: 700;
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        .section-subtitle {
+            font-size: 16px;
+            color: #8A8F9E;
+            text-align: center;
+            margin-bottom: 48px;
+        }
+
+        .feature-card {
+            background: rgba(30, 35, 41, 0.8);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            border: 1px solid rgba(240, 185, 11, 0.2);
+            transition: all 0.3s;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            border-color: #F0B90B;
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: rgba(240, 185, 11, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 20px;
+            font-size: 28px;
+            color: #F0B90B;
+        }
+
+        .feature-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .feature-text {
+            font-size: 13px;
+            color: #8A8F9E;
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #F0B90B 0%, #E0A800 100%);
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0B0E11;
+            margin-bottom: 16px;
+        }
+
+        .cta-section p {
+            font-size: 16px;
+            color: #1E2329;
+            margin-bottom: 32px;
+        }
+
+        .btn-cta {
+            background: #0B0E11;
+            color: #F0B90B;
+            padding: 14px 36px;
+            border-radius: 40px;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+        }
+
+        .btn-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+        }
+
+        /* Footer */
+        .footer {
+            padding: 48px 0 24px;
+            border-top: 1px solid rgba(240, 185, 11, 0.1);
+        }
+
+        .footer-links a {
+            color: #8A8F9E;
+            text-decoration: none;
+            font-size: 13px;
+            transition: color 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #F0B90B;
+        }
+
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 36px; }
+            .hero p { font-size: 14px; }
+            .stat-number { font-size: 32px; }
+            .section-title { font-size: 28px; }
+            .btn-hero-primary, .btn-hero-secondary { padding: 10px 24px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg">
+        <div class="container">
+            <a class="navbar-brand" href="/">
+                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="16" cy="16" r="15" stroke="#F0B90B" stroke-width="1.5" fill="none"/>
+                    <polygon points="16,6 23,10 23,18 16,22 9,18 9,10 16,6" fill="none" stroke="#F0B90B" stroke-width="1.2"/>
+                    <circle cx="16" cy="12" r="1.8" fill="#F0B90B"/>
+                    <circle cx="12" cy="16" r="1.8" fill="#F0B90B"/>
+                    <circle cx="20" cy="16" r="1.8" fill="#F0B90B"/>
+                    <circle cx="16" cy="20" r="1.8" fill="#F0B90B"/>
+                    <line x1="16" y1="12" x2="16" y2="20" stroke="#F0B90B" stroke-width="1"/>
+                    <line x1="12" y1="16" x2="20" y2="16" stroke="#F0B90B" stroke-width="1"/>
+                </svg>
+                <div>
+                    <div style="font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: white;">NODE</div>
+                    <div style="font-size: 7px; color: #F0B90B; letter-spacing: 1px;">VOLATILITY</div>
+                </div>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon" style="filter: invert(1);"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#referral">Referral</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
+                    <li class="nav-item ms-lg-3"><a href="/login/" class="btn-login">Login</a></li>
+                    <li class="nav-item"><a href="/register/" class="btn-register">Get Started</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <div class="hero-logo">
+                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="40" cy="40" r="38" stroke="#F0B90B" stroke-width="2" fill="none"/>
+                    <polygon points="40,15 52,22 52,35 40,42 28,35 28,22 40,15" fill="none" stroke="#F0B90B" stroke-width="1.8"/>
+                    <circle cx="40" cy="28" r="3.5" fill="#F0B90B"/>
+                    <circle cx="31" cy="37" r="3.5" fill="#F0B90B"/>
+                    <circle cx="49" cy="37" r="3.5" fill="#F0B90B"/>
+                    <circle cx="40" cy="46" r="3.5" fill="#F0B90B"/>
+                    <line x1="40" y1="28" x2="40" y2="46" stroke="#F0B90B" stroke-width="2"/>
+                    <line x1="31" y1="37" x2="49" y2="37" stroke="#F0B90B" stroke-width="2"/>
+                    <path d="M62 62 L66 58 L70 62" stroke="#F6465D" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                    <path d="M10 18 L14 14 L18 18" stroke="#0ECB81" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+                </svg>
+            </div>
+            <h1>Trade Crypto & Earn<br><span style="color: #F0B90B;">20% Monthly Yield</span></h1>
+            <p>Buy, sell, and earn passive income on your crypto holdings. Automatic take profit at 20% gain.</p>
+            <div>
+                <a href="/register/" class="btn-hero-primary">Start Trading</a>
+                <a href="#features" class="btn-hero-secondary">Learn More</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats-section">
+        <div class="container">
+            <div class="row text-center">
+                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                    <div class="stat-number">20+</div>
+                    <div class="stat-label">Supported Tokens</div>
+                </div>
+                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                    <div class="stat-number">20%</div>
+                    <div class="stat-label">Monthly Yield</div>
+                </div>
+                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                    <div class="stat-number">7</div>
+                    <div class="stat-label">Referral Levels</div>
+                </div>
+                <div class="col-md-3 col-6">
+                    <div class="stat-number">720</div>
+                    <div class="stat-label">Hourly Payouts</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features-section">
+        <div class="container">
+            <h2 class="section-title">Why Choose NODE Volatility?</h2>
+            <p class="section-subtitle">Powerful features designed for modern crypto traders</p>
+            <div class="row g-4">
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h3 class="feature-title">Real-Time Trading</h3>
+                        <p class="feature-text">Trade 20+ cryptocurrencies with live market prices from CoinGecko. Professional charting and order book.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-gem"></i></div>
+                        <h3 class="feature-title">20% Monthly Yield</h3>
+                        <p class="feature-text">Earn 20% monthly yield on your token holdings. Distributed hourly - 720 times per month.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-rocket"></i></div>
+                        <h3 class="feature-title">Auto Take Profit</h3>
+                        <p class="feature-text">Automatic sell when your token gains 20% from purchase price. Lock in profits automatically.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-users"></i></div>
+                        <h3 class="feature-title">7-Level Referral</h3>
+                        <p class="feature-text">Earn commissions from 7 generations of referrals. 50% distribution to each level.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-wallet"></i></div>
+                        <h3 class="feature-title">BSC Integration</h3>
+                        <p class="feature-text">Real USDC deposits on BEP20 network. Secure wallet management with encrypted private keys.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-shield-alt"></i></div>
+                        <h3 class="feature-title">Secure & Encrypted</h3>
+                        <p class="feature-text">Bank-grade security with encrypted wallet storage and JWT authentication.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral Section -->
+    <section id="referral" class="stats-section">
+        <div class="container text-center">
+            <h2 class="section-title">Invite Friends, Earn Together</h2>
+            <p class="section-subtitle">Share your referral code and earn commissions from 7 generations</p>
+            <div class="feature-card" style="display: inline-block; padding: 20px 40px; margin-top: 20px;">
+                <div style="font-family: monospace; font-size: 24px; letter-spacing: 4px; color: #F0B90B;">• • • • •</div>
+                <p class="mt-3 mb-0" style="color: #8A8F9E;">Get your unique 5-digit referral code after registration</p>
+            </div>
+            <div class="mt-4">
+                <a href="/register/" class="btn-hero-primary">Create Account</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to Start Trading?</h2>
+            <p>Join thousands of traders already earning yield on their crypto</p>
+            <a href="/register/" class="btn-cta">Get Started Now</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-4 mb-md-0">
+                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
+                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="14" cy="14" r="13" stroke="#F0B90B" stroke-width="1.2" fill="none"/>
+                            <polygon points="14,5 19,9 19,16 14,19 9,16 9,9 14,5" fill="none" stroke="#F0B90B" stroke-width="1"/>
+                            <circle cx="14" cy="10" r="1.5" fill="#F0B90B"/>
+                            <circle cx="11" cy="13" r="1.5" fill="#F0B90B"/>
+                            <circle cx="17" cy="13" r="1.5" fill="#F0B90B"/>
+                            <circle cx="14" cy="16" r="1.5" fill="#F0B90B"/>
+                        </svg>
+                        <div>
+                            <div style="font-weight: 700; font-size: 16px; color: white;">NODE</div>
+                            <div style="font-size: 7px; color: #F0B90B;">VOLATILITY</div>
+                        </div>
+                    </div>
+                    <p class="small opacity-75">Trade crypto, earn yield, and grow your portfolio with NODE Volatility Platform.</p>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <h6 class="mb-3">Product</h6>
+                    <div class="footer-links d-flex flex-column gap-2">
+                        <a href="/trading/">Trading</a>
+                        <a href="/coins/">Markets</a>
+                        <a href="/yield/">Yield</a>
+                    </div>
+                </div>
+                <div class="col-md-2 col-6 mb-3">
+                    <h6 class="mb-3">Resources</h6>
+                    <div class="footer-links d-flex flex-column gap-2">
+                        <a href="#features">Features</a>
+                        <a href="#referral">Referral</a>
+                        <a href="/chat/">Support</a>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <h6 class="mb-3">Network</h6>
+                    <p class="small opacity-75 mb-2">BSC (BEP20) - USDC Deposits</p>
+                    <p class="small opacity-75">24/7 Support Available</p>
+                </div>
+            </div>
+            <hr class="mt-4 mb-3" style="border-color: rgba(240,185,11,0.2);">
+            <div class="text-center small opacity-50">
+                &copy; 2026 NODE Volatility. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

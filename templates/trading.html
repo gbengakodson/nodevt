@@ -1,0 +1,932 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Trading - BTC/USDC{% endblock %}
+
+{% block extra_css %}
+<style>
+    .trading-grid {
+        display: flex;
+        gap: 20px;
+        max-width: 1400px;
+        margin: 0 auto;
+    }
+
+    .left-column {
+        flex: 2;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .right-column {
+        flex: 1;
+        min-width: 0;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .chart-card, .order-card, .orderbook-card, .coins-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
+    }
+
+    .chart-card {
+        padding: 20px;
+    }
+
+    .orderbook-card, .coins-card {
+        padding: 16px;
+    }
+
+    .chart-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .symbol-price {
+        display: flex;
+        align-items: baseline;
+        gap: 16px;
+        flex-wrap: wrap;
+    }
+
+    .symbol-name {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .current-price {
+        font-size: 28px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .price-change {
+        font-size: 14px;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-weight: 500;
+    }
+
+    .price-up {
+        color: #0ECB81;
+        background: rgba(14, 203, 129, 0.1);
+    }
+
+    .price-down {
+        color: #F6465D;
+        background: rgba(246, 70, 93, 0.1);
+    }
+
+    .timeframes {
+        display: flex;
+        gap: 4px;
+        background: #F8F9FA;
+        padding: 4px;
+        border-radius: 8px;
+    }
+
+    .tf-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 500;
+        background: none;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        color: #707A8A;
+        transition: all 0.2s;
+    }
+
+    .tf-btn:hover {
+        color: #1E2329;
+        background: #EFF2F5;
+    }
+
+    .tf-btn.active {
+        background: #EFF2F5;
+        color: #1E2329;
+    }
+
+    #priceChart {
+        width: 100%;
+        height: 420px;
+    }
+
+    .order-tabs {
+        display: flex;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .order-tab {
+        flex: 1;
+        padding: 14px;
+        text-align: center;
+        background: none;
+        border: none;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        color: #707A8A;
+        transition: all 0.2s;
+    }
+
+    .order-tab:hover {
+        color: #1E2329;
+    }
+
+    .order-tab.active {
+        color: #1E2329;
+        border-bottom: 2px solid #1E2329;
+    }
+
+    .order-form {
+        padding: 20px;
+    }
+
+    .form-group {
+        margin-bottom: 20px;
+    }
+
+    .form-label {
+        font-size: 12px;
+        color: #707A8A;
+        margin-bottom: 8px;
+        display: block;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px;
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 8px;
+        font-size: 14px;
+        color: #1E2329;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: #D9DDE2;
+        background: white;
+    }
+
+    .perc-group {
+        display: flex;
+        gap: 8px;
+        margin-top: 10px;
+    }
+
+    .perc-btn {
+        flex: 1;
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 6px;
+        padding: 6px;
+        font-size: 11px;
+        cursor: pointer;
+        color: #707A8A;
+        transition: all 0.2s;
+    }
+
+    .perc-btn:hover {
+        background: #EFF2F5;
+        color: #1E2329;
+        border-color: #D9DDE2;
+    }
+
+    .btn-buy {
+        width: 100%;
+        background: #0ECB81;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-buy:hover {
+        background: #0BB572;
+    }
+
+    .btn-sell {
+        width: 100%;
+        background: #F6465D;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 12px;
+        font-weight: 600;
+        margin-top: 8px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-sell:hover {
+        background: #E03E54;
+    }
+
+    .orderbook-title {
+        font-weight: 600;
+        margin-bottom: 16px;
+        font-size: 14px;
+        color: #1E2329;
+    }
+
+    .orderbook-header {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #E2E4E8;
+        font-size: 11px;
+        color: #707A8A;
+        text-transform: uppercase;
+    }
+
+    .orderbook-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 12px;
+        font-family: monospace;
+        cursor: pointer;
+        transition: background 0.1s;
+        border-radius: 4px;
+    }
+
+    .orderbook-row:hover {
+        background: #F8F9FA;
+    }
+
+    .bid-price {
+        color: #0ECB81;
+    }
+
+    .ask-price {
+        color: #F6465D;
+    }
+
+    .coin-list {
+        max-height: 320px;
+        overflow-y: auto;
+    }
+
+    .coin-list::-webkit-scrollbar {
+        width: 4px;
+    }
+
+    .coin-list::-webkit-scrollbar-track {
+        background: #E2E4E8;
+        border-radius: 4px;
+    }
+
+    .coin-list::-webkit-scrollbar-thumb {
+        background: #D9DDE2;
+        border-radius: 4px;
+    }
+
+    .coin-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border-bottom: 1px solid #E2E4E8;
+        cursor: pointer;
+        transition: background 0.2s;
+        border-radius: 8px;
+    }
+
+    .coin-item:hover {
+        background: #F8F9FA;
+    }
+
+    .coin-info {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .coin-symbol {
+        font-weight: 600;
+        font-size: 13px;
+        color: #1E2329;
+    }
+
+    .coin-name {
+        font-size: 10px;
+        color: #707A8A;
+        margin-top: 2px;
+    }
+
+    .coin-price {
+        font-weight: 500;
+        font-size: 12px;
+        color: #1E2329;
+    }
+
+    .coin-change {
+        font-size: 11px;
+        font-weight: 500;
+        margin-top: 2px;
+        text-align: right;
+    }
+
+    .stats-mini {
+        display: flex;
+        justify-content: space-between;
+        background: #F8F9FA;
+        border-radius: 8px;
+        padding: 12px;
+        margin-top: 16px;
+    }
+
+    .stat-mini {
+        text-align: center;
+        flex: 1;
+    }
+
+    .stat-mini-label {
+        font-size: 10px;
+        color: #707A8A;
+    }
+
+    .stat-mini-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: #1E2329;
+        margin-top: 4px;
+    }
+
+    .total-amount {
+        font-size: 20px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .loading-chart {
+        text-align: center;
+        padding: 180px;
+        color: #707A8A;
+    }
+
+    @media (max-width: 992px) {
+        .trading-grid {
+            flex-direction: column;
+        }
+        #priceChart {
+            height: 320px;
+        }
+        .loading-chart {
+            padding: 100px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="trading-grid">
+    <div class="left-column">
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="symbol-price">
+                    <span class="symbol-name" id="symbolName">BTC/USDC</span>
+                    <span class="current-price" id="currentPrice">$0.00</span>
+                    <span class="price-change" id="priceChange">0.00%</span>
+                </div>
+                <div class="timeframes">
+                    <button class="tf-btn" data-tf="1">24h</button>
+                    <button class="tf-btn active" data-tf="7">7d</button>
+                    <button class="tf-btn" data-tf="30">30d</button>
+                    <button class="tf-btn" data-tf="90">90d</button>
+                    <button class="tf-btn" data-tf="365">1y</button>
+                </div>
+            </div>
+            <div id="chartContainer">
+                <canvas id="priceChart"></canvas>
+            </div>
+        </div>
+
+        <div class="order-card">
+            <div class="order-tabs">
+                <button class="order-tab active" data-tab="limit">Limit Order</button>
+                <button class="order-tab" data-tab="market">Market Order</button>
+            </div>
+
+            <div id="limitPanel" class="order-form">
+                <div class="form-group">
+                    <label class="form-label">Price (USDC)</label>
+                    <input type="number" id="limitPrice" class="form-input" step="0.01" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Amount (USDC)</label>
+                    <input type="number" id="limitAmount" class="form-input" step="0.01" placeholder="0.00">
+                    <div class="perc-group">
+                        <button class="perc-btn" data-perc="25">25%</button>
+                        <button class="perc-btn" data-perc="50">50%</button>
+                        <button class="perc-btn" data-perc="75">75%</button>
+                        <button class="perc-btn" data-perc="100">100%</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Total</label>
+                    <div class="total-amount" id="limitTotal">$0.00</div>
+                </div>
+                <button class="btn-buy" id="buyBtn">Buy BTC</button>
+                <button class="btn-sell" id="sellBtn">Sell BTC</button>
+            </div>
+
+            <div id="marketPanel" class="order-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Amount (USDC)</label>
+                    <input type="number" id="marketAmount" class="form-input" placeholder="0.00">
+                    <div class="perc-group">
+                        <button class="perc-btn" data-market-perc="25">25%</button>
+                        <button class="perc-btn" data-market-perc="50">50%</button>
+                        <button class="perc-btn" data-market-perc="75">75%</button>
+                        <button class="perc-btn" data-market-perc="100">100%</button>
+                    </div>
+                </div>
+                <button class="btn-buy" id="buyBtnMarket">Buy BTC</button>
+                <button class="btn-sell" id="sellBtnMarket">Sell BTC</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="right-column">
+        <div class="orderbook-card">
+            <div class="orderbook-title">Order Book</div>
+            <div class="orderbook-header">
+                <span>Price (USDC)</span>
+                <span>Amount</span>
+                <span>Total</span>
+            </div>
+            <div id="askOrders" style="margin-bottom: 8px;"></div>
+            <div id="bidOrders"></div>
+        </div>
+
+        <div class="coins-card">
+            <div class="orderbook-title">Top Coins</div>
+            <div class="coin-list" id="coinList"></div>
+            <div class="stats-mini">
+                <div class="stat-mini">
+                    <div class="stat-mini-label">Your Balance</div>
+                    <div class="stat-mini-value" id="userBalance">$0.00</div>
+                </div>
+                <div class="stat-mini">
+                    <div class="stat-mini-label">24h Volume</div>
+                    <div class="stat-mini-value" id="globalVolume">$0</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+    const API_BASE = 'http://127.0.0.1:8000/api';
+    const COINGECKO_API = 'https://api.coingecko.com/api/v3';
+
+    let priceChart = null;
+    let tokens = [];
+    let currentSymbol = 'BTC';
+    let currentDays = 7;
+    let userBalance = 0;
+    let userHoldings = {};
+    let currentPrice = 0;
+
+    const symbolToCoinGeckoId = {
+        'BTC': 'bitcoin',
+        'ETH': 'ethereum',
+        'BNB': 'binancecoin',
+        'SOL': 'solana',
+        'XRP': 'ripple',
+        'ADA': 'cardano',
+        'DOGE': 'dogecoin',
+        'AVAX': 'avalanche-2',
+        'DOT': 'polkadot',
+        'PEPE': 'pepe',
+        'LINK': 'chainlink',
+        'UNI': 'uniswap',
+        'ATOM': 'cosmos',
+        'LTC': 'litecoin',
+        'NEAR': 'near',
+        'ALGO': 'algorand',
+        'VET': 'vechain',
+        'FTM': 'fantom',
+        'EGLD': 'elrond-erd-2',
+        'THETA': 'theta-token'
+    };
+
+    function getToken() { return localStorage.getItem('access_token'); }
+
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const options = { method, headers };
+        if (data) options.body = JSON.stringify(data);
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+        if (response.status === 401) window.location.href = '/login/';
+        return response.json();
+    }
+
+    function formatCurrency(num) {
+        if (!num) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function formatNumber(num, decimals = 4) {
+        if (!num) return '0';
+        return parseFloat(num).toFixed(decimals);
+    }
+
+    async function fetchChartData(coinSymbol, days = 7) {
+        const coinId = symbolToCoinGeckoId[coinSymbol];
+        if (!coinId) return null;
+
+        try {
+            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
+            const data = await response.json();
+            return data;
+        } catch (error) {
+            console.error('Error fetching chart data:', error);
+            return null;
+        }
+    }
+
+    async function updateChart() {
+        if (!currentSymbol) return;
+
+        const chartContainer = document.getElementById('chartContainer');
+        if (!chartContainer) return;
+
+        chartContainer.innerHTML = '<div class="loading-chart">Loading chart data...</div><canvas id="priceChart" style="display:none;"></canvas>';
+
+        const chartData = await fetchChartData(currentSymbol, currentDays);
+
+        if (!chartData || !chartData.prices || chartData.prices.length === 0) {
+            chartContainer.innerHTML = '<div class="loading-chart">Failed to load chart data. Please refresh.</div><canvas id="priceChart" style="display:none;"></canvas>';
+            return;
+        }
+
+        chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
+        const canvas = document.getElementById('priceChart');
+        if (!canvas) return;
+
+        const ctx = canvas.getContext('2d');
+
+        const prices = chartData.prices;
+        const labels = prices.map(p => {
+            const date = new Date(p[0]);
+            if (currentDays <= 2) {
+                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            } else if (currentDays <= 7) {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            } else {
+                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            }
+        });
+
+        const priceValues = prices.map(p => p[1]);
+
+        if (priceChart) {
+            priceChart.destroy();
+            priceChart = null;
+        }
+
+        priceChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: priceValues,
+                    borderColor: '#1E2329',
+                    borderWidth: 2,
+                    fill: true,
+                    backgroundColor: (ctx) => {
+                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 400);
+                        gradient.addColorStop(0, 'rgba(30, 35, 41, 0.1)');
+                        gradient.addColorStop(1, 'rgba(30, 35, 41, 0.01)');
+                        return gradient;
+                    },
+                    tension: 0.2,
+                    pointRadius: 0,
+                    pointHoverRadius: 5,
+                    pointHoverBackgroundColor: '#1E2329'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        mode: 'index',
+                        intersect: false,
+                        backgroundColor: 'white',
+                        titleColor: '#1E2329',
+                        bodyColor: '#1E2329',
+                        borderColor: '#E2E4E8',
+                        borderWidth: 1,
+                        callbacks: {
+                            label: (ctx) => `${currentSymbol}: $${ctx.raw.toFixed(2)}`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+                    },
+                    y: {
+                        grid: { color: '#EFF2F5' },
+                        ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() }
+                    }
+                }
+            }
+        });
+
+        const lastPrice = priceValues[priceValues.length - 1];
+        const firstPrice = priceValues[0];
+        const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
+        const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
+
+        document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
+        document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
+        document.getElementById('priceChange').className = `price-change ${changeClass}`;
+        document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+        currentPrice = lastPrice;
+    }
+
+    function generateOrderBook(price) {
+        let bids = [], asks = [];
+        for (let i = 0; i < 5; i++) {
+            bids.push({ price: price * (1 - (0.0005 + i * 0.0005)), size: 0.5 + Math.random() * 3 });
+            asks.push({ price: price * (1 + (0.0005 + i * 0.0005)), size: 0.5 + Math.random() * 3 });
+        }
+        let bidTotal = 0, askTotal = 0;
+        return {
+            bids: bids.map(b => ({ ...b, total: bidTotal += b.size })),
+            asks: asks.map(a => ({ ...a, total: askTotal += a.size }))
+        };
+    }
+
+    function renderOrderBook() {
+        if (!currentPrice) return;
+        const book = generateOrderBook(currentPrice);
+
+        const askOrders = document.getElementById('askOrders');
+        const bidOrders = document.getElementById('bidOrders');
+
+        if (askOrders) askOrders.innerHTML = book.asks.map(a =>
+            `<div class="orderbook-row" onclick="setPrice(${a.price})"><span class="ask-price">${formatCurrency(a.price)}</span><span>${formatNumber(a.size)}</span><span>${formatNumber(a.total)}</span></div>`
+        ).join('');
+
+        if (bidOrders) bidOrders.innerHTML = book.bids.map(b =>
+            `<div class="orderbook-row" onclick="setPrice(${b.price})"><span class="bid-price">${formatCurrency(b.price)}</span><span>${formatNumber(b.size)}</span><span>${formatNumber(b.total)}</span></div>`
+        ).join('');
+    }
+
+    async function loadCoins() {
+        try {
+            // Get local tokens first
+            tokens = await apiCall('/trading/');
+
+            // Display top 5 coins from local data
+            const topCoins = tokens.slice(0, 5);
+            const container = document.getElementById('coinList');
+
+            if (container) {
+                container.innerHTML = topCoins.map(token => {
+                    const change = (Math.random() - 0.5) * 8;
+                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                    return `
+                        <div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                            <div class="coin-info">
+                                <span class="coin-symbol">${token.symbol}</span>
+                                <span class="coin-name">${token.name}</span>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="coin-price">${formatCurrency(token.current_price)}</div>
+                                <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+
+            // Update current price display
+            const currentToken = tokens.find(t => t.symbol === currentSymbol);
+            if (currentToken) {
+                currentPrice = parseFloat(currentToken.current_price);
+                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+                await updateChart();
+                renderOrderBook();
+            }
+
+            // Try to fetch real market data in background
+            try {
+                const ids = Object.values(symbolToCoinGeckoId).slice(0, 10).join(',');
+                const response = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`);
+                const marketData = await response.json();
+
+                // Update token prices with real data
+                const marketMap = {};
+                for (const coin of marketData) {
+                    for (const [symbol, id] of Object.entries(symbolToCoinGeckoId)) {
+                        if (coin.id === id) {
+                            marketMap[symbol] = {
+                                price: coin.current_price,
+                                change_24h: coin.price_change_percentage_24h || 0
+                            };
+                        }
+                    }
+                }
+
+                for (const token of tokens) {
+                    if (marketMap[token.symbol]) {
+                        token.current_price = marketMap[token.symbol].price;
+                    }
+                }
+
+                // Update display with real prices
+                if (currentToken && marketMap[currentSymbol]) {
+                    currentPrice = marketMap[currentSymbol].price;
+                    document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+                }
+
+                // Update top coins display with real changes
+                if (container) {
+                    container.innerHTML = topCoins.map(token => {
+                        const marketInfo = marketMap[token.symbol] || { price: token.current_price, change_24h: (Math.random() - 0.5) * 8 };
+                        const changeClass = marketInfo.change_24h >= 0 ? 'price-up' : 'price-down';
+                        return `
+                            <div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                                <div class="coin-info">
+                                    <span class="coin-symbol">${token.symbol}</span>
+                                    <span class="coin-name">${token.name}</span>
+                                </div>
+                                <div style="text-align: right;">
+                                    <div class="coin-price">${formatCurrency(marketInfo.price)}</div>
+                                    <div class="coin-change ${changeClass}">${marketInfo.change_24h >= 0 ? '+' : ''}${marketInfo.change_24h.toFixed(2)}%</div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                }
+
+                const totalVolume = marketData.reduce((sum, c) => sum + (c.total_volume || 0), 0);
+                document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
+
+            } catch (e) {
+                console.log('Using local price data');
+            }
+
+        } catch (e) {
+            console.error('Error loading coins:', e);
+        }
+    }
+
+    function selectCoin(symbol) {
+        currentSymbol = symbol;
+        const token = tokens.find(t => t.symbol === symbol);
+        if (token) {
+            currentPrice = parseFloat(token.current_price);
+            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+            updateChart();
+            renderOrderBook();
+        }
+        document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
+        document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
+        document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
+        document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
+    }
+    window.selectCoin = selectCoin;
+
+    async function loadUserData() {
+        try {
+            const balance = await apiCall('/trading/my_balance/');
+            userBalance = parseFloat(balance.grand_balance);
+            document.getElementById('userBalance').innerHTML = formatCurrency(userBalance);
+            const holdings = await apiCall('/trading/my_tokens/');
+            userHoldings = {};
+            holdings.forEach(h => { userHoldings[h.token_symbol] = parseFloat(h.quantity); });
+        } catch (e) { console.error(e); }
+    }
+
+    function setPrice(price) {
+        document.getElementById('limitPrice').value = price.toFixed(2);
+        const amount = document.getElementById('limitAmount').value;
+        if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount));
+    }
+    window.setPrice = setPrice;
+
+    async function executeBuy() {
+        const token = tokens.find(t => t.symbol === currentSymbol);
+        if (!token) return;
+        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
+        const amount = activeTab === 'limit' ? parseFloat(document.getElementById('limitAmount').value) : parseFloat(document.getElementById('marketAmount').value);
+        if (!amount || amount <= 0) { alert('Enter amount'); return; }
+        if (amount > userBalance) { alert(`Insufficient balance: ${formatCurrency(userBalance)}`); return; }
+        try {
+            const result = await apiCall('/trading/buy/', 'POST', { token_id: token.id, amount_usdc: amount });
+            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
+            else alert('Purchase failed');
+        } catch (e) { alert('Error'); }
+    }
+
+    async function executeSell() {
+        const token = tokens.find(t => t.symbol === currentSymbol);
+        if (!token) return;
+        const userQty = userHoldings[currentSymbol] || 0;
+        if (userQty === 0) { alert(`No ${currentSymbol} to sell`); return; }
+        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
+        let quantity;
+        if (activeTab === 'limit') {
+            const amount = parseFloat(document.getElementById('limitAmount').value);
+            if (!amount || amount <= 0) { alert('Enter amount'); return; }
+            quantity = amount / parseFloat(token.current_price);
+        } else {
+            const amount = parseFloat(document.getElementById('marketAmount').value);
+            if (!amount || amount <= 0) { alert('Enter amount'); return; }
+            quantity = amount / parseFloat(token.current_price);
+        }
+        if (quantity > userQty) { alert(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`); return; }
+        try {
+            const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
+            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
+            else alert('Sale failed');
+        } catch (e) { alert('Error'); }
+    }
+
+    document.querySelectorAll('[data-perc]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percent = parseInt(this.getAttribute('data-perc'));
+            const amount = (userBalance * percent) / 100;
+            document.getElementById('limitAmount').value = amount.toFixed(2);
+            document.getElementById('limitTotal').innerHTML = formatCurrency(amount);
+        });
+    });
+
+    document.querySelectorAll('[data-market-perc]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percent = parseInt(this.getAttribute('data-market-perc'));
+            document.getElementById('marketAmount').value = ((userBalance * percent) / 100).toFixed(2);
+        });
+    });
+
+    document.getElementById('limitAmount').addEventListener('input', function() {
+        document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0);
+    });
+
+    document.querySelectorAll('.order-tab').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const tab = this.getAttribute('data-tab');
+            document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none';
+            document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentDays = parseInt(this.getAttribute('data-tf'));
+            await updateChart();
+        });
+    });
+
+    document.getElementById('buyBtn').addEventListener('click', executeBuy);
+    document.getElementById('sellBtn').addEventListener('click', executeSell);
+    document.getElementById('buyBtnMarket').addEventListener('click', executeBuy);
+    document.getElementById('sellBtnMarket').addEventListener('click', executeSell);
+
+    async function init() {
+        await loadCoins();
+        await loadUserData();
+        // Set up order book refresh
+        setInterval(() => renderOrderBook(), 3000);
+        // Refresh data every 2 minutes
+        setInterval(async () => {
+            await loadCoins();
+            await loadUserData();
+        }, 120000);
+    }
+
+    init();
+</script>
+{% endblock %}
