@@ -2,21 +2,16 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.views import APIView  # <-- ADD THIS LINE
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from decimal import Decimal
 
 from apps.tokens.models import CryptoToken, Purchase
-from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, \
-    SellSerializer
+from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
 
 
-class HealthView(APIView):
-    permission_classes = []
-
-    def get(self, request):
-        return Response({'status': 'healthy'})
 
 
 
@@ -549,3 +544,10 @@ class TradingViewSet(viewsets.ViewSet):
             return Response({'success': True, 'message': 'Take profit order cancelled'})
         except TakeProfitOrder.DoesNotExist:
             return Response({'error': 'Order not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+
+class HealthView(APIView):
+    permission_classes = []
+
+    def get(self, request):
+        return Response({'status': 'healthy'})
