@@ -6,6 +6,9 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 
@@ -36,27 +39,35 @@ class RegisterView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
+
+
+
 class LoginView(APIView):
-    permission_classes = []  # Public access
+    permission_classes = []
 
     def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            password = serializer.validated_data['password']
+        try:
+            serializer = LoginSerializer(data=request.data)
+            if serializer.is_valid():
+                email = serializer.validated_data['email']
+                password = serializer.validated_data['password']
 
-            user = authenticate(request, username=email, password=password)
-            if user:
-                refresh = RefreshToken.for_user(user)
-                return Response({
-                    'user': UserSerializer(user).data,
-                    'refresh': str(refresh),
-                    'access': str(refresh.access_token),
-                    'message': 'Login successful!'
-                })
-            return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
+                user = authenticate(request, username=email, password=password)
+                if user:
+                    refresh = RefreshToken.for_user(user)
+                    return Response({
+                        'user': UserSerializer(user).data,
+                        'refresh': str(refresh),
+                        'access': str(refresh.access_token),
+                        'message': 'Login successful!'
+                    })
+                return Response({'error': 'Invalid credentials'}, status=status.HTTP_401_UNAUTHORIZED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Login error: {str(e)}")
+            import traceback
+            traceback.print_exc()
+            return Response({'error': str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 class LogoutView(APIView):
     permission_classes = [IsAuthenticated]
