@@ -2,7 +2,7 @@ services:
   - type: web
     name: node-volatility-crypto
     runtime: python
-    buildCommand: pip install -r requirements.txt
+    buildCommand: ./render-build.sh
     startCommand: gunicorn config.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
