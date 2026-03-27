@@ -309,11 +309,8 @@
                             <i class="fas fa-headset me-1"></i>Support
                          </a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="#" id="logoutBtn">
-                            <i class="fas fa-sign-out-alt me-1"></i>Logout
-                        </a>
-                    </li>
+                    <!-- Dynamic auth links - will be filled by JavaScript -->
+                    <li class="nav-item" id="authLinks"></li>
                 </ul>
             </div>
         </div>
@@ -333,7 +330,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-
+        const API_BASE = '/api';
 
         // Simple logout function
         function logout() {
@@ -343,17 +340,6 @@
             // Redirect to login page
             window.location.href = '/login/';
         }
-
-        // Attach logout event listener when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    logout();
-                });
-            }
-        });
 
         function getToken() {
             return localStorage.getItem('access_token');
@@ -375,6 +361,29 @@
             localStorage.removeItem('access_token');
             localStorage.removeItem('refresh_token');
             sessionStorage.clear();
+        }
+
+        // Update auth links based on login status
+        function updateAuthLinks() {
+            const authContainer = document.getElementById('authLinks');
+            const token = getToken();
+
+            if (token) {
+                authContainer.innerHTML = `
+                    <a class="nav-link" href="#" onclick="logout(); return false;">
+                        <i class="fas fa-sign-out-alt me-1"></i>Logout
+                    </a>
+                `;
+            } else {
+                authContainer.innerHTML = `
+                    <a class="nav-link" href="/login/">
+                        <i class="fas fa-sign-in-alt me-1"></i>Login
+                    </a>
+                    <a class="nav-link" href="/register/">
+                        <i class="fas fa-user-plus me-1"></i>Register
+                    </a>
+                `;
+            }
         }
 
         async function apiCall(endpoint, method = 'GET', data = null) {
@@ -454,6 +463,18 @@
         }
 
         setInterval(refreshToken, 55 * 60 * 1000);
+
+        // Update auth links on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAuthLinks();
+        });
+
+        // Also call when storage changes (for logout from other tabs)
+        window.addEventListener('storage', function(e) {
+            if (e.key === 'access_token') {
+                updateAuthLinks();
+            }
+        });
 
         $(document).on('click', function(e) {
             if ($(window).width() <= 768) {
