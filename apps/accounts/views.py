@@ -1,30 +1,13 @@
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from .models import User
 from rest_framework.permissions import IsAuthenticated
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
-from .models import User
 
 
-class DebugView(APIView):
-    permission_classes = []
-
-    def get(self, request):
-        try:
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            user_count = User.objects.count()
-            return Response({
-                'status': 'ok',
-                'user_count': user_count,
-                'database_connected': True
-            })
-        except Exception as e:
-            return Response({
-                'error': str(e)
-            }, status=500)
 
 
 class RegisterView(APIView):
@@ -95,3 +78,5 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+

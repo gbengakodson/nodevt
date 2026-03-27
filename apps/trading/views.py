@@ -546,8 +546,3 @@ class TradingViewSet(viewsets.ViewSet):
             return Response({'error': 'Order not found'}, status=status.HTTP_400_BAD_REQUEST)
 
 
-class HealthView(APIView):
-    permission_classes = []
-
-    def get(self, request):
-        return Response({'status': 'healthy'})
