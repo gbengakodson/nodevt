@@ -12,6 +12,14 @@ from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSeria
 from apps.wallets.models import Wallet, Transaction
 
 
+class HealthView(APIView):
+    permission_classes = []
+
+    def get(self, request):
+        return Response({'status': 'healthy'})
+
+
+
 class TradingViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
