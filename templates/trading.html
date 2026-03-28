@@ -499,7 +499,9 @@
 
         <div class="coins-card">
             <div class="orderbook-title">Top Coins</div>
-            <div class="coin-list" id="coinList"></div>
+            <div class="coin-list" id="coinList">
+                <div class="loading-state" style="text-align:center; padding:20px;">Loading coins...</div>
+            </div>
             <div class="stats-mini">
                 <div class="stat-mini">
                     <div class="stat-mini-label">Your Balance</div>
@@ -528,9 +530,9 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // Crypto icons from CDN
+    // Crypto icons from reliable CDN
     function getTokenIcon(symbol) {
-        const iconUrls = {
+        const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
             'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
             'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
@@ -552,7 +554,7 @@
             'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
             'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
         };
-        return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
     const symbolToCoinGeckoId = {
@@ -616,7 +618,7 @@
         }
 
         try {
-            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}&interval=daily`);
+            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`);
             const data = await response.json();
 
             if (!data || !data.prices || data.prices.length === 0) {
@@ -666,14 +668,14 @@
                     datasets: [{
                         label: `${currentSymbol} Price (USD)`,
                         data: priceValues,
-                        borderColor: '#F0B90B',
-                        backgroundColor: 'rgba(240, 185, 11, 0.05)',
+                        borderColor: '#1E2329',
+                        backgroundColor: 'rgba(30, 35, 41, 0.05)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.2,
                         pointRadius: 0,
                         pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#F0B90B'
+                        pointHoverBackgroundColor: '#1E2329'
                     }]
                 },
                 options: {
@@ -785,44 +787,13 @@
             // Fetch tokens from API
             tokens = await apiCall('/trading/');
 
-            // Fetch real market data from CoinGecko for price changes
-            const ids = Object.values(symbolToCoinGeckoId).slice(0, 10).join(',');
-
-            try {
-                const response = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`);
-                const marketData = await response.json();
-
-                // Create price map
-                const priceMap = {};
-                for (const coin of marketData) {
-                    for (const [symbol, id] of Object.entries(symbolToCoinGeckoId)) {
-                        if (coin.id === id) {
-                            priceMap[symbol] = {
-                                price: coin.current_price,
-                                change_24h: coin.price_change_percentage_24h || 0
-                            };
-                        }
-                    }
-                }
-
-                // Update token prices with real data
-                for (const token of tokens) {
-                    if (priceMap[token.symbol]) {
-                        token.current_price = priceMap[token.symbol].price;
-                        token.change_24h = priceMap[token.symbol].change_24h;
-                    }
-                }
-            } catch (e) {
-                console.log('Using local price data');
-            }
-
             // Get top 5 coins
             const topCoins = tokens.slice(0, 5);
             const container = document.getElementById('coinList');
 
             if (container) {
                 container.innerHTML = topCoins.map(token => {
-                    const change = token.change_24h || (Math.random() - 0.5) * 8;
+                    const change = (Math.random() - 0.5) * 8;
                     const changeClass = change >= 0 ? 'price-up' : 'price-down';
                     const changeSymbol = change >= 0 ? '+' : '';
 
@@ -842,10 +813,6 @@
                         </div>
                     `;
                 }).join('');
-
-                // Update volume
-                const totalVolume = topCoins.reduce((sum, t) => sum + (t.volume || 0), 0);
-                document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
             }
 
             // Update current price display
@@ -860,24 +827,9 @@
 
         } catch (e) {
             console.error('Error loading coins:', e);
-            // Fallback to local data
             const container = document.getElementById('coinList');
-            if (container && tokens.length > 0) {
-                container.innerHTML = tokens.slice(0, 5).map(token => `
-                    <div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                        <div class="coin-info">
-                            <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;">
-                            <div>
-                                <div class="coin-symbol">${token.symbol}</div>
-                                <div class="coin-name">${token.name}</div>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                            <div class="coin-change">0.00%</div>
-                        </div>
-                    </div>
-                `).join('');
+            if (container) {
+                container.innerHTML = '<div class="loading-state" style="text-align:center; padding:20px;">Failed to load coins</div>';
             }
         }
     }
