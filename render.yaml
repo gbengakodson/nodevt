@@ -2,7 +2,7 @@ services:
   - type: web
     name: node-volatility-crypto
     runtime: python
-    buildCommand: ./render-build.sh
+    buildCommand: pip install -r requirements.txt && python manage.py migrate && python manage.py collectstatic --noinput
     startCommand: gunicorn config.wsgi:application
     envVars:
       - key: DJANGO_SECRET_KEY
@@ -11,3 +11,7 @@ services:
         value: false
       - key: PYTHON_VERSION
         value: 3.11.0
+      - key: DATABASE_URL
+        fromDatabase:
+          name: node-crypto-db
+          property: connectionString
