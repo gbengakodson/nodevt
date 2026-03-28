@@ -176,14 +176,8 @@
     .coin-icon {
         width: 48px;
         height: 48px;
-        background: #EFF2F5;
         border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        font-weight: 600;
-        color: #1E2329;
+        object-fit: contain;
     }
 
     .coin-details h3 {
@@ -260,9 +254,9 @@
 
     .trade-btn {
         width: 100%;
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        color: #1E2329;
+        background: rgba(14, 203, 129, 0.1);
+        border: 1px solid rgba(14, 203, 129, 0.3);
+        color: #0ECB81;
         border-radius: 8px;
         padding: 8px;
         font-size: 12px;
@@ -273,8 +267,8 @@
     }
 
     .trade-btn:hover {
-        background: #EFF2F5;
-        border-color: #D9DDE2;
+        background: rgba(14, 203, 129, 0.2);
+        border-color: #0ECB81;
     }
 
     .loading-state, .empty-state {
@@ -300,6 +294,10 @@
         .search-box {
             max-width: none;
         }
+        .coin-icon {
+            width: 40px;
+            height: 40px;
+        }
     }
 </style>
 {% endblock %}
@@ -308,8 +306,8 @@
 <div class="coins-container">
     <!-- Header -->
     <div class="market-header">
-        <div class="market-title">📊 Cryptocurrency volatility Market</div>
-        <div class="market-subtitle">Real-time prices and market data</div>
+        <div class="market-title">📊 Cryptocurrency Market</div>
+        <div class="market-subtitle">Real-time prices and market data from CoinGecko</div>
         <div class="last-updated">
             <span class="refresh-indicator"></span>
             <span id="lastUpdated">Updating...</span>
@@ -357,17 +355,57 @@
 
     let allCoins = [];
     let currentFilter = 'all';
-    let isLoading = false;
-    let lastUpdateTime = 0;
-    const CACHE_DURATION = 120000; // 2 minutes cache
+    let updateInterval = null;
+
+    // Crypto icons from CDN
+    function getTokenIcon(symbol) {
+        const iconUrls = {
+            'BTC': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+            'ETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+            'BNB': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+            'SOL': 'https://cryptologos.cc/logos/solana-sol-logo.png',
+            'XRP': 'https://cryptologos.cc/logos/xrp-xrp-logo.png',
+            'ADA': 'https://cryptologos.cc/logos/cardano-ada-logo.png',
+            'DOGE': 'https://cryptologos.cc/logos/dogecoin-doge-logo.png',
+            'AVAX': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+            'DOT': 'https://cryptologos.cc/logos/polkadot-dot-logo.png',
+            'PEPE': 'https://cryptologos.cc/logos/pepe-pepe-logo.png',
+            'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.png',
+            'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+            'ATOM': 'https://cryptologos.cc/logos/cosmos-atom-logo.png',
+            'LTC': 'https://cryptologos.cc/logos/litecoin-ltc-logo.png',
+            'NEAR': 'https://cryptologos.cc/logos/near-protocol-near-logo.png',
+            'ALGO': 'https://cryptologos.cc/logos/algorand-algo-logo.png',
+            'VET': 'https://cryptologos.cc/logos/vechain-vet-logo.png',
+            'FTM': 'https://cryptologos.cc/logos/fantom-ftm-logo.png',
+            'EGLD': 'https://cryptologos.cc/logos/multiversx-egld-logo.png',
+            'THETA': 'https://cryptologos.cc/logos/theta-theta-logo.png'
+        };
+        return iconUrls[symbol] || 'https://cryptologos.cc/logos/bitcoin-btc-logo.png';
+    }
 
     // Map our symbols to CoinGecko IDs
     const symbolToId = {
-        'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-        'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-        'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap',
-        'ATOM': 'cosmos', 'LTC': 'litecoin', 'NEAR': 'near', 'ALGO': 'algorand',
-        'VET': 'vechain', 'FTM': 'fantom', 'EGLD': 'elrond-erd-2', 'THETA': 'theta-token'
+        'BTC': 'bitcoin',
+        'ETH': 'ethereum',
+        'BNB': 'binancecoin',
+        'SOL': 'solana',
+        'XRP': 'ripple',
+        'ADA': 'cardano',
+        'DOGE': 'dogecoin',
+        'AVAX': 'avalanche-2',
+        'DOT': 'polkadot',
+        'PEPE': 'pepe',
+        'LINK': 'chainlink',
+        'UNI': 'uniswap',
+        'ATOM': 'cosmos',
+        'LTC': 'litecoin',
+        'NEAR': 'near',
+        'ALGO': 'algorand',
+        'VET': 'vechain',
+        'FTM': 'fantom',
+        'EGLD': 'elrond-erd-2',
+        'THETA': 'theta-token'
     };
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -390,56 +428,27 @@
         return num.toLocaleString();
     }
 
-    function getIcon(symbol) {
-        const icons = {
-            'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
-            'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'PEPE': '🐸',
-            'LINK': '🔗', 'UNI': '🦄', 'ATOM': '⚛️', 'LTC': 'Ł', 'NEAR': 'Ⓝ',
-            'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎', 'THETA': 'θ'
-        };
-        return icons[symbol] || '🪙';
-    }
-
-    // Show loading skeleton
-    function showSkeleton() {
-        const container = document.getElementById('coinsGrid');
-        container.innerHTML = `
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i> Loading market data...
-            </div>
-        `;
-    }
-
-    // Update last updated time
-    function updateLastUpdated() {
-        const now = new Date();
-        document.getElementById('lastUpdated').innerHTML = `Last updated: ${now.toLocaleTimeString()}`;
-    }
-
-    // Fetch market data with caching
     async function fetchMarketData() {
-        const now = Date.now();
-
-        // Check if we have cached data
-        const cachedData = localStorage.getItem('coins_market_data');
-        const cachedTime = localStorage.getItem('coins_market_time');
-
-        if (cachedData && cachedTime && (now - parseInt(cachedTime)) < CACHE_DURATION) {
-            console.log('Using cached data');
-            return JSON.parse(cachedData);
-        }
-
-        console.log('Fetching fresh data from CoinGecko');
         try {
             const ids = Object.values(symbolToId).join(',');
             const response = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h`);
             const data = await response.json();
 
-            // Cache the data
-            localStorage.setItem('coins_market_data', JSON.stringify(data));
-            localStorage.setItem('coins_market_time', now.toString());
-
-            return data;
+            const coins = [];
+            for (const [symbol, id] of Object.entries(symbolToId)) {
+                const coinData = data.find(c => c.id === id);
+                if (coinData) {
+                    coins.push({
+                        symbol: symbol,
+                        name: coinData.name,
+                        current_price: coinData.current_price,
+                        price_change_percentage_24h: coinData.price_change_percentage_24h || 0,
+                        market_cap: coinData.market_cap,
+                        total_volume: coinData.total_volume
+                    });
+                }
+            }
+            return coins;
         } catch (error) {
             console.error('Error fetching market data:', error);
             return null;
@@ -447,62 +456,17 @@
     }
 
     async function updateMarketData() {
-        if (isLoading) return;
-
-        isLoading = true;
-        showSkeleton();
-
         try {
-            const marketData = await fetchMarketData();
-
-            if (marketData && marketData.length > 0) {
-                // Convert to our format
-                const coins = [];
-                for (const [symbol, id] of Object.entries(symbolToId)) {
-                    const coinData = marketData.find(c => c.id === id);
-                    if (coinData) {
-                        coins.push({
-                            symbol: symbol,
-                            name: coinData.name,
-                            current_price: coinData.current_price,
-                            price_change_percentage_24h: coinData.price_change_percentage_24h || 0,
-                            market_cap: coinData.market_cap,
-                            total_volume: coinData.total_volume
-                        });
-                    }
-                }
-
+            const coins = await fetchMarketData();
+            if (coins) {
                 allCoins = coins;
                 renderCoins(allCoins);
                 updateMarketStats(coins);
-                updateLastUpdated();
-            } else {
-                // Fallback to local data if API fails
-                loadLocalData();
+                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
             }
         } catch (e) {
-            console.error('Error:', e);
-            loadLocalData();
-        }
-
-        isLoading = false;
-    }
-
-    async function loadLocalData() {
-        try {
-            const localTokens = await apiCall('/trading/');
-            allCoins = localTokens.map(token => ({
-                symbol: token.symbol,
-                name: token.name,
-                current_price: token.current_price,
-                price_change_percentage_24h: (Math.random() - 0.5) * 20,
-                market_cap: token.current_price * 1000000,
-                total_volume: token.current_price * 500000
-            }));
-            renderCoins(allCoins);
-            updateMarketStats(allCoins);
-        } catch (e) {
-            console.error('Error loading local data:', e);
+            console.error('Error updating market data:', e);
+            document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data. Please refresh the page.</div>';
         }
     }
 
@@ -522,7 +486,7 @@
         const container = document.getElementById('coinsGrid');
 
         if (!coins || coins.length === 0) {
-            container.innerHTML = '<div class="empty-state">No coins found</div>';
+            container.innerHTML = '<div class="empty-state">No coins found matching your search</div>';
             return;
         }
 
@@ -546,12 +510,14 @@
             const change = coin.price_change_percentage_24h || 0;
             const changeClass = change >= 0 ? 'price-up' : 'price-down';
             const changeSymbol = change >= 0 ? '+' : '';
+            const marketCap = coin.market_cap || 0;
+            const volume24h = coin.total_volume || 0;
 
             return `
                 <div class="coin-card" onclick="location.href='/trading/'">
                     <div class="coin-card-header">
                         <div class="coin-info">
-                            <div class="coin-icon">${getIcon(coin.symbol)}</div>
+                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
                             <div class="coin-details">
                                 <h3>${coin.symbol}</h3>
                                 <p>${coin.name}</p>
@@ -566,11 +532,11 @@
                     <div class="coin-stats">
                         <div class="coin-stat">
                             <div class="coin-stat-label">Market Cap</div>
-                            <div class="coin-stat-value">${formatCurrency(coin.market_cap)}</div>
+                            <div class="coin-stat-value">${formatCurrency(marketCap)}</div>
                         </div>
                         <div class="coin-stat">
                             <div class="coin-stat-label">24h Volume</div>
-                            <div class="coin-stat-value">${formatCurrency(coin.total_volume)}</div>
+                            <div class="coin-stat-value">${formatCurrency(volume24h)}</div>
                         </div>
                     </div>
                     <button class="trade-btn" onclick="event.stopPropagation(); location.href='/trading/'">Trade ${coin.symbol}</button>
@@ -595,48 +561,11 @@
         });
     });
 
-    // Initial load - show skeleton immediately
-    showSkeleton();
+    // Show loading state
+    document.getElementById('coinsGrid').innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading market data...</div>';
 
-    // Load data - this will show cached data first if available
-    async function init() {
-        // Check if we have cached data to show immediately
-        const cachedData = localStorage.getItem('coins_market_data');
-        if (cachedData) {
-            try {
-                const marketData = JSON.parse(cachedData);
-                const coins = [];
-                for (const [symbol, id] of Object.entries(symbolToId)) {
-                    const coinData = marketData.find(c => c.id === id);
-                    if (coinData) {
-                        coins.push({
-                            symbol: symbol,
-                            name: coinData.name,
-                            current_price: coinData.current_price,
-                            price_change_percentage_24h: coinData.price_change_percentage_24h || 0,
-                            market_cap: coinData.market_cap,
-                            total_volume: coinData.total_volume
-                        });
-                    }
-                }
-                if (coins.length > 0) {
-                    allCoins = coins;
-                    renderCoins(allCoins);
-                    updateMarketStats(coins);
-                    updateLastUpdated();
-                }
-            } catch(e) {}
-        }
-
-        // Then fetch fresh data in background
-        await updateMarketData();
-    }
-
-    init();
-
-    // Auto-refresh every 2 minutes in background
-    setInterval(() => {
-        updateMarketData();
-    }, 120000);
+    // Load data
+    updateMarketData();
+    setInterval(updateMarketData, 120000);
 </script>
 {% endblock %}
