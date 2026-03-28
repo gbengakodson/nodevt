@@ -53,9 +53,8 @@
 
     .symbol-price {
         display: flex;
-        align-items: baseline;
-        gap: 16px;
-        flex-wrap: wrap;
+        align-items: center;
+        gap: 12px;
     }
 
     .symbol-name {
@@ -418,14 +417,12 @@
         <div class="chart-card">
             <div class="chart-header">
                 <div class="symbol-price">
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <img id="currentCoinIcon" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <img id="currentCoinIcon" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%;">
+                    <div>
+                        <span class="symbol-name" id="symbolName">BTC/USDC</span>
                         <div>
-                            <span class="symbol-name" id="symbolName">BTC/USDC</span>
-                            <div>
-                                <span class="current-price" id="currentPrice">$0.00</span>
-                                <span class="price-change" id="priceChange">0.00%</span>
-                            </div>
+                            <span class="current-price" id="currentPrice">$0.00</span>
+                            <span class="price-change" id="priceChange">0.00%</span>
                         </div>
                     </div>
                 </div>
@@ -525,11 +522,6 @@
     let priceChart = null;
     let tokens = [];
     let currentSymbol = 'BTC';
-    const selectedCoin = localStorage.getItem('selectedCoin');
-    if (selectedCoin) {
-       currentSymbol = selectedCoin;
-       localStorage.removeItem('selectedCoin');
-    }
     let currentDays = 7;
     let userBalance = 0;
     let userHoldings = {};
@@ -539,28 +531,28 @@
     // Crypto icons from CDN
     function getTokenIcon(symbol) {
         const iconUrls = {
-            'BTC': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
-            'ETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-            'BNB': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-            'SOL': 'https://cryptologos.cc/logos/solana-sol-logo.png',
-            'XRP': 'https://cryptologos.cc/logos/xrp-xrp-logo.png',
-            'ADA': 'https://cryptologos.cc/logos/cardano-ada-logo.png',
-            'DOGE': 'https://cryptologos.cc/logos/dogecoin-doge-logo.png',
-            'AVAX': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
-            'DOT': 'https://cryptologos.cc/logos/polkadot-dot-logo.png',
-            'NEAR': 'https://cryptologos.cc/logos/near-protocol-near-logo.png',
-            'LTC': 'https://cryptologos.cc/logos/litecoin-ltc-logo.png',
-            'THETA': 'https://cryptologos.cc/logos/theta-theta-logo.png',
-            'PEPE': 'https://cryptologos.cc/logos/pepe-pepe-logo.png',
-            'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.png',
-            'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
-            'ATOM': 'https://cryptologos.cc/logos/cosmos-atom-logo.png',
-            'ALGO': 'https://cryptologos.cc/logos/algorand-algo-logo.png',
-            'VET': 'https://cryptologos.cc/logos/vechain-vet-logo.png',
-            'FTM': 'https://cryptologos.cc/logos/fantom-ftm-logo.png',
-            'EGLD': 'https://cryptologos.cc/logos/multiversx-egld-logo.png'
+            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
+            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
+            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
         };
-        return iconUrls[symbol] || 'https://cryptologos.cc/logos/bitcoin-btc-logo.png';
+        return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
     const symbolToCoinGeckoId = {
@@ -609,123 +601,116 @@
         return parseFloat(num).toFixed(decimals);
     }
 
-    async function fetchChartData(coinSymbol, days = 7) {
-        const coinId = symbolToCoinGeckoId[coinSymbol];
-        if (!coinId) return null;
-
-        try {
-            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${days}`);
-            const data = await response.json();
-            return data;
-        } catch (error) {
-            console.error('Error fetching chart data:', error);
-            return null;
-        }
-    }
-
     async function updateChart() {
         if (!currentSymbol) return;
 
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
 
-        chartContainer.innerHTML = '<div class="loading-chart">Loading chart data...</div><canvas id="priceChart" style="display:none;"></canvas>';
+        chartContainer.innerHTML = '<div class="loading-chart">Loading chart data for ' + currentSymbol + '...</div><canvas id="priceChart" style="display:none;"></canvas>';
 
-        const chartData = await fetchChartData(currentSymbol, currentDays);
-
-        if (!chartData || !chartData.prices || chartData.prices.length === 0) {
-            chartContainer.innerHTML = '<div class="loading-chart">Failed to load chart data. Please refresh.</div><canvas id="priceChart" style="display:none;"></canvas>';
+        const coinId = symbolToCoinGeckoId[currentSymbol];
+        if (!coinId) {
+            chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>';
             return;
         }
 
-        chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
-        const canvas = document.getElementById('priceChart');
-        if (!canvas) return;
+        try {
+            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}&interval=daily`);
+            const data = await response.json();
 
-        const ctx = canvas.getContext('2d');
-
-        const prices = chartData.prices;
-        const labels = prices.map(p => {
-            const date = new Date(p[0]);
-            if (currentDays <= 2) {
-                return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            } else if (currentDays <= 7) {
-                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-            } else {
-                return date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+            if (!data || !data.prices || data.prices.length === 0) {
+                chartContainer.innerHTML = '<div class="loading-chart">No data available for ' + currentSymbol + '</div>';
+                return;
             }
-        });
 
-        const priceValues = prices.map(p => p[1]);
+            const prices = data.prices;
+            const labels = [];
+            const priceValues = [];
 
-        if (priceChart) {
-            priceChart.destroy();
-            priceChart = null;
-        }
+            for (let i = 0; i < prices.length; i++) {
+                const date = new Date(prices[i][0]);
+                let label;
+                if (currentDays <= 2) {
+                    label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+                labels.push(label);
+                priceValues.push(prices[i][1]);
+            }
 
-        priceChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    data: priceValues,
-                    borderColor: '#1E2329',
-                    borderWidth: 2,
-                    fill: true,
-                    backgroundColor: (ctx) => {
-                        const gradient = ctx.chart.ctx.createLinearGradient(0, 0, 0, 400);
-                        gradient.addColorStop(0, 'rgba(30, 35, 41, 0.1)');
-                        gradient.addColorStop(1, 'rgba(30, 35, 41, 0.01)');
-                        return gradient;
+            chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
+            const ctx = document.getElementById('priceChart').getContext('2d');
+
+            if (priceChart) {
+                priceChart.destroy();
+            }
+
+            const firstPrice = priceValues[0];
+            const lastPrice = priceValues[priceValues.length - 1];
+            const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
+            const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
+
+            document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
+            document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
+            document.getElementById('priceChange').className = `price-change ${changeClass}`;
+            document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+            document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+            currentPrice = lastPrice;
+
+            priceChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${currentSymbol} Price (USD)`,
+                        data: priceValues,
+                        borderColor: '#F0B90B',
+                        backgroundColor: 'rgba(240, 185, 11, 0.05)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5,
+                        pointHoverBackgroundColor: '#F0B90B'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            mode: 'index',
+                            intersect: false,
+                            backgroundColor: 'white',
+                            titleColor: '#1E2329',
+                            bodyColor: '#1E2329',
+                            borderColor: '#E2E4E8',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: (ctx) => `${currentSymbol}: $${ctx.raw.toFixed(2)}`
+                            }
+                        }
                     },
-                    tension: 0.2,
-                    pointRadius: 0,
-                    pointHoverRadius: 5,
-                    pointHoverBackgroundColor: '#1E2329'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: 'white',
-                        titleColor: '#1E2329',
-                        bodyColor: '#1E2329',
-                        borderColor: '#E2E4E8',
-                        borderWidth: 1,
-                        callbacks: {
-                            label: (ctx) => `${currentSymbol}: $${ctx.raw.toFixed(2)}`
+                    scales: {
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
+                        },
+                        y: {
+                            grid: { color: '#EFF2F5' },
+                            ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() }
                         }
                     }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
-                    },
-                    y: {
-                        grid: { color: '#EFF2F5' },
-                        ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() }
-                    }
                 }
-            }
-        });
+            });
 
-        const lastPrice = priceValues[priceValues.length - 1];
-        const firstPrice = priceValues[0];
-        const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
-        const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
-
-        document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
-        document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
-        document.getElementById('priceChange').className = `price-change ${changeClass}`;
-        document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
-        document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-        currentPrice = lastPrice;
+        } catch (error) {
+            console.error('Error updating chart:', error);
+            chartContainer.innerHTML = '<div class="loading-chart">Error loading chart for ' + currentSymbol + '</div>';
+        }
     }
 
     function generateOrderBook(price) {
@@ -745,14 +730,10 @@
         if (!currentPrice) return;
         const book = generateOrderBook(currentPrice);
 
-        const askOrders = document.getElementById('askOrders');
-        const bidOrders = document.getElementById('bidOrders');
-
-        if (askOrders) askOrders.innerHTML = book.asks.map(a =>
+        document.getElementById('askOrders').innerHTML = book.asks.map(a =>
             `<div class="orderbook-row" onclick="setPrice(${a.price})"><span class="ask-price">${formatCurrency(a.price)}</span><span>${formatNumber(a.size)}</span><span>${formatNumber(a.total)}</span></div>`
         ).join('');
-
-        if (bidOrders) bidOrders.innerHTML = book.bids.map(b =>
+        document.getElementById('bidOrders').innerHTML = book.bids.map(b =>
             `<div class="orderbook-row" onclick="setPrice(${b.price})"><span class="bid-price">${formatCurrency(b.price)}</span><span>${formatNumber(b.size)}</span><span>${formatNumber(b.total)}</span></div>`
         ).join('');
     }
@@ -780,7 +761,6 @@
             }
 
             const holdings = await apiCall('/trading/my_tokens/');
-            const hasHoldings = holdings && holdings.length > 0;
             const currentHoldings = holdings.find(h => h.token_symbol === currentSymbol);
             const hasCurrentToken = currentHoldings && parseFloat(currentHoldings.quantity) > 0;
 
@@ -802,54 +782,22 @@
 
     async function loadCoins() {
         try {
+            // Fetch tokens from API
             tokens = await apiCall('/trading/');
 
-            const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) {
-                currentPrice = parseFloat(currentToken.current_price);
-                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-                await updateChart();
-                renderOrderBook();
-            }
-
-            const topCoins = tokens.slice(0, 5);
-            const container = document.getElementById('coinList');
-
-            if (container) {
-                container.innerHTML = topCoins.map(token => {
-                    const change = (Math.random() - 0.5) * 8;
-                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                    return `
-                        <div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                            <div class="coin-info">
-                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
-                                <div>
-                                    <div class="coin-symbol">${token.symbol}</div>
-                                    <div class="coin-name">${token.name}</div>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                                <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</div>
-                            </div>
-                        </div>
-                    `;
-                }).join('');
-            }
-
-            await updateButtonState();
+            // Fetch real market data from CoinGecko for price changes
+            const ids = Object.values(symbolToCoinGeckoId).slice(0, 10).join(',');
 
             try {
-                const ids = Object.values(symbolToCoinGeckoId).slice(0, 10).join(',');
                 const response = await fetch(`${COINGECKO_API}/coins/markets?vs_currency=usd&ids=${ids}&order=market_cap_desc&per_page=10&page=1&sparkline=false&price_change_percentage=24h`);
                 const marketData = await response.json();
 
-                const marketMap = {};
+                // Create price map
+                const priceMap = {};
                 for (const coin of marketData) {
                     for (const [symbol, id] of Object.entries(symbolToCoinGeckoId)) {
                         if (coin.id === id) {
-                            marketMap[symbol] = {
+                            priceMap[symbol] = {
                                 price: coin.current_price,
                                 change_24h: coin.price_change_percentage_24h || 0
                             };
@@ -857,46 +805,80 @@
                     }
                 }
 
+                // Update token prices with real data
                 for (const token of tokens) {
-                    if (marketMap[token.symbol]) {
-                        token.current_price = marketMap[token.symbol].price;
+                    if (priceMap[token.symbol]) {
+                        token.current_price = priceMap[token.symbol].price;
+                        token.change_24h = priceMap[token.symbol].change_24h;
                     }
-                }
-
-                if (currentToken && marketMap[currentSymbol]) {
-                    currentPrice = marketMap[currentSymbol].price;
-                    document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                }
-
-                const totalVolume = marketData.reduce((sum, c) => sum + (c.total_volume || 0), 0);
-                document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
-
-                if (container) {
-                    container.innerHTML = topCoins.map(token => {
-                        const marketInfo = marketMap[token.symbol] || { price: token.current_price, change_24h: (Math.random() - 0.5) * 8 };
-                        const changeClass = marketInfo.change_24h >= 0 ? 'price-up' : 'price-down';
-                        return `
-                            <div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                                <div class="coin-info">
-                                    <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
-                                    <div>
-                                        <div class="coin-symbol">${token.symbol}</div>
-                                        <div class="coin-name">${token.name}</div>
-                                    </div>
-                                </div>
-                                <div style="text-align: right;">
-                                    <div class="coin-price">${formatCurrency(marketInfo.price)}</div>
-                                    <div class="coin-change ${changeClass}">${marketInfo.change_24h >= 0 ? '+' : ''}${marketInfo.change_24h.toFixed(2)}%</div>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
                 }
             } catch (e) {
                 console.log('Using local price data');
             }
+
+            // Get top 5 coins
+            const topCoins = tokens.slice(0, 5);
+            const container = document.getElementById('coinList');
+
+            if (container) {
+                container.innerHTML = topCoins.map(token => {
+                    const change = token.change_24h || (Math.random() - 0.5) * 8;
+                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                    const changeSymbol = change >= 0 ? '+' : '';
+
+                    return `
+                        <div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                            <div class="coin-info">
+                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                                <div>
+                                    <div class="coin-symbol">${token.symbol}</div>
+                                    <div class="coin-name">${token.name}</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="coin-price">${formatCurrency(token.current_price)}</div>
+                                <div class="coin-change ${changeClass}">${changeSymbol}${Math.abs(change).toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+                // Update volume
+                const totalVolume = topCoins.reduce((sum, t) => sum + (t.volume || 0), 0);
+                document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
+            }
+
+            // Update current price display
+            const currentToken = tokens.find(t => t.symbol === currentSymbol);
+            if (currentToken) {
+                currentPrice = parseFloat(currentToken.current_price);
+                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+            }
+
+            await updateButtonState();
+
         } catch (e) {
             console.error('Error loading coins:', e);
+            // Fallback to local data
+            const container = document.getElementById('coinList');
+            if (container && tokens.length > 0) {
+                container.innerHTML = tokens.slice(0, 5).map(token => `
+                    <div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                        <div class="coin-info">
+                            <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;">
+                            <div>
+                                <div class="coin-symbol">${token.symbol}</div>
+                                <div class="coin-name">${token.name}</div>
+                            </div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div class="coin-price">${formatCurrency(token.current_price)}</div>
+                            <div class="coin-change">0.00%</div>
+                        </div>
+                    </div>
+                `).join('');
+            }
         }
     }
 
@@ -907,6 +889,7 @@
             currentPrice = parseFloat(token.current_price);
             document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
             document.getElementById('currentCoinIcon').src = getTokenIcon(symbol);
+            document.getElementById('symbolName').innerHTML = `${symbol}/USDC`;
             updateChart();
             renderOrderBook();
             updateButtonState();
@@ -1030,23 +1013,30 @@
         }
     });
 
-    window.addEventListener('orientationchange', function() {
-        setTimeout(() => {
-            if (priceChart) {
-                priceChart.resize();
-            }
-        }, 100);
-    });
-
     async function init() {
         await loadCoins();
         await loadUserData();
+
+        // Check if a coin was selected from coins page
+        const selectedCoin = localStorage.getItem('selectedCoin');
+        if (selectedCoin) {
+            currentSymbol = selectedCoin;
+            localStorage.removeItem('selectedCoin');
+        }
+
+        // Auto-load chart for current symbol
+        await updateChart();
+        renderOrderBook();
+        updateButtonState();
+
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => {
             await loadCoins();
             await loadUserData();
+            await updateChart();
         }, 120000);
     }
+
     init();
 </script>
 {% endblock %}
