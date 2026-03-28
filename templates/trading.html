@@ -530,7 +530,7 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // Crypto icons from reliable CDN
+    // Crypto icons from CDN
     function getTokenIcon(symbol) {
         const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
@@ -753,13 +753,9 @@
             if (userGrandBalance <= 0) {
                 buyBtn.classList.add('btn-buy-disabled');
                 buyBtnMarket.classList.add('btn-buy-disabled');
-                buyBtn.title = 'Insufficient balance to buy';
-                buyBtnMarket.title = 'Insufficient balance to buy';
             } else {
                 buyBtn.classList.remove('btn-buy-disabled');
                 buyBtnMarket.classList.remove('btn-buy-disabled');
-                buyBtn.title = 'Buy tokens';
-                buyBtnMarket.title = 'Buy tokens';
             }
 
             const holdings = await apiCall('/trading/my_tokens/');
@@ -769,13 +765,9 @@
             if (!hasCurrentToken) {
                 sellBtn.classList.add('btn-sell-disabled');
                 sellBtnMarket.classList.add('btn-sell-disabled');
-                sellBtn.title = `No ${currentSymbol} to sell`;
-                sellBtnMarket.title = `No ${currentSymbol} to sell`;
             } else {
                 sellBtn.classList.remove('btn-sell-disabled');
                 sellBtnMarket.classList.remove('btn-sell-disabled');
-                sellBtn.title = 'Sell tokens';
-                sellBtnMarket.title = 'Sell tokens';
             }
         } catch (e) {
             console.error('Error updating button state:', e);
@@ -785,7 +777,10 @@
     async function loadCoins() {
         try {
             // Fetch tokens from API
-            tokens = await apiCall('/trading/');
+            const apiTokens = await apiCall('/trading/');
+            tokens = apiTokens;
+
+            console.log('Loaded tokens:', tokens.length);
 
             // Get top 5 coins
             const topCoins = tokens.slice(0, 5);
@@ -815,14 +810,6 @@
                 }).join('');
             }
 
-            // Update current price display
-            const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) {
-                currentPrice = parseFloat(currentToken.current_price);
-                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-            }
-
             await updateButtonState();
 
         } catch (e) {
@@ -835,6 +822,7 @@
     }
 
     function selectCoin(symbol) {
+        console.log('Selecting coin:', symbol);
         currentSymbol = symbol;
         const token = tokens.find(t => t.symbol === symbol);
         if (token) {
@@ -966,21 +954,48 @@
     });
 
     async function init() {
-        await loadCoins();
-        await loadUserData();
+        console.log('Trading page initializing...');
 
-        // Check if a coin was selected from coins page
+        // STEP 1: Check for selected coin from localStorage
         const selectedCoin = localStorage.getItem('selectedCoin');
+        console.log('Selected coin from storage:', selectedCoin);
+
         if (selectedCoin) {
             currentSymbol = selectedCoin;
+            console.log('Current symbol set to:', currentSymbol);
             localStorage.removeItem('selectedCoin');
         }
 
-        // Auto-load chart for current symbol
+        // STEP 2: Load coins data (this will populate the top coins list)
+        await loadCoins();
+        console.log('Coins loaded, tokens count:', tokens.length);
+
+        // STEP 3: Load user data
+        await loadUserData();
+
+        // STEP 4: Update UI for current symbol
+        const token = tokens.find(t => t.symbol === currentSymbol);
+        if (token) {
+            currentPrice = parseFloat(token.current_price);
+            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+            document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+            document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+
+            // Update button texts
+            document.getElementById('buyBtn').innerHTML = `Buy ${currentSymbol}`;
+            document.getElementById('sellBtn').innerHTML = `Sell ${currentSymbol}`;
+            document.getElementById('buyBtnMarket').innerHTML = `Buy ${currentSymbol}`;
+            document.getElementById('sellBtnMarket').innerHTML = `Sell ${currentSymbol}`;
+        } else {
+            console.error('Token not found for symbol:', currentSymbol);
+        }
+
+        // STEP 5: Load chart
         await updateChart();
         renderOrderBook();
         updateButtonState();
 
+        // STEP 6: Set intervals
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => {
             await loadCoins();
