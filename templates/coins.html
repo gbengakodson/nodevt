@@ -514,7 +514,7 @@
             const volume24h = coin.total_volume || 0;
 
             return `
-                <div class="coin-card" onclick="location.href='/trading/'">
+                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-info">
                             <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
@@ -567,5 +567,11 @@
     // Load data
     updateMarketData();
     setInterval(updateMarketData, 120000);
+
+    function goToTrading(symbol) {
+          localStorage.setItem('selectedCoin', symbol);
+          window.location.href = '/trading/';
+    }
+
 </script>
 {% endblock %}
