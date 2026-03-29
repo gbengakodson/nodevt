@@ -352,28 +352,28 @@
 
     function getTokenIcon(symbol) {
         const icons = {
-            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
-            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
-            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
-            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
-            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+            'BTC': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
+            'ETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
+            'BNB': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
+            'SOL': 'https://cryptologos.cc/logos/solana-sol-logo.png',
+            'XRP': 'https://cryptologos.cc/logos/xrp-xrp-logo.png',
+            'ADA': 'https://cryptologos.cc/logos/cardano-ada-logo.png',
+            'DOGE': 'https://cryptologos.cc/logos/dogecoin-doge-logo.png',
+            'AVAX': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
+            'DOT': 'https://cryptologos.cc/logos/polkadot-dot-logo.png',
+            'NEAR': 'https://cryptologos.cc/logos/near-protocol-near-logo.png',
+            'LTC': 'https://cryptologos.cc/logos/litecoin-ltc-logo.png',
+            'THETA': 'https://cryptologos.cc/logos/theta-theta-logo.png',
+            'PEPE': 'https://cryptologos.cc/logos/pepe-pepe-logo.png',
+            'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.png',
+            'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
+            'ATOM': 'https://cryptologos.cc/logos/cosmos-atom-logo.png',
+            'ALGO': 'https://cryptologos.cc/logos/algorand-algo-logo.png',
+            'VET': 'https://cryptologos.cc/logos/vechain-vet-logo.png',
+            'FTM': 'https://cryptologos.cc/logos/fantom-ftm-logo.png',
+            'EGLD': 'https://cryptologos.cc/logos/multiversx-egld-logo.png'
         };
-        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+        return icons[symbol] || 'https://cryptologos.cc/logos/bitcoin-btc-logo.png';
     }
 
     const symbolToId = {
@@ -415,6 +415,11 @@
         if (num > 1e6) return `${(num / 1e6).toFixed(2)}M`;
         if (num > 1e3) return `${(num / 1e3).toFixed(2)}K`;
         return num.toLocaleString();
+    }
+
+    function goToTrading(symbol) {
+        localStorage.setItem('selectedCoin', symbol);
+        window.location.href = '/trading/';
     }
 
     async function fetchMarketData() {
@@ -503,10 +508,10 @@
             const volume24h = coin.total_volume || 0;
 
             return `
-                <div class="coin-card" onclick="location.href='/trading/'">
+                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
                             <div class="coin-details">
                                 <h3>${coin.symbol}</h3>
                                 <p>${coin.name}</p>
@@ -528,7 +533,7 @@
                             <div class="coin-stat-value">${formatCurrency(volume24h)}</div>
                         </div>
                     </div>
-                    <button class="trade-btn" onclick="event.stopPropagation(); location.href='/trading/'">Trade ${coin.symbol}</button>
+                    <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
                 </div>
             `;
         }).join('');
