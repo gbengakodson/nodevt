@@ -351,7 +351,6 @@
     let currentFilter = 'all';
 
     function getTokenIcon(symbol) {
-           // Use local static files
         return `/static/coins/${symbol}.png`;
     }
 
@@ -490,7 +489,10 @@
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
+                            <img src="/static/coins/${coin.symbol}.png"
+                                 alt="${coin.symbol}"
+                                 class="coin-icon"
+                                 onerror="this.src='/static/coins/BTC.png'">
                             <div class="coin-details">
                                 <h3>${coin.symbol}</h3>
                                 <p>${coin.name}</p>
