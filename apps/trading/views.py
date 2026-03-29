@@ -553,3 +553,12 @@ class TradingViewSet(viewsets.ViewSet):
             return Response({'error': 'Order not found'}, status=status.HTTP_400_BAD_REQUEST)
 
 
+    @action(detail=False, methods=['get'])
+    def test_tokens(self, request):
+        """Test endpoint to check tokens"""
+        from apps.tokens.models import CryptoToken
+        tokens = CryptoToken.objects.filter(is_active=True)
+        data = [{'symbol': t.symbol, 'name': t.name, 'price': str(t.current_price)} for t in tokens]
+        return Response({'count': len(data), 'tokens': data})
+
+
