@@ -88,11 +88,32 @@
         font-weight: 600;
     }
 
+    .yield-chart-container {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+
+    .chart-title {
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 16px;
+        color: #1E2329;
+    }
+
+    #hourlyYieldChart {
+        width: 100%;
+        height: 300px;
+    }
+
     .yield-table {
         background: white;
         border-radius: 12px;
         border: 1px solid #E2E4E8;
         overflow: hidden;
+        margin-bottom: 24px;
     }
 
     .table-header {
@@ -119,6 +140,19 @@
         background: #F8F9FA;
     }
 
+    .token-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .token-logo {
+        width: 28px;
+        height: 28px;
+        font-size: 18px;
+        text-align: center;
+    }
+
     .empty-state {
         text-align: center;
         padding: 40px;
@@ -130,10 +164,10 @@
         color: #1E2329;
         border: none;
         border-radius: 8px;
-        padding: 10px 20px;
+        padding: 12px 24px;
         font-weight: 600;
         cursor: pointer;
-        margin-top: 16px;
+        float: right;
     }
 
     @media (max-width: 768px) {
@@ -143,6 +177,14 @@
         .table-header, .yield-row {
             grid-template-columns: 1fr 0.8fr 0.8fr 0.8fr;
             font-size: 11px;
+            gap: 4px;
+        }
+        .token-logo {
+            width: 24px;
+            font-size: 14px;
+        }
+        #hourlyYieldChart {
+            height: 220px;
         }
     }
 </style>
@@ -172,9 +214,9 @@
             <div class="stat-sub">Based on holdings value</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Hourly Distribution</div>
-            <div class="stat-value" id="hourlyYield">$0.00</div>
-            <div class="stat-sub">720 distributions/month</div>
+            <div class="stat-label">Current Hourly Rate</div>
+            <div class="stat-value" id="hourlyRate">$0.00</div>
+            <div class="stat-sub">Per hour</div>
         </div>
     </div>
 
@@ -183,8 +225,13 @@
         <div class="info-text">
             You earn <span class="info-highlight">20% monthly yield</span> on the current value of your token holdings.
             Yield is distributed <span class="info-highlight">hourly (720 times per month)</span> directly to your Yield Wallet.
-            The amount varies based on your token holdings value and market prices.
+            The chart below shows your projected hourly earnings based on current portfolio value.
         </div>
+    </div>
+
+    <div class="yield-chart-container">
+        <div class="chart-title">📈 Hourly Yield Projection (Next 24 Hours)</div>
+        <canvas id="hourlyYieldChart"></canvas>
     </div>
 
     <div class="yield-table">
@@ -197,14 +244,28 @@
         <div id="yieldBreakdown"></div>
     </div>
 
-    <div style="margin-top: 20px; text-align: right;">
+    <div style="overflow: hidden; margin-bottom: 20px;">
         <button class="withdraw-btn" onclick="withdrawAllYield()">
             <i class="fas fa-arrow-down me-2"></i>Withdraw All Yield
         </button>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
+    let hourlyChart = null;
+
+    // Real crypto logos
+    function getTokenLogo(symbol) {
+        const logos = {
+            'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
+            'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'NEAR': 'Ⓝ',
+            'LTC': 'Ł', 'THETA': 'θ', 'PEPE': '🐸', 'LINK': '🔗', 'UNI': '🦄',
+            'ATOM': '⚛️', 'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎'
+        };
+        return logos[symbol] || '🪙';
+    }
+
     async function loadYieldData() {
         try {
             // Get user's token holdings
@@ -222,7 +283,7 @@
                 container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
                 document.getElementById('totalYield').innerHTML = formatCurrency(0);
                 document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
-                document.getElementById('hourlyYield').innerHTML = formatCurrency(0);
+                document.getElementById('hourlyRate').innerHTML = formatCurrency(0);
                 return;
             }
 
@@ -240,7 +301,10 @@
 
                 html += `
                     <div class="yield-row">
-                        <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
+                        <div class="token-cell">
+                            <span class="token-logo">${getTokenLogo(holding.token_symbol)}</span>
+                            <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
+                        </div>
                         <span>${formatCurrency(value)}</span>
                         <span>${formatCurrency(monthlyYield)}</span>
                         <span>${formatCurrency(hourlyYield)}</span>
@@ -251,12 +315,71 @@
             container.innerHTML = html;
             document.getElementById('totalYield').innerHTML = formatCurrency(totalYield);
             document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
-            document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyTotal);
+            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyTotal);
+
+            // Update Hourly Yield Chart
+            updateHourlyChart(hourlyTotal);
 
         } catch (e) {
             console.error('Error loading yield data:', e);
             document.getElementById('yieldBreakdown').innerHTML = '<div class="empty-state">Unable to load yield data</div>';
         }
+    }
+
+    function updateHourlyChart(hourlyRate) {
+        const labels = [];
+        const data = [];
+
+        for (let i = 0; i < 24; i++) {
+            const hour = new Date();
+            hour.setHours(hour.getHours() + i);
+            labels.push(hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+            data.push(hourlyRate);
+        }
+
+        const ctx = document.getElementById('hourlyYieldChart').getContext('2d');
+
+        if (hourlyChart) {
+            hourlyChart.destroy();
+        }
+
+        hourlyChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Hourly Yield ($)',
+                    data: data,
+                    borderColor: '#0ECB81',
+                    backgroundColor: 'rgba(14, 203, 129, 0.1)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#0ECB81'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'top' },
+                    tooltip: {
+                        callbacks: {
+                            label: (ctx) => `$${ctx.raw.toFixed(6)} per hour`
+                        }
+                    }
+                },
+                scales: {
+                    x: {
+                        ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 8 }
+                    },
+                    y: {
+                        ticks: { callback: v => '$' + v.toFixed(4) }
+                    }
+                }
+            }
+        });
     }
 
     async function withdrawAllYield() {

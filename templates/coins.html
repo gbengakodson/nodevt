@@ -351,29 +351,8 @@
     let currentFilter = 'all';
 
     function getTokenIcon(symbol) {
-        const icons = {
-            'BTC': 'https://cryptologos.cc/logos/bitcoin-btc-logo.png',
-            'ETH': 'https://cryptologos.cc/logos/ethereum-eth-logo.png',
-            'BNB': 'https://cryptologos.cc/logos/bnb-bnb-logo.png',
-            'SOL': 'https://cryptologos.cc/logos/solana-sol-logo.png',
-            'XRP': 'https://cryptologos.cc/logos/xrp-xrp-logo.png',
-            'ADA': 'https://cryptologos.cc/logos/cardano-ada-logo.png',
-            'DOGE': 'https://cryptologos.cc/logos/dogecoin-doge-logo.png',
-            'AVAX': 'https://cryptologos.cc/logos/avalanche-avax-logo.png',
-            'DOT': 'https://cryptologos.cc/logos/polkadot-dot-logo.png',
-            'NEAR': 'https://cryptologos.cc/logos/near-protocol-near-logo.png',
-            'LTC': 'https://cryptologos.cc/logos/litecoin-ltc-logo.png',
-            'THETA': 'https://cryptologos.cc/logos/theta-theta-logo.png',
-            'PEPE': 'https://cryptologos.cc/logos/pepe-pepe-logo.png',
-            'LINK': 'https://cryptologos.cc/logos/chainlink-link-logo.png',
-            'UNI': 'https://cryptologos.cc/logos/uniswap-uni-logo.png',
-            'ATOM': 'https://cryptologos.cc/logos/cosmos-atom-logo.png',
-            'ALGO': 'https://cryptologos.cc/logos/algorand-algo-logo.png',
-            'VET': 'https://cryptologos.cc/logos/vechain-vet-logo.png',
-            'FTM': 'https://cryptologos.cc/logos/fantom-ftm-logo.png',
-            'EGLD': 'https://cryptologos.cc/logos/multiversx-egld-logo.png'
-        };
-        return icons[symbol] || 'https://cryptologos.cc/logos/bitcoin-btc-logo.png';
+           // Use local static files
+        return `/static/coins/${symbol}.png`;
     }
 
     const symbolToId = {

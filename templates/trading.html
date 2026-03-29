@@ -536,31 +536,9 @@
     };
 
     function getTokenIcon(symbol) {
-        const icons = {
-            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
-            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
-            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
-            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
-            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
-        };
-        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+           // Use local static files
+         return `/static/coins/${symbol}.png`;
     }
-
     function getToken() { return localStorage.getItem('access_token'); }
 
     async function apiCall(endpoint, method = 'GET', data = null) {
@@ -649,8 +627,8 @@
                     datasets: [{
                         label: `${currentSymbol} Price (USD)`,
                         data: priceValues,
-                        borderColor: '#F0B90B',
-                        backgroundColor: 'rgba(240, 185, 11, 0.05)',
+                        borderColor: '#1E2329',
+                        backgroundColor: 'rgba(30, 35, 41, 0.05)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.2,
@@ -775,7 +753,7 @@
                     return `
                         <div class="coin-item" onclick="selectCoin('${token.symbol}')">
                             <div class="coin-info">
-                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
                                 <div>
                                     <div class="coin-symbol">${token.symbol}</div>
                                     <div class="coin-name">${token.name}</div>
@@ -939,14 +917,26 @@
     });
 
     async function init() {
-        await loadCoins();
-        await loadUserData();
-
+        // Check for selected coin from localStorage
         const selectedCoin = localStorage.getItem('selectedCoin');
         if (selectedCoin) {
             currentSymbol = selectedCoin;
             localStorage.removeItem('selectedCoin');
-            selectCoin(currentSymbol);
+        }
+
+        await loadCoins();
+        await loadUserData();
+
+        const token = tokens.find(t => t.symbol === currentSymbol);
+        if (token) {
+            currentPrice = parseFloat(token.current_price);
+            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+            document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+            document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+            document.getElementById('buyBtn').innerHTML = `Buy ${currentSymbol}`;
+            document.getElementById('sellBtn').innerHTML = `Sell ${currentSymbol}`;
+            document.getElementById('buyBtnMarket').innerHTML = `Buy ${currentSymbol}`;
+            document.getElementById('sellBtnMarket').innerHTML = `Sell ${currentSymbol}`;
         }
 
         await updateChart();
@@ -960,6 +950,7 @@
             await updateChart();
         }, 120000);
     }
+
     init();
 </script>
 {% endblock %}

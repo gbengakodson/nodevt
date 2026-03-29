@@ -223,6 +223,22 @@
             font-size: 11px;
         }
     }
+
+
+@media (max-width: 768px) {
+    .mobile-logout {
+        display: block !important;
+    }
+    .btn-logout-mobile {
+        width: 100%;
+        background: #F6465D;
+        color: white;
+        padding: 12px;
+        border: none;
+        border-radius: 8px;
+        font-weight: 600;
+    }
+}
 </style>
 {% endblock %}
 
@@ -232,8 +248,19 @@
         <div class="profile-title">
             <h1>Account Profile</h1>
             <p>Manage your account and security settings</p>
+
+            <div class="mobile-logout" style="display: none; margin-top: 20px;">
+                <button onclick="logout()" style="width: 100%; background: #F6465D; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600;">Logout</button></div>
+
+                <style>
+                    @media (max-width: 768px) {
+                        .mobile-logout {
+                             display: block !important;
+                        }
+                    }
+                </style>
+            </div>
         </div>
-    </div>
 
     <div class="stats-grid">
         <div class="stat-card">

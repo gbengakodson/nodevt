@@ -145,10 +145,6 @@
         color: #1E2329;
     }
 
-    .holding-icon {
-        font-size: 28px;
-    }
-
     .holding-details {
         margin-bottom: 12px;
     }
@@ -532,6 +528,10 @@
                 <div><strong>BSC (BEP20)</strong></div>
             </div>
             <div class="address-box" id="depositAddress">Loading...</div>
+            <div style="text-align: center; margin: 20px 0;">
+                <img id="qrCode" src="" alt="QR Code" style="width: 150px; height: 150px; border: 1px solid #E2E4E8; border-radius: 12px; padding: 8px;">
+                <p class="small text-muted mt-2">Scan to copy address</p>
+            </div>
             <button class="btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="copyDepositAddress()">📋 Copy Address</button>
             <div class="warning-text">
                 ⚠️ Send only USDC on BEP20 network to this address. Sending other tokens may result in loss.
@@ -606,34 +606,14 @@
         return parseFloat(num).toFixed(decimals);
     }
 
-    // Get current price from CoinGecko
-    async function getCurrentPrice(symbol) {
-        const symbolToId = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-            'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap',
-            'ATOM': 'cosmos', 'LTC': 'litecoin', 'NEAR': 'near', 'ALGO': 'algorand',
-            'VET': 'vechain', 'FTM': 'fantom', 'EGLD': 'elrond-erd-2', 'THETA': 'theta-token'
-        };
-
-        const id = symbolToId[symbol];
-        if (!id) return { price: 0, change_24h: 0 };
-
-        try {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
-            const data = await response.json();
-            return {
-                price: data[id]?.usd || 0,
-                change_24h: data[id]?.usd_24h_change || 0
-            };
-        } catch (e) {
-            return { price: 0, change_24h: 0 };
-        }
+    // Crypto icons from CDN
+    function getTokenIcon(symbol) {
+           // Use local static files
+         return `/static/coins/${symbol}.png`;
     }
 
     async function loadDashboard() {
         try {
-            // Load balances
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
             userYieldBalance = parseFloat(balance.yield_balance) || 0;
@@ -643,22 +623,14 @@
             document.getElementById('availableYield').innerHTML = formatCurrency(userYieldBalance);
             document.getElementById('withdrawYieldAmount').innerHTML = formatCurrency(userYieldBalance);
 
-            // Load user's token holdings
             const holdings = await apiCall('/trading/my_tokens/');
+            const tokens = await apiCall('/trading/');
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
-
-            const iconMap = {
-                'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
-                'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'PEPE': '🐸',
-                'LINK': '🔗', 'UNI': '🦄', 'ATOM': '⚛️', 'LTC': 'Ł', 'NEAR': 'Ⓝ',
-                'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎', 'THETA': 'θ'
-            };
 
             if (!holdings || holdings.length === 0) {
                 holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No tokens in your portfolio. <a href="/trading/" style="color:#F0B90B">Start trading</a> to build your portfolio.</div>';
             } else {
-                // Get real-time prices for all holdings
                 const holdingsWithPrices = await Promise.all(holdings.map(async (holding) => {
                     const marketInfo = await getCurrentPrice(holding.token_symbol);
                     return {
@@ -679,13 +651,14 @@
                     const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
                     const pnlClass = pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
                     const pnlSymbol = pnl >= 0 ? '+' : '';
-                    const icon = iconMap[holding.token_symbol] || '🪙';
 
                     return `
                         <div class="holding-card" onclick="location.href='/trading/'">
                             <div class="holding-card-header">
-                                <span class="holding-symbol">${holding.token_symbol}</span>
-                                <span class="holding-icon">${icon}</span>
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
+                                    <span class="holding-symbol">${holding.token_symbol}</span>
+                                </div>
                             </div>
                             <div class="holding-details">
                                 <div class="holding-row">
@@ -720,13 +693,11 @@
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
 
-            // Calculate yield - 20% MONTHLY on current portfolio value
             const monthlyYield = totalPortfolioValue * 0.20;
-            const hourlyYield = monthlyYield / 720; // 720 hours per month
+            const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
 
-            // Load Yield Chart and Recent Distributions
             await loadYieldData(totalPortfolioValue, holdings);
 
         } catch (e) {
@@ -735,9 +706,30 @@
         }
     }
 
+    async function getCurrentPrice(symbol) {
+        const symbolToId = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+            'DOT': 'polkadot', 'PEPE': 'pepe'
+        };
+
+        const id = symbolToId[symbol];
+        if (!id) return { price: 0, change_24h: 0 };
+
+        try {
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
+            const data = await response.json();
+            return {
+                price: data[id]?.usd || 0,
+                change_24h: data[id]?.usd_24h_change || 0
+            };
+        } catch (e) {
+            return { price: 0, change_24h: 0 };
+        }
+    }
+
     async function loadYieldData(totalPortfolioValue, holdings) {
         try {
-            // Generate yield chart data based on portfolio value - 20% monthly yield
             const labels = [];
             const yields = [];
 
@@ -745,14 +737,11 @@
                 const date = new Date();
                 date.setDate(date.getDate() - i);
                 labels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-
-                // Calculate daily yield based on portfolio value (20% monthly = 0.666% daily)
                 const dailyYield = totalPortfolioValue * 0.00666;
                 const variation = (Math.random() - 0.5) * dailyYield * 0.2;
                 yields.push(Math.max(0, dailyYield + variation));
             }
 
-            // Create or update chart
             const ctx = document.getElementById('yieldChart').getContext('2d');
             if (yieldChartInstance) yieldChartInstance.destroy();
 
@@ -790,15 +779,14 @@
                 }
             });
 
-            // Generate recent hourly distributions based on current holdings
             const distContainer = document.getElementById('recentDistributions');
 
             if (!holdings || holdings.length === 0 || totalPortfolioValue === 0) {
                 distContainer.innerHTML = '<div class="empty-dist">No yield distributions yet. Yield will start accruing when you hold tokens.</div>';
             } else {
+                const hourlyYield = totalPortfolioValue * 0.20 / 720;
                 const hourlyDistributions = [];
                 const now = new Date();
-                const hourlyYield = totalPortfolioValue * 0.20 / 720;
 
                 for (let i = 0; i < 8; i++) {
                     const hourAgo = new Date(now.getTime() - i * 3600000);
@@ -816,7 +804,6 @@
                     </div>
                 `).join('');
 
-                // Add note about monthly yield
                 const noteHtml = `
                     <div style="margin-top: 12px; padding: 8px; background: #F8F9FA; border-radius: 6px; font-size: 10px; color: #707A8A; text-align: center;">
                         💰 20% monthly yield distributed hourly (720 times per month) based on your portfolio value
@@ -824,18 +811,24 @@
                 `;
                 distContainer.innerHTML += noteHtml;
             }
-
         } catch (e) {
             console.error('Error loading yield data:', e);
             document.getElementById('recentDistributions').innerHTML = '<div class="empty-dist">Unable to load yield data</div>';
         }
     }
 
-    // Deposit Functions
+    function generateQRCode() {
+        const address = document.getElementById('depositAddress').innerText;
+        if (address && address !== 'Loading...' && address !== 'No wallet created yet') {
+            document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${address}`;
+        }
+    }
+
     async function openDepositModal() {
         try {
             const balance = await apiCall('/trading/my_balance/');
-            document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'Create wallet first';
+            document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
+            setTimeout(generateQRCode, 500);
         } catch (e) { console.error(e); }
         document.getElementById('depositModal').style.display = 'flex';
     }
@@ -850,7 +843,6 @@
         alert('Address copied to clipboard!');
     }
 
-    // Withdraw Yield Functions
     function openWithdrawYieldModal() {
         document.getElementById('withdrawYieldModal').style.display = 'flex';
         document.getElementById('withdrawAmount').value = '';
@@ -893,6 +885,6 @@
     }
 
     loadDashboard();
-    setInterval(loadDashboard, 120000); // Refresh every 2 minutes
+    setInterval(loadDashboard, 120000);
 </script>
 {% endblock %}
