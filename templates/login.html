@@ -377,7 +377,7 @@
             if (response.status === 200) {
                 localStorage.setItem('access_token', data.access);
                 localStorage.setItem('refresh_token', data.refresh);
-                window.location.href = '/dashboard/';
+                window.location.href = '/coins/';
             } else {
                 errorDiv.style.display = 'block';
                 errorDiv.innerHTML = '<i class="fas fa-exclamation-circle me-2"></i>' + (data.error || 'Invalid email or password');

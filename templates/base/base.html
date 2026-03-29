@@ -247,13 +247,117 @@
             background: #D0D4DC;
             border-radius: 3px;
         }
+
+        /* Modern Modal Styles */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.modal-overlay.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-container {
+    background: white;
+    border-radius: 24px;
+    max-width: 500px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: transform 0.3s ease;
+    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+}
+
+.modal-overlay.active .modal-container {
+    transform: scale(1);
+}
+
+.modal-header {
+    padding: 20px 24px;
+    border-bottom: 1px solid #E2E4E8;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #1E2329;
+}
+
+.modal-close {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: #707A8A;
+    transition: color 0.2s;
+}
+
+.modal-close:hover {
+    color: #F6465D;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.modal-footer {
+    padding: 16px 24px;
+    border-top: 1px solid #E2E4E8;
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+}
+
+.modal-btn {
+    padding: 10px 20px;
+    border-radius: 8px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.modal-btn-primary {
+    background: #F0B90B;
+    border: none;
+    color: #1E2329;
+}
+
+.modal-btn-primary:hover {
+    background: #E0A800;
+}
+
+.modal-btn-secondary {
+    background: #F8F9FA;
+    border: 1px solid #E2E4E8;
+    color: #1E2329;
+}
+
+.modal-btn-secondary:hover {
+    background: #EFF2F5;
+}
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container-fluid px-3">
-            <a class="navbar-brand" href="/dashboard/" style="padding: 0;">
+            <a class="navbar-brand" href="/coins/" style="padding: 0;">
                {% include 'base/logo.html' %}
             </a>
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -483,6 +587,35 @@
                 }
             }
         });
+
+        function getTokenIcon(symbol) {
+    const iconUrls = {
+        'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+        'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+        'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+        'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+        'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+        'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+        'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+        'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+        'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+        'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+        'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+        'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
+        'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+        'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+        'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+        'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+        'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+        'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+        'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
+        'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+        };
+        return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+    }
+
+
+
     </script>
     {% block extra_js %}{% endblock %}
 </body>
