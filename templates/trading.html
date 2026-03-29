@@ -218,12 +218,6 @@
         transition: all 0.2s;
     }
 
-    .btn-buy-disabled {
-        background: #E2E4E8;
-        color: #707A8A;
-        cursor: not-allowed;
-    }
-
     .btn-sell {
         width: 100%;
         background: #F6465D;
@@ -235,12 +229,6 @@
         margin-top: 8px;
         cursor: pointer;
         transition: all 0.2s;
-    }
-
-    .btn-sell-disabled {
-        background: #E2E4E8;
-        color: #707A8A;
-        cursor: not-allowed;
     }
 
     .orderbook-title {
@@ -403,10 +391,6 @@
         .coin-list {
             max-height: 250px;
         }
-        .coin-info img {
-            width: 28px;
-            height: 28px;
-        }
     }
 </style>
 {% endblock %}
@@ -499,9 +483,7 @@
 
         <div class="coins-card">
             <div class="orderbook-title">Top Coins</div>
-            <div class="coin-list" id="coinList">
-                <div class="loading-state" style="text-align:center; padding:20px;">Loading coins...</div>
-            </div>
+            <div class="coin-list" id="coinList"></div>
             <div class="stats-mini">
                 <div class="stat-mini">
                     <div class="stat-mini-label">Your Balance</div>
@@ -530,7 +512,6 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // CoinGecko ID mapping - THIS IS CRITICAL
     const symbolToCoinGeckoId = {
         'BTC': 'bitcoin',
         'ETH': 'ethereum',
@@ -554,7 +535,6 @@
         'THETA': 'theta-token'
     };
 
-    // Crypto icons from CDN
     function getTokenIcon(symbol) {
         const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
@@ -605,52 +585,27 @@
     }
 
     async function updateChart() {
-        if (!currentSymbol) {
-            console.error('No current symbol set');
-            return;
-        }
-
-        console.log('=== UPDATING CHART FOR:', currentSymbol, '===');
+        if (!currentSymbol) return;
 
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
 
         chartContainer.innerHTML = '<div class="loading-chart">Loading chart data for ' + currentSymbol + '...</div><canvas id="priceChart" style="display:none;"></canvas>';
 
-        // Get the CoinGecko ID for the current symbol
-        let coinId = symbolToCoinGeckoId[currentSymbol];
-
-        // Try uppercase if not found
+        const coinId = symbolToCoinGeckoId[currentSymbol];
         if (!coinId) {
-            coinId = symbolToCoinGeckoId[currentSymbol.toUpperCase()];
-            console.log('Trying uppercase:', currentSymbol.toUpperCase(), '->', coinId);
-        }
-
-        // Try lowercase if not found
-        if (!coinId) {
-            coinId = symbolToCoinGeckoId[currentSymbol.toLowerCase()];
-            console.log('Trying lowercase:', currentSymbol.toLowerCase(), '->', coinId);
-        }
-
-        if (!coinId) {
-            console.error('No CoinGecko ID found for symbol:', currentSymbol);
-            chartContainer.innerHTML = '<div class="loading-chart">Coin not found: ' + currentSymbol + '</div>';
+            chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>';
             return;
         }
-
-        console.log('CoinGecko ID:', coinId);
 
         try {
             const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`);
             const data = await response.json();
 
             if (!data || !data.prices || data.prices.length === 0) {
-                console.error('No price data for:', currentSymbol);
                 chartContainer.innerHTML = '<div class="loading-chart">No data available for ' + currentSymbol + '</div>';
                 return;
             }
-
-            console.log('Got', data.prices.length, 'price points for', currentSymbol);
 
             const prices = data.prices;
             const labels = [];
@@ -694,14 +649,13 @@
                     datasets: [{
                         label: `${currentSymbol} Price (USD)`,
                         data: priceValues,
-                        borderColor: '#1E2329',
-                        backgroundColor: 'rgba(30, 35, 41, 0.05)',
+                        borderColor: '#F0B90B',
+                        backgroundColor: 'rgba(240, 185, 11, 0.05)',
                         borderWidth: 2,
                         fill: true,
                         tension: 0.2,
                         pointRadius: 0,
-                        pointHoverRadius: 5,
-                        pointHoverBackgroundColor: '#1E2329'
+                        pointHoverRadius: 5
                     }]
                 },
                 options: {
@@ -734,8 +688,6 @@
                     }
                 }
             });
-
-            console.log('Chart updated successfully for', currentSymbol);
 
         } catch (error) {
             console.error('Error updating chart:', error);
@@ -779,11 +731,15 @@
             const sellBtnMarket = document.getElementById('sellBtnMarket');
 
             if (userGrandBalance <= 0) {
-                buyBtn.classList.add('btn-buy-disabled');
-                buyBtnMarket.classList.add('btn-buy-disabled');
+                buyBtn.style.background = '#E2E4E8';
+                buyBtn.style.cursor = 'not-allowed';
+                buyBtnMarket.style.background = '#E2E4E8';
+                buyBtnMarket.style.cursor = 'not-allowed';
             } else {
-                buyBtn.classList.remove('btn-buy-disabled');
-                buyBtnMarket.classList.remove('btn-buy-disabled');
+                buyBtn.style.background = '#0ECB81';
+                buyBtn.style.cursor = 'pointer';
+                buyBtnMarket.style.background = '#0ECB81';
+                buyBtnMarket.style.cursor = 'pointer';
             }
 
             const holdings = await apiCall('/trading/my_tokens/');
@@ -791,34 +747,31 @@
             const hasCurrentToken = currentHoldings && parseFloat(currentHoldings.quantity) > 0;
 
             if (!hasCurrentToken) {
-                sellBtn.classList.add('btn-sell-disabled');
-                sellBtnMarket.classList.add('btn-sell-disabled');
+                sellBtn.style.background = '#E2E4E8';
+                sellBtn.style.cursor = 'not-allowed';
+                sellBtnMarket.style.background = '#E2E4E8';
+                sellBtnMarket.style.cursor = 'not-allowed';
             } else {
-                sellBtn.classList.remove('btn-sell-disabled');
-                sellBtnMarket.classList.remove('btn-sell-disabled');
+                sellBtn.style.background = '#F6465D';
+                sellBtn.style.cursor = 'pointer';
+                sellBtnMarket.style.background = '#F6465D';
+                sellBtnMarket.style.cursor = 'pointer';
             }
         } catch (e) {
-            console.error('Error updating button state:', e);
+            console.error(e);
         }
     }
 
     async function loadCoins() {
         try {
-            const apiTokens = await apiCall('/trading/');
-            tokens = apiTokens;
-
-            console.log('Loaded tokens:', tokens.length);
-            console.log('Token symbols:', tokens.map(t => t.symbol));
-
+            tokens = await apiCall('/trading/');
             const topCoins = tokens.slice(0, 5);
             const container = document.getElementById('coinList');
 
-            if (container && topCoins.length > 0) {
+            if (container) {
                 container.innerHTML = topCoins.map(token => {
                     const change = (Math.random() - 0.5) * 8;
                     const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                    const changeSymbol = change >= 0 ? '+' : '';
-
                     return `
                         <div class="coin-item" onclick="selectCoin('${token.symbol}')">
                             <div class="coin-info">
@@ -830,46 +783,42 @@
                             </div>
                             <div style="text-align: right;">
                                 <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                                <div class="coin-change ${changeClass}">${changeSymbol}${Math.abs(change).toFixed(2)}%</div>
+                                <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
                             </div>
                         </div>
                     `;
                 }).join('');
             }
 
+            const totalVolume = Math.random() * 500000000;
+            document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
+
+            const currentToken = tokens.find(t => t.symbol === currentSymbol);
+            if (currentToken) {
+                currentPrice = parseFloat(currentToken.current_price);
+                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+            }
+
             await updateButtonState();
 
         } catch (e) {
             console.error('Error loading coins:', e);
-            const container = document.getElementById('coinList');
-            if (container) {
-                container.innerHTML = '<div class="loading-state" style="text-align:center; padding:20px;">Failed to load coins</div>';
-            }
         }
     }
 
     function selectCoin(symbol) {
-        console.log('=== SELECT COIN CALLED ===');
-        console.log('Selected symbol:', symbol);
-
         currentSymbol = symbol;
         const token = tokens.find(t => t.symbol === symbol);
-
         if (token) {
             currentPrice = parseFloat(token.current_price);
             document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
             document.getElementById('currentCoinIcon').src = getTokenIcon(symbol);
             document.getElementById('symbolName').innerHTML = `${symbol}/USDC`;
-
-            console.log('Updating chart for:', symbol);
             updateChart();
             renderOrderBook();
             updateButtonState();
-        } else {
-            console.error('Token not found for symbol:', symbol);
-            console.log('Available tokens:', tokens.map(t => t.symbol));
         }
-
         document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
         document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
@@ -990,53 +939,20 @@
     });
 
     async function init() {
-        console.log('=== TRADING PAGE INITIALIZING ===');
-
-        // Load coins data first
         await loadCoins();
-        console.log('Coins loaded, tokens count:', tokens.length);
-
-        // Check for selected coin from localStorage
-        const selectedCoin = localStorage.getItem('selectedCoin');
-        console.log('Selected coin from storage:', selectedCoin);
-
-        if (selectedCoin) {
-            // Verify the selected coin exists in our tokens list
-            const coinExists = tokens.some(t => t.symbol === selectedCoin);
-            if (coinExists) {
-                currentSymbol = selectedCoin;
-                console.log('Current symbol set to:', currentSymbol);
-            } else {
-                console.warn('Selected coin not found, defaulting to BTC');
-                currentSymbol = 'BTC';
-            }
-            localStorage.removeItem('selectedCoin');
-        }
-
-        // Load user data
         await loadUserData();
 
-        // Update UI for current symbol
-        const token = tokens.find(t => t.symbol === currentSymbol);
-        if (token) {
-            currentPrice = parseFloat(token.current_price);
-            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-            document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-            document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
-
-            // Update button texts
-            document.getElementById('buyBtn').innerHTML = `Buy ${currentSymbol}`;
-            document.getElementById('sellBtn').innerHTML = `Sell ${currentSymbol}`;
-            document.getElementById('buyBtnMarket').innerHTML = `Buy ${currentSymbol}`;
-            document.getElementById('sellBtnMarket').innerHTML = `Sell ${currentSymbol}`;
+        const selectedCoin = localStorage.getItem('selectedCoin');
+        if (selectedCoin) {
+            currentSymbol = selectedCoin;
+            localStorage.removeItem('selectedCoin');
+            selectCoin(currentSymbol);
         }
 
-        // Load the chart
         await updateChart();
         renderOrderBook();
         updateButtonState();
 
-        // Set intervals
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => {
             await loadCoins();
@@ -1044,7 +960,6 @@
             await updateChart();
         }, 120000);
     }
-
     init();
 </script>
 {% endblock %}
