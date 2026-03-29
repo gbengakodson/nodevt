@@ -20,8 +20,15 @@ class TradingViewSet(viewsets.ViewSet):
 
     def list(self, request):
         """List all available crypto tokens"""
+        from apps.tokens.models import CryptoToken
         tokens = CryptoToken.objects.filter(is_active=True)
+
+        # Debug print
+        print(f"LIST METHOD CALLED - Found {tokens.count()} active tokens")
+
         serializer = CryptoTokenSerializer(tokens, many=True)
+        print(f"Serialized data length: {len(serializer.data)}")
+
         return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
