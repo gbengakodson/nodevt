@@ -532,53 +532,67 @@
 
     // Crypto icons from CDN
     function getTokenIcon(symbol) {
-        const icons = {
-            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
-            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
-            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
-            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
-            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
-        };
-        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+    // Normalize symbol to uppercase
+    const upperSymbol = symbol.toUpperCase();
+    
+    const icons = {
+        'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+        'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+        'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+        'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+        'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+        'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+        'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+        'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+        'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+        'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+        'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+        'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
+        'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+        'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+        'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+        'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+        'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+        'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+        'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
+        'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+    };
+    
+    // Return icon if exists, otherwise return a generic one
+    if (icons[upperSymbol]) {
+        return icons[upperSymbol];
     }
+    // Try to get from CoinGecko CDN by symbol
+    return `https://assets.coingecko.com/coins/images/1/small/bitcoin.png`;
+}
 
     const symbolToCoinGeckoId = {
-        'BTC': 'bitcoin',
-        'ETH': 'ethereum',
-        'BNB': 'binancecoin',
-        'SOL': 'solana',
-        'XRP': 'ripple',
-        'ADA': 'cardano',
-        'DOGE': 'dogecoin',
-        'AVAX': 'avalanche-2',
-        'DOT': 'polkadot',
-        'PEPE': 'pepe',
-        'LINK': 'chainlink',
-        'UNI': 'uniswap',
-        'ATOM': 'cosmos',
-        'LTC': 'litecoin',
-        'NEAR': 'near',
-        'ALGO': 'algorand',
-        'VET': 'vechain',
-        'FTM': 'fantom',
-        'EGLD': 'elrond-erd-2',
-        'THETA': 'theta-token'
-    };
+    'BTC': 'bitcoin',
+    'ETH': 'ethereum',
+    'BNB': 'binancecoin',
+    'SOL': 'solana',
+    'XRP': 'ripple',
+    'ADA': 'cardano',
+    'DOGE': 'dogecoin',
+    'AVAX': 'avalanche-2',
+    'DOT': 'polkadot',
+    'PEPE': 'pepe',
+    'LINK': 'chainlink',
+    'UNI': 'uniswap',
+    'ATOM': 'cosmos',
+    'LTC': 'litecoin',
+    'NEAR': 'near',
+    'ALGO': 'algorand',
+    'VET': 'vechain',
+    'FTM': 'fantom',
+    'EGLD': 'elrond-erd-2',
+    'THETA': 'theta-token'
+};
+
+// Add lower case versions
+for (let key in symbolToCoinGeckoId) {
+    symbolToCoinGeckoId[key.toLowerCase()] = symbolToCoinGeckoId[key];
+}
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -954,56 +968,63 @@
     });
 
     async function init() {
-        console.log('Trading page initializing...');
+         console.log('Trading page initializing...');
 
-        // STEP 1: Check for selected coin from localStorage
-        const selectedCoin = localStorage.getItem('selectedCoin');
-        console.log('Selected coin from storage:', selectedCoin);
+         // STEP 1: Load coins data FIRST - this is critical
+         await loadCoins();
+         console.log('Coins loaded, tokens count:', tokens.length);
+         console.log('Available symbols:', tokens.map(t => t.symbol));
 
-        if (selectedCoin) {
-            currentSymbol = selectedCoin;
-            console.log('Current symbol set to:', currentSymbol);
-            localStorage.removeItem('selectedCoin');
-        }
+         // STEP 2: Now check for selected coin from localStorage
+         const selectedCoin = localStorage.getItem('selectedCoin');
+         console.log('Selected coin from storage:', selectedCoin);
 
-        // STEP 2: Load coins data (this will populate the top coins list)
-        await loadCoins();
-        console.log('Coins loaded, tokens count:', tokens.length);
-
-        // STEP 3: Load user data
-        await loadUserData();
-
-        // STEP 4: Update UI for current symbol
-        const token = tokens.find(t => t.symbol === currentSymbol);
-        if (token) {
-            currentPrice = parseFloat(token.current_price);
-            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-            document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-            document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
-
-            // Update button texts
-            document.getElementById('buyBtn').innerHTML = `Buy ${currentSymbol}`;
-            document.getElementById('sellBtn').innerHTML = `Sell ${currentSymbol}`;
-            document.getElementById('buyBtnMarket').innerHTML = `Buy ${currentSymbol}`;
-            document.getElementById('sellBtnMarket').innerHTML = `Sell ${currentSymbol}`;
-        } else {
-            console.error('Token not found for symbol:', currentSymbol);
-        }
-
-        // STEP 5: Load chart
-        await updateChart();
-        renderOrderBook();
-        updateButtonState();
-
-        // STEP 6: Set intervals
-        setInterval(() => renderOrderBook(), 3000);
-        setInterval(async () => {
-            await loadCoins();
-            await loadUserData();
-            await updateChart();
-        }, 120000);
+         if (selectedCoin) {
+              // Verify the selected coin exists in our tokens list
+              const coinExists = tokens.some(t => t.symbol === selectedCoin);
+              if (coinExists) {
+                 currentSymbol = selectedCoin;
+                 console.log('Current symbol set to:', currentSymbol);
+              } else {
+                  console.warn('Selected coin not found, defaulting to BTC');
+                  currentSymbol = 'BTC';
+         }
+         localStorage.removeItem('selectedCoin');
     }
 
-    init();
+    // STEP 3: Load user data
+    await loadUserData();
+
+    // STEP 4: Update UI for current symbol
+    const token = tokens.find(t => t.symbol === currentSymbol);
+    if (token) {
+        currentPrice = parseFloat(token.current_price);
+        document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+        document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+        document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+
+        // Update button texts
+        document.getElementById('buyBtn').innerHTML = `Buy ${currentSymbol}`;
+        document.getElementById('sellBtn').innerHTML = `Sell ${currentSymbol}`;
+        document.getElementById('buyBtnMarket').innerHTML = `Buy ${currentSymbol}`;
+        document.getElementById('sellBtnMarket').innerHTML = `Sell ${currentSymbol}`;
+    } else {
+        console.error('Token not found for symbol:', currentSymbol);
+        console.log('Available tokens:', tokens.map(t => t.symbol));
+    }
+
+    // STEP 5: Load chart
+    await updateChart();
+    renderOrderBook();
+    updateButtonState();
+
+    // STEP 6: Set intervals
+    setInterval(() => renderOrderBook(), 3000);
+    setInterval(async () => {
+        await loadCoins();
+        await loadUserData();
+        await updateChart();
+    }, 120000);
+}
 </script>
 {% endblock %}
