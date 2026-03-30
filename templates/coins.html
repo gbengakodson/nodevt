@@ -452,6 +452,7 @@
         const btc = coins.find(c => c.symbol === 'BTC');
         const btcDominance = btc && totalMarketCap > 0 ? (btc.market_cap / totalMarketCap) * 100 : 0;
 
+        // Apply formatting here
         document.getElementById('totalMarketCap').innerHTML = formatCurrency(totalMarketCap);
         document.getElementById('totalVolume').innerHTML = formatCurrency(totalVolume);
         document.getElementById('activeCoins').innerHTML = coins.length;
