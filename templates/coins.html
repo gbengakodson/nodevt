@@ -378,12 +378,11 @@
     };
 
     function formatCurrency(num) {
-        if (!num) return '$0.00';
-    
-        // Convert to number
+        if (!num || num === 0) return '$0.00';
+
         const value = parseFloat(num);
-    
-        // Handle very large numbers with B, M, T suffixes
+
+        // Handle very large numbers with suffixes
         if (value >= 1e12) {
             return `$${(value / 1e12).toFixed(1)}T`;
         }
@@ -393,15 +392,15 @@
         if (value >= 1e6) {
             return `$${(value / 1e6).toFixed(1)}M`;
         }
-        if (value < 0.01) {
+        if (value < 0.01 && value > 0) {
             return `$${value.toFixed(6)}`;
         }
-    
+
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     function formatNumber(num) {
-        if (!num) return '0';
+        if (!num || num === 0) return '0';
         const value = parseFloat(num);
     
         if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`;
