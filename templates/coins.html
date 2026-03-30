@@ -382,7 +382,7 @@
 
         const value = parseFloat(num);
 
-        // Handle very large numbers with suffixes
+        // Handle very large numbers with suffixes. make this change
         if (value >= 1e12) {
             return `$${(value / 1e12).toFixed(1)}T`;
         }
