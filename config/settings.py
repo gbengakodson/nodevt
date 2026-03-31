@@ -13,7 +13,7 @@ SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'your-secret-key-here')
 DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
 # Update ALLOWED_HOSTS
-ALLOWED_HOSTS = ['*']  # For Render, we'll set properly later
+ALLOWED_HOSTS = ['nodevt.onrender.com', 'localhost', '127.0.0.1', 'www.nodevt.com']  # For Render, we'll set properly later
 
 INSTALLED_APPS = [
     'django.contrib.admin',
