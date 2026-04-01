@@ -571,18 +571,12 @@ class TradingViewSet(viewsets.ViewSet):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def check_deposits_webhook(request):
-        """Webhook endpoint to trigger deposit checking"""
-        print("DEPOSIT CHECK WEBHOOK CALLED")
+    """Webhook endpoint to trigger all automated tasks"""
+    print("=" * 50)
+    print("AUTOMATED TASKS TRIGGERED")
+    print("=" * 50)
 
-        # Simple security - check a secret key
-        #secret_key = request.GET.get('secret') or request.POST.get('secret')
-        #expected_secret = os.environ.get('DEPOSIT_CHECK_SECRET', 'your-secret-key-here')
+    # Run both commands
+    call_command('run_all_checks')
 
-        #if secret_key != expected_secret:
-            #return JsonResponse({'error': 'Unauthorized'}, status=401)
-
-        try:
-            call_command('check_credits')
-            return JsonResponse({'status': 'success', 'message': 'Deposit check completed'})
-        except Exception as e:
-            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+    return JsonResponse({'status': 'success', 'message': 'Deposit check and yield credit completed'})
