@@ -579,7 +579,7 @@ def check_deposits_webhook(request):
     try:
         from django.core.management import call_command
         call_command('check_credits')
-        call_command('credit_yield')
+        call_command('process_yield', action='credit')
         return JsonResponse({'status': 'success', 'message': 'Deposit check and yield credit completed'})
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
