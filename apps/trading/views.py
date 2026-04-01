@@ -576,7 +576,10 @@ def check_deposits_webhook(request):
     print("AUTOMATED TASKS TRIGGERED")
     print("=" * 50)
 
-    # Run both commands
-    call_command('run_all_checks')
-
-    return JsonResponse({'status': 'success', 'message': 'Deposit check and yield credit completed'})
+    try:
+        from django.core.management import call_command
+        call_command('check_credits')
+        call_command('credit_yield')
+        return JsonResponse({'status': 'success', 'message': 'Deposit check and yield credit completed'})
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
