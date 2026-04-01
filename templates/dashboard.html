@@ -477,7 +477,7 @@
     <!-- Yield Earnings Section with Chart -->
     <div class="yield-detail-section">
         <div class="section-header">
-            <span class="section-title">💰 Yield Earnings (20% Monthly)</span>
+            <span class="section-title">💰 Yield Earnings (Up to 20% Monthly)</span>
             <span class="section-link" onclick="location.href='/yield/'">Full Report →</span>
         </div>
         <div class="yield-chart-container">
@@ -495,7 +495,7 @@
 
     <div class="yield-preview">
         <div class="yield-header">
-            <span class="yield-title">📊 Yield Summary (20% Monthly)</span>
+            <span class="yield-title">📊 Yield Summary (up to 20% Monthly)</span>
             <span class="stat-action" onclick="location.href='/yield/'">View Full Report →</span>
         </div>
         <div class="yield-stats">
@@ -693,7 +693,7 @@
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
 
-            const monthlyYield = totalPortfolioValue * 0.20;
+            const monthlyYield = totalPortfolioValue * 0.10;
             const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
@@ -737,8 +737,8 @@
                 const date = new Date();
                 date.setDate(date.getDate() - i);
                 labels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-                const dailyYield = totalPortfolioValue * 0.00666;
-                const variation = (Math.random() - 0.5) * dailyYield * 0.2;
+                const dailyYield = totalPortfolioValue * 0.00333;
+                const variation = (Math.random() - 0.5) * dailyYield * 0.10;
                 yields.push(Math.max(0, dailyYield + variation));
             }
 
@@ -784,7 +784,7 @@
             if (!holdings || holdings.length === 0 || totalPortfolioValue === 0) {
                 distContainer.innerHTML = '<div class="empty-dist">No yield distributions yet. Yield will start accruing when you hold tokens.</div>';
             } else {
-                const hourlyYield = totalPortfolioValue * 0.20 / 720;
+                const hourlyYield = totalPortfolioValue * 0.10 / 720;
                 const hourlyDistributions = [];
                 const now = new Date();
 
@@ -806,7 +806,7 @@
 
                 const noteHtml = `
                     <div style="margin-top: 12px; padding: 8px; background: #F8F9FA; border-radius: 6px; font-size: 10px; color: #707A8A; text-align: center;">
-                        💰 20% monthly yield distributed hourly (720 times per month) based on your portfolio value
+                        💰 Up to 20% monthly yield distributed hourly (720 times per month) based on your portfolio value
                     </div>
                 `;
                 distContainer.innerHTML += noteHtml;
