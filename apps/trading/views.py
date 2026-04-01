@@ -572,16 +572,14 @@ class TradingViewSet(viewsets.ViewSet):
 @require_http_methods(["GET", "POST"])
 def check_deposits_webhook(request):
         """Webhook endpoint to trigger deposit checking"""
-
-        print("=" * 50)
         print("DEPOSIT CHECK WEBHOOK CALLED")
-        print("=" * 50)
-        # Simple security - check a secret key
-        secret_key = request.GET.get('secret') or request.POST.get('secret')
-        expected_secret = os.environ.get('DEPOSIT_CHECK_SECRET', 'your-secret-key-here')
 
-        if secret_key != expected_secret:
-            return JsonResponse({'error': 'Unauthorized'}, status=401)
+        # Simple security - check a secret key
+        #secret_key = request.GET.get('secret') or request.POST.get('secret')
+        #expected_secret = os.environ.get('DEPOSIT_CHECK_SECRET', 'your-secret-key-here')
+
+        #if secret_key != expected_secret:
+            #return JsonResponse({'error': 'Unauthorized'}, status=401)
 
         try:
             call_command('check_credits')
