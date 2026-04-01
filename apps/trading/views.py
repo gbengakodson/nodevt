@@ -1,3 +1,8 @@
+import os
+from django.core.management import call_command
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -562,3 +567,20 @@ class TradingViewSet(viewsets.ViewSet):
         return Response({'count': len(data), 'tokens': data})
 
 
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def check_deposits_webhook(request):
+        """Webhook endpoint to trigger deposit checking"""
+        # Simple security - check a secret key
+        secret_key = request.GET.get('secret') or request.POST.get('secret')
+        expected_secret = os.environ.get('DEPOSIT_CHECK_SECRET', 'your-secret-key-here')
+
+        if secret_key != expected_secret:
+            return JsonResponse({'error': 'Unauthorized'}, status=401)
+
+        try:
+            call_command('check_credits')
+            return JsonResponse({'status': 'success', 'message': 'Deposit check completed'})
+        except Exception as e:
+            return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
