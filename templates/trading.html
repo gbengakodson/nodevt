@@ -740,14 +740,16 @@
         }
     }
 
-    async function loadCoins() {
+        async function loadCoins() {
         try {
             console.log('loadCoins: fetching tokens...');
-            tokens = await apiCall('/trading/');
+            // Ensure tokens is at least an empty array if apiCall returns null/undefined
+            tokens = await apiCall('/trading/') || [];
             console.log('loadCoins: received', tokens.length, 'tokens');
 
             if (tokens.length === 0) {
                 console.warn('No tokens received from API');
+                return; // Stop execution if there is no data to process
             }
 
             const currentToken = tokens.find(t => t.symbol === currentSymbol);

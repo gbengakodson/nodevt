@@ -194,7 +194,7 @@
 <div class="yield-container">
     <div class="yield-header">
         <h1>💰 Yield Earnings</h1>
-        <p>Earn 20% monthly yield on your token holdings, distributed hourly</p>
+        <p>Earn Up to 20% monthly yield on your token holdings, distributed hourly</p>
     </div>
 
     <div class="stats-grid">
@@ -210,7 +210,7 @@
         </div>
         <div class="stat-card">
             <div class="stat-label">Monthly Rate</div>
-            <div class="stat-value">20%</div>
+            <div class="stat-value">Up to 20%</div>
             <div class="stat-sub">Based on holdings value</div>
         </div>
         <div class="stat-card">
@@ -223,7 +223,7 @@
     <div class="info-card">
         <div class="info-title">📊 How Yield Works</div>
         <div class="info-text">
-            You earn <span class="info-highlight">20% monthly yield</span> on the current value of your token holdings.
+            You earn <span class="info-highlight">Up to 20% monthly yield</span> on the current value of your token holdings.
             Yield is distributed <span class="info-highlight">hourly (720 times per month)</span> directly to your Yield Wallet.
             The chart below shows your projected hourly earnings based on current portfolio value.
         </div>
@@ -292,7 +292,7 @@
                 const currentToken = tokens.find(t => t.id === holding.token);
                 const currentPrice = currentToken ? parseFloat(currentToken.current_price) : 0;
                 const value = parseFloat(holding.quantity) * currentPrice;
-                const monthlyYield = value * 0.20;
+                const monthlyYield = value * 0.10;
                 const hourlyYield = monthlyYield / 720;
 
                 totalValue += value;

@@ -7,7 +7,7 @@ from apps.tokens.models import UserTokenBalance
 from apps.wallets.models import Wallet, Transaction
 
 class YieldService:
-    YIELD_PERCENTAGE = Decimal('20')  # 20% monthly
+    YIELD_PERCENTAGE = Decimal('10')  # Up to 20% monthly
     DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
     
     @classmethod

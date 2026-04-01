@@ -278,7 +278,7 @@
         <div class="stat-card">
             <div class="stat-label">24h Yield</div>
             <div class="stat-value" id="dailyYield">$0.00</div>
-            <div class="stat-change">20% monthly yield</div>
+            <div class="stat-change"> Up to 20% monthly yield</div>
         </div>
     </div>
 
@@ -417,7 +417,7 @@
             }
         });
 
-        const hourlyYield = totalValue * 0.20 / 720;
+        const hourlyYield = totalValue * 0.10 / 720;
         const yieldData = [];
         for (let i = 0; i <= 24; i++) {
             const variation = (Math.random() - 0.5) * hourlyYield * 0.3;

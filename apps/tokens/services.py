@@ -1,5 +1,9 @@
 import requests
 from decimal import Decimal
+import pandas as pd
+from datetime import datetime, timedelta
+
+
 
 class PriceService:
     COINGECKO_API = "https://api.coingecko.com/api/v3/simple/price"
@@ -87,3 +91,32 @@ class PriceService:
             
             return updated
         return 0
+
+    @classmethod
+    def get_historical_dataframe(cls, coin_symbol, days=7):
+        """Get historical price data as pandas DataFrame"""
+        coin_id = cls.SYMBOL_TO_ID.get(coin_symbol)
+        if not coin_id:
+            return pd.DataFrame()
+
+        try:
+            response = requests.get(
+                f"{cls.COINGECKO_API}/coins/{coin_id}/market_chart",
+                params={'vs_currency': 'usd', 'days': days},
+                timeout=10
+            )
+
+            if response.status_code == 200:
+                data = response.json()
+                prices = data['prices']
+
+                # Create DataFrame
+                df = pd.DataFrame(prices, columns=['timestamp', 'price'])
+                df['date'] = pd.to_datetime(df['timestamp'], unit='ms')
+                df['date_str'] = df['date'].dt.strftime('%Y-%m-%d %H:%M')
+
+                return df
+            return pd.DataFrame()
+        except Exception as e:
+            print(f"Error fetching historical data: {e}")
+            return pd.DataFrame()
