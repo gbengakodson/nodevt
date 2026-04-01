@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.yield_earnings.services.yield_service import YieldService
+from apps.yield_earnings.services import YieldService
 
 
 class Command(BaseCommand):
