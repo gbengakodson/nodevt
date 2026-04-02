@@ -145,7 +145,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # Custom Settings
 NODE_FEE_PERCENTAGE = 10  # 10% node fee on purchases
-YIELD_PERCENTAGE = 20  # 20% monthly yield
+YIELD_PERCENTAGE = 10  # 10% monthly yield
 DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
 
 
