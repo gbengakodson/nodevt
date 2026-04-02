@@ -18,6 +18,14 @@ from apps.wallets.models import Wallet, Transaction
 
 
 
+def update_prices_webhook(request):
+    """Webhook endpoint to trigger price updates"""
+    from django.core.management import call_command
+    call_command('update_prices')
+    return JsonResponse({'status': 'success', 'message': 'Prices updated'})
+
+
+
 
 
 class TradingViewSet(viewsets.ViewSet):
@@ -594,8 +602,3 @@ def check_deposits_webhook(request):
     return JsonResponse({'status': 'success', 'deposits_checked': True, 'yield_users_credited': credited_count})
 
 
-def update_prices_webhook(request):
-    """Webhook endpoint to trigger price updates"""
-    from django.core.management import call_command
-    call_command('update_prices')
-    return JsonResponse({'status': 'success', 'message': 'Prices updated'})
