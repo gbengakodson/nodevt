@@ -8,7 +8,7 @@ from apps.wallets.models import Wallet, Transaction
 
 
 class YieldService:
-    YIELD_PERCENTAGE = Decimal('20')  # 20% monthly
+    YIELD_PERCENTAGE = Decimal('10')  # 10% monthly
     DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
 
     @classmethod
