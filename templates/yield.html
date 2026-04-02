@@ -253,12 +253,9 @@
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-
     const API_BASE = '/api';
 
-    function getToken() {
-        return localStorage.getItem('access_token');
-    }
+    function getToken() { return localStorage.getItem('access_token'); }
 
     async function apiCall(endpoint, method = 'GET', data = null) {
         const token = getToken();
@@ -271,48 +268,83 @@
         return response.json();
     }
 
+    function formatCurrency(num) {
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+    }
 
+    function formatNumber(num, decimals = 6) {
+        if (!num || num === 0) return '0';
+        return parseFloat(num).toFixed(decimals);
+    }
+
+    function getTokenLogo(symbol) {
+        return `/static/coins/${symbol}.png`;
+    }
 
     let hourlyChart = null;
 
-    // Real crypto logos
-    function getTokenLogo(symbol) {
-        const logos = {
-            'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
-            'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'NEAR': 'Ⓝ',
-            'LTC': 'Ł', 'THETA': 'θ', 'PEPE': '🐸', 'LINK': '🔗', 'UNI': '🦄',
-            'ATOM': '⚛️', 'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎'
-        };
-        return logos[symbol] || '🪙';
-    }
-
     async function loadYieldData() {
-    try {
-        const holdings = await apiCall('/trading/my_tokens/');
-        const balance = await apiCall('/trading/my_balance/');
+        try {
+            const holdings = await apiCall('/trading/my_tokens/');
+            const tokens = await apiCall('/trading/');
+            const balance = await apiCall('/trading/my_balance/');
 
-        let totalValue = 0;
-        for (const holding of holdings) {
-            const value = parseFloat(holding.quantity) * parseFloat(holding.current_price);
-            totalValue += value;
+            let totalValue = 0;
+            let totalYield = 0;
+            let hourlyTotal = 0;
+
+            const container = document.getElementById('yieldBreakdown');
+
+            if (!holdings || holdings.length === 0) {
+                container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
+                document.getElementById('totalYield').innerHTML = formatCurrency(0);
+                document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+                document.getElementById('hourlyRate').innerHTML = formatCurrency(0);
+                return;
+            }
+
+            let html = '';
+            for (const holding of holdings) {
+                const currentToken = tokens.find(t => t.id === holding.token);
+                const currentPrice = currentToken ? parseFloat(currentToken.current_price) : 0;
+                const value = parseFloat(holding.quantity) * currentPrice;
+                const monthlyYield = value * 0.10;
+                const hourlyYield = monthlyYield / 720;
+
+                totalValue += value;
+                totalYield += monthlyYield;
+                hourlyTotal += hourlyYield;
+
+                html += `
+                    <div class="yield-row">
+                        <div class="token-cell">
+                            <img src="${getTokenLogo(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
+                            <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
+                        </div>
+                        <span>${formatCurrency(value)}</span>
+                        <span>${formatCurrency(monthlyYield)}</span>
+                        <span>${formatCurrency(hourlyYield)}</span>
+                    </div>
+                `;
+            }
+
+            container.innerHTML = html;
+            document.getElementById('totalYield').innerHTML = formatCurrency(totalYield);
+            document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyTotal);
+
+            updateHourlyChart(hourlyTotal);
+
+        } catch (e) {
+            console.error('Error loading yield data:', e);
+            document.getElementById('yieldBreakdown').innerHTML = '<div class="empty-state">Unable to load yield data</div>';
         }
-
-        const monthlyYield = totalValue * 0.10;
-        const hourlyYield = monthlyYield / 720;
-
-        document.getElementById('totalYield').innerHTML = formatCurrency(monthlyYield);
-        document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance);
-        document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyYield);
-
-    } catch (e) {
-        console.error('Error:', e);
     }
-}
 
     function updateHourlyChart(hourlyRate) {
         const labels = [];
         const data = [];
-
         for (let i = 0; i < 24; i++) {
             const hour = new Date();
             hour.setHours(hour.getHours() + i);
@@ -321,10 +353,7 @@
         }
 
         const ctx = document.getElementById('hourlyYieldChart').getContext('2d');
-
-        if (hourlyChart) {
-            hourlyChart.destroy();
-        }
+        if (hourlyChart) hourlyChart.destroy();
 
         hourlyChart = new Chart(ctx, {
             type: 'line',
@@ -343,24 +372,9 @@
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `$${ctx.raw.toFixed(6)} per hour`
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 8 }
-                    },
-                    y: {
-                        ticks: { callback: v => '$' + v.toFixed(4) }
-                    }
-                }
+                responsive: true, maintainAspectRatio: true,
+                plugins: { legend: { position: 'top' }, tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(6)} per hour` } } },
+                scales: { x: { ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 8 } }, y: { ticks: { callback: v => '$' + v.toFixed(4) } } }
             }
         });
     }
@@ -369,23 +383,11 @@
         try {
             const balance = await apiCall('/trading/my_balance/');
             const amount = parseFloat(balance.yield_balance);
-
-            if (!amount || amount <= 0) {
-                alert('No yield available to withdraw');
-                return;
-            }
-
+            if (!amount || amount <= 0) { alert('No yield available to withdraw'); return; }
             const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-
-            if (result.success) {
-                alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`);
-                loadYieldData();
-            } else {
-                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
-            }
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
+            if (result.success) { alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`); loadYieldData(); }
+            else { alert('Withdrawal failed: ' + (result.error || 'Unknown error')); }
+        } catch (e) { alert('Error: ' + e.message); }
     }
 
     loadYieldData();

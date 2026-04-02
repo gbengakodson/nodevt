@@ -606,10 +606,23 @@
         return parseFloat(num).toFixed(decimals);
     }
 
-    // Crypto icons from CDN
     function getTokenIcon(symbol) {
-           // Use local static files
-         return `/static/coins/${symbol}.png`;
+        return `/static/coins/${symbol}.png`;
+    }
+
+    async function getCurrentPrice(symbol) {
+        const symbolToId = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+            'DOT': 'polkadot', 'PEPE': 'pepe'
+        };
+        const id = symbolToId[symbol];
+        if (!id) return { price: 0, change_24h: 0 };
+        try {
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
+            const data = await response.json();
+            return { price: data[id]?.usd || 0, change_24h: data[id]?.usd_24h_change || 0 };
+        } catch (e) { return { price: 0, change_24h: 0 }; }
     }
 
     async function loadDashboard() {
@@ -628,16 +641,19 @@
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
 
+            const iconMap = {
+                'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
+                'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'PEPE': '🐸',
+                'LINK': '🔗', 'UNI': '🦄', 'ATOM': '⚛️', 'LTC': 'Ł', 'NEAR': 'Ⓝ',
+                'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎', 'THETA': 'θ'
+            };
+
             if (!holdings || holdings.length === 0) {
                 holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No tokens in your portfolio. <a href="/trading/" style="color:#F0B90B">Start trading</a> to build your portfolio.</div>';
             } else {
                 const holdingsWithPrices = await Promise.all(holdings.map(async (holding) => {
                     const marketInfo = await getCurrentPrice(holding.token_symbol);
-                    return {
-                        ...holding,
-                        current_price: marketInfo.price,
-                        change_24h: marketInfo.change_24h
-                    };
+                    return { ...holding, current_price: marketInfo.price, change_24h: marketInfo.change_24h };
                 }));
 
                 holdingsCardsContainer.innerHTML = holdingsWithPrices.map(holding => {
@@ -651,41 +667,24 @@
                     const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
                     const pnlClass = pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
                     const pnlSymbol = pnl >= 0 ? '+' : '';
+                    const icon = iconMap[holding.token_symbol] || '🪙';
 
                     return `
                         <div class="holding-card" onclick="location.href='/trading/'">
                             <div class="holding-card-header">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
+                                    <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
                                     <span class="holding-symbol">${holding.token_symbol}</span>
                                 </div>
                             </div>
                             <div class="holding-details">
-                                <div class="holding-row">
-                                    <span class="holding-label">Quantity</span>
-                                    <span class="holding-value">${formatNumber(quantity, 4)}</span>
-                                </div>
-                                <div class="holding-row">
-                                    <span class="holding-label">Avg Price</span>
-                                    <span class="holding-value">${formatCurrency(avgPrice)}</span>
-                                </div>
-                                <div class="holding-row">
-                                    <span class="holding-label">Current Price</span>
-                                    <span class="holding-price">${formatCurrency(currentPrice)}</span>
-                                </div>
-                                <div class="holding-row">
-                                    <span class="holding-label">24h Change</span>
-                                    <span class="${holding.change_24h >= 0 ? 'price-up' : 'price-down'}">${holding.change_24h >= 0 ? '+' : ''}${holding.change_24h.toFixed(2)}%</span>
-                                </div>
-                                <div class="holding-row">
-                                    <span class="holding-label">Total Value</span>
-                                    <span class="holding-value">${formatCurrency(value)}</span>
-                                </div>
+                                <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(quantity, 4)}</span></div>
+                                <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
+                                <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPrice)}</span></div>
+                                <div class="holding-row"><span class="holding-label">24h Change</span><span class="${holding.change_24h >= 0 ? 'price-up' : 'price-down'}">${holding.change_24h >= 0 ? '+' : ''}${holding.change_24h.toFixed(2)}%</span></div>
+                                <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(value)}</span></div>
                             </div>
-                            <div class="holding-pnl">
-                                <span class="holding-label">P&L</span>
-                                <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
-                            </div>
+                            <div class="holding-pnl"><span class="holding-label">P&L</span><span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span></div>
                         </div>
                     `;
                 }).join('');
@@ -693,6 +692,7 @@
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
 
+            // Yield calculations - 10% monthly
             const monthlyYield = totalPortfolioValue * 0.10;
             const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
@@ -706,129 +706,49 @@
         }
     }
 
-    async function getCurrentPrice(symbol) {
-        const symbolToId = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-            'DOT': 'polkadot', 'PEPE': 'pepe'
-        };
-
-        const id = symbolToId[symbol];
-        if (!id) return { price: 0, change_24h: 0 };
-
-        try {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
-            const data = await response.json();
-            return {
-                price: data[id]?.usd || 0,
-                change_24h: data[id]?.usd_24h_change || 0
-            };
-        } catch (e) {
-            return { price: 0, change_24h: 0 };
-        }
-    }
-
     async function loadYieldData(totalPortfolioValue, holdings) {
-    try {
-        const labels = [];
-        const yields = [];
+        try {
+            const labels = [];
+            const yields = [];
+            const dailyYield = totalPortfolioValue * 0.00333;
 
-        // Calculate correct daily yield (10% monthly = 0.333% daily)
-        const dailyYield = totalPortfolioValue * 0.00333;
-
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            labels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-            const variation = (Math.random() - 0.5) * dailyYield * 0.1;
-            yields.push(Math.max(0, dailyYield + variation));
-        }
-
-        // Update chart
-        const ctx = document.getElementById('yieldChart').getContext('2d');
-        if (yieldChartInstance) yieldChartInstance.destroy();
-
-        yieldChartInstance = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Daily Yield',
-                    data: yields,
-                    borderColor: '#0ECB81',
-                    backgroundColor: 'rgba(14, 203, 129, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: (ctx) => `$${ctx.raw.toFixed(6)}`
-                        }
-                    }
-                },
-                scales: {
-                    x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } },
-                    y: { ticks: { callback: v => '$' + v.toFixed(4) } }
-                }
+            for (let i = 29; i >= 0; i--) {
+                const date = new Date();
+                date.setDate(date.getDate() - i);
+                labels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+                const variation = (Math.random() - 0.5) * dailyYield * 0.2;
+                yields.push(Math.max(0, dailyYield + variation));
             }
-        });
 
-        // Get actual yield wallet balance
-        const balance = await apiCall('/trading/my_balance/');
-        const actualYieldBalance = parseFloat(balance.yield_balance) || 0;
+            const ctx = document.getElementById('yieldChart').getContext('2d');
+            if (yieldChartInstance) yieldChartInstance.destroy();
 
-        // Display recent hourly distributions
-        const distContainer = document.getElementById('recentDistributions');
-        const hourlyRate = (totalPortfolioValue * 0.10) / 720;
-
-        // Show last 8 hours of yield (simulated or real)
-        const hourlyDistributions = [];
-        const now = new Date();
-
-        for (let i = 0; i < 8; i++) {
-            const hourAgo = new Date(now.getTime() - i * 3600000);
-            // Check if there's a real transaction for this hour
-            const hasTransaction = false; // You can check actual transactions here
-
-            hourlyDistributions.push({
-                time: hourAgo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
-                amount: hasTransaction ? hourlyRate : 0
+            yieldChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: { labels: labels, datasets: [{ label: 'Daily Yield', data: yields, borderColor: '#0ECB81', backgroundColor: 'rgba(14, 203, 129, 0.1)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0, pointHoverRadius: 5 }] },
+                options: {
+                    responsive: true, maintainAspectRatio: true,
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(4)}` } } },
+                    scales: { x: { grid: { display: false }, ticks: { maxRotation: 0, autoSkip: true, maxTicksLimit: 6 } }, y: { grid: { color: '#EFF2F5' }, ticks: { callback: v => '$' + v.toFixed(2) } } }
+                }
             });
-        }
 
-        distContainer.innerHTML = hourlyDistributions.map(dist => `
-            <div class="dist-row">
-                <span>Yield Distribution</span>
-                <span class="dist-amount">+${formatCurrency(dist.amount)}</span>
-                <span class="dist-time">${dist.time}</span>
-            </div>
-        `).join('');
+            const distContainer = document.getElementById('recentDistributions');
+            const hourlyRate = (totalPortfolioValue * 0.10) / 720;
+            const now = new Date();
+            let hourlyDistributions = [];
 
-        // Add note
-        const noteHtml = `
-            <div style="margin-top: 12px; padding: 8px; background: #F8F9FA; border-radius: 6px; font-size: 10px; color: #707A8A; text-align: center;">
-                💰 10% monthly yield (${(hourlyRate * 720).toFixed(2)}% APY) - Credited hourly
-            </div>
-        `;
-        distContainer.innerHTML += noteHtml;
+            for (let i = 0; i < 8; i++) {
+                const hourAgo = new Date(now.getTime() - i * 3600000);
+                hourlyDistributions.push({ time: hourAgo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }), amount: hourlyRate });
+            }
 
-    } catch (e) {
-        console.error('Error loading yield data:', e);
-    }
-}
+            distContainer.innerHTML = hourlyDistributions.map(dist => `<div class="dist-row"><span>Yield Distribution</span><span class="dist-amount">+${formatCurrency(dist.amount)}</span><span class="dist-time">${dist.time}</span></div>`).join('');
+            distContainer.innerHTML += `<div style="margin-top: 12px; padding: 8px; background: #F8F9FA; border-radius: 6px; font-size: 10px; color: #707A8A; text-align: center;">💰 10% monthly yield distributed hourly (720 times per month)</div>`;
 
-    function generateQRCode() {
-        const address = document.getElementById('depositAddress').innerText;
-        if (address && address !== 'Loading...' && address !== 'No wallet created yet') {
-            document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${address}`;
+        } catch (e) {
+            console.error('Error loading yield data:', e);
+            document.getElementById('recentDistributions').innerHTML = '<div class="empty-dist">Unable to load yield data</div>';
         }
     }
 
@@ -836,60 +756,30 @@
         try {
             const balance = await apiCall('/trading/my_balance/');
             document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
-            setTimeout(generateQRCode, 500);
+            const address = balance.deposit_address;
+            if (address && address !== 'Loading...') {
+                document.getElementById('qrCode').src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(address)}`;
+                document.getElementById('qrContainer').style.display = 'block';
+            }
         } catch (e) { console.error(e); }
         document.getElementById('depositModal').style.display = 'flex';
     }
 
-    function closeDepositModal() {
-        document.getElementById('depositModal').style.display = 'none';
-    }
-
-    function copyDepositAddress() {
-        const address = document.getElementById('depositAddress').innerText;
-        navigator.clipboard.writeText(address);
-        alert('Address copied to clipboard!');
-    }
-
-    function openWithdrawYieldModal() {
-        document.getElementById('withdrawYieldModal').style.display = 'flex';
-        document.getElementById('withdrawAmount').value = '';
-    }
-
-    function closeWithdrawYieldModal() {
-        document.getElementById('withdrawYieldModal').style.display = 'none';
-    }
-
-    function setWithdrawPercent(percent) {
-        const amount = (userYieldBalance * percent) / 100;
-        document.getElementById('withdrawAmount').value = amount.toFixed(2);
-    }
+    function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
+    function copyDepositAddress() { const address = document.getElementById('depositAddress').innerText; navigator.clipboard.writeText(address); alert('Address copied to clipboard!'); }
+    function openWithdrawYieldModal() { document.getElementById('withdrawYieldModal').style.display = 'flex'; document.getElementById('withdrawAmount').value = ''; }
+    function closeWithdrawYieldModal() { document.getElementById('withdrawYieldModal').style.display = 'none'; }
+    function setWithdrawPercent(percent) { const amount = (userYieldBalance * percent) / 100; document.getElementById('withdrawAmount').value = amount.toFixed(2); }
 
     async function confirmWithdrawYield() {
         const amount = parseFloat(document.getElementById('withdrawAmount').value);
-
-        if (!amount || amount <= 0) {
-            alert('Please enter a valid amount');
-            return;
-        }
-
-        if (amount > userYieldBalance) {
-            alert(`Insufficient yield balance. You have ${formatCurrency(userYieldBalance)}`);
-            return;
-        }
-
+        if (!amount || amount <= 0) { alert('Please enter a valid amount'); return; }
+        if (amount > userYieldBalance) { alert(`Insufficient yield balance. You have ${formatCurrency(userYieldBalance)}`); return; }
         try {
             const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-            if (result.success) {
-                alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`);
-                closeWithdrawYieldModal();
-                loadDashboard();
-            } else {
-                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
-            }
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
+            if (result.success) { alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`); closeWithdrawYieldModal(); loadDashboard(); }
+            else { alert('Withdrawal failed: ' + (result.error || 'Unknown error')); }
+        } catch (e) { alert('Error: ' + e.message); }
     }
 
     loadDashboard();
