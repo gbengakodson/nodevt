@@ -270,6 +270,7 @@
 
     function formatCurrency(num) {
         if (!num || num === 0) return '$0.00';
+        if (num < 0.01) return `$${parseFloat(num).toFixed(6)}`;
         return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}`;
     }
 
@@ -291,7 +292,7 @@
             const holdings = await apiCall('/trading/my_tokens/');
             const tokens = await apiCall('/trading/');
 
-            // Calculate portfolio value
+            // Calculate portfolio value correctly
             let portfolioValue = 0;
             for (const holding of holdings) {
                 const token = tokens.find(t => t.id === holding.token);
@@ -299,29 +300,22 @@
                 portfolioValue += parseFloat(holding.quantity) * price;
             }
 
-            // Calculate yields (10% monthly)
-            const monthlyYieldProjection = portfolioValue * 0.10;
-            const hourlyYieldRate = monthlyYieldProjection / 720;
+            // Calculate hourly rate (10% monthly = 10% / 720 hours)
+            const hourlyRate = portfolioValue > 0 ? (portfolioValue * 0.10) / 720 : 0;
 
             // Get actual yield earned from transactions
-            let actualYieldEarned = 0;
-            try {
-                const transactions = await apiCall('/trading/recent_transactions/');
-                const yieldTxs = transactions.filter(tx => tx.type === 'YIELD');
-                actualYieldEarned = yieldTxs.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
-            } catch(e) {
-                actualYieldEarned = parseFloat(balance.yield_balance) || 0;
-            }
+            let actualYieldEarned = parseFloat(balance.yield_balance) || 0;
 
             // Update stats
             document.getElementById('totalYield').innerHTML = formatCurrency(actualYieldEarned);
             document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance);
-            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyYieldRate);
+            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyRate);
 
             // Build yield breakdown table
             const container = document.getElementById('yieldBreakdown');
             if (!holdings || holdings.length === 0) {
                 container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
+                updateHourlyChart(0);
                 return;
             }
 
@@ -348,7 +342,7 @@
             container.innerHTML = html;
 
             // Update chart
-            updateHourlyChart(hourlyYieldRate);
+            updateHourlyChart(hourlyRate);
 
         } catch (e) {
             console.error('Error loading yield data:', e);
