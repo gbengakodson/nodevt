@@ -287,64 +287,27 @@
     }
 
     async function loadYieldData() {
-        try {
-            // Get user's token holdings
-            const holdings = await apiCall('/trading/my_tokens/');
-            const tokens = await apiCall('/trading/');
-            const balance = await apiCall('/trading/my_balance/');
+    try {
+        const holdings = await apiCall('/trading/my_tokens/');
+        const balance = await apiCall('/trading/my_balance/');
 
-            let totalValue = 0;
-            let totalYield = 0;
-            let hourlyTotal = 0;
-
-            const container = document.getElementById('yieldBreakdown');
-
-            if (!holdings || holdings.length === 0) {
-                container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
-                document.getElementById('totalYield').innerHTML = formatCurrency(0);
-                document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
-                document.getElementById('hourlyRate').innerHTML = formatCurrency(0);
-                return;
-            }
-
-            let html = '';
-            for (const holding of holdings) {
-                const currentToken = tokens.find(t => t.id === holding.token);
-                const currentPrice = currentToken ? parseFloat(currentToken.current_price) : 0;
-                const value = parseFloat(holding.quantity) * currentPrice;
-                const monthlyYield = value * 0.10;
-                const hourlyYield = monthlyYield / 720;
-
-                totalValue += value;
-                totalYield += monthlyYield;
-                hourlyTotal += hourlyYield;
-
-                html += `
-                    <div class="yield-row">
-                        <div class="token-cell">
-                            <span class="token-logo">${getTokenLogo(holding.token_symbol)}</span>
-                            <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
-                        </div>
-                        <span>${formatCurrency(value)}</span>
-                        <span>${formatCurrency(monthlyYield)}</span>
-                        <span>${formatCurrency(hourlyYield)}</span>
-                    </div>
-                `;
-            }
-
-            container.innerHTML = html;
-            document.getElementById('totalYield').innerHTML = formatCurrency(totalYield);
-            document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance || 0);
-            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyTotal);
-
-            // Update Hourly Yield Chart
-            updateHourlyChart(hourlyTotal);
-
-        } catch (e) {
-            console.error('Error loading yield data:', e);
-            document.getElementById('yieldBreakdown').innerHTML = '<div class="empty-state">Unable to load yield data</div>';
+        let totalValue = 0;
+        for (const holding of holdings) {
+            const value = parseFloat(holding.quantity) * parseFloat(holding.current_price);
+            totalValue += value;
         }
+
+        const monthlyYield = totalValue * 0.10;
+        const hourlyYield = monthlyYield / 720;
+
+        document.getElementById('totalYield').innerHTML = formatCurrency(monthlyYield);
+        document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance);
+        document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyYield);
+
+    } catch (e) {
+        console.error('Error:', e);
     }
+}
 
     function updateHourlyChart(hourlyRate) {
         const labels = [];
