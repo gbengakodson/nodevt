@@ -10,6 +10,7 @@ from apps.wallets.models import Wallet, Transaction
 class YieldService:
     YIELD_PERCENTAGE = Decimal('10')  # 10% monthly
     DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
+    HOURLY_RATE = Decimal('0.0001388888888888889')  # 10% / 720
 
     @classmethod
     def calculate_monthly_yield(cls, token_balance):
@@ -23,6 +24,56 @@ class YieldService:
         """Calculate hourly yield for a token balance"""
         monthly_yield = cls.calculate_monthly_yield(token_balance)
         hourly_yield = monthly_yield / Decimal(str(cls.DISTRIBUTIONS_PER_MONTH))
+        return hourly_yield
+
+    @classmethod
+    def calculate_hourly_yield_from_value(cls, portfolio_value):
+        """Calculate hourly yield directly from portfolio value"""
+        if portfolio_value <= 0:
+            return Decimal('0')
+        return portfolio_value * cls.HOURLY_RATE
+
+    @classmethod
+    @transaction.atomic
+    def credit_hourly_yield(cls, user):
+        """Credit hourly yield based on current portfolio value"""
+        # Get user's total portfolio value
+        holdings = user.token_balances.filter(quantity__gt=0)
+        total_value = Decimal('0')
+        for h in holdings:
+            total_value += h.quantity * h.token.current_price
+
+        if total_value <= 0:
+            return Decimal('0')
+
+        hourly_yield = cls.calculate_hourly_yield_from_value(total_value)
+
+        # Get or create yield wallet
+        yield_wallet, created = Wallet.objects.get_or_create(
+            user=user,
+            wallet_type='YIELD',
+            defaults={'balance': Decimal('0')}
+        )
+
+        # Credit to yield wallet
+        yield_wallet.balance += hourly_yield
+        yield_wallet.save()
+
+        # Create transaction record
+        Transaction.objects.create(
+            user=user,
+            transaction_type='YIELD',
+            amount=hourly_yield,
+            fee=Decimal('0'),
+            status='COMPLETED',
+            metadata={
+                'type': 'hourly_yield',
+                'portfolio_value': str(total_value),
+                'hourly_rate': str(cls.HOURLY_RATE)
+            },
+            completed_at=timezone.now()
+        )
+
         return hourly_yield
 
     @classmethod

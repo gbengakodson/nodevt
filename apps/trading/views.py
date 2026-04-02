@@ -571,14 +571,24 @@ class TradingViewSet(viewsets.ViewSet):
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def check_deposits_webhook(request):
-    """Trigger hourly yield credit"""
-    from apps.yield_earnings.services import YieldService
+    """Trigger hourly yield credit for all users"""
     from django.contrib.auth import get_user_model
+    from apps.yield_earnings.services.yield_service import YieldService
+    from django.core.management import call_command
+
     User = get_user_model()
+    credited_count = 0
 
+    # First check deposits
+    call_command('check_credits')
+
+    # Then credit hourly yield for all users
     for user in User.objects.all():
-        yield_credited = YieldService.credit_hourly_yield(user)
-        if yield_credited > 0:
-            print(f"Credited ${yield_credited} to {user.email}")
+        try:
+            amount = YieldService.credit_hourly_yield(user)
+            if amount > 0:
+                credited_count += 1
+        except Exception as e:
+            print(f"Error crediting {user.email}: {e}")
 
-    return JsonResponse({'status': 'success'})
+    return JsonResponse({'status': 'success', 'deposits_checked': True, 'yield_users_credited': credited_count})
