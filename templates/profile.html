@@ -383,23 +383,23 @@
 
     async function loadProfile() {
         try {
-            // Get user info from API
             const userData = await apiCall('/auth/profile/');
-            console.log('User data:', userData);
+            const balance = await apiCall('/trading/my_balance/');
+            const transactions = await apiCall('/trading/recent_transactions/');
+
+            // Calculate totals
+            const deposits = transactions.filter(tx => tx.type === 'DEPOSIT');
+            const totalDeposits = deposits.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            const trades = transactions.filter(tx => tx.type === 'PURCHASE' || tx.type === 'SALE');
 
             document.getElementById('userEmail').innerHTML = userData.email || 'N/A';
             document.getElementById('userUsername').innerHTML = userData.username || 'N/A';
             document.getElementById('userJoined').innerHTML = userData.created_at ? new Date(userData.created_at).toLocaleDateString() : 'N/A';
             document.getElementById('referralCode').innerHTML = userData.referral_code || 'N/A';
-
-            // Load balance info
-            const balance = await apiCall('/trading/my_balance/');
             document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
-
-            // Update stats
-            document.getElementById('totalDeposits').innerHTML = formatCurrency(0);
-            document.getElementById('totalTrades').innerHTML = '0';
-            document.getElementById('totalYield').innerHTML = formatCurrency(balance.yield_balance || 0);
+            document.getElementById('totalDeposits').innerHTML = formatCurrency(totalDeposits);
+            document.getElementById('totalTrades').innerHTML = trades.length;
+            document.getElementById('totalYield').innerHTML = formatCurrency(balance.yield_balance);
 
         } catch (e) {
             console.error('Error loading profile:', e);
