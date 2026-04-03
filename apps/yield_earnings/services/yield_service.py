@@ -36,7 +36,22 @@ class YieldService:
     @classmethod
     @transaction.atomic
     def credit_hourly_yield(cls, user):
-        """Credit hourly yield based on current portfolio value"""
+        """Credit hourly yield based on current portfolio value - only once per hour"""
+        from decimal import Decimal
+        from apps.wallets.models import Wallet, Transaction
+        from django.utils import timezone
+
+        # Check if we already credited this hour
+        last_hour = timezone.now().replace(minute=0, second=0, microsecond=0)
+        last_transaction = Transaction.objects.filter(
+            user=user,
+            transaction_type='YIELD',
+            created_at__gte=last_hour
+        ).exists()
+
+        if last_transaction:
+            return Decimal('0')
+
         # Get user's total portfolio value
         holdings = user.token_balances.filter(quantity__gt=0)
         total_value = Decimal('0')
@@ -46,7 +61,7 @@ class YieldService:
         if total_value <= 0:
             return Decimal('0')
 
-        hourly_yield = cls.calculate_hourly_yield_from_value(total_value)
+        hourly_yield = total_value * cls.HOURLY_RATE
 
         # Get or create yield wallet
         yield_wallet, created = Wallet.objects.get_or_create(
