@@ -263,13 +263,10 @@
         }
     }
 
-    // Load address when page loads
-    loadDepositAddress();
-
     async function checkDeposit() {
         showLoading();
         try {
-            const result = await apiCall('/trading/check-deposits/');
+            const result = await apiCall('/check-deposits/');
             alert(result.message || 'Deposit check completed');
             // Refresh balance display
             loadDepositAddress();
@@ -278,5 +275,10 @@
         }
         hideLoading();
     }
+
+    // Load address when page loads
+    loadDepositAddress();
+
+
 </script>
 {% endblock %}
