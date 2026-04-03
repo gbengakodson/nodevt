@@ -270,10 +270,15 @@
 
     function formatCurrency(num) {
         if (!num || num === 0) return '$0.00';
-        if (num < 0.01 && num > 0) {
-            return `$${parseFloat(num).toFixed(8)}`;
+        const value = parseFloat(num);
+        if (isNaN(value)) return '$0.00';
+        // Handle very small numbers (like PEPE)
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+            return `$${value.toFixed(8)}`;
         }
-        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}`;
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
     function formatNumber(num, decimals = 6) {
