@@ -576,6 +576,29 @@ class TradingViewSet(viewsets.ViewSet):
 
 
 
+    @action(detail=False, methods=['get'])
+    def recent_transactions(self, request):
+        """Get recent transactions for the user"""
+        from apps.wallets.models import Transaction
+
+        transactions = Transaction.objects.filter(user=request.user).order_by('-created_at')[:50]
+
+        data = []
+        for tx in transactions:
+            data.append({
+                'id': str(tx.id),
+                'type': tx.transaction_type,
+                'amount': str(tx.amount),
+                'fee': str(tx.fee),
+                'status': tx.status,
+                'date': tx.created_at.strftime('%Y-%m-%d %H:%M'),
+                'tx_hash': tx.tx_hash
+            })
+
+        return Response(data)
+
+
+
 @csrf_exempt
 @require_http_methods(["GET", "POST"])
 def check_deposits_webhook(request):
@@ -602,3 +625,22 @@ def check_deposits_webhook(request):
     return JsonResponse({'status': 'success', 'deposits_checked': True, 'yield_users_credited': credited_count})
 
 
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def credit_yield_only(request):
+    """Safe webhook that ONLY credits yield - no deposit checking"""
+    from django.contrib.auth import get_user_model
+    from apps.yield_earnings.services.yield_service import YieldService
+
+    User = get_user_model()
+    credited_count = 0
+
+    for user in User.objects.all():
+        try:
+            amount = YieldService.credit_hourly_yield(user)
+            if amount > 0:
+                credited_count += 1
+        except Exception as e:
+            print(f"Error crediting {user.email}: {e}")
+
+    return JsonResponse({'status': 'success', 'users_credited': credited_count})

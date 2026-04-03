@@ -12,4 +12,5 @@ urlpatterns = [
     path('', include(router.urls)),
     path('check-deposits/', check_deposits_webhook, name='check_deposits'),
     path('update-prices/', update_prices_webhook, name='update_prices'),
+    path('credit-yield/', credit_yield_only, name='credit_yield'),
 ]
