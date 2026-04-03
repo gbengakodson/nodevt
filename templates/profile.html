@@ -377,7 +377,6 @@
 
     function formatCurrency(num) {
         if (!num || num === 0) return '$0.00';
-        // Handle very small numbers
         if (Math.abs(num) < 0.01 && Math.abs(num) > 0) {
             return `$${parseFloat(num).toFixed(8)}`;
         }
@@ -388,16 +387,20 @@
         try {
             const userData = await apiCall('/auth/profile/');
             const balance = await apiCall('/trading/my_balance/');
+            const transactions = await apiCall('/trading/recent_transactions/');
+
+            // Calculate totals
+            const deposits = transactions.filter(tx => tx.type === 'DEPOSIT');
+            const totalDeposits = deposits.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+            const trades = transactions.filter(tx => tx.type === 'PURCHASE' || tx.type === 'SALE');
 
             document.getElementById('userEmail').innerHTML = userData.email || 'N/A';
             document.getElementById('userUsername').innerHTML = userData.username || 'N/A';
             document.getElementById('userJoined').innerHTML = userData.created_at ? new Date(userData.created_at).toLocaleDateString() : 'N/A';
             document.getElementById('referralCode').innerHTML = userData.referral_code || 'N/A';
             document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
-
-            // Placeholder stats until we have transaction endpoint
-            document.getElementById('totalDeposits').innerHTML = formatCurrency(0);
-            document.getElementById('totalTrades').innerHTML = '0';
+            document.getElementById('totalDeposits').innerHTML = formatCurrency(totalDeposits);
+            document.getElementById('totalTrades').innerHTML = trades.length;
             document.getElementById('totalYield').innerHTML = formatCurrency(balance.yield_balance);
 
         } catch (e) {
