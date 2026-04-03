@@ -18,6 +18,10 @@ from apps.wallets.models import Wallet, Transaction
 
 
 
+
+
+
+
 def update_prices_webhook(request):
     """Webhook endpoint to trigger price updates"""
     from django.core.management import call_command
