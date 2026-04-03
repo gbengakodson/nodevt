@@ -38,7 +38,7 @@ class Command(BaseCommand):
                 self.stdout.write(self.style.SUCCESS(f"  New deposit found: ${diff:,.2f}"))
                 
                 # Credit to user's grand wallet
-                grand_wallet.balance = balance
+                grand_wallet.balance +=diff
                 grand_wallet.save()
                 
                 # Record transaction
