@@ -698,7 +698,7 @@
                     const icon = iconMap[holding.token_symbol] || '🪙';
 
                     return `
-                        <div class="holding-card" onclick="location.href='/trading/'">
+                        <div class="holding-card" onclick="goToTrading('${holding.token_symbol}')">
                             <div class="holding-card-header">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
@@ -812,5 +812,10 @@
 
     loadDashboard();
     setInterval(loadDashboard, 120000);
+
+    function goToTrading(symbol) {
+        localStorage.setItem('selectedCoin', symbol);
+        window.location.href = '/trading/';
+    }
 </script>
 {% endblock %}

@@ -898,6 +898,15 @@
     });
 
     async function init() {
+
+        const selectedCoin = localStorage.getItem('selectedCoin');
+        if (selectedCoin) {
+            currentSymbol = selectedCoin;
+            localStorage.removeItem('selectedCoin');
+            console.log('Selected coin from dashboard:', currentSymbol);
+        }
+
+
         console.log('Init started');
 
         await loadCoins();
