@@ -679,10 +679,14 @@
             if (!holdings || holdings.length === 0) {
                 holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No tokens in your portfolio. <a href="/trading/" style="color:#F0B90B">Start trading</a> to build your portfolio.</div>';
             } else {
-                const holdingsWithPrices = await Promise.all(holdings.map(async (holding) => {
-                    const marketInfo = await getCurrentPrice(holding.token_symbol);
-                    return { ...holding, current_price: marketInfo.price, change_24h: marketInfo.change_24h };
-                }));
+                // Use the price directly from the API instead of fetching again
+                const holdingsWithPrices = holdings.map(holding => {
+                    return {
+                    ...holding,
+                    current_price: holding.current_price,
+                    change_24h: 0  // or keep as is
+                    };
+                });
 
                 holdingsCardsContainer.innerHTML = holdingsWithPrices.map(holding => {
                     const currentPrice = holding.current_price;
