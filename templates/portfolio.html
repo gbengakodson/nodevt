@@ -336,21 +336,41 @@
     }
 
     function formatCurrency(num) {
-        if (!num || num === 0) return '$0.00';
+        if (!num) return '$0.00';
+
+        // Convert to number first
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
-        // Handle very small numbers (like PEPE)
+
+        if (value === 0) return '$0.00';
+
+        // Handle very small numbers (like PEPE at 0.00000344)
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return `$${value.toFixed(8)}`;
         }
+
+        // Handle large numbers
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+
+        // Regular numbers
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
     function formatNumber(num, decimals = 6) {
-        if (!num || num === 0) return '0';
-        return parseFloat(num).toFixed(decimals);
+        if (!num) return '0';
+
+        const value = parseFloat(num);
+        if (isNaN(value)) return '0';
+
+        if (value === 0) return '0';
+
+        // Handle very small numbers
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+            return value.toFixed(8);
+        }
+
+        return value.toFixed(decimals);
     }
 
     async function getCurrentPrice(symbol) {
