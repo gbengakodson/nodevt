@@ -916,12 +916,7 @@
 
         document.getElementById('currentCoinIcon').src = '/static/coins/BTC.png';
 
-        const selectedCoin = localStorage.getItem('selectedCoin');
-        if (selectedCoin) {
-            currentSymbol = selectedCoin;
-            localStorage.removeItem('selectedCoin');
-            selectCoin(currentSymbol);
-        }
+
 
         await updateChart();
         renderOrderBook();
