@@ -379,22 +379,13 @@
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-
-        // Convert to number first
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
-
         if (value === 0) return '$0.00';
-
-        if (value < 0.01 && value > 0) {
-            return `$${value.toFixed(8)}`;
-        }
-
-        // Handle large numbers
-        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-
-        // Regular numbers
+        if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+        if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
