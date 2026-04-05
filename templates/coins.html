@@ -386,9 +386,7 @@
 
         if (value === 0) return '$0.00';
 
-        // Handle very small numbers (like PEPE at 0.00000344)
-        if (value < 0.01 && value.toString().includes('e-') || (value > 0 && value < 0.01)) {
-        // Show up to 8 decimal places
+        if (value < 0.01 && value > 0) {
             return `$${value.toFixed(8)}`;
         }
 
@@ -397,7 +395,7 @@
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
 
         // Regular numbers
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     function formatCurrencyShort(num) {
