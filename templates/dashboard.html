@@ -615,6 +615,8 @@
     let userYieldBalance = 0;
     let userGrandBalance = 0;
     let yieldChartInstance = null;
+    let tokens = [];
+    let userHoldings = {};
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -631,59 +633,30 @@
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-
-        // Convert to number first
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
-
         if (value === 0) return '$0.00';
-
-        // Handle very small numbers (like PEPE at 0.00000344)
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return `$${value.toFixed(8)}`;
         }
-
-        // Handle large numbers
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-
-        // Regular numbers
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
     function formatNumber(num, decimals = 6) {
         if (!num) return '0';
-
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
-
         if (value === 0) return '0';
-
-        // Handle very small numbers
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return value.toFixed(8);
         }
-
         return value.toFixed(decimals);
     }
 
     function getTokenIcon(symbol) {
         return `/static/coins/${symbol}.png`;
-    }
-
-    async function getCurrentPrice(symbol) {
-        const symbolToId = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-            'DOT': 'polkadot', 'PEPE': 'pepe'
-        };
-        const id = symbolToId[symbol];
-        if (!id) return { price: 0, change_24h: 0 };
-        try {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd&include_24hr_change=true`);
-            const data = await response.json();
-            return { price: data[id]?.usd || 0, change_24h: data[id]?.usd_24h_change || 0 };
-        } catch (e) { return { price: 0, change_24h: 0 }; }
     }
 
     async function loadDashboard() {
@@ -698,68 +671,63 @@
             document.getElementById('withdrawYieldAmount').innerHTML = formatCurrency(userYieldBalance);
 
             const holdings = await apiCall('/trading/my_tokens/');
-            const tokens = await apiCall('/trading/');
+            tokens = await apiCall('/trading/');
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
 
-            const iconMap = {
-                'BTC': '₿', 'ETH': 'Ξ', 'BNB': 'ⓑ', 'SOL': '◎', 'XRP': '✕',
-                'ADA': '₳', 'DOGE': 'Ð', 'AVAX': '▲', 'DOT': '●', 'PEPE': '🐸',
-                'LINK': '🔗', 'UNI': '🦄', 'ATOM': '⚛️', 'LTC': 'Ł', 'NEAR': 'Ⓝ',
-                'ALGO': '🌀', 'VET': '🌿', 'FTM': '🔺', 'EGLD': '💎', 'THETA': 'θ'
-            };
+            // Update userHoldings for sell function
+            userHoldings = {};
+            holdings.forEach(h => {
+                userHoldings[h.token_symbol] = parseFloat(h.quantity);
+            });
 
             if (!holdings || holdings.length === 0) {
                 holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No tokens in your portfolio. <a href="/trading/" style="color:#F0B90B">Start trading</a> to build your portfolio.</div>';
             } else {
-                // Use the price directly from the API instead of fetching again
-                const holdingsWithPrices = holdings.map(holding => {
-                    return {
-                    ...holding,
-                    current_price: holding.current_price,
-                    change_24h: 0  // or keep as is
-                    };
-                });
+                holdingsCardsContainer.innerHTML = holdings.map(holding => {
+                    const currentPrice = parseFloat(holding.current_price);
+                    const quantity = parseFloat(holding.quantity);
+                    const avgPrice = parseFloat(holding.average_buy_price);
+                    const value = quantity * currentPrice;
+                    const invested = quantity * avgPrice;
+                    const pnl = value - invested;
+                    const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
+                    const pnlClass = pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                    const pnlSymbol = pnl >= 0 ? '+' : '';
+                    const canSell = currentPrice >= avgPrice;
+                    const sellButtonClass = canSell ? 'btn-sell-small' : 'btn-sell-disabled-small';
+                    const sellButtonTitle = canSell ? `Sell ${holding.token_symbol}` : `Cannot sell (price below purchase price)`;
 
-                holdingsCardsContainer.innerHTML = holdingsWithPrices.map(holding => {
-                        const currentPrice = holding.current_price;
-                        const avgPrice = parseFloat(holding.average_buy_price);
-                        const canSell = currentPrice >= avgPrice;
-                        const sellButtonClass = canSell ? 'btn-sell-small' : 'btn-sell-disabled-small';
-                        const sellButtonTitle = canSell ? `Sell ${holding.token_symbol}` : `Cannot sell (price below purchase price)`;
+                    totalPortfolioValue += value;
 
-                        return `
-                            <div class="holding-card">
-                               <div class="holding-card-header">
-                                  <div style="display: flex; align-items: center; gap: 10px;">
-                                     <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
-                                     <span class="holding-symbol">${holding.token_symbol}</span>
-                                     </div>
-                                  </div>
-                                  <div class="holding-details">
-                                  <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(holding.quantity, 4)}</span></div>
-                                  <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
-                                  <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPrice)}</span></div>
-                                  <div class="holding-row"><span class="holding-label">24h Change</span><span class="${holding.change_24h >= 0 ? 'price-up' : 'price-down'}">${holding.change_24h >= 0 ? '+' : ''}${holding.change_24h.toFixed(2)}%</span></div>
-                                  <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(holding.current_value)}</span></div>
-                               </div>
-                               <div class="holding-pnl">
-                               <span class="holding-label">P&L</span>
-                               <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
-                               </div>
-                               <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${holding.quantity}, ${currentPrice})" ${!canSell ? 'disabled' : ''} title="${sellButtonTitle}">
-                                    Sell ${holding.token_symbol}
-                               </button>
+                    return `
+                        <div class="holding-card">
+                            <div class="holding-card-header">
+                                <div style="display: flex; align-items: center; gap: 10px;">
+                                    <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
+                                    <span class="holding-symbol">${holding.token_symbol}</span>
+                                </div>
                             </div>
-                        `;
+                            <div class="holding-details">
+                                <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(quantity, 4)}</span></div>
+                                <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
+                                <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPrice)}</span></div>
+                                <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(value)}</span></div>
+                            </div>
+                            <div class="holding-pnl">
+                                <span class="holding-label">P&L</span>
+                                <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
+                            </div>
+                            <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${quantity}, ${currentPrice})" ${!canSell ? 'disabled' : ''} title="${sellButtonTitle}">
+                                Sell ${holding.token_symbol}
+                            </button>
+                        </div>
+                    `;
                 }).join('');
-
             }
-
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
 
-            // Yield calculations - 10% monthly
             const monthlyYield = totalPortfolioValue * 0.10;
             const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
@@ -849,53 +817,54 @@
         } catch (e) { alert('Error: ' + e.message); }
     }
 
-    loadDashboard();
-    setInterval(loadDashboard, 120000);
+    async function sellTokenFromDashboard(symbol, quantity, currentPrice) {
+        const token = tokens.find(t => t.symbol === symbol);
+        if (!token) {
+            alert('Token not found');
+            return;
+        }
+
+        const userQty = userHoldings[symbol] || 0;
+        if (userQty === 0) {
+            alert(`No ${symbol} to sell`);
+            return;
+        }
+
+        if (quantity > userQty) {
+            alert(`You only have ${formatNumber(userQty)} ${symbol}`);
+            return;
+        }
+
+        const avgPrice = parseFloat(token.average_buy_price);
+        if (currentPrice < avgPrice) {
+            alert(`Cannot sell ${symbol}. Current price (${formatCurrency(currentPrice)}) is below your purchase price (${formatCurrency(avgPrice)}).`);
+            return;
+        }
+
+        if (confirm(`Sell ${formatNumber(quantity)} ${symbol} at ${formatCurrency(currentPrice)}?`)) {
+            try {
+                const result = await apiCall('/trading/sell/', 'POST', {
+                    token_id: token.id,
+                    quantity: quantity
+                });
+                if (result.success) {
+                    alert(`Sold ${result.sale.quantity} ${symbol}`);
+                    loadDashboard();
+                } else {
+                    alert('Sale failed: ' + (result.reason || 'Unknown error'));
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    }
 
     function goToTrading(symbol) {
         localStorage.setItem('selectedCoin', symbol);
         window.location.href = '/trading/';
     }
 
-    async function sellTokenFromDashboard(symbol, quantity, currentPrice) {
-    const token = tokens.find(t => t.symbol === symbol);
-    if (!token) {
-        alert('Token not found');
-        return;
-    }
-
-    const userQty = userHoldings[symbol] || 0;
-    if (userQty === 0) {
-        alert(`No ${symbol} to sell`);
-        return;
-    }
-
-    if (quantity > userQty) {
-        alert(`You only have ${formatNumber(userQty)} ${symbol}`);
-        return;
-    }
-
-    if (currentPrice < parseFloat(token.average_buy_price)) {
-        alert(`Cannot sell ${symbol}. Current price is below your purchase price.`);
-        return;
-    }
-
-    if (confirm(`Sell ${formatNumber(quantity)} ${symbol} at ${formatCurrency(currentPrice)}?`)) {
-        try {
-            const result = await apiCall('/trading/sell/', 'POST', {
-                token_id: token.id,
-                quantity: quantity
-            });
-            if (result.success) {
-                alert(`Sold ${result.sale.quantity} ${symbol}`);
-                loadDashboard();
-            } else {
-                alert('Sale failed: ' + (result.reason || 'Unknown error'));
-            }
-        } catch (e) {
-            alert('Error: ' + e.message);
-        }
-    }
-}
+    loadDashboard();
+    setInterval(loadDashboard, 120000);
 </script>
 {% endblock %}
