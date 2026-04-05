@@ -601,6 +601,90 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response(data)
 
+    @action(detail=False, methods=['post'])
+    def prepare_buy(self, request):
+        """Prepare a buy transaction for the user to sign"""
+        from apps.wallets.services.transaction_service import TransactionService
+
+        token_id = request.data.get('token_id')
+        amount_usdc = Decimal(str(request.data.get('amount_usdc', 0)))
+
+        if not request.user.wallet_address:
+            return Response({'error': 'No wallet address found'}, status=400)
+
+        tx_service = TransactionService()
+        tx = tx_service.create_buy_transaction(request.user.wallet_address, float(amount_usdc))
+
+        if tx:
+            return Response({
+                'transaction': {
+                    'to': tx['to'],
+                    'value': str(tx['value']),
+                    'gas': tx['gas'],
+                    'gasPrice': str(tx['gasPrice']),
+                    'nonce': tx['nonce'],
+                    'data': tx['data'].hex() if tx['data'] else '0x'
+                }
+            })
+        return Response({'error': 'Failed to create transaction'}, status=500)
+
+    @action(detail=False, methods=['post'])
+    def withdraw(self, request):
+        """Withdraw USDC from grand balance to external wallet"""
+        from apps.wallets.models import Wallet, Transaction
+        from decimal import Decimal
+        from django.utils import timezone
+
+        address = request.data.get('address')
+        amount = Decimal(str(request.data.get('amount', 0)))
+
+        if not address:
+            return Response({'error': 'Wallet address required'}, status=400)
+
+        if amount <= 0:
+            return Response({'error': 'Invalid amount'}, status=400)
+
+        # Check minimum withdrawal
+        if amount < 10:
+            return Response({'error': 'Minimum withdrawal is $10 USDC'}, status=400)
+
+        # Get user's grand wallet
+        grand_wallet = Wallet.objects.get(user=request.user, wallet_type='GRAND')
+
+        if grand_wallet.balance < amount:
+            return Response({'error': 'Insufficient balance'}, status=400)
+
+        # Deduct from grand wallet
+        grand_wallet.balance -= amount
+        grand_wallet.save()
+
+        # Create transaction record
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='WITHDRAWAL',
+            amount=amount,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'to_address': address,
+                'network': 'BSC (BEP20)',
+                'token': 'USDC'
+            },
+            completed_at=timezone.now()
+        )
+
+        # Note: Actual blockchain transfer would go here
+        # For now, we just update the database
+
+        return Response({
+            'success': True,
+            'amount': str(amount),
+            'address': address,
+            'new_balance': str(grand_wallet.balance),
+            'message': f'Withdrawal of ${amount} USDC to {address} initiated'
+        })
+
+
 
 
 @csrf_exempt
@@ -648,3 +732,6 @@ def credit_yield_only(request):
             print(f"Error crediting {user.email}: {e}")
 
     return JsonResponse({'status': 'success', 'users_credited': credited_count})
+
+
+
