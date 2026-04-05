@@ -218,6 +218,12 @@
         transition: all 0.2s;
     }
 
+    .btn-buy-disabled {
+        background: #E2E4E8;
+        color: #707A8A;
+        cursor: not-allowed;
+    }
+
     .btn-sell {
         width: 100%;
         background: #F6465D;
@@ -229,6 +235,12 @@
         margin-top: 8px;
         cursor: pointer;
         transition: all 0.2s;
+    }
+
+    .btn-sell-disabled {
+        background: #E2E4E8;
+        color: #707A8A;
+        cursor: not-allowed;
     }
 
     .orderbook-title {
@@ -374,6 +386,44 @@
         color: #707A8A;
     }
 
+    /* Wallet Connect Section */
+    .wallet-connect-section {
+        background: #F8F9FA;
+        padding: 12px 16px;
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .wallet-connected {
+        color: #0ECB81;
+        font-weight: 500;
+    }
+
+    .wallet-disconnected {
+        color: #F6465D;
+        font-weight: 500;
+    }
+
+    .btn-secondary {
+        background: #F8F9FA;
+        border: 1px solid #E2E4E8;
+        color: #1E2329;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .btn-secondary:hover {
+        background: #EFF2F5;
+        border-color: #D9DDE2;
+    }
+
     @media (max-width: 992px) {
         .trading-grid {
             flex-direction: column;
@@ -391,6 +441,10 @@
         .coin-list {
             max-height: 250px;
         }
+        .coin-info img {
+            width: 28px;
+            height: 28px;
+        }
     }
 </style>
 {% endblock %}
@@ -398,10 +452,25 @@
 {% block content %}
 <div class="trading-grid">
     <div class="left-column">
+        <!-- Wallet Connect Section -->
+        <div class="wallet-connect-section">
+            <div id="walletStatus" class="wallet-disconnected">
+                <i class="fas fa-link"></i> Wallet not connected
+            </div>
+            <div style="display: flex; gap: 10px;">
+                <button id="connectWalletBtn" class="btn-primary" onclick="connectWallet()">
+                    <i class="fas fa-wallet"></i> Connect Wallet
+                </button>
+                <div id="walletInfo" style="display: none; gap: 10px;">
+                    <button class="btn-secondary" onclick="disconnectWallet()">Disconnect</button>
+                </div>
+            </div>
+        </div>
+
         <div class="chart-card">
             <div class="chart-header">
                 <div class="symbol-price">
-                    <img id="currentCoinIcon" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
+                    <img id="currentCoinIcon" src="" alt="" style="width: 32px; height: 32px; border-radius: 50%;">
                     <div>
                         <span class="symbol-name" id="symbolName">BTC/USDC</span>
                         <div>
@@ -512,6 +581,38 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
+    // Web3 Wallet Variables
+    let web3 = null;
+    let userAccount = null;
+    let isConnected = false;
+
+    // Crypto icons from CDN
+    function getTokenIcon(symbol) {
+        const icons = {
+            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
+            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
+            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+        };
+        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+    }
+
     const symbolToCoinGeckoId = {
         'BTC': 'bitcoin',
         'ETH': 'ethereum',
@@ -535,10 +636,6 @@
         'THETA': 'theta-token'
     };
 
-    function getTokenIcon(symbol) {
-        return `/static/coins/${symbol}.png`;
-    }
-
     function getToken() { return localStorage.getItem('access_token'); }
 
     async function apiCall(endpoint, method = 'GET', data = null) {
@@ -552,30 +649,154 @@
         return response.json();
     }
 
+    function formatCurrency(num) {
+        if (!num) return '$0.00';
+
+        // Convert to number first
+        const value = parseFloat(num);
+        if (isNaN(value)) return '$0.00';
+
+        if (value === 0) return '$0.00';
+
+        // Handle very small numbers (like PEPE at 0.00000344)
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+            return `$${value.toFixed(8)}`;
+        }
+
+        // Handle large numbers
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+
+        // Regular numbers
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+    }
+
     function formatNumber(num, decimals = 6) {
         if (!num) return '0';
+
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
+
         if (value === 0) return '0';
 
-            // Handle very small numbers
+        // Handle very small numbers
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-           return value.toFixed(8);
+            return value.toFixed(8);
         }
 
         return value.toFixed(decimals);
     }
 
-    function formatCurrency(num) {
-        if (!num) return '$0.00';
-        const value = parseFloat(num);
-        if (isNaN(value)) return '$0.00';
-        if (value === 0) return '$0.00';
-        if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-        if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-        if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-        if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    // Wallet Connection Functions
+    async function connectWallet() {
+        if (window.ethereum?.isCoinbaseWallet) {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                isConnected = true;
+                updateWalletUI('Coinbase Wallet', userAccount);
+                await switchToBSC();
+                await updateUserWalletAddress(userAccount);
+                return true;
+            } catch (error) {
+                console.error('Coinbase connection error:', error);
+                alert('Failed to connect Coinbase Wallet: ' + error.message);
+                return false;
+            }
+        }
+
+        if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                userAccount = accounts[0];
+                isConnected = true;
+                updateWalletUI('MetaMask', userAccount);
+                await switchToBSC();
+                await updateUserWalletAddress(userAccount);
+                return true;
+            } catch (error) {
+                console.error('MetaMask connection error:', error);
+                alert('Failed to connect MetaMask: ' + error.message);
+                return false;
+            }
+        }
+
+        alert('Please install MetaMask or Coinbase Wallet!');
+        window.open('https://metamask.io/download/', '_blank');
+        return false;
+    }
+
+    async function switchToBSC() {
+        try {
+            await window.ethereum.request({
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: '0x38' }]
+            });
+        } catch (error) {
+            if (error.code === 4902) {
+                await window.ethereum.request({
+                    method: 'wallet_addEthereumChain',
+                    params: [{
+                        chainId: '0x38',
+                        chainName: 'BNB Smart Chain',
+                        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
+                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
+                        blockExplorerUrls: ['https://bscscan.com/']
+                    }]
+                });
+            }
+        }
+    }
+
+    function updateWalletUI(walletName, address) {
+        document.getElementById('walletStatus').innerHTML = `
+            <span class="wallet-connected">
+                <i class="fas fa-check-circle"></i> ${walletName}: ${address.substring(0, 6)}...${address.substring(38)}
+            </span>
+        `;
+        document.getElementById('connectWalletBtn').style.display = 'none';
+        document.getElementById('walletInfo').style.display = 'flex';
+    }
+
+    function disconnectWallet() {
+        isConnected = false;
+        userAccount = null;
+        document.getElementById('walletStatus').innerHTML = '<span class="wallet-disconnected"><i class="fas fa-link"></i> Wallet not connected</span>';
+        document.getElementById('connectWalletBtn').style.display = 'block';
+        document.getElementById('walletInfo').style.display = 'none';
+    }
+
+    async function checkWalletConnection() {
+        if (typeof window.ethereum !== 'undefined') {
+            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+            if (accounts.length > 0) {
+                userAccount = accounts[0];
+                isConnected = true;
+                const walletName = window.ethereum.isCoinbaseWallet ? 'Coinbase Wallet' :
+                                  window.ethereum.isMetaMask ? 'MetaMask' : 'Web3 Wallet';
+                updateWalletUI(walletName, userAccount);
+            }
+        }
+    }
+
+    async function updateUserWalletAddress(address) {
+        try {
+            await apiCall('/auth/update-wallet/', 'POST', { wallet_address: address });
+        } catch (e) {
+            console.error('Failed to update wallet address:', e);
+        }
+    }
+
+    if (typeof window.ethereum !== 'undefined') {
+        window.ethereum.on('accountsChanged', function(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAccount = accounts[0];
+                updateWalletUI('Wallet', userAccount);
+                updateUserWalletAddress(userAccount);
+            }
+        });
     }
 
     async function updateChart() {
@@ -671,14 +892,8 @@
                         }
                     },
                     scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 }
-                        },
-                        y: {
-                            grid: { color: '#EFF2F5' },
-                            ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() }
-                        }
+                        x: { grid: { display: false }, ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
+                        y: { grid: { color: '#EFF2F5' }, ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() } }
                     }
                 }
             });
@@ -725,15 +940,11 @@
             const sellBtnMarket = document.getElementById('sellBtnMarket');
 
             if (userGrandBalance <= 0) {
-                buyBtn.style.background = '#E2E4E8';
-                buyBtn.style.cursor = 'not-allowed';
-                buyBtnMarket.style.background = '#E2E4E8';
-                buyBtnMarket.style.cursor = 'not-allowed';
+                buyBtn.classList.add('btn-buy-disabled');
+                buyBtnMarket.classList.add('btn-buy-disabled');
             } else {
-                buyBtn.style.background = '#0ECB81';
-                buyBtn.style.cursor = 'pointer';
-                buyBtnMarket.style.background = '#0ECB81';
-                buyBtnMarket.style.cursor = 'pointer';
+                buyBtn.classList.remove('btn-buy-disabled');
+                buyBtnMarket.classList.remove('btn-buy-disabled');
             }
 
             const holdings = await apiCall('/trading/my_tokens/');
@@ -741,32 +952,47 @@
             const hasCurrentToken = currentHoldings && parseFloat(currentHoldings.quantity) > 0;
 
             if (!hasCurrentToken) {
-                sellBtn.style.background = '#E2E4E8';
-                sellBtn.style.cursor = 'not-allowed';
-                sellBtnMarket.style.background = '#E2E4E8';
-                sellBtnMarket.style.cursor = 'not-allowed';
+                sellBtn.classList.add('btn-sell-disabled');
+                sellBtnMarket.classList.add('btn-sell-disabled');
             } else {
-                sellBtn.style.background = '#F6465D';
-                sellBtn.style.cursor = 'pointer';
-                sellBtnMarket.style.background = '#F6465D';
-                sellBtnMarket.style.cursor = 'pointer';
+                sellBtn.classList.remove('btn-sell-disabled');
+                sellBtnMarket.classList.remove('btn-sell-disabled');
             }
         } catch (e) {
             console.error(e);
         }
     }
 
-        async function loadCoins() {
+    async function loadCoins() {
         try {
-            console.log('loadCoins: fetching tokens...');
-            // Ensure tokens is at least an empty array if apiCall returns null/undefined
-            tokens = await apiCall('/trading/') || [];
-            console.log('loadCoins: received', tokens.length, 'tokens');
+            tokens = await apiCall('/trading/');
+            const topCoins = tokens.slice(0, 5);
+            const container = document.getElementById('coinList');
 
-            if (tokens.length === 0) {
-                console.warn('No tokens received from API');
-                return; // Stop execution if there is no data to process
+            if (container) {
+                container.innerHTML = topCoins.map(token => {
+                    const change = (Math.random() - 0.5) * 8;
+                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                    return `
+                        <div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                            <div class="coin-info">
+                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                                <div>
+                                    <div class="coin-symbol">${token.symbol}</div>
+                                    <div class="coin-name">${token.name}</div>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div class="coin-price">${formatCurrency(token.current_price)}</div>
+                                <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
             }
+
+            const totalVolume = Math.random() * 500000000;
+            document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
 
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
             if (currentToken) {
@@ -821,6 +1047,12 @@
     window.setPrice = setPrice;
 
     async function executeBuy() {
+        if (!isConnected || !userAccount) {
+            alert('Please connect your wallet (MetaMask or Coinbase Wallet) first!');
+            await connectWallet();
+            if (!isConnected) return;
+        }
+
         if (userGrandBalance <= 0) {
             alert('Insufficient balance to buy. Please deposit USDC first.');
             return;
@@ -914,60 +1146,20 @@
     });
 
     async function init() {
+        await checkWalletConnection();
+        await loadCoins();
+        await loadUserData();
 
         const selectedCoin = localStorage.getItem('selectedCoin');
         if (selectedCoin) {
             currentSymbol = selectedCoin;
             localStorage.removeItem('selectedCoin');
-            console.log('Selected coin from dashboard:', currentSymbol);
+            selectCoin(currentSymbol);
         }
-
-
-        console.log('Init started');
-
-        await loadCoins();
-        console.log('loadCoins completed, tokens count:', tokens.length);
-
-        await loadUserData();
-
-        document.getElementById('currentCoinIcon').src = '/static/coins/BTC.png';
-
-
 
         await updateChart();
         renderOrderBook();
         updateButtonState();
-
-        // Force top coins rendering
-        const container = document.getElementById('coinList');
-        if (container && tokens.length > 0) {
-            console.log('Rendering top coins, tokens:', tokens.length);
-            const topCoins = tokens.slice(0, 5);
-            container.innerHTML = topCoins.map(token => {
-                const change = (Math.random() - 0.5) * 8;
-                const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                return `
-                    <div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                        <div class="coin-info">
-                            <img src="/static/coins/${token.symbol}.png"
-                                 alt="${token.symbol}"
-                                 style="width: 28px; height: 28px; border-radius: 50%;"
-                                 onerror="this.src='/static/coins/BTC.png'">
-                            <div>
-                                <div class="coin-symbol">${token.symbol}</div>
-                                <div class="coin-name">${token.name}</div>
-                            </div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                            <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-        } else {
-            console.log('No tokens to render, container:', container, 'tokens length:', tokens.length);
-        }
 
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => {
