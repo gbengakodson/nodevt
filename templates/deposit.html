@@ -172,7 +172,31 @@
 
         <div class="address-box">
             <div class="address-label">Your Deposit Address</div>
-            <div class="address-value" id="depositAddress">Loading...</div>
+            <div class="info-box" style="margin-top: 20px;">
+            <div class="info-title">Platform USDC Wallet (BSC)</div>
+            <div class="address-box" id="platformWallet">0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4</div>
+            <button class="copy-btn" onclick="copyPlatformAddress()">Copy Platform Address</button>
+            <div class="info-text mt-2">
+            <i class="fas fa-info-circle"></i> Send USDC to this address, then click "Confirm Deposit" below.
+        </div>
+    </div>
+            <div class="deposit-request-card" style="margin-top: 20px;">
+    <h4>Confirm Your Deposit</h4>
+    <div class="form-group">
+        <label>Transaction Hash (TXID)</label>
+        <input type="text" id="txHash" class="form-input" placeholder="0x...">
+    </div>
+    <div class="form-group">
+        <label>Amount (USDC)</label>
+        <input type="number" id="depositAmount" class="form-input" placeholder="0.00">
+    </div>
+    <div class="form-group">
+        <label>Your Wallet Address</label>
+        <input type="text" id="userWalletAddress" class="form-input" placeholder="0x...">
+    </div>
+    <button class="btn-primary" onclick="submitDepositRequest()">Submit Deposit Request</button>
+</div>
+
         </div>
         <button class="btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="checkDeposit()">
             <i class="fas fa-sync-alt me-2"></i>Check for New Deposits
@@ -287,6 +311,12 @@
 
     // Load address when page loads
     loadDepositAddress();
+
+    function copyPlatformAddress() {
+         const address = document.getElementById('platformWallet').innerText;
+         navigator.clipboard.writeText(address);
+         alert('Platform address copied!');
+    }
 
 
 </script>

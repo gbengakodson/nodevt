@@ -1,0 +1,311 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Admin Dashboard{% endblock %}
+
+{% block extra_css %}
+<style>
+    .admin-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #E2E4E8;
+        padding-bottom: 12px;
+    }
+    
+    .admin-tab {
+        background: none;
+        border: none;
+        padding: 10px 20px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        color: #707A8A;
+        border-radius: 8px;
+        transition: all 0.2s;
+    }
+    
+    .admin-tab.active {
+        background: #F0B90B;
+        color: #1E2329;
+    }
+    
+    .admin-table {
+        width: 100%;
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
+    }
+    
+    .admin-table th {
+        text-align: left;
+        padding: 12px 16px;
+        background: #F8F9FA;
+        font-size: 12px;
+        font-weight: 600;
+        color: #707A8A;
+        border-bottom: 1px solid #E2E4E8;
+    }
+    
+    .admin-table td {
+        padding: 12px 16px;
+        border-bottom: 1px solid #E2E4E8;
+        font-size: 13px;
+    }
+    
+    .status-pending {
+        color: #F0B90B;
+        font-weight: 500;
+    }
+    
+    .status-confirmed, .status-processed {
+        color: #0ECB81;
+        font-weight: 500;
+    }
+    
+    .status-rejected {
+        color: #F6465D;
+        font-weight: 500;
+    }
+    
+    .btn-confirm {
+        background: #0ECB81;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 12px;
+        cursor: pointer;
+        margin-right: 8px;
+    }
+    
+    .btn-reject {
+        background: #F6465D;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        padding: 4px 12px;
+        cursor: pointer;
+    }
+    
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 24px;
+    }
+    
+    .stat-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+    }
+    
+    .stat-number {
+        font-size: 28px;
+        font-weight: 600;
+        color: #F0B90B;
+    }
+    
+    .stat-label {
+        font-size: 12px;
+        color: #707A8A;
+        margin-top: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-container">
+    <h1 class="mb-4">Admin Dashboard</h1>
+    
+    <div class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-number" id="pendingDeposits">0</div>
+            <div class="stat-label">Pending Deposits</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="pendingWithdrawals">0</div>
+            <div class="stat-label">Pending Withdrawals</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalUsers">0</div>
+            <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-number" id="totalVolume">$0</div>
+            <div class="stat-label">Total Volume</div>
+        </div>
+    </div>
+    
+    <div class="admin-tabs">
+        <button class="admin-tab active" data-tab="deposits">Deposit Requests</button>
+        <button class="admin-tab" data-tab="withdrawals">Withdrawal Requests</button>
+        <button class="admin-tab" data-tab="users">Users</button>
+    </div>
+    
+    <div id="depositsPanel" class="admin-panel">
+        <div class="admin-table">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Date</th><th>User</th><th>Amount</th><th>TX Hash</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody id="depositsList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="withdrawalsPanel" class="admin-panel" style="display: none;">
+        <div class="admin-table">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Date</th><th>User</th><th>Amount</th><th>Wallet Address</th><th>Status</th><th>Action</th></tr>
+                </thead>
+                <tbody id="withdrawalsList"></tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div id="usersPanel" class="admin-panel" style="display: none;">
+        <div class="admin-table">
+            <table class="admin-table">
+                <thead>
+                    <tr><th>Date Joined</th><th>User</th><th>Grand Balance</th><th>Yield Balance</th><th>Referrals</th></tr>
+                </thead>
+                <tbody id="usersList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api';
+    
+    function getToken() { return localStorage.getItem('access_token'); }
+    
+    async function apiCall(endpoint, method = 'GET', data = null) {
+        const token = getToken();
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const options = { method, headers };
+        if (data) options.body = JSON.stringify(data);
+        const response = await fetch(`${API_BASE}${endpoint}`, options);
+        return response.json();
+    }
+    
+    function formatCurrency(num) {
+        if (!num) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+    
+    async function loadDeposits() {
+        const data = await apiCall('/admin/deposits/');
+        const tbody = document.getElementById('depositsList');
+        const pending = data.filter(d => d.status === 'PENDING').length;
+        document.getElementById('pendingDeposits').innerText = pending;
+        
+        tbody.innerHTML = data.map(d => `
+            <tr>
+                <td>${d.created_at}</td>
+                <td>${d.user}</td>
+                <td>${formatCurrency(d.amount)}</td>
+                <td style="font-family: monospace; font-size: 11px;">${d.tx_hash.substring(0, 10)}...</td>
+                <td class="status-${d.status.toLowerCase()}">${d.status}</td>
+                <td>
+                    ${d.status === 'PENDING' ? `
+                        <button class="btn-confirm" onclick="processDeposit('${d.id}', 'confirm')">Confirm</button>
+                        <button class="btn-reject" onclick="processDeposit('${d.id}', 'reject')">Reject</button>
+                    ` : '-'}
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    async function loadWithdrawals() {
+        const data = await apiCall('/admin/withdrawals/');
+        const tbody = document.getElementById('withdrawalsList');
+        const pending = data.filter(w => w.status === 'PENDING').length;
+        document.getElementById('pendingWithdrawals').innerText = pending;
+        
+        tbody.innerHTML = data.map(w => `
+            <tr>
+                <td>${w.created_at}</td>
+                <td>${w.user}</td>
+                <td>${formatCurrency(w.amount)}</td>
+                <td style="font-family: monospace; font-size: 11px;">${w.wallet_address.substring(0, 10)}...</td>
+                <td class="status-${w.status.toLowerCase()}">${w.status}</td>
+                <td>
+                    ${w.status === 'PENDING' ? `
+                        <button class="btn-confirm" onclick="processWithdrawal('${w.id}', 'process')">Process</button>
+                        <button class="btn-reject" onclick="processWithdrawal('${w.id}', 'reject')">Reject</button>
+                    ` : '-'}
+                </td>
+            </tr>
+        `).join('');
+    }
+    
+    async function loadUsers() {
+        const data = await apiCall('/admin/users/');
+        const tbody = document.getElementById('usersList');
+        document.getElementById('totalUsers').innerText = data.length;
+        
+        tbody.innerHTML = data.map(u => `
+            <tr>
+                <td>${u.date_joined}</td>
+                <td>${u.email}</td>
+                <td>${formatCurrency(u.grand_balance)}</td>
+                <td>${formatCurrency(u.yield_balance)}</td>
+                <td>${u.referral_count}</td>
+            </tr>
+        `).join('');
+    }
+    
+    async function processDeposit(depositId, action) {
+        const result = await apiCall('/admin/deposits/', 'POST', {
+            deposit_id: depositId,
+            action: action
+        });
+        if (result.success) {
+            loadDeposits();
+        } else {
+            alert('Error processing deposit');
+        }
+    }
+    
+    async function processWithdrawal(withdrawalId, action) {
+        const result = await apiCall('/admin/withdrawals/', 'POST', {
+            withdrawal_id: withdrawalId,
+            action: action
+        });
+        if (result.success) {
+            loadWithdrawals();
+        } else {
+            alert('Error processing withdrawal');
+        }
+    }
+    
+    document.querySelectorAll('.admin-tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            this.classList.add('active');
+            const tabName = this.getAttribute('data-tab');
+            document.getElementById('depositsPanel').style.display = tabName === 'deposits' ? 'block' : 'none';
+            document.getElementById('withdrawalsPanel').style.display = tabName === 'withdrawals' ? 'block' : 'none';
+            document.getElementById('usersPanel').style.display = tabName === 'users' ? 'block' : 'none';
+            
+            if (tabName === 'deposits') loadDeposits();
+            if (tabName === 'withdrawals') loadWithdrawals();
+            if (tabName === 'users') loadUsers();
+        });
+    });
+    
+    loadDeposits();
+    loadWithdrawals();
+    loadUsers();
+    
+    setInterval(() => {
+        loadDeposits();
+        loadWithdrawals();
+    }, 30000);
+</script>
+{% endblock %}

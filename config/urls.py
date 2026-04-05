@@ -3,6 +3,7 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.shortcuts import redirect
 from rest_framework_simplejwt.views import TokenRefreshView
+from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -23,4 +24,8 @@ urlpatterns = [
     path('chat/', TemplateView.as_view(template_name='chat.html'), name='chat'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
     path('register/', TemplateView.as_view(template_name='register.html'), name='register'),
+    path('admin-dashboard/', TemplateView.as_view(template_name='admin_dashboard.html'), name='admin_dashboard'),
+    path('api/admin/deposits/', AdminDepositsView.as_view(), name='admin_deposits'),
+    path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
+    path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
 ]
