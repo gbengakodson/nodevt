@@ -440,6 +440,39 @@
         .holding-card { flex: 0 0 260px; }
         .dist-header, .dist-row { grid-template-columns: 1.5fr 1fr 1.2fr; font-size: 10px; }
     }
+
+    .btn-sell-small {
+    width: 100%;
+    background: #F6465D;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-sell-small:hover {
+    background: #E03E54;
+    transform: translateY(-1px);
+}
+
+.btn-sell-disabled-small {
+    width: 100%;
+    background: #E2E4E8;
+    color: #707A8A;
+    border: none;
+    border-radius: 8px;
+    padding: 8px;
+    font-size: 12px;
+    font-weight: 500;
+    margin-top: 12px;
+    cursor: not-allowed;
+}
+
 </style>
 {% endblock %}
 
@@ -689,38 +722,38 @@
                 });
 
                 holdingsCardsContainer.innerHTML = holdingsWithPrices.map(holding => {
-                    const currentPrice = holding.current_price;
-                    const quantity = parseFloat(holding.quantity);
-                    const avgPrice = parseFloat(holding.average_buy_price);
-                    const value = quantity * currentPrice;
-                    totalPortfolioValue += value;
-                    const invested = quantity * avgPrice;
-                    const pnl = value - invested;
-                    const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
-                    const pnlClass = pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-                    const pnlSymbol = pnl >= 0 ? '+' : '';
-                    const icon = iconMap[holding.token_symbol] || '🪙';
+                        const currentPrice = holding.current_price;
+                        const avgPrice = parseFloat(holding.average_buy_price);
+                        const canSell = currentPrice >= avgPrice;
+                        const sellButtonClass = canSell ? 'btn-sell-small' : 'btn-sell-disabled-small';
+                        const sellButtonTitle = canSell ? `Sell ${holding.token_symbol}` : `Cannot sell (price below purchase price)`;
 
-                    return `
-                        <div class="holding-card" onclick="goToTrading('${holding.token_symbol}')">
-                            <div class="holding-card-header">
-                                <div style="display: flex; align-items: center; gap: 10px;">
-                                    <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
-                                    <span class="holding-symbol">${holding.token_symbol}</span>
-                                </div>
+                        return `
+                            <div class="holding-card">
+                               <div class="holding-card-header">
+                                  <div style="display: flex; align-items: center; gap: 10px;">
+                                     <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
+                                     <span class="holding-symbol">${holding.token_symbol}</span>
+                                     </div>
+                                  </div>
+                                  <div class="holding-details">
+                                  <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(holding.quantity, 4)}</span></div>
+                                  <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
+                                  <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPrice)}</span></div>
+                                  <div class="holding-row"><span class="holding-label">24h Change</span><span class="${holding.change_24h >= 0 ? 'price-up' : 'price-down'}">${holding.change_24h >= 0 ? '+' : ''}${holding.change_24h.toFixed(2)}%</span></div>
+                                  <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(holding.current_value)}</span></div>
+                               </div>
+                               <div class="holding-pnl">
+                               <span class="holding-label">P&L</span>
+                               <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
+                               </div>
+                               <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${holding.quantity}, ${currentPrice})" ${!canSell ? 'disabled' : ''} title="${sellButtonTitle}">
+                                    Sell ${holding.token_symbol}
+                               </button>
                             </div>
-                            <div class="holding-details">
-                                <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(quantity, 4)}</span></div>
-                                <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
-                                <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPrice)}</span></div>
-                                <div class="holding-row"><span class="holding-label">24h Change</span><span class="${holding.change_24h >= 0 ? 'price-up' : 'price-down'}">${holding.change_24h >= 0 ? '+' : ''}${holding.change_24h.toFixed(2)}%</span></div>
-                                <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(value)}</span></div>
-                            </div>
-                            <div class="holding-pnl"><span class="holding-label">P&L</span><span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span></div>
-                        </div>
-                    `;
+                        `;
                 }).join('');
-            }
+
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
 
@@ -821,5 +854,46 @@
         localStorage.setItem('selectedCoin', symbol);
         window.location.href = '/trading/';
     }
+
+    async function sellTokenFromDashboard(symbol, quantity, currentPrice) {
+    const token = tokens.find(t => t.symbol === symbol);
+    if (!token) {
+        alert('Token not found');
+        return;
+    }
+
+    const userQty = userHoldings[symbol] || 0;
+    if (userQty === 0) {
+        alert(`No ${symbol} to sell`);
+        return;
+    }
+
+    if (quantity > userQty) {
+        alert(`You only have ${formatNumber(userQty)} ${symbol}`);
+        return;
+    }
+
+    if (currentPrice < parseFloat(token.average_buy_price)) {
+        alert(`Cannot sell ${symbol}. Current price is below your purchase price.`);
+        return;
+    }
+
+    if (confirm(`Sell ${formatNumber(quantity)} ${symbol} at ${formatCurrency(currentPrice)}?`)) {
+        try {
+            const result = await apiCall('/trading/sell/', 'POST', {
+                token_id: token.id,
+                quantity: quantity
+            });
+            if (result.success) {
+                alert(`Sold ${result.sale.quantity} ${symbol}`);
+                loadDashboard();
+            } else {
+                alert('Sale failed: ' + (result.reason || 'Unknown error'));
+            }
+        } catch (e) {
+            alert('Error: ' + e.message);
+        }
+    }
+}
 </script>
 {% endblock %}
