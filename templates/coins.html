@@ -387,7 +387,8 @@
         if (value === 0) return '$0.00';
 
         // Handle very small numbers (like PEPE at 0.00000344)
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+        if (value < 0.01 && value.toString().includes('e-') || (value > 0 && value < 0.01)) {
+        // Show up to 8 decimal places
             return `$${value.toFixed(8)}`;
         }
 
