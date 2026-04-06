@@ -11,8 +11,6 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-
-
 class RegisterView(APIView):
     permission_classes = []  # Public access
 
@@ -28,6 +26,15 @@ class RegisterView(APIView):
                 print(f"Wallet created for {user.email}: {address}")
             except Exception as e:
                 print(f"Error creating wallet: {e}")
+
+            # CREATE REFERRAL RELATIONSHIP FOR REFERRAL SERVICE
+            if user.referrer:
+                try:
+                    from apps.referrals.services.referral_service import ReferralService
+                    ReferralService.create_referral(user.referrer, user)
+                    print(f"ReferralRelationship created: {user.referrer.email} -> {user.email}")
+                except Exception as e:
+                    print(f"Error creating ReferralRelationship: {e}")
 
             refresh = RefreshToken.for_user(user)
             return Response({

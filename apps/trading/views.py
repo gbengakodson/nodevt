@@ -450,7 +450,8 @@ class TradingViewSet(viewsets.ViewSet):
     @action(detail=False, methods=['get'])
     def referral_tree(self, request):
         """Get referral tree for user (up to 7 generations)"""
-        from apps.referrals.models import ReferralRelationship
+        from apps.referrals.models import ReferralRelationship, ReferralEarning
+        from django.db.models import Sum
 
         levels = []
         current_users = [request.user]
@@ -463,10 +464,17 @@ class TradingViewSet(viewsets.ViewSet):
                 referrals = ReferralRelationship.objects.filter(referrer=user).select_related('referred')
                 for ref in referrals:
                     next_users.append(ref.referred)
+
+                    # Calculate actual earnings from this referred user
+                    earnings = ReferralEarning.objects.filter(
+                        user=request.user,
+                        from_user=ref.referred
+                    ).aggregate(total=Sum('amount'))['total'] or 0
+
                     level_data.append({
                         'name': ref.referred.username or ref.referred.email.split('@')[0],
                         'email': ref.referred.email,
-                        'earnings': 0  # Could calculate from ReferralEarning
+                        'earnings': float(earnings)
                     })
 
             if level_data:
