@@ -1,6 +1,5 @@
-# wallets/urls.py
 from django.urls import path
-from .views import (
+from apps.wallets.views import (
     SubmitDepositRequestView,
     SubmitWithdrawalRequestView,
     AdminDepositRequestsView,

@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import DepositRequest, WithdrawalRequest
 
 
+
 class SubmitDepositRequestView(APIView):
     permission_classes = [IsAuthenticated]
 

@@ -28,5 +28,5 @@ urlpatterns = [
     path('api/admin/deposits/', AdminDepositsView.as_view(), name='admin_deposits'),
     path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
-    path('api/wallets/', include('wallets.urls')),
+    path('api/wallets/', include('apps.wallets.urls')),
 ]
