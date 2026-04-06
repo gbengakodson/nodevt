@@ -453,19 +453,7 @@
 <div class="trading-grid">
     <div class="left-column">
         <!-- Wallet Connect Section -->
-        <div class="wallet-connect-section">
-            <div id="walletStatus" class="wallet-disconnected">
-                <i class="fas fa-link"></i> Wallet not connected
-            </div>
-            <div style="display: flex; gap: 10px;">
-                <button id="connectWalletBtn" class="btn-primary" onclick="connectWallet()">
-                    <i class="fas fa-wallet"></i> Connect Wallet
-                </button>
-                <div id="walletInfo" style="display: none; gap: 10px;">
-                    <button class="btn-secondary" onclick="disconnectWallet()">Disconnect</button>
-                </div>
-            </div>
-        </div>
+
 
         <div class="chart-card">
             <div class="chart-header">
@@ -688,96 +676,9 @@
     }
 
     // Wallet Connection Functions
-    async function connectWallet() {
-        if (window.ethereum?.isCoinbaseWallet) {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                userAccount = accounts[0];
-                isConnected = true;
-                updateWalletUI('Coinbase Wallet', userAccount);
-                await switchToBSC();
-                await updateUserWalletAddress(userAccount);
-                return true;
-            } catch (error) {
-                console.error('Coinbase connection error:', error);
-                alert('Failed to connect Coinbase Wallet: ' + error.message);
-                return false;
-            }
-        }
 
-        if (typeof window.ethereum !== 'undefined' && window.ethereum.isMetaMask) {
-            try {
-                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-                userAccount = accounts[0];
-                isConnected = true;
-                updateWalletUI('MetaMask', userAccount);
-                await switchToBSC();
-                await updateUserWalletAddress(userAccount);
-                return true;
-            } catch (error) {
-                console.error('MetaMask connection error:', error);
-                alert('Failed to connect MetaMask: ' + error.message);
-                return false;
-            }
-        }
 
-        alert('Please install MetaMask or Coinbase Wallet!');
-        window.open('https://metamask.io/download/', '_blank');
-        return false;
-    }
 
-    async function switchToBSC() {
-        try {
-            await window.ethereum.request({
-                method: 'wallet_switchEthereumChain',
-                params: [{ chainId: '0x38' }]
-            });
-        } catch (error) {
-            if (error.code === 4902) {
-                await window.ethereum.request({
-                    method: 'wallet_addEthereumChain',
-                    params: [{
-                        chainId: '0x38',
-                        chainName: 'BNB Smart Chain',
-                        nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
-                        rpcUrls: ['https://bsc-dataseed.binance.org/'],
-                        blockExplorerUrls: ['https://bscscan.com/']
-                    }]
-                });
-            }
-        }
-    }
-
-    function updateWalletUI(walletName, address) {
-        document.getElementById('walletStatus').innerHTML = `
-            <span class="wallet-connected">
-                <i class="fas fa-check-circle"></i> ${walletName}: ${address.substring(0, 6)}...${address.substring(38)}
-            </span>
-        `;
-        document.getElementById('connectWalletBtn').style.display = 'none';
-        document.getElementById('walletInfo').style.display = 'flex';
-    }
-
-    function disconnectWallet() {
-        isConnected = false;
-        userAccount = null;
-        document.getElementById('walletStatus').innerHTML = '<span class="wallet-disconnected"><i class="fas fa-link"></i> Wallet not connected</span>';
-        document.getElementById('connectWalletBtn').style.display = 'block';
-        document.getElementById('walletInfo').style.display = 'none';
-    }
-
-    async function checkWalletConnection() {
-        if (typeof window.ethereum !== 'undefined') {
-            const accounts = await window.ethereum.request({ method: 'eth_accounts' });
-            if (accounts.length > 0) {
-                userAccount = accounts[0];
-                isConnected = true;
-                const walletName = window.ethereum.isCoinbaseWallet ? 'Coinbase Wallet' :
-                                  window.ethereum.isMetaMask ? 'MetaMask' : 'Web3 Wallet';
-                updateWalletUI(walletName, userAccount);
-            }
-        }
-    }
 
     async function updateUserWalletAddress(address) {
         try {
