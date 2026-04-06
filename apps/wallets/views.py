@@ -416,27 +416,28 @@ class AdminSendEmailView(APIView):
             users = User.objects.filter(is_active=True)
 
         success_count = 0
-        failed_emails = []
+        failed_list = []
 
         for user in users:
             try:
                 send_mail(
                     subject,
                     message,
-                    settings.DEFAULT_FROM_EMAIL,
+                    settings.DEFAULT_FROM_EMAIL or 'noreply@yourdomain.com',
                     [user.email],
                     fail_silently=False,
                 )
                 success_count += 1
+                logger.info(f"Email sent to {user.email}")
             except Exception as e:
-                failed_emails.append(user.email)
-                logger.error(f"Failed to send email to {user.email}: {str(e)}")
+                failed_list.append(user.email)
+                logger.error(f"Failed to send to {user.email}: {str(e)}")
 
         return Response({
             'success': True,
             'sent_count': success_count,
             'total': users.count(),
-            'failed_emails': failed_emails
+            'failed': failed_list
         })
 
 

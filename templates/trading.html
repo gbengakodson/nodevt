@@ -386,44 +386,6 @@
         color: #707A8A;
     }
 
-    /* Wallet Connect Section */
-    .wallet-connect-section {
-        background: #F8F9FA;
-        padding: 12px 16px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-
-    .wallet-connected {
-        color: #0ECB81;
-        font-weight: 500;
-    }
-
-    .wallet-disconnected {
-        color: #F6465D;
-        font-weight: 500;
-    }
-
-    .btn-secondary {
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        color: #1E2329;
-        padding: 8px 16px;
-        border-radius: 6px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .btn-secondary:hover {
-        background: #EFF2F5;
-        border-color: #D9DDE2;
-    }
-
     @media (max-width: 992px) {
         .trading-grid {
             flex-direction: column;
@@ -452,9 +414,6 @@
 {% block content %}
 <div class="trading-grid">
     <div class="left-column">
-        <!-- Wallet Connect Section -->
-
-
         <div class="chart-card">
             <div class="chart-header">
                 <div class="symbol-price">
@@ -569,11 +528,6 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // Web3 Wallet Variables
-    let web3 = null;
-    let userAccount = null;
-    let isConnected = false;
-
     // Crypto icons from CDN
     function getTokenIcon(symbol) {
         const icons = {
@@ -640,22 +594,18 @@
     function formatCurrency(num) {
         if (!num) return '$0.00';
 
-        // Convert to number first
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
 
         if (value === 0) return '$0.00';
 
-        // Handle very small numbers (like PEPE at 0.00000344)
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return `$${value.toFixed(8)}`;
         }
 
-        // Handle large numbers
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
 
-        // Regular numbers
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
@@ -667,21 +617,12 @@
 
         if (value === 0) return '0';
 
-        // Handle very small numbers
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return value.toFixed(8);
         }
 
         return value.toFixed(decimals);
     }
-
-    // Wallet Connection Functions
-
-
-
-
-
-
 
     async function updateChart() {
         if (!currentSymbol) return;
@@ -931,12 +872,6 @@
     window.setPrice = setPrice;
 
     async function executeBuy() {
-        if (!isConnected || !userAccount) {
-            alert('Please connect your wallet (MetaMask or Coinbase Wallet) first!');
-            await connectWallet();
-            if (!isConnected) return;
-        }
-
         if (userGrandBalance <= 0) {
             alert('Insufficient balance to buy. Please deposit USDC first.');
             return;
@@ -1030,7 +965,6 @@
     });
 
     async function init() {
-        await checkWalletConnection();
         await loadCoins();
         await loadUserData();
 
