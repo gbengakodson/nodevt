@@ -14,72 +14,200 @@
         background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
     }
 
-    .withdraw-container {
-        min-height: calc(100vh - 200px);
-        display: flex;
-        align-items: center;
-        justify-content: center;
+    .withdraw-wrapper {
+        max-width: 1400px;
+        margin: 0 auto;
         padding: 40px 20px;
     }
 
-    .withdraw-card {
+    .withdraw-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 30px;
+    }
+
+    /* Left Panel - Balance Info */
+    .balance-panel {
         background: rgba(30, 35, 41, 0.95);
         backdrop-filter: blur(10px);
-        border-radius: 28px;
+        border-radius: 24px;
         border: 1px solid rgba(240, 185, 11, 0.2);
-        padding: 40px;
-        max-width: 500px;
-        width: 100%;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        padding: 32px;
         transition: transform 0.3s;
     }
 
-    .withdraw-card:hover {
-        transform: translateY(-5px);
+    .balance-panel:hover {
+        transform: translateY(-3px);
         border-color: rgba(240, 185, 11, 0.4);
     }
 
-    .withdraw-header {
-        text-align: center;
-        margin-bottom: 32px;
+    .panel-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #2B3139;
     }
 
-    .withdraw-header h2 {
-        font-size: 28px;
-        font-weight: 700;
+    .panel-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(240, 185, 11, 0.15);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        color: #F0B90B;
+    }
+
+    .panel-title {
+        font-size: 20px;
+        font-weight: 600;
         color: #FFFFFF;
-        margin-bottom: 8px;
     }
 
-    .withdraw-header p {
-        font-size: 14px;
+    .panel-subtitle {
+        font-size: 13px;
         color: #8A8F9E;
+        margin-top: 4px;
     }
 
-    .balance-display {
-        background: #1E2329;
-        border-radius: 16px;
-        padding: 20px;
-        text-align: center;
+    /* Balance Card */
+    .balance-card {
+        background: linear-gradient(135deg, #1A1C23 0%, #1E2329 100%);
+        border-radius: 20px;
+        padding: 24px;
         margin-bottom: 24px;
         border: 1px solid #2B3139;
     }
 
     .balance-label {
-        font-size: 11px;
+        font-size: 12px;
         color: #8A8F9E;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
         margin-bottom: 8px;
     }
 
     .balance-amount {
-        font-size: 32px;
+        font-size: 36px;
         font-weight: 700;
+        color: #F0B90B;
+        font-family: monospace;
+    }
+
+    .balance-hint {
+        font-size: 11px;
+        color: #5E6673;
+        margin-top: 8px;
+    }
+
+    /* Quick Amount Buttons */
+    .quick-amounts {
+        display: flex;
+        gap: 12px;
+        margin: 20px 0;
+    }
+
+    .quick-amount-btn {
+        flex: 1;
+        background: #1A1C23;
+        border: 1px solid #2B3139;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #EAECEF;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: center;
+    }
+
+    .quick-amount-btn:hover {
+        background: #F0B90B;
+        color: #0B0E11;
+        border-color: #F0B90B;
+    }
+
+    /* Network Info */
+    .network-info {
+        background: #1A1C23;
+        border-radius: 16px;
+        padding: 20px;
+        margin-top: 24px;
+        border: 1px solid #2B3139;
+    }
+
+    .network-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 12px 0;
+        border-bottom: 1px solid #2B3139;
+    }
+
+    .network-row:last-child {
+        border-bottom: none;
+    }
+
+    .network-label {
+        font-size: 13px;
+        color: #8A8F9E;
+    }
+
+    .network-value {
+        font-size: 13px;
+        color: #EAECEF;
+        font-weight: 500;
+    }
+
+    .network-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: rgba(240, 185, 11, 0.12);
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
         color: #F0B90B;
     }
 
+    /* Right Panel - Withdraw Form */
+    .form-panel {
+        background: rgba(30, 35, 41, 0.95);
+        backdrop-filter: blur(10px);
+        border-radius: 24px;
+        border: 1px solid rgba(240, 185, 11, 0.2);
+        padding: 32px;
+        transition: transform 0.3s;
+    }
+
+    .form-panel:hover {
+        transform: translateY(-3px);
+        border-color: rgba(240, 185, 11, 0.4);
+    }
+
+    .form-header {
+        margin-bottom: 28px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #2B3139;
+    }
+
+    .form-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #FFFFFF;
+        margin-bottom: 4px;
+    }
+
+    .form-subtitle {
+        font-size: 13px;
+        color: #8A8F9E;
+    }
+
     .form-group {
-        margin-bottom: 20px;
+        margin-bottom: 24px;
     }
 
     .form-label {
@@ -90,76 +218,99 @@
         margin-bottom: 8px;
     }
 
+    .form-label .required {
+        color: #F6465D;
+        margin-left: 4px;
+    }
+
     .form-input {
         width: 100%;
         padding: 14px 18px;
-        background: #1E2329;
+        background: #1A1C23;
         border: 1.5px solid #2B3139;
-        border-radius: 14px;
+        border-radius: 12px;
         font-size: 14px;
         color: #EAECEF;
         transition: all 0.2s;
+        font-family: monospace;
     }
 
     .form-input:focus {
         outline: none;
         border-color: #F0B90B;
-        box-shadow: 0 0 0 4px rgba(240, 185, 11, 0.1);
+        box-shadow: 0 0 0 3px rgba(240, 185, 11, 0.1);
     }
 
     .form-input::placeholder {
         color: #5E6673;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
-    .perc-buttons {
+    .input-hint {
+        font-size: 11px;
+        color: #5E6673;
+        margin-top: 6px;
+    }
+
+    .fee-breakdown {
+        background: #1A1C23;
+        border-radius: 12px;
+        padding: 16px;
+        margin: 20px 0;
+    }
+
+    .fee-row {
         display: flex;
-        gap: 8px;
-        margin-top: 12px;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 13px;
     }
 
-    .perc-btn {
-        flex: 1;
-        background: #2A2F3A;
-        border: 1px solid #2B3139;
-        border-radius: 10px;
-        padding: 8px;
-        font-size: 12px;
-        cursor: pointer;
+    .fee-label {
         color: #8A8F9E;
-        transition: all 0.2s;
     }
 
-    .perc-btn:hover {
-        background: #F0B90B;
-        color: #0B0E11;
-        border-color: #F0B90B;
+    .fee-value {
+        color: #EAECEF;
     }
 
-    .withdraw-btn {
+    .fee-total {
+        border-top: 1px solid #2B3139;
+        margin-top: 8px;
+        padding-top: 8px;
+        font-weight: 600;
+    }
+
+    .btn-submit {
         width: 100%;
-        background: #F6465D;
+        background: #F0B90B;
         border: none;
-        color: white;
-        padding: 14px;
+        color: #0B0E11;
+        padding: 16px;
         font-size: 15px;
         font-weight: 600;
-        border-radius: 14px;
+        border-radius: 12px;
         cursor: pointer;
         transition: all 0.2s;
-        margin-top: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 8px;
     }
 
-    .withdraw-btn:hover {
-        background: #E03E54;
+    .btn-submit:hover {
+        background: #E0A800;
         transform: translateY(-2px);
+        box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
     }
 
     .info-box {
-        background: rgba(240, 185, 11, 0.1);
-        border-left: 4px solid #F0B90B;
-        padding: 16px;
+        background: rgba(14, 203, 129, 0.08);
+        border-left: 3px solid #0ECB81;
+        padding: 14px 16px;
         border-radius: 12px;
-        margin-top: 24px;
+        margin-top: 20px;
     }
 
     .info-text {
@@ -168,55 +319,158 @@
         line-height: 1.5;
     }
 
+    .warning-box {
+        background: rgba(246, 70, 93, 0.08);
+        border-left: 3px solid #F6465D;
+        padding: 14px 16px;
+        border-radius: 12px;
+        margin-top: 16px;
+    }
+
+    .warning-text {
+        font-size: 12px;
+        color: #8A8F9E;
+        line-height: 1.5;
+    }
+
+    @media (max-width: 992px) {
+        .withdraw-grid {
+            grid-template-columns: 1fr;
+            gap: 20px;
+        }
+        .balance-panel, .form-panel {
+            padding: 24px;
+        }
+    }
+
     @media (max-width: 768px) {
-        .withdraw-card {
-            padding: 32px 24px;
+        .withdraw-wrapper {
+            padding: 20px;
         }
         .balance-amount {
-            font-size: 24px;
+            font-size: 28px;
+        }
+        .quick-amounts {
+            gap: 8px;
+        }
+        .quick-amount-btn {
+            padding: 8px;
+            font-size: 12px;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="withdraw-container">
-    <div class="withdraw-card">
-        <div class="withdraw-header">
-            <h2>Withdraw USDC</h2>
-            <p>Withdraw funds to your external wallet</p>
-        </div>
+<div class="withdraw-wrapper">
+    <div class="withdraw-grid">
+        <!-- Left Panel: Balance & Information -->
+        <div class="balance-panel">
+            <div class="panel-header">
+                <div class="panel-icon">
+                    <i class="fas fa-arrow-down"></i>
+                </div>
+                <div>
+                    <div class="panel-title">Withdraw Funds</div>
+                    <div class="panel-subtitle">Withdraw USDC to your external wallet</div>
+                </div>
+            </div>
 
-        <div class="balance-display">
-            <div class="balance-label">Available Balance</div>
-            <div class="balance-amount" id="availableBalance">$0.00</div>
-        </div>
+            <div class="balance-card">
+                <div class="balance-label">Available Balance</div>
+                <div class="balance-amount" id="availableBalance">$0.00</div>
+                <div class="balance-hint">USDC on BSC (BEP20) network</div>
+            </div>
 
-        <div class="form-group">
-            <label class="form-label">Withdrawal Address (BSC)</label>
-            <input type="text" id="withdrawAddress" class="form-input" placeholder="0x...">
-        </div>
+            <div class="quick-amounts">
+                <div class="quick-amount-btn" onclick="setAmount(25)">25%</div>
+                <div class="quick-amount-btn" onclick="setAmount(50)">50%</div>
+                <div class="quick-amount-btn" onclick="setAmount(75)">75%</div>
+                <div class="quick-amount-btn" onclick="setAmount(100)">100%</div>
+            </div>
 
-        <div class="form-group">
-            <label class="form-label">Amount (USDC)</label>
-            <input type="number" id="withdrawAmount" class="form-input" step="0.01" placeholder="0.00">
-            <div class="perc-buttons">
-                <button class="perc-btn" onclick="setPercent(25)">25%</button>
-                <button class="perc-btn" onclick="setPercent(50)">50%</button>
-                <button class="perc-btn" onclick="setPercent(75)">75%</button>
-                <button class="perc-btn" onclick="setPercent(100)">100%</button>
+            <div class="network-info">
+                <div class="network-row">
+                    <span class="network-label">Network</span>
+                    <span class="network-value">
+                        <span class="network-badge">
+                            <i class="fas fa-globe"></i> BSC (BEP20)
+                        </span>
+                    </span>
+                </div>
+                <div class="network-row">
+                    <span class="network-label">Token</span>
+                    <span class="network-value">USDC (Binance-Peg)</span>
+                </div>
+                <div class="network-row">
+                    <span class="network-label">Processing Time</span>
+                    <span class="network-value">Up to 10 Minutes</span>
+                </div>
+                <div class="network-row">
+                    <span class="network-label">Min / Max</span>
+                    <span class="network-value">$10 / No Limit</span>
+                </div>
+            </div>
+
+            <div class="warning-box">
+                <div class="warning-text">
+                    <i class="fas fa-exclamation-triangle me-1"></i>
+                    <strong>Important:</strong> Ensure your wallet supports USDC on BSC (BEP20) network.
+                    Sending to the wrong network may result in permanent loss.
+                </div>
             </div>
         </div>
 
-        <button class="withdraw-btn" onclick="withdraw()">
-            <i class="fas fa-paper-plane me-2"></i>Withdraw USDC
-        </button>
+        <!-- Right Panel: Withdraw Form -->
+        <div class="form-panel">
+            <div class="form-header">
+                <div class="form-title">Withdrawal Request</div>
+                <div class="form-subtitle">Enter withdrawal details</div>
+            </div>
 
-        <div class="info-box">
-            <div class="info-text">
-                <i class="fas fa-info-circle me-1"></i> Minimum withdrawal: $10 USDC<br>
-                <i class="fas fa-clock me-1"></i> Processing time: 1-5 minutes<br>
-                <i class="fas fa-gas-pump me-1"></i> Network: BSC (BEP20) only
+            <div class="form-group">
+                <label class="form-label">
+                    Withdrawal Address
+                    <span class="required">*</span>
+                </label>
+                <input type="text" id="withdrawAddress" class="form-input" placeholder="0x...">
+                <div class="input-hint">Your external BSC wallet address</div>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">
+                    Amount (USDC)
+                    <span class="required">*</span>
+                </label>
+                <input type="number" id="withdrawAmount" class="form-input" step="0.01" placeholder="0.00">
+                <div class="input-hint">Minimum withdrawal: $10 USDC</div>
+            </div>
+
+            <div class="fee-breakdown">
+                <div class="fee-row">
+                    <span class="fee-label">Withdrawal Amount</span>
+                    <span class="fee-value" id="displayAmount">$0.00</span>
+                </div>
+                <div class="fee-row">
+                    <span class="fee-label">Network Fee</span>
+                    <span class="fee-value">$0.00</span>
+                </div>
+                <div class="fee-row fee-total">
+                    <span class="fee-label">You Will Receive</span>
+                    <span class="fee-value" id="youReceive">$0.00</span>
+                </div>
+            </div>
+
+            <button class="btn-submit" onclick="submitWithdrawalRequest()">
+                <i class="fas fa-paper-plane"></i>
+                Submit Withdrawal Request
+            </button>
+
+            <div class="info-box">
+                <div class="info-text">
+                    <i class="fas fa-clock me-1"></i>
+                    Withdrawal requests are processed within 10 minutes. You will receive a confirmation email once completed.
+                </div>
             </div>
         </div>
     </div>
@@ -232,67 +486,53 @@
 
     async function apiCall(endpoint, method = 'GET', data = null) {
         const token = getToken();
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const options = {
-            method: method,
-            headers: headers,
-        };
-
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
-
+        const headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+        const options = { method, headers };
+        if (data) options.body = JSON.stringify(data);
         const response = await fetch(`${API_BASE}${endpoint}`, options);
-
-        if (response.status === 401) {
-            window.location.href = '/login/';
-            throw new Error('Session expired');
-        }
-
+        if (response.status === 401) window.location.href = '/login/';
         return response.json();
     }
 
-
     function formatCurrency(num) {
-            if (!num) return '$0.00';
-            const value = parseFloat(num);
-            if (isNaN(value)) return '$0.00';
-            if (value === 0) return '$0.00';
-            if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-            if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-            if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-            if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-            return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        if (!num || num === 0) return '$0.00';
+        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     async function loadBalance() {
         try {
             const balance = await apiCall('/trading/my_balance/');
-            userBalance = parseFloat(balance.grand_balance);
+            userBalance = parseFloat(balance.grand_balance) || 0;
             document.getElementById('availableBalance').innerHTML = formatCurrency(userBalance);
         } catch (e) {
-            console.error(e);
+            console.error('Error loading balance:', e);
         }
     }
 
-    function setPercent(percent) {
+    function setAmount(percent) {
         const amount = (userBalance * percent) / 100;
         document.getElementById('withdrawAmount').value = amount.toFixed(2);
+        updateDisplay(amount);
     }
 
-    async function withdraw() {
-        const address = document.getElementById('withdrawAddress').value;
+    function updateDisplay(amount) {
+        const numAmount = parseFloat(amount) || 0;
+        document.getElementById('displayAmount').innerHTML = formatCurrency(numAmount);
+        document.getElementById('youReceive').innerHTML = formatCurrency(numAmount);
+    }
+
+    async function submitWithdrawalRequest() {
+        const address = document.getElementById('withdrawAddress').value.trim();
         const amount = parseFloat(document.getElementById('withdrawAmount').value);
 
         if (!address) {
             alert('Please enter a withdrawal address');
+            return;
+        }
+
+        if (!address.startsWith('0x') || address.length !== 42) {
+            alert('Please enter a valid BSC wallet address (0x...).');
             return;
         }
 
@@ -312,22 +552,27 @@
         }
 
         try {
-            const result = await apiCall('/trading/withdraw/', 'POST', {
-                address: address,
-                amount: amount
+            const result = await apiCall('/wallets/withdrawal-request/', 'POST', {
+                amount: amount,
+                wallet_address: address
             });
 
             if (result.success) {
-                alert(`Withdrawal of ${formatCurrency(amount)} initiated to ${address}`);
+                alert('Withdrawal request submitted successfully! Our team will process it within 24 hours.');
+                document.getElementById('withdrawAddress').value = '';
                 document.getElementById('withdrawAmount').value = '';
                 await loadBalance();
             } else {
-                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
+                alert('Error: ' + (result.error || 'Failed to submit request'));
             }
         } catch (e) {
             alert('Error: ' + e.message);
         }
     }
+
+    document.getElementById('withdrawAmount').addEventListener('input', function() {
+        updateDisplay(this.value);
+    });
 
     loadBalance();
 </script>

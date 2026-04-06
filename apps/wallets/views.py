@@ -121,3 +121,35 @@ class AdminWithdrawalRequestsView(APIView):
         withdrawal.save()
 
         return Response({'success': True})
+
+
+class WithdrawalRequestView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .models import WithdrawalRequest
+        from apps.wallets.models import Wallet
+
+        amount = request.data.get('amount')
+        wallet_address = request.data.get('wallet_address')
+
+        if not amount or not wallet_address:
+            return Response({'error': 'All fields are required'}, status=400)
+
+        amount = Decimal(str(amount))
+
+        if amount < 10:
+            return Response({'error': 'Minimum withdrawal is $10 USDC'}, status=400)
+
+        grand_wallet = Wallet.objects.get(user=request.user, wallet_type='GRAND')
+
+        if grand_wallet.balance < amount:
+            return Response({'error': 'Insufficient balance'}, status=400)
+
+        withdrawal = WithdrawalRequest.objects.create(
+            user=request.user,
+            amount=amount,
+            wallet_address=wallet_address
+        )
+
+        return Response({'success': True, 'message': 'Withdrawal request submitted'})
