@@ -3,6 +3,9 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import DepositRequest, WithdrawalRequest
+from django.db.models import Sum, Count, Avg
+from django.contrib.auth.models import User
+from apps.wallets.models import Wallet
 
 
 
@@ -154,3 +157,89 @@ class WithdrawalRequestView(APIView):
         )
 
         return Response({'success': True, 'message': 'Withdrawal request submitted'})
+
+
+# Add these to your apps/wallets/views.py
+
+class AdminStatisticsView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from django.db.models import Sum, Count, Avg
+        from apps.wallets.models import Wallet
+        from django.contrib.auth.models import User
+
+        # Calculate statistics
+        total_buys = Transaction.objects.filter(type='BUY').count()  # Adjust based on your model
+        total_solds = Transaction.objects.filter(type='SELL').count()
+
+        # Token holdings stats
+        all_wallets = Wallet.objects.filter(wallet_type='GRAND')
+        total_tokens_held = all_wallets.aggregate(Sum('balance'))['balance__sum'] or 0
+
+        return Response({
+            'total_buys': total_buys,
+            'total_solds': total_solds,
+            'total_tokens_held': float(total_tokens_held),
+            'total_yield': 0,  # Calculate based on your yield model
+            'active_sell_tokens': 0,  # Based on your trading model
+            'inactive_sell_tokens': 0,
+            'avg_hold_time': '14d',
+            'turnover_rate': '23%'
+        })
+
+
+class AdminHoldersView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from apps.wallets.models import Wallet
+        from django.contrib.auth.models import User
+
+        users = User.objects.filter(is_active=True)
+        holder_data = []
+
+        for user in users:
+            try:
+                wallet = Wallet.objects.get(user=user, wallet_type='GRAND')
+                holder_data.append({
+                    'email': user.email,
+                    'tokens_held': float(wallet.balance),
+                    'value': float(wallet.balance) * 1.0  # Multiply by token price
+                })
+            except Wallet.DoesNotExist:
+                holder_data.append({
+                    'email': user.email,
+                    'tokens_held': 0,
+                    'value': 0
+                })
+
+        # Sort by tokens held
+        holder_data.sort(key=lambda x: x['tokens_held'], reverse=True)
+
+        top_holders = holder_data[:10]
+        bottom_holders = [h for h in holder_data if h['tokens_held'] > 0][-10:]
+
+        # Calculate distribution
+        total_tokens = sum(h['tokens_held'] for h in holder_data)
+        top_10_percent_tokens = sum(h['tokens_held'] for h in holder_data[:int(len(holder_data) * 0.1)])
+
+        return Response({
+            'top_holders': top_holders,
+            'bottom_holders': bottom_holders,
+            'top_percentage': (top_10_percent_tokens / total_tokens * 100) if total_tokens > 0 else 0,
+            'middle_percentage': 65,
+            'bottom_percentage': 10
+        })
+
+
+class AdminBuySellActivityView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        # Return mock data - replace with actual transaction data
+        return Response({
+            'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+            'buys': [12, 19, 15, 17, 14, 22, 18],
+            'sells': [8, 12, 10, 9, 11, 15, 13]
+        })
