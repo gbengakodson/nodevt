@@ -179,6 +179,10 @@ class AdminStatisticsView(APIView):
         from django.db.models import F, Sum, Q, Avg
         from datetime import timedelta
         from django.utils import timezone
+        from decimal import Decimal
+        import logging
+
+        logger = logging.getLogger(__name__)
 
         # Total token VALUE
         total_token_value = UserTokenBalance.objects.aggregate(
@@ -187,10 +191,35 @@ class AdminStatisticsView(APIView):
 
         total_buys = Purchase.objects.count()
 
-        # Platform USDC balance
-        platform_usdc_balance = Wallet.objects.filter(
-            wallet_type='GRAND'
-        ).aggregate(total=Sum('balance'))['total'] or Decimal('0')
+        # Platform USDC balance from BLOCKCHAIN (not database)
+        platform_wallet_address = "0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4"  # Your platform wallet
+        platform_usdc_balance = Decimal('0')
+
+        try:
+            from web3 import Web3
+            # Connect to BSC
+            bsc_rpc = "https://bsc-dataseed.binance.org/"
+            w3 = Web3(Web3.HTTPProvider(bsc_rpc))
+
+            if w3.is_connected():
+                # USDC Contract on BSC
+                usdc_contract_address = "0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4"
+                usdc_abi = '[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}]'
+
+                contract = w3.eth.contract(address=usdc_contract_address, abi=usdc_abi)
+                balance_wei = contract.functions.balanceOf(platform_wallet_address).call()
+                platform_usdc_balance = Decimal(str(balance_wei / 10 ** 18))  # USDC has 18 decimals
+                logger.info(f"Blockchain balance: {platform_usdc_balance} USDC")
+            else:
+                raise Exception("Web3 connection failed")
+
+        except Exception as e:
+            logger.error(f"Error fetching blockchain balance: {str(e)}")
+            # Fallback to database balance if blockchain fails
+            platform_usdc_balance = Wallet.objects.filter(
+                wallet_type='GRAND'
+            ).aggregate(total=Sum('balance'))['total'] or Decimal('0')
+            logger.warning(f"Using database fallback balance: {platform_usdc_balance}")
 
         # Active/Inactive sell counts
         all_balances = UserTokenBalance.objects.filter(quantity__gt=0)
@@ -226,13 +255,12 @@ class AdminStatisticsView(APIView):
         )['avg_age']
 
         if avg_hold_seconds:
-            avg_days = avg_hold_seconds.total_seconds() / 86400  # Convert seconds to days
+            avg_days = avg_hold_seconds.total_seconds() / 86400
             avg_hold_time = f"{int(avg_days)}d"
         else:
             avg_hold_time = "0d"
 
         # REAL: Turnover Rate = (Total Sells / Total Buys) * 100
-        # Since no Sale model, use withdrawals as sells
         from apps.wallets.models import WithdrawalRequest
         total_sells = WithdrawalRequest.objects.filter(status='PROCESSED').count()
         turnover_rate = f"{int((total_sells / total_buys) * 100)}%" if total_buys > 0 else "0%"
@@ -371,11 +399,16 @@ class AdminSendEmailView(APIView):
     permission_classes = [IsAdminUser]
 
     def post(self, request):
+        from django.core.mail import send_mail
+        from django.conf import settings
+        from django.contrib.auth.models import User
+        import logging
+
+        logger = logging.getLogger(__name__)
+
         subject = request.data.get('subject')
         message = request.data.get('message')
-        user_ids = request.data.get('user_ids', [])  # Empty = all users
-
-        from django.contrib.auth.models import User
+        user_ids = request.data.get('user_ids', [])
 
         if user_ids:
             users = User.objects.filter(id__in=user_ids, is_active=True)
@@ -383,6 +416,8 @@ class AdminSendEmailView(APIView):
             users = User.objects.filter(is_active=True)
 
         success_count = 0
+        failed_emails = []
+
         for user in users:
             try:
                 send_mail(
@@ -393,13 +428,15 @@ class AdminSendEmailView(APIView):
                     fail_silently=False,
                 )
                 success_count += 1
-            except:
-                pass
+            except Exception as e:
+                failed_emails.append(user.email)
+                logger.error(f"Failed to send email to {user.email}: {str(e)}")
 
         return Response({
             'success': True,
             'sent_count': success_count,
-            'total': users.count()
+            'total': users.count(),
+            'failed_emails': failed_emails
         })
 
 
