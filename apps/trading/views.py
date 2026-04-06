@@ -82,19 +82,16 @@ class TradingViewSet(viewsets.ViewSet):
                 'required': str(amount_usdc)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate token quantity
-        token_quantity = amount_usdc / token.current_price
-
         # Calculate node fee (10%)
         node_fee = amount_usdc * Decimal('0.1')
         amount_after_fee = amount_usdc - node_fee
 
+        # Calculate token quantity after fee
+        token_quantity = amount_after_fee / token.current_price
+
         # Deduct from grand wallet
         grand_wallet.balance -= amount_usdc
         grand_wallet.save()
-
-        # Calculate token quantity after fee
-        token_quantity_after_fee = amount_after_fee / token.current_price
 
         # Update user's token balance
         user_balance, created = request.user.token_balances.get_or_create(
@@ -103,9 +100,8 @@ class TradingViewSet(viewsets.ViewSet):
         )
 
         # Add tokens with average price calculation
-        total_quantity = user_balance.quantity + token_quantity_after_fee
-        total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
-                    token_quantity_after_fee * token.current_price)
+        total_quantity = user_balance.quantity + token_quantity
+        total_cost = (user_balance.quantity * user_balance.average_buy_price) + (token_quantity * token.current_price)
         user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
         user_balance.quantity = total_quantity
         user_balance.save()
@@ -114,7 +110,7 @@ class TradingViewSet(viewsets.ViewSet):
         purchase = Purchase.objects.create(
             user=request.user,
             token=token,
-            quantity=token_quantity_after_fee,
+            quantity=token_quantity,
             price_per_token=token.current_price,
             total_amount=amount_after_fee,
             node_fee=node_fee
@@ -126,12 +122,11 @@ class TradingViewSet(viewsets.ViewSet):
         try:
             distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
             referral_count = len(distributions)
-            print(f"Distributed node fee to {referral_count} referrers")
         except Exception as e:
             print(f"Error distributing referral fees: {e}")
             referral_count = 0
 
-        # Create main transaction record for buyer
+        # Create transaction record for buyer
         Transaction.objects.create(
             user=request.user,
             transaction_type='PURCHASE',
@@ -141,7 +136,7 @@ class TradingViewSet(viewsets.ViewSet):
             metadata={
                 'token_id': str(token.id),
                 'token_symbol': token.symbol,
-                'quantity': str(token_quantity_after_fee),
+                'quantity': str(token_quantity),
                 'price': str(token.current_price),
                 'node_fee': str(node_fee),
                 'referrals_credited': referral_count
@@ -151,10 +146,10 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response({
             'success': True,
-            'message': f'Successfully purchased {token_quantity_after_fee:.8f} {token.symbol}',
+            'message': f'Successfully purchased {token_quantity:.8f} {token.symbol}',
             'purchase': {
                 'token': token.symbol,
-                'quantity': str(token_quantity_after_fee),
+                'quantity': str(token_quantity),
                 'price_per_token': str(token.current_price),
                 'total_amount': str(amount_after_fee),
                 'node_fee': str(node_fee)
@@ -429,24 +424,27 @@ class TradingViewSet(viewsets.ViewSet):
     def referral_stats(self, request):
         """Get referral statistics for user"""
         from apps.referrals.models import ReferralRelationship, ReferralEarning
+        from decimal import Decimal
 
-        # Count referrals
+        # Count referrals (people this user directly referred)
         total_referrals = ReferralRelationship.objects.filter(referrer=request.user).count()
         active_referrals = ReferralRelationship.objects.filter(
             referrer=request.user,
             referred__is_active=True
         ).count()
 
-        # Calculate total commissions
+        # Calculate total commissions from referral earnings
         earnings = ReferralEarning.objects.filter(user=request.user)
         total_commissions = sum(e.amount for e in earnings)
-        pending_commissions = 0  # All commissions are credited immediately
+
+        # Pending commissions (all are credited immediately, so 0)
+        pending_commissions = Decimal('0')
 
         return Response({
             'total_referrals': total_referrals,
             'active_referrals': active_referrals,
-            'total_commissions': total_commissions,
-            'pending_commissions': pending_commissions
+            'total_commissions': float(total_commissions),
+            'pending_commissions': float(pending_commissions)
         })
 
     @action(detail=False, methods=['get'])
@@ -485,19 +483,20 @@ class TradingViewSet(viewsets.ViewSet):
         """Get referral earnings history"""
         from apps.referrals.models import ReferralEarning
 
-        earnings = ReferralEarning.objects.filter(user=request.user).order_by('-created_at')[:20]
+        earnings = ReferralEarning.objects.filter(user=request.user).order_by('-created_at')[:50]
 
         data = []
         for e in earnings:
             data.append({
                 'date': e.created_at.strftime('%Y-%m-%d %H:%M'),
-                'from_user': e.from_user.username or e.from_user.email.split('@')[0],
+                'from_user': e.from_user.email,
                 'level': e.level,
                 'purchase_amount': str(e.purchase.total_amount),
                 'commission': str(e.amount)
             })
 
         return Response(data)
+
 
     @action(detail=False, methods=['get'])
     def deposit_address(self, request):
