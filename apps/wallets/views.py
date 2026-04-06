@@ -213,57 +213,29 @@ class AdminHoldersView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        try:
-            from apps.wallets.models import Wallet
+        from apps.tokens.models import UserTokenBalance
 
-            # Get users with wallets
-            holders = []
-            wallets = Wallet.objects.filter(wallet_type='GRAND', balance__gt=0).select_related('user')[:10]
+        # Get all users with token balances
+        holders = UserTokenBalance.objects.filter(quantity__gt=0).select_related('user', 'token')
 
-            for wallet in wallets:
-                holders.append({
-                    'email': wallet.user.email,
-                    'tokens_held': float(wallet.balance),
-                    'value': float(wallet.balance)  # Assume $1 per token
-                })
-
-            # If no holders, return sample data
-            if not holders:
-                holders = [
-                    {'email': 'demo@example.com', 'tokens_held': 1000, 'value': 1000},
-                    {'email': 'user2@example.com', 'tokens_held': 500, 'value': 500},
-                ]
-
-            # Sort by tokens held
-            holders.sort(key=lambda x: x['tokens_held'], reverse=True)
-
-            # Split into top and bottom
-            mid_point = len(holders) // 2
-            top_holders = holders[:5]
-            bottom_holders = holders[-5:] if len(holders) > 5 else holders
-
-            return Response({
-                'top_holders': top_holders,
-                'bottom_holders': bottom_holders,
-                'top_percentage': 65,
-                'middle_percentage': 25,
-                'bottom_percentage': 10
+        holder_data = []
+        for h in holders:
+            holder_data.append({
+                'email': h.user.email,
+                'tokens_held': float(h.quantity),
+                'value': float(h.current_value)
             })
-        except Exception as e:
-            logger.error(f"AdminHoldersView error: {str(e)}")
-            # Return sample data on error
-            return Response({
-                'top_holders': [
-                    {'email': 'admin@example.com', 'tokens_held': 10000, 'value': 10000},
-                    {'email': 'trader@example.com', 'tokens_held': 5000, 'value': 5000},
-                ],
-                'bottom_holders': [
-                    {'email': 'new@example.com', 'tokens_held': 10, 'value': 10},
-                ],
-                'top_percentage': 65,
-                'middle_percentage': 25,
-                'bottom_percentage': 10
-            })
+
+        # Sort by tokens held
+        holder_data.sort(key=lambda x: x['tokens_held'], reverse=True)
+
+        return Response({
+            'top_holders': holder_data[:5],
+            'bottom_holders': holder_data[-5:] if len(holder_data) > 5 else [],
+            'top_percentage': 65,
+            'middle_percentage': 25,
+            'bottom_percentage': 10
+        })
 
 
 # Replace your AdminBuySellActivityView with this safe version
