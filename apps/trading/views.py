@@ -87,10 +87,14 @@ class TradingViewSet(viewsets.ViewSet):
 
         # Calculate node fee (10%)
         node_fee = amount_usdc * Decimal('0.1')
+        amount_after_fee = amount_usdc - node_fee
 
         # Deduct from grand wallet
         grand_wallet.balance -= amount_usdc
         grand_wallet.save()
+
+        # Calculate token quantity after fee
+        token_quantity_after_fee = amount_after_fee / token.current_price
 
         # Update user's token balance
         user_balance, created = request.user.token_balances.get_or_create(
@@ -99,8 +103,9 @@ class TradingViewSet(viewsets.ViewSet):
         )
 
         # Add tokens with average price calculation
-        total_quantity = user_balance.quantity + token_quantity
-        total_cost = (user_balance.quantity * user_balance.average_buy_price) + (token_quantity * token.current_price)
+        total_quantity = user_balance.quantity + token_quantity_after_fee
+        total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
+                    token_quantity_after_fee * token.current_price)
         user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
         user_balance.quantity = total_quantity
         user_balance.save()
@@ -109,13 +114,24 @@ class TradingViewSet(viewsets.ViewSet):
         purchase = Purchase.objects.create(
             user=request.user,
             token=token,
-            quantity=token_quantity,
+            quantity=token_quantity_after_fee,
             price_per_token=token.current_price,
-            total_amount=amount_usdc,
+            total_amount=amount_after_fee,
             node_fee=node_fee
         )
 
-        # Create transaction record
+        # DISTRIBUTE NODE FEE TO REFERRALS
+        from apps.referrals.services.referral_service import ReferralService
+
+        try:
+            distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
+            referral_count = len(distributions)
+            print(f"Distributed node fee to {referral_count} referrers")
+        except Exception as e:
+            print(f"Error distributing referral fees: {e}")
+            referral_count = 0
+
+        # Create main transaction record for buyer
         Transaction.objects.create(
             user=request.user,
             transaction_type='PURCHASE',
@@ -125,24 +141,33 @@ class TradingViewSet(viewsets.ViewSet):
             metadata={
                 'token_id': str(token.id),
                 'token_symbol': token.symbol,
-                'quantity': str(token_quantity),
-                'price': str(token.current_price)
+                'quantity': str(token_quantity_after_fee),
+                'price': str(token.current_price),
+                'node_fee': str(node_fee),
+                'referrals_credited': referral_count
             },
             completed_at=timezone.now()
         )
 
         return Response({
             'success': True,
-            'message': f'Successfully purchased {token_quantity:.8f} {token.symbol}',
+            'message': f'Successfully purchased {token_quantity_after_fee:.8f} {token.symbol}',
             'purchase': {
                 'token': token.symbol,
-                'quantity': str(token_quantity),
+                'quantity': str(token_quantity_after_fee),
                 'price_per_token': str(token.current_price),
-                'total_amount': str(amount_usdc),
+                'total_amount': str(amount_after_fee),
                 'node_fee': str(node_fee)
+            },
+            'referral_commission': {
+                'total_fee': str(node_fee),
+                'referrers_count': referral_count,
+                'distributed': referral_count > 0
             },
             'grand_balance': str(grand_wallet.balance)
         })
+
+
 
     @action(detail=False, methods=['post'])
     def sell(self, request):
