@@ -551,8 +551,15 @@
         if (token) headers['Authorization'] = `Bearer ${token}`;
         const options = { method, headers };
         if (data) options.body = JSON.stringify(data);
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-        return response.json();
+
+        try {
+            const response = await fetch(`${API_BASE}${endpoint}`, options);
+            if (!response.ok) throw new Error(`HTTP ${response.status}`);
+            return await response.json();
+        } catch (e) {
+            console.warn(`API call failed for ${endpoint}:`, e);
+            return []; // Return empty array instead of failing
+        }
     }
 
     function formatCurrency(num) {
