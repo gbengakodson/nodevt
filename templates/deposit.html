@@ -26,7 +26,6 @@
         gap: 30px;
     }
 
-    /* Left Panel - Wallet Info */
     .wallet-panel {
         background: rgba(30, 35, 41, 0.95);
         backdrop-filter: blur(10px);
@@ -74,7 +73,6 @@
         margin-top: 4px;
     }
 
-    /* Network Badge */
     .network-badge {
         display: inline-flex;
         align-items: center;
@@ -89,7 +87,6 @@
         color: #F0B90B;
     }
 
-    /* Address Box */
     .address-container {
         background: #1A1C23;
         border-radius: 16px;
@@ -140,7 +137,6 @@
         transform: translateY(-2px);
     }
 
-    /* QR Code */
     .qr-section {
         text-align: center;
         margin: 24px 0;
@@ -166,7 +162,6 @@
         margin-top: 12px;
     }
 
-    /* Warning Box */
     .warning-box {
         background: rgba(246, 70, 93, 0.08);
         border-left: 3px solid #F6465D;
@@ -191,7 +186,6 @@
         line-height: 1.5;
     }
 
-    /* Right Panel - Deposit Form */
     .form-panel {
         background: rgba(30, 35, 41, 0.95);
         backdrop-filter: blur(10px);
@@ -261,7 +255,6 @@
 
     .form-input::placeholder {
         color: #5E6673;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     }
 
     .input-hint {
@@ -270,7 +263,6 @@
         margin-top: 6px;
     }
 
-    /* Info Grid */
     .info-grid {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -341,7 +333,6 @@
             grid-template-columns: 1fr;
             gap: 20px;
         }
-
         .wallet-panel, .form-panel {
             padding: 24px;
         }
@@ -351,16 +342,13 @@
         .deposit-wrapper {
             padding: 20px;
         }
-
         .address-value {
             font-size: 11px;
         }
-
         .qr-code {
             width: 120px;
             height: 120px;
         }
-
         .info-grid {
             grid-template-columns: 1fr;
             gap: 12px;
@@ -379,7 +367,7 @@
                     <i class="fas fa-wallet"></i>
                 </div>
                 <div>
-                    <div class="panel-title">Platform Wallet</div>
+                    <div class="panel-title">Node</div>
                     <div class="panel-subtitle">Send USDC to this address</div>
                 </div>
             </div>
@@ -424,13 +412,13 @@
         <div class="form-panel">
             <div class="form-header">
                 <div class="form-title">Deposit Request</div>
-                <div class="form-subtitle">Submit your deposit details for verification</div>
+                <div class="form-subtitle">Submit your deposit details for faster transaction</div>
             </div>
 
             <div class="info-grid">
                 <div class="info-item">
                     <div class="info-item-label">Processing Time</div>
-                    <div class="info-item-value">Up to 24 hours</div>
+                    <div class="info-item-value">Allow up to 10 Minutes</div>
                 </div>
                 <div class="info-item">
                     <div class="info-item-label">Minimum Deposit</div>
@@ -473,7 +461,7 @@
                 <div class="input-hint">The address you sent USDC from</div>
             </div>
 
-            <button class="btn-submit" onclick="submitDepositRequest()">
+            <button class="btn-submit" id="submitBtn">
                 <i class="fas fa-paper-plane"></i>
                 Submit Deposit Request
             </button>
@@ -481,15 +469,12 @@
             <div class="info-box">
                 <div class="info-text">
                     <i class="fas fa-clock me-1"></i>
-                    After submitting, our team will verify your transaction and credit your account within 24 hours.
-                    You will receive a confirmation email once completed.
+                    After submitting, the system will track your transaction and credit your account.
                 </div>
             </div>
         </div>
     </div>
 </div>
-
-
 
 <script>
     const API_BASE = '/api';
@@ -509,78 +494,73 @@
         return response.json();
     }
 
-
-
-        function formatCurrency(num) {
-            if (!num) return '$0.00';
-            const value = parseFloat(num);
-            if (isNaN(value)) return '$0.00';
-            if (value === 0) return '$0.00';
-            if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-            if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-            if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-            if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-            return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-        }
-
-    async function loadDepositAddress() {
-        try {
-            const balance = await apiCall('/trading/my_balance/');
-            const address = balance.deposit_address;
-
-            if (address) {
-                document.getElementById('depositAddress').innerHTML = address;
-                generateQRCode(address);
-            } else {
-                document.getElementById('depositAddress').innerHTML = 'No wallet created yet';
-            }
-        } catch (e) {
-            console.error(e);
-            document.getElementById('depositAddress').innerHTML = 'Unable to load address';
-        }
+    function generateQRCode() {
+        const address = '0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4';
+        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(address)}`;
+        const qrImg = document.getElementById('qrCode');
+        if (qrImg) qrImg.src = qrUrl;
     }
-
-    function generateQRCode(address) {
-        if (address && address !== 'Loading...' && address !== 'No wallet created yet' && address !== 'Unable to load address') {
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(address)}`;
-            document.getElementById('qrCode').src = qrUrl;
-            document.getElementById('qrCode').style.display = 'block';
-            document.getElementById('qrContainer').style.display = 'block';
-        }
-    }
-
-    function copyAddress() {
-        const address = document.getElementById('depositAddress').innerText;
-        if (address && address !== 'Loading...' && address !== 'No wallet created yet') {
-            navigator.clipboard.writeText(address);
-            alert('Address copied to clipboard!');
-        } else {
-            alert('No valid address to copy');
-        }
-    }
-
-    async function checkDeposit() {
-        showLoading();
-        try {
-            const result = await apiCall('/check-deposits/');
-            alert(result.message || 'Deposit check completed');
-            // Refresh balance display
-            loadDepositAddress();
-        } catch (e) {
-            alert('Error checking deposit: ' + e.message);
-        }
-        hideLoading();
-    }
-
-    // Load address when page loads
-    loadDepositAddress();
 
     function copyPlatformAddress() {
-         const address = document.getElementById('platformWallet').innerText;
-         navigator.clipboard.writeText(address);
-         alert('Platform address copied!');
+        const address = '0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4';
+        navigator.clipboard.writeText(address);
+        alert('Platform address copied to clipboard!');
     }
 
+    async function submitDepositRequest() {
+        const txHash = document.getElementById('txHash').value.trim();
+        const amount = document.getElementById('depositAmount').value;
+        const walletAddress = document.getElementById('userWalletAddress').value.trim();
 
+        if (!txHash) {
+            alert('Please enter the transaction hash');
+            return;
+        }
+
+        if (!amount || amount <= 0) {
+            alert('Please enter a valid amount');
+            return;
+        }
+
+        if (amount < 10) {
+            alert('Minimum deposit is $10 USDC');
+            return;
+        }
+
+        if (!walletAddress) {
+            alert('Please enter your wallet address');
+            return;
+        }
+
+        if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
+            alert('Please enter a valid BSC wallet address (0x...).');
+            return;
+        }
+
+        try {
+            const result = await apiCall('/wallets/deposit-request/', 'POST', {
+                tx_hash: txHash,
+                amount: amount,
+                wallet_address: walletAddress
+            });
+
+            if (result.success) {
+                alert('Deposit request submitted successfully! Our team will review it within 24 hours.');
+                document.getElementById('txHash').value = '';
+                document.getElementById('depositAmount').value = '';
+                document.getElementById('userWalletAddress').value = '';
+            } else {
+                alert('Error: ' + (result.error || 'Failed to submit request'));
+            }
+        } catch (e) {
+            console.error('Error:', e);
+            alert('Error: ' + e.message);
+        }
+    }
+
+    document.getElementById('submitBtn').addEventListener('click', submitDepositRequest);
+    window.copyPlatformAddress = copyPlatformAddress;
+
+    generateQRCode();
 </script>
 {% endblock %}
