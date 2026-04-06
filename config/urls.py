@@ -32,10 +32,12 @@ urlpatterns = [
     path('api/admin/deposits/', AdminDepositsView.as_view(), name='admin_deposits'),
     path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
-    path('api/wallets/', include('apps.wallets.urls')),
+
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
     path('api/admin/holders/', AdminHoldersView.as_view(), name='admin_holders'),
     path('api/admin/buy-sell-activity/', AdminBuySellActivityView.as_view(), name='admin_buy_sell'),
+
+    path('api/wallets/', include('apps.wallets.urls')),
 
 ]
