@@ -4,6 +4,10 @@ from django.views.generic import TemplateView
 from django.shortcuts import redirect
 from rest_framework_simplejwt.views import TokenRefreshView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
+from apps.wallets.views import (
+    AdminStatisticsView,
+    AdminHoldersView,
+    AdminBuySellActivityView)
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -29,4 +33,9 @@ urlpatterns = [
     path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
     path('api/wallets/', include('apps.wallets.urls')),
+
+    path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
+    path('api/admin/holders/', AdminHoldersView.as_view(), name='admin_holders'),
+    path('api/admin/buy-sell-activity/', AdminBuySellActivityView.as_view(), name='admin_buy_sell'),
+
 ]
