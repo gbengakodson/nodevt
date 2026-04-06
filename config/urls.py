@@ -7,7 +7,7 @@ from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, Ad
 from apps.wallets.views import (
     AdminStatisticsView,
     AdminHoldersView,
-    #AdminBuySellActivityView
+    AdminBuySellActivityView
     )
 
 urlpatterns = [
@@ -37,7 +37,7 @@ urlpatterns = [
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
     path('api/admin/holders/', AdminHoldersView.as_view(), name='admin_holders'),
-    #path('api/admin/buy-sell-activity/', AdminBuySellActivityView.as_view(), name='admin_buy_sell'),
+    path('api/admin/buy-sell-activity/', AdminBuySellActivityView.as_view(), name='admin_buy_sell'),
 
     path('api/wallets/', include('apps.wallets.urls')),
 

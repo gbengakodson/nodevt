@@ -174,35 +174,22 @@ class AdminStatisticsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        # Total tokens held (from UserTokenBalance)
-        total_tokens_held = UserTokenBalance.objects.aggregate(
-            total=Sum('quantity')
+        from apps.tokens.models import UserTokenBalance, Purchase
+
+        # Total token VALUE (not quantity)
+        total_token_value = UserTokenBalance.objects.aggregate(
+            total=Sum(F('quantity') * F('token__current_price'))
         )['total'] or Decimal('0')
 
-        # Total buys (from Purchase model)
         total_buys = Purchase.objects.count()
-
-        # Total volume from purchases
-        total_volume = Purchase.objects.aggregate(
-            total=Sum('total_amount')
-        )['total'] or Decimal('0')
-
-        # Users with active/inactive sell buttons (based on take_profit_triggered)
-        active_sell = UserTokenBalance.objects.filter(
-            take_profit_triggered=False
-        ).values('user').distinct().count()
-
-        inactive_sell = UserTokenBalance.objects.filter(
-            take_profit_triggered=True
-        ).values('user').distinct().count()
 
         return Response({
             'total_buys': total_buys,
-            'total_solds': 0,  # You need a Sale model
-            'total_tokens_held': float(total_tokens_held),
-            'total_yield': 0,  # From YieldDistribution
-            'active_sell_tokens': active_sell,
-            'inactive_sell_tokens': inactive_sell,
+            'total_solds': 0,
+            'total_tokens_held': float(total_token_value),  # This is now USD value
+            'total_yield': 0,
+            'active_sell_tokens': 0,
+            'inactive_sell_tokens': 0,
             'avg_hold_time': '0d',
             'turnover_rate': '0%'
         })
@@ -215,22 +202,23 @@ class AdminHoldersView(APIView):
     def get(self, request):
         from apps.tokens.models import UserTokenBalance
 
-        # Get all users with token balances
         holders = UserTokenBalance.objects.filter(quantity__gt=0).select_related('user', 'token')
 
         holder_data = []
         for h in holders:
             holder_data.append({
                 'email': h.user.email,
-                'tokens_held': float(h.quantity),
+                'token_symbol': h.token.symbol,  # Add token symbol
+                'token_name': h.token.name,  # Add token name
+                'quantity': float(h.quantity),
                 'value': float(h.current_value)
             })
 
-        # Sort by tokens held
-        holder_data.sort(key=lambda x: x['tokens_held'], reverse=True)
+        # Sort by value (USD)
+        holder_data.sort(key=lambda x: x['value'], reverse=True)
 
         return Response({
-            'top_holders': holder_data[:5],
+            'top_holders': holder_data[:10],  # Show 10 top holders
             'bottom_holders': holder_data[-5:] if len(holder_data) > 5 else [],
             'top_percentage': 65,
             'middle_percentage': 25,
@@ -243,20 +231,38 @@ class AdminBuySellActivityView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        try:
-            # Return sample chart data
-            return Response({
-                'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                'buys': [12, 19, 15, 17, 14, 22, 18],
-                'sells': [8, 12, 10, 9, 11, 15, 13]
-            })
-        except Exception as e:
-            logger.error(f"AdminBuySellActivityView error: {str(e)}")
-            return Response({
-                'days': ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                'buys': [0, 0, 0, 0, 0, 0, 0],
-                'sells': [0, 0, 0, 0, 0, 0, 0]
-            })
+        from apps.tokens.models import Purchase
+        from apps.wallets.models import Transaction
+        from datetime import datetime, timedelta
+
+        # Get last 7 days
+        days = []
+        buys = []
+        sells = []
+
+        for i in range(6, -1, -1):
+            date = datetime.now() - timedelta(days=i)
+
+            # Count purchases (buys)
+            daily_buys = Purchase.objects.filter(
+                created_at__date=date
+            ).count()
+
+            # Count sale transactions
+            daily_sells = Transaction.objects.filter(
+                transaction_type='SALE',
+                created_at__date=date
+            ).count()
+
+            days.append(date.strftime('%a'))
+            buys.append(daily_buys)
+            sells.append(daily_sells)
+
+        return Response({
+            'days': days,
+            'buys': buys,
+            'sells': sells
+        })
 
 
 # Update your existing AdminUsersView

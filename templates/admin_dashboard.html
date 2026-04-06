@@ -435,29 +435,41 @@
             <div class="section-subtitle">Highest and lowest token holdings</div>
         </div>
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; padding: 20px;">
-            <div>
-                <h4 style="font-size: 12px; margin-bottom: 12px; color: #0ECB81;">🏆 Top Holders</h4>
-                <div class="holdings-table">
-                    <table style="width: 100%; font-size: 12px;">
-                        <thead>
-                            <tr><th>Rank</th><th>User</th><th>Tokens Held</th><th>Value</th></tr>
-                        </thead>
-                        <tbody id="topHoldersList"></tbody>
-                    </table>
-                </div>
-            </div>
-            <div>
-                <h4 style="font-size: 12px; margin-bottom: 12px; color: #F6465D;">📉 Bottom Holders</h4>
-                <div class="holdings-table">
-                    <table style="width: 100%; font-size: 12px;">
-                        <thead>
-                            <tr><th>Rank</th><th>User</th><th>Tokens Held</th><th>Value</th></tr>
-                        </thead>
-                        <tbody id="bottomHoldersList"></tbody>
-                    </table>
-                </div>
-            </div>
+    <div>
+        <h4 style="font-size: 12px; margin-bottom: 12px; color: #0ECB81;">🏆 Top Holders</h4>
+        <div class="holdings-table" style="max-height: 300px; overflow-y: auto;">
+            <table style="width: 100%; font-size: 12px;">
+                <thead style="position: sticky; top: 0; background: #F8F9FA;">
+                    <tr>
+                        <th>Rank</th>
+                        <th>User</th>
+                        <th>Token</th>
+                        <th>Quantity</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="topHoldersList"></tbody>
+            </table>
         </div>
+    </div>
+    <div>
+        <h4 style="font-size: 12px; margin-bottom: 12px; color: #F6465D;">📉 Bottom Holders</h4>
+        <div class="holdings-table" style="max-height: 300px; overflow-y: auto;">
+            <table style="width: 100%; font-size: 12px;">
+                <thead style="position: sticky; top: 0; background: #F8F9FA;">
+                    <tr>
+                        <th>Rank</th>
+                        <th>User</th>
+                        <th>Token</th>
+                        <th>Quantity</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody id="bottomHoldersList"></tbody>
+            </table>
+        </div>
+    </div>
+</div>
     </div>
 
     <!-- Admin Tabs -->
@@ -545,127 +557,143 @@
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-        return `$${parseFloat(num).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        const value = parseFloat(num);
+        if (isNaN(value)) return '$0.00';
+        if (value === 0) return '$0.00';
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+            return `$${value.toFixed(8)}`;
+        }
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
-    function formatNumber(num) {
-        return parseFloat(num).toLocaleString();
+    function formatNumber(num, decimals = 6) {
+        if (!num) return '0';
+        const value = parseFloat(num);
+        if (isNaN(value)) return '0';
+        if (value === 0) return '0';
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
+            return value.toFixed(8);
+        }
+        return value.toFixed(decimals);
     }
 
     // Load dashboard statistics
     async function loadStatistics() {
-        try {
-            const stats = await apiCall('/admin/statistics/');
-            document.getElementById('totalBuys').innerText = formatNumber(stats.total_buys || 0);
-            document.getElementById('totalSolds').innerText = formatNumber(stats.total_solds || 0);
-            document.getElementById('totalTokensHeld').innerText = formatNumber(stats.total_tokens_held || 0);
-            document.getElementById('totalYield').innerText = formatCurrency(stats.total_yield);
-            document.getElementById('activeSellTokens').innerText = formatNumber(stats.active_sell_tokens || 0);
-            document.getElementById('inactiveSellTokens').innerText = formatNumber(stats.inactive_sell_tokens || 0);
-            document.getElementById('avgHoldTime').innerText = stats.avg_hold_time || '0d';
-            document.getElementById('turnoverRate').innerText = stats.turnover_rate || '0%';
-        } catch (e) {
-            console.error('Error loading statistics:', e);
-        }
+    try {
+        const stats = await apiCall('/admin/statistics/');
+
+        document.getElementById('totalBuys').innerText = stats.total_buys || '0';
+        document.getElementById('totalSolds').innerText = stats.total_solds || '0';
+        document.getElementById('totalTokensHeld').innerText = formatCurrency(stats.total_tokens_held);
+        document.getElementById('totalYield').innerText = formatCurrency(stats.total_yield);
+        document.getElementById('activeSellTokens').innerText = stats.active_sell_tokens || '0';
+        document.getElementById('inactiveSellTokens').innerText = stats.inactive_sell_tokens || '0';
+        document.getElementById('avgHoldTime').innerText = stats.avg_hold_time || '0d';
+        document.getElementById('turnoverRate').innerText = stats.turnover_rate || '0%';
+    } catch (e) {
+        console.error('Error loading statistics:', e);
     }
+}
 
-    // Load holders data and update charts
-    async function loadHolders() {
-        try {
-            const data = await apiCall('/admin/holders/');
+async function loadHolders() {
+    try {
+        const data = await apiCall('/admin/holders/');
 
-            // Update top holders list
-            const topList = document.getElementById('topHoldersList');
-            topList.innerHTML = data.top_holders.map((h, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${h.email}</td>
-                    <td>${formatNumber(h.tokens_held)}</td>
-                    <td>${formatCurrency(h.value)}</td>
-                </tr>
-            `).join('');
+        // Update top holders with token symbols
+        const topList = document.getElementById('topHoldersList');
+        topList.innerHTML = data.top_holders.map((h, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${h.email}</td>
+                <td>${h.token_symbol} (${h.token_name})</td>
+                <td>${formatNumber(h.quantity)}</td>
+                <td>${formatCurrency(h.value)}</td>
+            </tr>
+        `).join('');
 
-            // Update bottom holders list
-            const bottomList = document.getElementById('bottomHoldersList');
-            bottomList.innerHTML = data.bottom_holders.map((h, i) => `
-                <tr>
-                    <td>${i + 1}</td>
-                    <td>${h.email}</td>
-                    <td>${formatNumber(h.tokens_held)}</td>
-                    <td>${formatCurrency(h.value)}</td>
-                </tr>
-            `).join('');
+        // Update bottom holders
+        const bottomList = document.getElementById('bottomHoldersList');
+        bottomList.innerHTML = data.bottom_holders.map((h, i) => `
+            <tr>
+                <td>${i + 1}</td>
+                <td>${h.email}</td>
+                <td>${h.token_symbol}</td>
+                <td>${formatNumber(h.quantity)}</td>
+                <td>${formatCurrency(h.value)}</td>
+            </tr>
+        `).join('');
 
-            // Update distribution chart
-            if (holderChart) holderChart.destroy();
-            const ctx = document.getElementById('holderDistributionChart').getContext('2d');
-            holderChart = new Chart(ctx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Top 10% Holders', 'Middle 80%', 'Bottom 10%'],
-                    datasets: [{
-                        data: [data.top_percentage || 65, data.middle_percentage || 25, data.bottom_percentage || 10],
-                        backgroundColor: ['#F0B90B', '#0ECB81', '#707A8A'],
-                        borderWidth: 0
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 } } }
-                    }
+        // Update chart
+        if (holderChart) holderChart.destroy();
+        const ctx = document.getElementById('holderDistributionChart').getContext('2d');
+        holderChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Top 10% Holders', 'Middle 80%', 'Bottom 10%'],
+                datasets: [{
+                    data: [data.top_percentage, data.middle_percentage, data.bottom_percentage],
+                    backgroundColor: ['#F0B90B', '#0ECB81', '#707A8A'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 } } }
                 }
-            });
-        } catch (e) {
-            console.error('Error loading holders:', e);
-        }
+            }
+        });
+    } catch (e) {
+        console.error('Error loading holders:', e);
     }
+}
 
-    // Load buy/sell activity chart
-    async function loadBuySellActivity() {
-        try {
-            const data = await apiCall('/admin/buy-sell-activity/');
+async function loadBuySellActivity() {
+    try {
+        const data = await apiCall('/admin/buy-sell-activity/');
 
-            if (buySellChart) buySellChart.destroy();
-            const ctx = document.getElementById('buySellChart').getContext('2d');
-            buySellChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: data.days || ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
-                    datasets: [
-                        {
-                            label: 'Buys',
-                            data: data.buys || [12, 19, 15, 17, 14, 22, 18],
-                            borderColor: '#0ECB81',
-                            backgroundColor: 'rgba(14, 203, 129, 0.1)',
-                            tension: 0.4
-                        },
-                        {
-                            label: 'Sells',
-                            data: data.sells || [8, 12, 10, 9, 11, 15, 13],
-                            borderColor: '#F6465D',
-                            backgroundColor: 'rgba(246, 70, 93, 0.1)',
-                            tension: 0.4
-                        }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { position: 'bottom', labels: { font: { size: 11 } } }
+        if (buySellChart) buySellChart.destroy();
+        const ctx = document.getElementById('buySellChart').getContext('2d');
+        buySellChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.days,
+                datasets: [
+                    {
+                        label: 'Buys',
+                        data: data.buys,
+                        borderColor: '#0ECB81',
+                        backgroundColor: 'rgba(14, 203, 129, 0.1)',
+                        tension: 0.4
                     },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#E2E4E8' } },
-                        x: { grid: { display: false } }
+                    {
+                        label: 'Sells',
+                        data: data.sells,
+                        borderColor: '#F6465D',
+                        backgroundColor: 'rgba(246, 70, 93, 0.1)',
+                        tension: 0.4
                     }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { position: 'bottom', labels: { font: { size: 11 } } }
+                },
+                scales: {
+                    y: { beginAtZero: true, grid: { color: '#E2E4E8' } },
+                    x: { grid: { display: false } }
                 }
-            });
-        } catch (e) {
-            console.error('Error loading buy/sell activity:', e);
-        }
+            }
+        });
+    } catch (e) {
+        console.error('Error loading buy/sell activity:', e);
     }
+}
 
     // Load deposits
     async function loadDeposits() {
