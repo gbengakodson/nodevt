@@ -1,10 +1,15 @@
+# wallets/urls.py
 from django.urls import path
-from .views import DepositRequestView, WithdrawalRequestView, AdminDepositsView, AdminWithdrawalsView, AdminUsersView
+from .views import (
+    SubmitDepositRequestView,
+    SubmitWithdrawalRequestView,
+    AdminDepositRequestsView,
+    AdminWithdrawalRequestsView
+)
 
 urlpatterns = [
-    path('deposit-request/', DepositRequestView.as_view(), name='deposit_request'),
-    path('withdrawal-request/', WithdrawalRequestView.as_view(), name='withdrawal_request'),
-    path('admin/deposits/', AdminDepositsView.as_view(), name='admin_deposits'),
-    path('admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
-    path('admin/users/', AdminUsersView.as_view(), name='admin_users'),
+    path('deposit-request/', SubmitDepositRequestView.as_view(), name='deposit_request'),
+    path('withdrawal-request/', SubmitWithdrawalRequestView.as_view(), name='withdrawal_request'),
+    path('admin/deposits/', AdminDepositRequestsView.as_view(), name='admin_deposits'),
+    path('admin/withdrawals/', AdminWithdrawalRequestsView.as_view(), name='admin_withdrawals'),
 ]
