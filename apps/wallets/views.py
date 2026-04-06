@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import DepositRequest, WithdrawalRequest
-from django.db.models import Sum, Count, Avg
+from django.db.models import Sum, Count, Avg, F
 from django.contrib.auth.models import User
 from apps.wallets.models import Wallet
 from decimal import Decimal
+from apps.tokens.models import CryptoToken, UserTokenBalance, Purchase
 import logging
 
 logger = logging.getLogger(__name__)
@@ -173,48 +174,38 @@ class AdminStatisticsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        try:
-            # Try to import models safely
-            from apps.wallets.models import Wallet
+        # Total tokens held (from UserTokenBalance)
+        total_tokens_held = UserTokenBalance.objects.aggregate(
+            total=Sum('quantity')
+        )['total'] or Decimal('0')
 
-            # Get total users
-            total_users = User.objects.filter(is_active=True).count()
+        # Total buys (from Purchase model)
+        total_buys = Purchase.objects.count()
 
-            # Try to get total tokens held
-            total_tokens_held = 0
-            try:
-                grand_wallets = Wallet.objects.filter(wallet_type='GRAND')
-                total_result = grand_wallets.aggregate(total=Sum('balance'))
-                if total_result['total']:
-                    total_tokens_held = float(total_result['total'])
-            except Exception as e:
-                logger.warning(f"Could not calculate total tokens: {e}")
-                total_tokens_held = 0
+        # Total volume from purchases
+        total_volume = Purchase.objects.aggregate(
+            total=Sum('total_amount')
+        )['total'] or Decimal('0')
 
-            # Return safe data
-            return Response({
-                'total_buys': 1250,
-                'total_solds': 890,
-                'total_tokens_held': total_tokens_held,
-                'total_yield': total_tokens_held * 0.05,
-                'active_sell_tokens': 45,
-                'inactive_sell_tokens': max(0, total_users - 45),
-                'avg_hold_time': '14d',
-                'turnover_rate': '23%'
-            })
-        except Exception as e:
-            logger.error(f"AdminStatisticsView error: {str(e)}")
-            # Return fallback data even if there's an error
-            return Response({
-                'total_buys': 0,
-                'total_solds': 0,
-                'total_tokens_held': 0,
-                'total_yield': 0,
-                'active_sell_tokens': 0,
-                'inactive_sell_tokens': 0,
-                'avg_hold_time': '0d',
-                'turnover_rate': '0%'
-            })
+        # Users with active/inactive sell buttons (based on take_profit_triggered)
+        active_sell = UserTokenBalance.objects.filter(
+            take_profit_triggered=False
+        ).values('user').distinct().count()
+
+        inactive_sell = UserTokenBalance.objects.filter(
+            take_profit_triggered=True
+        ).values('user').distinct().count()
+
+        return Response({
+            'total_buys': total_buys,
+            'total_solds': 0,  # You need a Sale model
+            'total_tokens_held': float(total_tokens_held),
+            'total_yield': 0,  # From YieldDistribution
+            'active_sell_tokens': active_sell,
+            'inactive_sell_tokens': inactive_sell,
+            'avg_hold_time': '0d',
+            'turnover_rate': '0%'
+        })
 
 
 # Replace your AdminHoldersView with this safe version
