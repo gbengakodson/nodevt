@@ -174,36 +174,82 @@ class AdminStatisticsView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        from apps.tokens.models import UserTokenBalance, Purchase
-        from django.db.models import F, Sum, Q
+        from apps.tokens.models import UserTokenBalance, Purchase, CryptoToken
+        from apps.wallets.models import Wallet
+        from django.db.models import F, Sum, Q, Avg
+        from datetime import timedelta
+        from django.utils import timezone
 
+        # Total token VALUE
         total_token_value = UserTokenBalance.objects.aggregate(
             total=Sum(F('quantity') * F('token__current_price'))
         )['total'] or Decimal('0')
 
         total_buys = Purchase.objects.count()
 
-        # Active sell: current_price > average_buy_price (profit)
-        # Inactive sell: current_price <= average_buy_price (loss or equal)
-        all_balances = UserTokenBalance.objects.filter(quantity__gt=0)
+        # Platform USDC balance
+        platform_usdc_balance = Wallet.objects.filter(
+            wallet_type='GRAND'
+        ).aggregate(total=Sum('balance'))['total'] or Decimal('0')
 
+        # Active/Inactive sell counts
+        all_balances = UserTokenBalance.objects.filter(quantity__gt=0)
         active_sell = all_balances.filter(
             token__current_price__gt=F('average_buy_price')
         ).count()
-
         inactive_sell = all_balances.filter(
             token__current_price__lte=F('average_buy_price')
         ).count()
 
+        # Unique holders
+        unique_holders = UserTokenBalance.objects.filter(quantity__gt=0).values('user').distinct().count()
+
+        # Average token value per holder
+        avg_token_value = total_token_value / unique_holders if unique_holders > 0 else 0
+
+        # Most held token
+        most_held = UserTokenBalance.objects.values('token__symbol', 'token__name').annotate(
+            total_quantity=Sum('quantity')
+        ).order_by('-total_quantity').first()
+        most_held_token = f"{most_held['token__symbol']}" if most_held else '-'
+
+        # Total volume from purchases
+        total_volume = Purchase.objects.aggregate(
+            total=Sum('total_amount')
+        )['total'] or Decimal('0')
+
+        # REAL: Average Hold Time (using created_at from UserTokenBalance)
+        avg_hold_seconds = UserTokenBalance.objects.filter(
+            quantity__gt=0
+        ).aggregate(
+            avg_age=Avg(timezone.now() - F('created_at'))
+        )['avg_age']
+
+        if avg_hold_seconds:
+            avg_days = avg_hold_seconds.total_seconds() / 86400  # Convert seconds to days
+            avg_hold_time = f"{int(avg_days)}d"
+        else:
+            avg_hold_time = "0d"
+
+        # REAL: Turnover Rate = (Total Sells / Total Buys) * 100
+        # Since no Sale model, use withdrawals as sells
+        from apps.wallets.models import WithdrawalRequest
+        total_sells = WithdrawalRequest.objects.filter(status='PROCESSED').count()
+        turnover_rate = f"{int((total_sells / total_buys) * 100)}%" if total_buys > 0 else "0%"
+
         return Response({
             'total_buys': total_buys,
-            'total_solds': 0,
+            'platform_usdc_balance': float(platform_usdc_balance),
             'total_tokens_held': float(total_token_value),
             'total_yield': 0,
             'active_sell_tokens': active_sell,
             'inactive_sell_tokens': inactive_sell,
-            'avg_hold_time': '14d',
-            'turnover_rate': '23%'
+            'unique_holders': unique_holders,
+            'avg_token_value': float(avg_token_value),
+            'most_held_token': most_held_token,
+            'total_volume': float(total_volume),
+            'avg_hold_time': avg_hold_time,
+            'turnover_rate': turnover_rate
         })
 
 
@@ -315,3 +361,113 @@ class AdminUsersView(APIView):
         except Exception as e:
             logger.error(f"AdminUsersView error: {str(e)}")
             return Response([])
+
+
+from django.core.mail import send_mail
+from django.conf import settings
+
+
+class AdminSendEmailView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        subject = request.data.get('subject')
+        message = request.data.get('message')
+        user_ids = request.data.get('user_ids', [])  # Empty = all users
+
+        from django.contrib.auth.models import User
+
+        if user_ids:
+            users = User.objects.filter(id__in=user_ids, is_active=True)
+        else:
+            users = User.objects.filter(is_active=True)
+
+        success_count = 0
+        for user in users:
+            try:
+                send_mail(
+                    subject,
+                    message,
+                    settings.DEFAULT_FROM_EMAIL,
+                    [user.email],
+                    fail_silently=False,
+                )
+                success_count += 1
+            except:
+                pass
+
+        return Response({
+            'success': True,
+            'sent_count': success_count,
+            'total': users.count()
+        })
+
+
+from apps.chat.models import ChatMessage
+
+
+class AdminChatMessagesView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        # Get all messages grouped by user
+        from django.contrib.auth.models import User
+        from django.db.models import Count, Max
+
+        users_with_messages = User.objects.filter(
+            chat_messages__isnull=False
+        ).annotate(
+            message_count=Count('chat_messages'),
+            last_message=Max('chat_messages__created_at')
+        ).order_by('-last_message')
+
+        result = []
+        for user in users_with_messages:
+            # Get last message
+            last_msg = ChatMessage.objects.filter(user=user).last()
+            unread_count = ChatMessage.objects.filter(user=user, is_read=False, is_admin_reply=False).count()
+
+            result.append({
+                'user_id': str(user.id),
+                'user_email': user.email,
+                'message_count': user.message_count,
+                'unread_count': unread_count,
+                'last_message': last_msg.message[:50] if last_msg else '',
+                'last_message_time': last_msg.created_at.strftime('%Y-%m-%d %H:%M') if last_msg else ''
+            })
+
+        return Response(result)
+
+    def get_conversation(self, request, user_id):
+        from django.contrib.auth.models import User
+        user = User.objects.get(id=user_id)
+        messages = ChatMessage.objects.filter(user=user).order_by('created_at')
+
+        # Mark messages as read
+        ChatMessage.objects.filter(user=user, is_admin_reply=False, is_read=False).update(is_read=True)
+
+        data = [{
+            'id': str(m.id),
+            'message': m.message,
+            'is_admin_reply': m.is_admin_reply,
+            'created_at': m.created_at.strftime('%Y-%m-%d %H:%M'),
+            'is_read': m.is_read
+        } for m in messages]
+
+        return Response({'user_email': user.email, 'messages': data})
+
+    def post(self, request, user_id):
+        from django.contrib.auth.models import User
+        user = User.objects.get(id=user_id)
+        reply_message = request.data.get('message')
+
+        if reply_message:
+            ChatMessage.objects.create(
+                user=user,
+                message=reply_message,
+                is_admin_reply=True,
+                is_read=True
+            )
+            return Response({'success': True, 'message': 'Reply sent'})
+
+        return Response({'error': 'Message required'}, status=400)

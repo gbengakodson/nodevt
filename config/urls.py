@@ -3,6 +3,8 @@ from django.urls import path, include
 from django.views.generic import TemplateView
 from django.shortcuts import redirect
 from rest_framework_simplejwt.views import TokenRefreshView
+from apps.wallets.views import AdminSendEmailView
+from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.wallets.views import (
     AdminStatisticsView,
@@ -27,6 +29,9 @@ urlpatterns = [
     path('withdraw/', TemplateView.as_view(template_name='withdraw.html'), name='withdraw'),
     path('referral/', TemplateView.as_view(template_name='referral.html'), name='referral'),
     path('chat/', TemplateView.as_view(template_name='chat.html'), name='chat'),
+    path('api/admin/send-email/', AdminSendEmailView.as_view(), name='admin_send_email'),
+    path('api/admin/chat/', AdminChatMessagesView.as_view(), name='admin_chat'),
+    path('api/admin/chat/<uuid:user_id>/', AdminChatMessagesView.as_view(), name='admin_chat_conversation'),
     path('login/', TemplateView.as_view(template_name='login.html'), name='login'),
     path('register/', TemplateView.as_view(template_name='register.html'), name='register'),
     path('admin-dashboard/', TemplateView.as_view(template_name='admin_dashboard.html'), name='admin_dashboard'),
