@@ -31,6 +31,7 @@ INSTALLED_APPS = [
     'drf_yasg',
     'channels',
     'apps.chat',
+    'apps.chatbot',
 
     # Local apps
     'apps.accounts.apps.AccountsConfig',

@@ -15,3 +15,8 @@ services:
         fromDatabase:
           name: node-crypto-db
           property: connectionString
+
+  - type: cron
+    name: daily-notifications
+    schedule: "0 9 * * *"  # 9 AM daily
+    command: python manage.py send_daily_notifications

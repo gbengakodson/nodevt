@@ -633,5 +633,10 @@
 
     </script>
     {% block extra_js %}{% endblock %}
+
+<!-- Add this before closing body tag in base.html -->
+{% if user.is_authenticated %}
+    {% include 'chatbot/widget.html' %}
+{% endif %}
 </body>
 </html>
