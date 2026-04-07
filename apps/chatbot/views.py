@@ -80,3 +80,12 @@ class MarkAllNotificationsReadAPIView(APIView):
         from .models import UserNotification
         UserNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'success': True})
+
+
+class MarkAllNotificationsReadAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        from .models import UserNotification
+        UserNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'success': True})

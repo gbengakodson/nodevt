@@ -351,6 +351,21 @@
 .modal-btn-secondary:hover {
     background: #EFF2F5;
 }
+
+
+.notification-item {
+    transition: background 0.2s;
+}
+.notification-item:hover {
+    background: #F8F9FA;
+}
+.notification-item.unread:hover {
+    background: #FFF0D4;
+}
+.notification-bell {
+    font-size: 20px;
+}
+
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -363,6 +378,7 @@
             <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <i class="fas fa-bars" style="color: #1E2329;"></i>
             </button>
+
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
                     <li class="nav-item">
@@ -413,6 +429,28 @@
                             <i class="fas fa-headset me-1"></i>Support
                          </a>
                     </li>
+
+                    <!-- Add this to your navbar where you want the notification bell -->
+<div class="nav-item" style="position: relative;">
+    <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative;">
+        🔔
+        <span id="notificationBadge" style="position: absolute; top: -8px; right: -8px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
+    </button>
+</div>
+
+<!-- Notification Panel -->
+<div id="notificationPanel" style="display: none; position: absolute; top: 50px; right: 0; width: 320px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1001; overflow: hidden;">
+    <div style="background: #F0B90B; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between;">
+        <span>🔔 Notifications</span>
+        <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
+    </div>
+    <div id="notificationList" style="max-height: 350px; overflow-y: auto;">
+        <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
+    </div>
+    <div style="padding: 10px; border-top: 1px solid #E2E4E8; text-align: center;">
+        <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 12px;">Mark all as read</button>
+    </div>
+</div>
                     <!-- Dynamic auth links - will be filled by JavaScript -->
                     <li class="nav-item" id="authLinks"></li>
                 </ul>
@@ -628,6 +666,108 @@
         };
         return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
+
+
+
+    let notificationPanelOpen = false;
+
+    function toggleNotificationPanel() {
+        notificationPanelOpen = !notificationPanelOpen;
+        document.getElementById('notificationPanel').style.display = notificationPanelOpen ? 'block' : 'none';
+        if (notificationPanelOpen) {
+            loadNotifications();
+        }
+    }
+
+    function closeNotificationPanel() {
+        notificationPanelOpen = false;
+        document.getElementById('notificationPanel').style.display = 'none';
+    }
+
+    async function loadNotifications() {
+        try {
+            const response = await fetch('/api/chatbot/notifications/', {
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+
+            const notifications = await response.json();
+            const listDiv = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+
+            if (notifications.length === 0) {
+                listDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #707A8A;">No notifications</div>';
+                badge.style.display = 'none';
+                return;
+            }
+
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+
+            listDiv.innerHTML = notifications.map(n => `
+                <div class="notification-item ${!n.is_read ? 'unread' : ''}" style="padding: 12px 15px; border-bottom: 1px solid #E2E4E8; cursor: pointer; ${!n.is_read ? 'background: #FFF4E5;' : ''}" onclick="markAsRead('${n.id}')">
+                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">${n.title}</div>
+                    <div style="font-size: 12px; color: #707A8A;">${n.message}</div>
+                    <div style="font-size: 10px; color: #8A8F9E; margin-top: 4px;">${n.created_at}</div>
+                </div>
+            `).join('');
+        } catch (error) {
+            console.error('Error loading notifications:', error);
+        }
+    }
+
+    async function markAsRead(notificationId) {
+        try {
+            await fetch('/api/chatbot/notifications/mark-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({ notification_id: notificationId })
+            });
+            loadNotifications();
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
+    }
+
+    async function markAllAsRead() {
+        try {
+            await fetch('/api/chatbot/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            });
+            loadNotifications();
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+
+    // Load notifications on page load
+    if (localStorage.getItem('access_token')) {
+        loadNotifications();
+        // Refresh every 5 minutes
+        setInterval(loadNotifications, 300000);
+    }
+
+    // Close panel when clicking outside
+    document.addEventListener('click', function(event) {
+        const panel = document.getElementById('notificationPanel');
+        const bell = document.querySelector('.notification-bell');
+        if (notificationPanelOpen && panel && !panel.contains(event.target) && !bell.contains(event.target)) {
+            closeNotificationPanel();
+        }
+    });
+
 
 
 

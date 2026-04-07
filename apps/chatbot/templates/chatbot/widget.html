@@ -16,6 +16,7 @@
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     transition: all 0.3s;
+    font-size: 28px;
 }
 
 .chatbot-button:hover {
@@ -26,10 +27,10 @@
     position: fixed;
     bottom: 90px;
     right: 20px;
-    width: 350px;
-    height: 500px;
+    width: 380px;
+    height: 550px;
     background: white;
-    border-radius: 12px;
+    border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
     display: none;
     flex-direction: column;
@@ -68,11 +69,11 @@
 }
 
 .chatbot-bubble {
-    max-width: 80%;
-    padding: 10px 12px;
-    border-radius: 12px;
+    max-width: 85%;
+    padding: 10px 14px;
+    border-radius: 16px;
     font-size: 13px;
-    line-height: 1.4;
+    line-height: 1.5;
 }
 
 .chatbot-message.user .chatbot-bubble {
@@ -84,6 +85,42 @@
     background: white;
     color: #1E2329;
     border: 1px solid #E2E4E8;
+}
+
+.quick-questions {
+    padding: 12px;
+    background: white;
+    border-top: 1px solid #E2E4E8;
+}
+
+.quick-title {
+    font-size: 11px;
+    color: #707A8A;
+    margin-bottom: 8px;
+    text-align: center;
+}
+
+.questions-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.quick-question {
+    background: #F8F9FA;
+    border: 1px solid #E2E4E8;
+    border-radius: 20px;
+    padding: 6px 12px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #1E2329;
+}
+
+.quick-question:hover {
+    background: #F0B90B;
+    border-color: #F0B90B;
+    color: #0B0E11;
 }
 
 .chatbot-input-area {
@@ -98,7 +135,7 @@
     flex: 1;
     padding: 10px;
     border: 1px solid #E2E4E8;
-    border-radius: 8px;
+    border-radius: 20px;
     font-size: 13px;
     outline: none;
 }
@@ -106,8 +143,8 @@
 .chatbot-send {
     background: #F0B90B;
     border: none;
-    padding: 10px 15px;
-    border-radius: 8px;
+    padding: 10px 18px;
+    border-radius: 20px;
     cursor: pointer;
     font-weight: 600;
 }
@@ -116,85 +153,13 @@
     background: none;
     border: none;
     color: #0B0E11;
-    font-size: 20px;
+    font-size: 24px;
     cursor: pointer;
 }
 
-.notification-badge {
-    position: absolute;
-    top: -5px;
-    right: -5px;
-    background: #F6465D;
-    color: white;
-    border-radius: 50%;
-    width: 20px;
-    height: 20px;
-    font-size: 11px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-.notification-panel {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    width: 320px;
-    max-height: 400px;
-    background: white;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-    display: none;
-    flex-direction: column;
-    z-index: 1000;
-    overflow: hidden;
-}
-
-.notification-header {
-    background: #F0B90B;
-    padding: 12px 15px;
-    font-weight: 600;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.notification-list {
-    flex: 1;
-    overflow-y: auto;
-    max-height: 350px;
-}
-
-.notification-item {
-    padding: 12px 15px;
-    border-bottom: 1px solid #E2E4E8;
-    cursor: pointer;
-    transition: background 0.2s;
-}
-
-.notification-item:hover {
-    background: #F8F9FA;
-}
-
-.notification-item.unread {
-    background: #FFF4E5;
-}
-
-.notification-title {
-    font-weight: 600;
-    font-size: 13px;
-    margin-bottom: 4px;
-}
-
-.notification-message {
-    font-size: 12px;
+.typing {
     color: #707A8A;
-}
-
-.notification-time {
-    font-size: 10px;
-    color: #8A8F9E;
-    margin-top: 4px;
+    font-style: italic;
 }
 </style>
 
@@ -207,42 +172,46 @@
         <div class="chatbot-messages" id="chatbotMessages">
             <div class="chatbot-message bot">
                 <div class="chatbot-bubble">
-                    Hi! I'm your crypto assistant. Ask me anything about trading, deposits, or referrals! 🚀
+                    👋 Hi! I'm your crypto assistant.<br><br>
+                    I can help you with:
+                    • Buying/Selling tokens
+                    • Deposits & Withdrawals
+                    • Referral program
+                    • Yield earnings
+                    • Portfolio tracking
                 </div>
             </div>
         </div>
+        <div class="quick-questions">
+            <div class="quick-title">📌 Quick Questions</div>
+            <div class="questions-grid" id="quickQuestions">
+                <button class="quick-question" data-question="How do I buy tokens?">🛒 How to buy?</button>
+                <button class="quick-question" data-question="How do I deposit USDC?">💰 How to deposit?</button>
+                <button class="quick-question" data-question="How does referral work?">🤝 Referral program</button>
+                <button class="quick-question" data-question="What's my balance?">📊 My balance</button>
+                <button class="quick-question" data-question="Show me my portfolio">📈 My portfolio</button>
+                <button class="quick-question" data-question="How do I earn yield?">🌟 Yield earnings</button>
+                <button class="quick-question" data-question="How to withdraw?">🏦 Withdraw funds</button>
+                <button class="quick-question" data-question="What is the node fee?">💸 Node fee</button>
+            </div>
+        </div>
         <div class="chatbot-input-area">
-            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Type your question..." onkeypress="handleKeyPress(event)">
+            <input type="text" class="chatbot-input" id="chatbotInput" placeholder="Or type your question..." onkeypress="handleKeyPress(event)">
             <button class="chatbot-send" onclick="sendMessage()">Send</button>
         </div>
     </div>
 
-    <div class="notification-panel" id="notificationPanel">
-        <div class="notification-header">
-            <span>🔔 Notifications</span>
-            <button class="chatbot-close" onclick="closeNotifications()">×</button>
-        </div>
-        <div class="notification-list" id="notificationList">
-            <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
-        </div>
-    </div>
-
-    <div style="position: relative;">
-        <button class="chatbot-button" onclick="toggleChatbot()">
-            🤖
-        </button>
-        <span class="notification-badge" id="notificationBadge" style="display: none;">0</span>
-    </div>
+    <button class="chatbot-button" onclick="toggleChatbot()">
+        🤖
+    </button>
 </div>
 
 <script>
     let chatbotOpen = false;
-    let notificationOpen = false;
 
     function toggleChatbot() {
         chatbotOpen = !chatbotOpen;
         document.getElementById('chatbotWindow').style.display = chatbotOpen ? 'flex' : 'none';
-        if (notificationOpen) closeNotifications();
     }
 
     function closeChatbot() {
@@ -250,17 +219,14 @@
         document.getElementById('chatbotWindow').style.display = 'none';
     }
 
-    function toggleNotifications() {
-        notificationOpen = !notificationOpen;
-        document.getElementById('notificationPanel').style.display = notificationOpen ? 'flex' : 'none';
-        if (chatbotOpen) closeChatbot();
-        if (notificationOpen) loadNotifications();
-    }
-
-    function closeNotifications() {
-        notificationOpen = false;
-        document.getElementById('notificationPanel').style.display = 'none';
-    }
+    // Add click handlers to quick questions
+    document.querySelectorAll('.quick-question').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const question = this.getAttribute('data-question');
+            document.getElementById('chatbotInput').value = question;
+            sendMessage();
+        });
+    });
 
     async function sendMessage() {
         const input = document.getElementById('chatbotInput');
@@ -298,7 +264,14 @@
         const messagesDiv = document.getElementById('chatbotMessages');
         const messageDiv = document.createElement('div');
         messageDiv.className = `chatbot-message ${sender}`;
-        messageDiv.innerHTML = `<div class="chatbot-bubble">${text}</div>`;
+
+        // Convert markdown-style formatting to HTML
+        let formattedText = text
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/•/g, '•')
+            .replace(/\n/g, '<br>');
+
+        messageDiv.innerHTML = `<div class="chatbot-bubble">${formattedText}</div>`;
         messagesDiv.appendChild(messageDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -308,7 +281,7 @@
         const typingDiv = document.createElement('div');
         typingDiv.id = 'typingIndicator';
         typingDiv.className = 'chatbot-message bot';
-        typingDiv.innerHTML = '<div class="chatbot-bubble">Typing...</div>';
+        typingDiv.innerHTML = '<div class="chatbot-bubble typing">🤖 Typing<span>.</span><span>.</span><span>.</span></div>';
         messagesDiv.appendChild(typingDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }
@@ -323,81 +296,4 @@
             sendMessage();
         }
     }
-
-    async function loadNotifications() {
-        try {
-            const response = await fetch('/api/chatbot/notifications/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            const notifications = await response.json();
-            const listDiv = document.getElementById('notificationList');
-
-            if (notifications.length === 0) {
-                listDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #707A8A;">No notifications</div>';
-                document.getElementById('notificationBadge').style.display = 'none';
-                return;
-            }
-
-            const unreadCount = notifications.filter(n => !n.is_read).length;
-            document.getElementById('notificationBadge').style.display = unreadCount > 0 ? 'flex' : 'none';
-            document.getElementById('notificationBadge').innerText = unreadCount;
-
-            listDiv.innerHTML = notifications.map(n => `
-                <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
-                    <div class="notification-title">${n.title}</div>
-                    <div class="notification-message">${n.message}</div>
-                    <div class="notification-time">${n.created_at}</div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('Error loading notifications:', error);
-        }
-    }
-
-    async function markAsRead(notificationId) {
-        try {
-            await fetch('/api/chatbot/notifications/mark-read/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ notification_id: notificationId })
-            });
-            loadNotifications();
-        } catch (error) {
-            console.error('Error marking as read:', error);
-        }
-    }
-
-    // Load notifications on page load
-    if (localStorage.getItem('access_token')) {
-        loadNotifications();
-        // Refresh every 5 minutes
-        setInterval(loadNotifications, 300000);
-    }
-
-    // Add notification bell to the page
-    const bellButton = document.createElement('button');
-    bellButton.innerHTML = '🔔';
-    bellButton.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        right: 90px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: #1E2329;
-        border: none;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        color: white;
-        font-size: 24px;
-        z-index: 1000;
-    `;
-    bellButton.onclick = toggleNotifications;
-    document.body.appendChild(bellButton);
 </script>
