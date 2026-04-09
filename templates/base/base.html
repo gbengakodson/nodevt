@@ -62,7 +62,7 @@
             font-size: 20px;
             padding: 8px;
             border-radius: 50%;
-            transition: background 0.2s;
+            transition: background 0.2 s;
         }
 
         .notification-bell:hover {
@@ -101,7 +101,7 @@
             padding: 12px 15px;
             border-bottom: 1px solid #E2E4E8;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2 s;
         }
 
         .notification-item:hover {
@@ -290,7 +290,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        const API_BASE = '/api';
+
 
         // ============ LIVE CLOCK WITH NANOSECONDS ============
         function updateLiveClock() {
@@ -473,7 +473,8 @@
             if (!refreshToken) return;
 
             try {
-                const response = await fetch(`${API_BASE}/token/refresh/`, {
+                const baseUrl = window.API_BASE || '/api';
+                const response = await fetch(`${baseUrl}/token/refresh/`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ refresh: refreshToken })
