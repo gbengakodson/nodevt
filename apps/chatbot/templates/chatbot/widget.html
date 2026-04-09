@@ -1,4 +1,4 @@
-<!-- Chatbot Widget -->
+<!-- Chatbot Widget - Mobile Responsive -->
 <style>
 .chatbot-widget {
     position: fixed;
@@ -8,27 +8,23 @@
 }
 
 .chatbot-button {
-    width: 60px;
-    height: 60px;
+    width: 56px;
+    height: 56px;
     border-radius: 50%;
     background: #F0B90B;
     border: none;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     transition: all 0.3s;
-    font-size: 28px;
-}
-
-.chatbot-button:hover {
-    transform: scale(1.1);
+    font-size: 24px;
 }
 
 .chatbot-window {
     position: fixed;
     bottom: 90px;
     right: 20px;
-    width: 380px;
-    height: 550px;
+    width: 350px;
+    height: 500px;
     background: white;
     border-radius: 16px;
     box-shadow: 0 4px 20px rgba(0,0,0,0.15);
@@ -36,6 +32,32 @@
     flex-direction: column;
     overflow: hidden;
     z-index: 1000;
+}
+
+/* Mobile styles */
+@media (max-width: 768px) {
+    .chatbot-window {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        bottom: 0;
+        right: 0;
+    }
+
+    .chatbot-button {
+        bottom: 20px;
+        right: 20px;
+        position: fixed;
+    }
+
+    .notification-bell-mobile {
+        display: block !important;
+    }
 }
 
 .chatbot-header {
@@ -161,6 +183,90 @@
     color: #707A8A;
     font-style: italic;
 }
+
+/* Notification Bell Styles */
+.notification-bell {
+    background: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    font-size: 20px;
+    padding: 8px;
+}
+
+.notification-badge {
+    position: absolute;
+    top: -5px;
+    right: -5px;
+    background: #F6465D;
+    color: white;
+    border-radius: 50%;
+    width: 18px;
+    height: 18px;
+    font-size: 10px;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.notification-panel {
+    position: absolute;
+    top: 50px;
+    right: 0;
+    width: 320px;
+    max-height: 400px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+    z-index: 1001;
+    overflow: hidden;
+}
+
+@media (max-width: 768px) {
+    .notification-panel {
+        position: fixed;
+        top: 0;
+        right: 0;
+        left: 0;
+        bottom: 0;
+        width: 100%;
+        height: 100%;
+        border-radius: 0;
+        z-index: 2000;
+    }
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #E2E4E8;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.notification-item:hover {
+    background: #F8F9FA;
+}
+
+.notification-item.unread {
+    background: #FFF4E5;
+}
+
+.notification-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.notification-message {
+    font-size: 12px;
+    color: #707A8A;
+}
+
+.notification-time {
+    font-size: 10px;
+    color: #8A8F9E;
+    margin-top: 4px;
+}
 </style>
 
 <div class="chatbot-widget">
@@ -219,7 +325,6 @@
         document.getElementById('chatbotWindow').style.display = 'none';
     }
 
-    // Add click handlers to quick questions
     document.querySelectorAll('.quick-question').forEach(btn => {
         btn.addEventListener('click', function() {
             const question = this.getAttribute('data-question');
@@ -234,11 +339,8 @@
 
         if (!message) return;
 
-        // Add user message to chat
         addMessage(message, 'user');
         input.value = '';
-
-        // Show typing indicator
         addTypingIndicator();
 
         try {
@@ -265,7 +367,6 @@
         const messageDiv = document.createElement('div');
         messageDiv.className = `chatbot-message ${sender}`;
 
-        // Convert markdown-style formatting to HTML
         let formattedText = text
             .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
             .replace(/•/g, '•')
@@ -281,7 +382,7 @@
         const typingDiv = document.createElement('div');
         typingDiv.id = 'typingIndicator';
         typingDiv.className = 'chatbot-message bot';
-        typingDiv.innerHTML = '<div class="chatbot-bubble typing">🤖 Typing<span>.</span><span>.</span><span>.</span></div>';
+        typingDiv.innerHTML = '<div class="chatbot-bubble typing">🤖 Typing...</div>';
         messagesDiv.appendChild(typingDiv);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
     }

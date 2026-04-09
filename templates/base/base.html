@@ -201,6 +201,86 @@
         .price-up { color: #0ECB81; }
         .price-down { color: #F6465D; }
 
+        /* Notification Bell Styles */
+        .notification-bell {
+            background: none;
+            border: none;
+            cursor: pointer;
+            position: relative;
+            font-size: 20px;
+            padding: 8px;
+            border-radius: 50%;
+            transition: background 0.2s;
+        }
+
+        .notification-bell:hover {
+            background: #F8F9FA;
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #F6465D;
+            color: white;
+            border-radius: 50%;
+            width: 18px;
+            height: 18px;
+            font-size: 10px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-panel {
+            position: absolute;
+            top: 50px;
+            right: 0;
+            width: 320px;
+            max-height: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+            z-index: 1001;
+            overflow: hidden;
+        }
+
+        .notification-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid #E2E4E8;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .notification-item:hover {
+            background: #F8F9FA;
+        }
+
+        .notification-item.unread {
+            background: #FFF4E5;
+        }
+
+        .notification-item.unread:hover {
+            background: #FFF0D4;
+        }
+
+        .notification-title {
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+
+        .notification-message {
+            font-size: 12px;
+            color: #707A8A;
+        }
+
+        .notification-time {
+            font-size: 10px;
+            color: #8A8F9E;
+            margin-top: 4px;
+        }
+
         @media (max-width: 768px) {
             .navbar-nav {
                 position: absolute;
@@ -232,6 +312,18 @@
             .chart-container {
                 height: 200px;
             }
+
+            .notification-panel {
+                position: fixed;
+                top: 0;
+                right: 0;
+                left: 0;
+                bottom: 0;
+                width: 100%;
+                height: 100%;
+                border-radius: 0;
+                z-index: 2000;
+            }
         }
 
         ::-webkit-scrollbar {
@@ -249,123 +341,108 @@
         }
 
         /* Modern Modal Styles */
-.modal-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.6);
-    backdrop-filter: blur(4px);
-    z-index: 1000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    opacity: 0;
-    visibility: hidden;
-    transition: all 0.3s ease;
-}
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
 
-.modal-overlay.active {
-    opacity: 1;
-    visibility: visible;
-}
+        .modal-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
 
-.modal-container {
-    background: white;
-    border-radius: 24px;
-    max-width: 500px;
-    width: 90%;
-    transform: scale(0.9);
-    transition: transform 0.3s ease;
-    box-shadow: 0 20px 40px rgba(0,0,0,0.2);
-}
+        .modal-container {
+            background: white;
+            border-radius: 24px;
+            max-width: 500px;
+            width: 90%;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        }
 
-.modal-overlay.active .modal-container {
-    transform: scale(1);
-}
+        .modal-overlay.active .modal-container {
+            transform: scale(1);
+        }
 
-.modal-header {
-    padding: 20px 24px;
-    border-bottom: 1px solid #E2E4E8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #E2E4E8;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
 
-.modal-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: #1E2329;
-}
+        .modal-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #1E2329;
+        }
 
-.modal-close {
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #707A8A;
-    transition: color 0.2s;
-}
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #707A8A;
+            transition: color 0.2s;
+        }
 
-.modal-close:hover {
-    color: #F6465D;
-}
+        .modal-close:hover {
+            color: #F6465D;
+        }
 
-.modal-body {
-    padding: 24px;
-}
+        .modal-body {
+            padding: 24px;
+        }
 
-.modal-footer {
-    padding: 16px 24px;
-    border-top: 1px solid #E2E4E8;
-    display: flex;
-    justify-content: flex-end;
-    gap: 12px;
-}
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid #E2E4E8;
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+        }
 
-.modal-btn {
-    padding: 10px 20px;
-    border-radius: 8px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: all 0.2s;
-}
+        .modal-btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-.modal-btn-primary {
-    background: #F0B90B;
-    border: none;
-    color: #1E2329;
-}
+        .modal-btn-primary {
+            background: #F0B90B;
+            border: none;
+            color: #1E2329;
+        }
 
-.modal-btn-primary:hover {
-    background: #E0A800;
-}
+        .modal-btn-primary:hover {
+            background: #E0A800;
+        }
 
-.modal-btn-secondary {
-    background: #F8F9FA;
-    border: 1px solid #E2E4E8;
-    color: #1E2329;
-}
+        .modal-btn-secondary {
+            background: #F8F9FA;
+            border: 1px solid #E2E4E8;
+            color: #1E2329;
+        }
 
-.modal-btn-secondary:hover {
-    background: #EFF2F5;
-}
-
-
-.notification-item {
-    transition: background 0.2s;
-}
-.notification-item:hover {
-    background: #F8F9FA;
-}
-.notification-item.unread:hover {
-    background: #FFF0D4;
-}
-.notification-bell {
-    font-size: 20px;
-}
-
+        .modal-btn-secondary:hover {
+            background: #EFF2F5;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -425,38 +502,39 @@
                         </a>
                     </li>
                     <li class="nav-item">
-                         <a class="nav-link" href="/chat/">
+                        <a class="nav-link" href="/chat/">
                             <i class="fas fa-headset me-1"></i>Support
-                         </a>
+                        </a>
                     </li>
 
-                    <!-- Add this to your navbar where you want the notification bell -->
-<div class="nav-item" style="position: relative;">
-    <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative;">
-        🔔
-        <span id="notificationBadge" style="position: absolute; top: -8px; right: -8px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
-    </button>
-</div>
+                    <!-- Notification Bell -->
+                    <li class="nav-item" style="position: relative;">
+                        <button class="notification-bell" onclick="toggleNotificationPanel()">
+                            🔔
+                            <span id="notificationBadge" class="notification-badge">0</span>
+                        </button>
+                    </li>
 
-<!-- Notification Panel -->
-<div id="notificationPanel" style="display: none; position: absolute; top: 50px; right: 0; width: 320px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1001; overflow: hidden;">
-    <div style="background: #F0B90B; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between;">
-        <span>🔔 Notifications</span>
-        <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
-    </div>
-    <div id="notificationList" style="max-height: 350px; overflow-y: auto;">
-        <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
-    </div>
-    <div style="padding: 10px; border-top: 1px solid #E2E4E8; text-align: center;">
-        <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 12px;">Mark all as read</button>
-    </div>
-</div>
-                    <!-- Dynamic auth links - will be filled by JavaScript -->
+                    <!-- Dynamic auth links -->
                     <li class="nav-item" id="authLinks"></li>
                 </ul>
             </div>
         </div>
     </nav>
+
+    <!-- Notification Panel -->
+    <div id="notificationPanel" class="notification-panel" style="display: none;">
+        <div style="background: #F0B90B; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+            <span>🔔 Notifications</span>
+            <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+        </div>
+        <div id="notificationList" style="max-height: calc(100% - 120px); overflow-y: auto;">
+            <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
+        </div>
+        <div style="padding: 12px; border-top: 1px solid #E2E4E8; text-align: center;">
+            <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 13px; font-weight: 500;">Mark all as read</button>
+        </div>
+    </div>
 
     <main class="container-fluid px-3 py-3">
         <div class="loading">
@@ -472,13 +550,11 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
+        const API_BASE = '/api';
 
         // Simple logout function
         function logout() {
-            // Clear all local storage
-            localStorage.clear();
-            sessionStorage.clear();
-            // Redirect to login page
+            clearTokens();
             window.location.href = '/login/';
         }
 
@@ -562,11 +638,9 @@
             if (isNaN(value)) return '0';
             if (value === 0) return '0';
 
-            // Handle very small numbers
             if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-               return value.toFixed(8);
-        }
-
+                return value.toFixed(8);
+            }
             return value.toFixed(decimals);
         }
 
@@ -590,7 +664,7 @@
             $('.loading').fadeOut();
         }
 
-        // Check if user is logged in, redirect to login if not
+        // Check if user is logged in
         const publicPaths = ['/', '/login/', '/register/'];
         const isPublicPath = publicPaths.includes(window.location.pathname);
 
@@ -626,7 +700,6 @@
             updateAuthLinks();
         });
 
-        // Also call when storage changes (for logout from other tabs)
         window.addEventListener('storage', function(e) {
             if (e.key === 'access_token') {
                 updateAuthLinks();
@@ -642,141 +715,186 @@
         });
 
         function getTokenIcon(symbol) {
-    const iconUrls = {
-        'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-        'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-        'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-        'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-        'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-        'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-        'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-        'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
-        'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-        'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
-        'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-        'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
-        'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-        'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-        'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-        'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-        'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-        'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-        'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
-        'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
-        };
-        return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
-    }
-
-
-
-    let notificationPanelOpen = false;
-
-    function toggleNotificationPanel() {
-        notificationPanelOpen = !notificationPanelOpen;
-        document.getElementById('notificationPanel').style.display = notificationPanelOpen ? 'block' : 'none';
-        if (notificationPanelOpen) {
-            loadNotifications();
+            const iconUrls = {
+                'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+                'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+                'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+                'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+                'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+                'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+                'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+                'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+                'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+                'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+                'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+                'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
+                'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+                'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+                'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+                'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+                'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+                'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+                'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
+                'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+            };
+            return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
         }
-    }
 
-    function closeNotificationPanel() {
-        notificationPanelOpen = false;
-        document.getElementById('notificationPanel').style.display = 'none';
-    }
+        // Notification Functions
+        let notificationPanelOpen = false;
 
-    async function loadNotifications() {
-        try {
-            const response = await fetch('/api/chatbot/notifications/', {
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                }
-            });
-
-            const notifications = await response.json();
-            const listDiv = document.getElementById('notificationList');
-            const badge = document.getElementById('notificationBadge');
-
-            if (notifications.length === 0) {
-                listDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #707A8A;">No notifications</div>';
-                badge.style.display = 'none';
-                return;
+        function toggleNotificationPanel() {
+            notificationPanelOpen = !notificationPanelOpen;
+            document.getElementById('notificationPanel').style.display = notificationPanelOpen ? 'block' : 'none';
+            if (notificationPanelOpen) {
+                loadNotifications();
             }
-
-            const unreadCount = notifications.filter(n => !n.is_read).length;
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-
-            listDiv.innerHTML = notifications.map(n => `
-                <div class="notification-item ${!n.is_read ? 'unread' : ''}" style="padding: 12px 15px; border-bottom: 1px solid #E2E4E8; cursor: pointer; ${!n.is_read ? 'background: #FFF4E5;' : ''}" onclick="markAsRead('${n.id}')">
-                    <div style="font-weight: 600; font-size: 13px; margin-bottom: 4px;">${n.title}</div>
-                    <div style="font-size: 12px; color: #707A8A;">${n.message}</div>
-                    <div style="font-size: 10px; color: #8A8F9E; margin-top: 4px;">${n.created_at}</div>
-                </div>
-            `).join('');
-        } catch (error) {
-            console.error('Error loading notifications:', error);
         }
-    }
 
-    async function markAsRead(notificationId) {
-        try {
-            await fetch('/api/chatbot/notifications/mark-read/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ notification_id: notificationId })
-            });
-            loadNotifications();
-        } catch (error) {
-            console.error('Error marking as read:', error);
+        function closeNotificationPanel() {
+            notificationPanelOpen = false;
+            document.getElementById('notificationPanel').style.display = 'none';
         }
-    }
 
-    async function markAllAsRead() {
-        try {
-            await fetch('/api/chatbot/notifications/mark-all-read/', {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+        async function loadNotifications() {
+            const token = getToken();
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/chatbot/notifications/', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                const notifications = await response.json();
+                const listDiv = document.getElementById('notificationList');
+                const badge = document.getElementById('notificationBadge');
+
+                if (!notifications || notifications.length === 0) {
+                    listDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #707A8A;">No notifications</div>';
+                    badge.style.display = 'none';
+                    return;
                 }
-            });
+
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+                if (unreadCount > 0) {
+                    badge.style.display = 'flex';
+                    badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+                } else {
+                    badge.style.display = 'none';
+                }
+
+                listDiv.innerHTML = notifications.map(n => `
+                    <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
+                        <div class="notification-title">${n.title}</div>
+                        <div class="notification-message">${n.message}</div>
+                        <div class="notification-time">${n.created_at}</div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading notifications:', error);
+            }
+        }
+
+        async function markAsRead(notificationId) {
+            try {
+                await fetch('/api/chatbot/notifications/mark-read/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getToken()}`
+                    },
+                    body: JSON.stringify({ notification_id: notificationId })
+                });
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking as read:', error);
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                await fetch('/api/chatbot/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${getToken()}`
+                    }
+                });
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
+        }
+
+        // Browser Notifications
+        async function requestNotificationPermission() {
+            if ('Notification' in window) {
+                const permission = await Notification.requestPermission();
+                if (permission === 'granted') {
+                    console.log('Notification permission granted');
+                }
+            }
+        }
+
+        function showBrowserNotification(title, message) {
+            if ('Notification' in window && Notification.permission === 'granted') {
+                new Notification(title, {
+                    body: message,
+                    icon: '/static/favicon.svg',
+                    silent: false
+                });
+            }
+        }
+
+        let lastNotificationCount = 0;
+        async function checkNewNotifications() {
+            const token = getToken();
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/chatbot/notifications/?unread_only=true', {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                const notifications = await response.json();
+                const unreadCount = notifications.length;
+
+                if (unreadCount > lastNotificationCount && unreadCount > 0) {
+                    const newNotifications = notifications.slice(0, unreadCount - lastNotificationCount);
+                    newNotifications.forEach(notif => {
+                        showBrowserNotification(notif.title, notif.message);
+                    });
+                }
+                lastNotificationCount = unreadCount;
+            } catch (error) {
+                console.error('Error checking notifications:', error);
+            }
+        }
+
+        // Initialize notifications
+        if (getToken()) {
             loadNotifications();
-        } catch (error) {
-            console.error('Error marking all as read:', error);
+            requestNotificationPermission();
+            setInterval(loadNotifications, 300000); // Every 5 minutes
+            setInterval(checkNewNotifications, 60000); // Every minute
         }
-    }
 
-    // Load notifications on page load
-    if (localStorage.getItem('access_token')) {
-        loadNotifications();
-        // Refresh every 5 minutes
-        setInterval(loadNotifications, 300000);
-    }
-
-    // Close panel when clicking outside
-    document.addEventListener('click', function(event) {
-        const panel = document.getElementById('notificationPanel');
-        const bell = document.querySelector('.notification-bell');
-        if (notificationPanelOpen && panel && !panel.contains(event.target) && !bell.contains(event.target)) {
-            closeNotificationPanel();
-        }
-    });
-
-
-
-
+        // Close panel when clicking outside
+        document.addEventListener('click', function(event) {
+            const panel = document.getElementById('notificationPanel');
+            const bell = document.querySelector('.notification-bell');
+            if (notificationPanelOpen && panel && !panel.contains(event.target) && !bell.contains(event.target)) {
+                closeNotificationPanel();
+            }
+        });
     </script>
     {% block extra_js %}{% endblock %}
 
-<!-- Add this before closing body tag in base.html -->
-{% if user.is_authenticated %}
-    {% include 'chatbot/widget.html' %}
-{% endif %}
+    <!-- Chatbot Widget -->
+    {% if user.is_authenticated %}
+        {% include 'chatbot/widget.html' %}
+    {% endif %}
 </body>
 </html>
