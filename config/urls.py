@@ -7,7 +7,7 @@ from apps.wallets.views import AdminSendEmailView
 from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 # Add this import at the top of your config/urls.py
-from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView
+from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
 
 from apps.wallets.views import (
     AdminStatisticsView,
@@ -54,5 +54,9 @@ urlpatterns = [
     path('api/chatbot/notifications/', NotificationsAPIView.as_view(), name='chatbot_notifications'),
     path('api/chatbot/notifications/mark-read/', MarkAllNotificationsReadAPIView.as_view(), name='chatbot_mark_read'),
     path('api/chatbot/notifications/mark-all-read/', MarkAllNotificationsReadAPIView.as_view(), name='chatbot_mark_all_read'),
+
+
+    path('api/notifications/subscribe/', SubscribePushAPIView.as_view(), name='subscribe_push'),
+    path('api/notifications/unsubscribe/', UnsubscribePushAPIView.as_view(), name='unsubscribe_push'),
 
 ]

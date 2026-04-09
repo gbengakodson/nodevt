@@ -3,6 +3,10 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .services.chatbot_service import ChatbotService, NotificationService
 from .models import ChatbotConversation
+from .models import PushSubscription
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+import json
 
 
 class ChatbotAPIView(APIView):
@@ -88,4 +92,35 @@ class MarkAllNotificationsReadAPIView(APIView):
     def post(self, request):
         from .models import UserNotification
         UserNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
+        return Response({'success': True})
+
+
+
+
+
+class SubscribePushAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        subscription_data = request.data
+
+        PushSubscription.objects.update_or_create(
+            user=request.user,
+            endpoint=subscription_data.get('endpoint'),
+            defaults={
+                'p256dh': subscription_data.get('keys', {}).get('p256dh'),
+                'auth': subscription_data.get('keys', {}).get('auth'),
+                'is_active': True
+            }
+        )
+
+        return Response({'success': True})
+
+
+class UnsubscribePushAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        endpoint = request.data.get('endpoint')
+        PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
         return Response({'success': True})

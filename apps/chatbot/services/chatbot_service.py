@@ -350,40 +350,35 @@ class NotificationService:
 
     @classmethod
     def send_daily_portfolio_update(cls, user):
-        """Send daily portfolio performance update"""
         from apps.tokens.models import UserTokenBalance
         from apps.wallets.models import Wallet, Transaction
+        from .push_service import PushNotificationService
         from django.db import models
 
         balances = UserTokenBalance.objects.filter(user=user, quantity__gt=0)
 
         if not balances:
-            # User has no tokens - remind to deposit
+            # Send push notification for zero balance
+            PushNotificationService.send_push_notification(
+                user,
+                "💰 Start Earning!",
+                "Deposit $10+ USDC to start trading and earning per hour from daily market volatility.",
+                '/deposit/'
+            )
+
             cls.create_notification(
                 user=user,
-                title="💰 Start Earning Today!",
-                message=f"""Your portfolio is empty! 
-
-💡 Deposit at least $10 USDC to start trading and earning hourly yield.
-
-📈 **Why invest?**
-- Earn hourly yield on your tokens
-- Refer friends for commission
-- Grow your crypto portfolio
-
-👉 Click here to deposit now!""",
+                title="💰 Start Earning!",
+                message="Deposit $10 USDC to start trading and earning hourly yield.",
                 notification_type='REMINDER'
             )
             return
 
-        # Calculate portfolio performance
         total_value = 0
-
         for balance in balances:
             value = balance.quantity * balance.token.current_price
             total_value += value
 
-        # Get yield earned today
         today = timezone.now().date()
         today_yield = Transaction.objects.filter(
             user=user,
@@ -391,22 +386,18 @@ class NotificationService:
             created_at__date=today
         ).aggregate(total=models.Sum('amount'))['total'] or 0
 
-        # Send portfolio update
+        # Send push notification
+        PushNotificationService.send_push_notification(
+            user,
+            f"📊 Portfolio: ${total_value:,.2f}",
+            f"Yield today: ${float(today_yield):,.2f}. {balances.count()} tokens held.",
+            '/portfolio/'
+        )
+
         cls.create_notification(
             user=user,
             title="📊 Daily Portfolio Update",
-            message=f"""**Your Portfolio Summary**
-
-💰 **Total Value:** ${total_value:,.2f} USDC
-✨ **Yield Earned Today:** ${float(today_yield):,.2f}
-📈 **Holdings:** {balances.count()} token(s)
-
-💡 **Tips to increase yield:**
-1. Add more funds to buy additional tokens
-2. Diversify across different tokens
-3. Reinvest your yield earnings
-
-Want specific advice? Ask our chatbot!""",
+            message=f"Total Value: ${total_value:,.2f} USDC | Yield Today: ${float(today_yield):,.2f}",
             notification_type='PORTFOLIO'
         )
 
