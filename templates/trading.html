@@ -675,7 +675,23 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // Crypto icons from CDN
+    // Trading Bot System
+    let tradingBotActive = {};
+    let botIntervals = {};
+    let botTradeSimulations = {};
+
+    const botConfig = {
+        'BTC': { strategy: 'Scalping + Trend Following', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 100 },
+        'ETH': { strategy: 'Grid Trading', risk: 'Medium', profitTarget: 4, stopLoss: 1.5, minAmount: 10, maxAmount: 80 },
+        'BNB': { strategy: 'Arbitrage', risk: 'Low', profitTarget: 3, stopLoss: 1, minAmount: 5, maxAmount: 50 },
+        'SOL': { strategy: 'Momentum', risk: 'High', profitTarget: 8, stopLoss: 3, minAmount: 10, maxAmount: 60 },
+        'XRP': { strategy: 'Range Trading', risk: 'Low', profitTarget: 2, stopLoss: 1, minAmount: 5, maxAmount: 40 },
+        'ADA': { strategy: 'DCA', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 35 },
+        'DOGE': { strategy: 'Meme Momentum', risk: 'High', profitTarget: 10, stopLoss: 5, minAmount: 5, maxAmount: 30 },
+        'AVAX': { strategy: 'Breakout', risk: 'Medium', profitTarget: 6, stopLoss: 2.5, minAmount: 10, maxAmount: 50 }
+    };
+
+    // Crypto icons
     function getTokenIcon(symbol) {
         const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
@@ -691,13 +707,7 @@
             'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
             'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
             'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/Fantom.png',
-            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/egld.png'
+            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png'
         };
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
@@ -714,15 +724,8 @@
         'DOT': 'polkadot',
         'PEPE': 'pepe',
         'LINK': 'chainlink',
-        'UNI': 'uniswap',
-        'ATOM': 'cosmos',
         'LTC': 'litecoin',
-        'NEAR': 'near',
-        'ALGO': 'algorand',
-        'VET': 'vechain',
-        'FTM': 'fantom',
-        'EGLD': 'elrond-erd-2',
-        'THETA': 'theta-token'
+        'NEAR': 'near'
     };
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -740,140 +743,199 @@
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
-
         if (value === 0) return '$0.00';
-
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return `$${value.toFixed(8)}`;
-        }
-
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return `$${value.toFixed(8)}`;
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
     }
 
     function formatNumber(num, decimals = 6) {
         if (!num) return '0';
-
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
-
         if (value === 0) return '0';
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return value.toFixed(8);
+        return value.toFixed(decimals);
+    }
 
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return value.toFixed(8);
+    // Generate bot analysis
+    function generateBotAnalysis(symbol, change24h) {
+        const config = botConfig[symbol] || botConfig['BTC'];
+        let signal = 'NEUTRAL';
+        let signalColor = 'bot-neutral';
+        let confidence = 65;
+
+        if (change24h > 5) { signal = 'SELL'; signalColor = 'bot-sell'; confidence = 80; }
+        else if (change24h > 2) { signal = 'SELL'; signalColor = 'bot-sell'; confidence = 65; }
+        else if (change24h < -5) { signal = 'BUY'; signalColor = 'bot-buy'; confidence = 80; }
+        else if (change24h < -2) { signal = 'BUY'; signalColor = 'bot-buy'; confidence = 65; }
+
+        const rsi = 30 + Math.random() * 70;
+        const macd = (Math.random() - 0.5) * 2;
+
+        return {
+            signal: signal, signalColor: signalColor, confidence: confidence,
+            strategy: config.strategy, risk: config.risk,
+            profitTarget: config.profitTarget, stopLoss: config.stopLoss,
+            rsi: Math.floor(rsi), macd: macd.toFixed(2),
+            trades: botTradeSimulations[symbol]?.length || 0
+        };
+    }
+
+    function showToast(message, type) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `position:fixed;bottom:20px;left:20px;background:${type === 'buy' ? '#0ECB81' : '#F6465D'};color:white;padding:10px 20px;border-radius:8px;z-index:10000;`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 3000);
+    }
+
+    function toggleBot(symbol) {
+        tradingBotActive[symbol] = !tradingBotActive[symbol];
+        updateBotIcons(symbol);
+        showToast(`🤖 Bot ${tradingBotActive[symbol] ? 'activated' : 'stopped'} for ${symbol}`, tradingBotActive[symbol] ? 'buy' : 'sell');
+
+        if (tradingBotActive[symbol]) {
+            if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
+            botIntervals[symbol] = setInterval(() => {
+                if (!tradingBotActive[symbol]) return;
+                const config = botConfig[symbol] || botConfig['BTC'];
+                const amount = (Math.random() * (config.maxAmount - config.minAmount) + config.minAmount).toFixed(2);
+                const isBuy = Math.random() > 0.7;
+                showToast(`${isBuy ? '🟢 BOT BUY' : '🔴 BOT SELL'}: ${amount} USDC of ${symbol}`, isBuy ? 'buy' : 'sell');
+            }, 60000);
+        } else if (botIntervals[symbol]) {
+            clearInterval(botIntervals[symbol]);
+            delete botIntervals[symbol];
+        }
+    }
+
+    function updateBotIcons(symbol) {
+        const isActive = tradingBotActive[symbol];
+        document.querySelectorAll(`.bot-icon[data-symbol="${symbol}"]`).forEach(icon => {
+            icon.style.background = isActive ? '#0ECB81' : '#707A8A';
+            icon.style.boxShadow = isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none';
+        });
+    }
+
+    function showBotModal(symbol, price, change) {
+        const analysis = generateBotAnalysis(symbol, change);
+        const isActive = tradingBotActive[symbol];
+
+        let modal = document.getElementById('botModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'botModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:none;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:16px;max-width:400px;width:90%;padding:20px;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+                        <h3 id="botModalTitle">🤖 Bot</h3>
+                        <button onclick="document.getElementById('botModal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+                    </div>
+                    <div id="botModalBody"></div>
+                    <button id="botModalAction" style="width:100%;padding:12px;border:none;border-radius:8px;color:white;cursor:pointer;margin-top:15px;"></button>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
-        return value.toFixed(decimals);
+        document.getElementById('botModalBody').innerHTML = `
+            <div style="margin-bottom:15px;"><strong>Signal:</strong> <span class="${analysis.signalColor}">${analysis.signal}</span></div>
+            <div style="margin-bottom:15px;"><strong>Confidence:</strong> ${analysis.confidence}%</div>
+            <div style="margin-bottom:15px;"><strong>Strategy:</strong> ${analysis.strategy}</div>
+            <div style="margin-bottom:15px;"><strong>Risk:</strong> ${analysis.risk}</div>
+            <div style="margin-bottom:15px;"><strong>RSI:</strong> ${analysis.rsi}</div>
+            <div style="margin-bottom:15px;"><strong>MACD:</strong> ${analysis.macd}</div>
+            <div><strong>Target:</strong> +${analysis.profitTarget}% | <strong>Stop:</strong> -${analysis.stopLoss}%</div>
+        `;
+
+        const actionBtn = document.getElementById('botModalAction');
+        actionBtn.textContent = isActive ? 'Stop Bot' : 'Start Bot';
+        actionBtn.style.background = isActive ? '#F6465D' : '#0ECB81';
+        actionBtn.onclick = () => { toggleBot(symbol); document.getElementById('botModal').style.display = 'none'; };
+
+        document.getElementById('botModalTitle').innerHTML = `🤖 ${symbol} Trading Bot`;
+        modal.style.display = 'flex';
+    }
+
+    function addChartBotIcon() {
+        const container = document.querySelector('.chart-header .symbol-price');
+        if (container && !document.querySelector('.chart-bot-icon')) {
+            const icon = document.createElement('div');
+            icon.className = 'chart-bot-icon bot-icon';
+            icon.setAttribute('data-symbol', currentSymbol);
+            icon.innerHTML = '🤖';
+            icon.style.cssText = 'width:32px;height:32px;background:#707A8A;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:15px;';
+            icon.onclick = () => showBotModal(currentSymbol, currentPrice, 0);
+            container.appendChild(icon);
+        }
+    }
+
+    function addCardBotIcons() {
+        document.querySelectorAll('.coin-item').forEach(card => {
+            const symbolElem = card.querySelector('.coin-symbol');
+            if (!symbolElem) return;
+            const symbol = symbolElem.innerText;
+            if (!card.querySelector('.card-bot-icon')) {
+                const icon = document.createElement('div');
+                icon.className = 'card-bot-icon bot-icon';
+                icon.setAttribute('data-symbol', symbol);
+                icon.innerHTML = '🤖';
+                icon.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;background:#707A8A;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;';
+                const priceElem = card.querySelector('.coin-price');
+                const price = parseFloat(priceElem?.innerText.replace('$', '')) || 0;
+                const changeElem = card.querySelector('.coin-change');
+                const change = parseFloat(changeElem?.innerText) || 0;
+                icon.onclick = (e) => { e.stopPropagation(); showBotModal(symbol, price, change); };
+                card.style.position = 'relative';
+                card.appendChild(icon);
+            }
+        });
     }
 
     async function updateChart() {
         if (!currentSymbol) return;
-
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
-
         chartContainer.innerHTML = '<div class="loading-chart">Loading chart data for ' + currentSymbol + '...</div><canvas id="priceChart" style="display:none;"></canvas>';
-
         const coinId = symbolToCoinGeckoId[currentSymbol];
-        if (!coinId) {
-            chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>';
-            return;
-        }
-
+        if (!coinId) { chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>'; return; }
         try {
             const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`);
             const data = await response.json();
-
-            if (!data || !data.prices || data.prices.length === 0) {
-                chartContainer.innerHTML = '<div class="loading-chart">No data available for ' + currentSymbol + '</div>';
-                return;
-            }
-
+            if (!data || !data.prices || data.prices.length === 0) { chartContainer.innerHTML = '<div class="loading-chart">No data available</div>'; return; }
             const prices = data.prices;
-            const labels = [];
-            const priceValues = [];
-
+            const labels = [], priceValues = [];
             for (let i = 0; i < prices.length; i++) {
                 const date = new Date(prices[i][0]);
-                let label;
-                if (currentDays <= 2) {
-                    label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                }
+                let label = currentDays <= 2 ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
                 labels.push(label);
                 priceValues.push(prices[i][1]);
             }
-
             chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
             const ctx = document.getElementById('priceChart').getContext('2d');
-
-            if (priceChart) {
-                priceChart.destroy();
-            }
-
+            if (priceChart) priceChart.destroy();
             const firstPrice = priceValues[0];
             const lastPrice = priceValues[priceValues.length - 1];
             const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
             const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
-
             document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
             document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
             document.getElementById('priceChange').className = `price-change ${changeClass}`;
             document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
             document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
             currentPrice = lastPrice;
-
             priceChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${currentSymbol} Price (USD)`,
-                        data: priceValues,
-                        borderColor: '#1E2329',
-                        backgroundColor: 'rgba(30, 35, 41, 0.05)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: 'white',
-                            titleColor: '#1E2329',
-                            bodyColor: '#1E2329',
-                            borderColor: '#E2E4E8',
-                            borderWidth: 1,
-                            callbacks: {
-                                label: (ctx) => `${currentSymbol}: $${ctx.raw.toFixed(2)}`
-                            }
-                        }
-                    },
-                    scales: {
-                        x: { grid: { display: false }, ticks: { color: '#707A8A', maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } },
-                        y: { grid: { color: '#EFF2F5' }, ticks: { color: '#707A8A', callback: v => '$' + v.toLocaleString() } }
-                    }
-                }
+                data: { labels: labels, datasets: [{ label: `${currentSymbol} Price (USD)`, data: priceValues, borderColor: '#1E2329', backgroundColor: 'rgba(30,35,41,0.05)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 5 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false }, tooltip: { mode: 'index', intersect: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#EFF2F5' } } } }
             });
-
-        } catch (error) {
-            console.error('Error updating chart:', error);
-            chartContainer.innerHTML = '<div class="loading-chart">Error loading chart for ' + currentSymbol + '</div>';
-        }
+            addChartBotIcon();
+        } catch (error) { console.error('Error updating chart:', error); chartContainer.innerHTML = '<div class="loading-chart">Error loading chart</div>'; }
     }
 
     function generateOrderBook(price) {
@@ -883,56 +945,29 @@
             asks.push({ price: price * (1 + (0.0005 + i * 0.0005)), size: 0.5 + Math.random() * 3 });
         }
         let bidTotal = 0, askTotal = 0;
-        return {
-            bids: bids.map(b => ({ ...b, total: bidTotal += b.size })),
-            asks: asks.map(a => ({ ...a, total: askTotal += a.size }))
-        };
+        return { bids: bids.map(b => ({ ...b, total: bidTotal += b.size })), asks: asks.map(a => ({ ...a, total: askTotal += a.size })) };
     }
 
     function renderOrderBook() {
         if (!currentPrice) return;
         const book = generateOrderBook(currentPrice);
-
-        document.getElementById('askOrders').innerHTML = book.asks.map(a =>
-            `<div class="orderbook-row" onclick="setPrice(${a.price})"><span class="ask-price">${formatCurrency(a.price)}</span><span>${formatNumber(a.size)}</span><span>${formatNumber(a.total)}</span></div>`
-        ).join('');
-        document.getElementById('bidOrders').innerHTML = book.bids.map(b =>
-            `<div class="orderbook-row" onclick="setPrice(${b.price})"><span class="bid-price">${formatCurrency(b.price)}</span><span>${formatNumber(b.size)}</span><span>${formatNumber(b.total)}</span></div>`
-        ).join('');
+        document.getElementById('askOrders').innerHTML = book.asks.map(a => `<div class="orderbook-row" onclick="setPrice(${a.price})"><span class="ask-price">${formatCurrency(a.price)}</span><span>${formatNumber(a.size)}</span><span>${formatNumber(a.total)}</span></div>`).join('');
+        document.getElementById('bidOrders').innerHTML = book.bids.map(b => `<div class="orderbook-row" onclick="setPrice(${b.price})"><span class="bid-price">${formatCurrency(b.price)}</span><span>${formatNumber(b.size)}</span><span>${formatNumber(b.total)}</span></div>`).join('');
     }
 
     async function updateButtonState() {
         try {
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
-
-            const buyBtn = document.getElementById('buyBtn');
-            const buyBtnMarket = document.getElementById('buyBtnMarket');
-            const sellBtn = document.getElementById('sellBtn');
-            const sellBtnMarket = document.getElementById('sellBtnMarket');
-
-            if (userGrandBalance <= 0) {
-                buyBtn.classList.add('btn-buy-disabled');
-                buyBtnMarket.classList.add('btn-buy-disabled');
-            } else {
-                buyBtn.classList.remove('btn-buy-disabled');
-                buyBtnMarket.classList.remove('btn-buy-disabled');
-            }
-
+            const buyBtn = document.getElementById('buyBtn'), buyBtnMarket = document.getElementById('buyBtnMarket'), sellBtn = document.getElementById('sellBtn'), sellBtnMarket = document.getElementById('sellBtnMarket');
+            if (userGrandBalance <= 0) { buyBtn.classList.add('btn-buy-disabled'); buyBtnMarket.classList.add('btn-buy-disabled'); }
+            else { buyBtn.classList.remove('btn-buy-disabled'); buyBtnMarket.classList.remove('btn-buy-disabled'); }
             const holdings = await apiCall('/trading/my_tokens/');
             const currentHoldings = holdings.find(h => h.token_symbol === currentSymbol);
             const hasCurrentToken = currentHoldings && parseFloat(currentHoldings.quantity) > 0;
-
-            if (!hasCurrentToken) {
-                sellBtn.classList.add('btn-sell-disabled');
-                sellBtnMarket.classList.add('btn-sell-disabled');
-            } else {
-                sellBtn.classList.remove('btn-sell-disabled');
-                sellBtnMarket.classList.remove('btn-sell-disabled');
-            }
-        } catch (e) {
-            console.error(e);
-        }
+            if (!hasCurrentToken) { sellBtn.classList.add('btn-sell-disabled'); sellBtnMarket.classList.add('btn-sell-disabled'); }
+            else { sellBtn.classList.remove('btn-sell-disabled'); sellBtnMarket.classList.remove('btn-sell-disabled'); }
+        } catch (e) { console.error(e); }
     }
 
     async function loadCoins() {
@@ -940,51 +975,20 @@
             tokens = await apiCall('/trading/');
             const topCoins = tokens.slice(0, 5);
             const container = document.getElementById('coinList');
-
             if (container) {
                 container.innerHTML = topCoins.map(token => {
                     const change = (Math.random() - 0.5) * 8;
                     const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                    return `
-                        <div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                            <div class="coin-info">
-                                <img src="${getTokenIcon(token.symbol)}" alt="${token.symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
-                                <div>
-                                    <div class="coin-symbol">${token.symbol}</div>
-                                    <div class="coin-name">${token.name}</div>
-                                </div>
-                            </div>
-                            <div style="text-align: right;">
-                                <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                                <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
-                            </div>
-                        </div>
-                    `;
+                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')"><div class="coin-info"><img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;"><div><div class="coin-symbol">${token.symbol}</div><div class="coin-name">${token.name}</div></div></div><div style="text-align:right;"><div class="coin-price">${formatCurrency(token.current_price)}</div><div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div></div></div>`;
                 }).join('');
             }
-
             const totalVolume = Math.random() * 500000000;
             document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
-
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) {
-                currentPrice = parseFloat(currentToken.current_price);
-                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-            }
-
+            if (currentToken) { currentPrice = parseFloat(currentToken.current_price); document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice); document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol); }
             await updateButtonState();
-
-        } catch (e) {
-            console.error('Error loading coins:', e);
-        }
-        // Add bot icons to coin cards
-        tokens.forEach(token => {
-            const change = (Math.random() - 0.5) * 8;
-            setTimeout(() => {
-            addBotIconToCard(token.symbol, token.current_price, change);
-            }, 100);
-        });
+            addCardBotIcons();
+        } catch (e) { console.error('Error loading coins:', e); }
     }
 
     function selectCoin(symbol) {
@@ -996,12 +1000,9 @@
             document.getElementById('currentCoinIcon').src = getTokenIcon(symbol);
             document.getElementById('symbolName').innerHTML = `${symbol}/USDC`;
             updateChart();
-            // After updating chart, add bot icon
-            setTimeout(() => {
-            addBotIconToChart(currentSymbol, currentPrice, 0);
-            }, 500);
             renderOrderBook();
             updateButtonState();
+            setTimeout(() => addChartBotIcon(), 500);
         }
         document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
@@ -1022,19 +1023,11 @@
         } catch (e) { console.error(e); }
     }
 
-    function setPrice(price) {
-        document.getElementById('limitPrice').value = price.toFixed(2);
-        const amount = document.getElementById('limitAmount').value;
-        if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount));
-    }
+    function setPrice(price) { document.getElementById('limitPrice').value = price.toFixed(2); const amount = document.getElementById('limitAmount').value; if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount)); }
     window.setPrice = setPrice;
 
     async function executeBuy() {
-        if (userGrandBalance <= 0) {
-            alert('Insufficient balance to buy. Please deposit USDC first.');
-            return;
-        }
-
+        if (userGrandBalance <= 0) { alert('Insufficient balance to buy. Please deposit USDC first.'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
         const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
@@ -1073,42 +1066,21 @@
     }
 
     document.querySelectorAll('[data-perc]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const percent = parseInt(this.getAttribute('data-perc'));
-            const amount = (userBalance * percent) / 100;
-            document.getElementById('limitAmount').value = amount.toFixed(2);
-            document.getElementById('limitTotal').innerHTML = formatCurrency(amount);
-        });
+        btn.addEventListener('click', function() { const percent = parseInt(this.getAttribute('data-perc')); const amount = (userBalance * percent) / 100; document.getElementById('limitAmount').value = amount.toFixed(2); document.getElementById('limitTotal').innerHTML = formatCurrency(amount); });
     });
 
     document.querySelectorAll('[data-market-perc]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const percent = parseInt(this.getAttribute('data-market-perc'));
-            document.getElementById('marketAmount').value = ((userBalance * percent) / 100).toFixed(2);
-        });
+        btn.addEventListener('click', function() { const percent = parseInt(this.getAttribute('data-market-perc')); document.getElementById('marketAmount').value = ((userBalance * percent) / 100).toFixed(2); });
     });
 
-    document.getElementById('limitAmount').addEventListener('input', function() {
-        document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0);
-    });
+    document.getElementById('limitAmount').addEventListener('input', function() { document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0); });
 
     document.querySelectorAll('.order-tab').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            const tab = this.getAttribute('data-tab');
-            document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none';
-            document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none';
-        });
+        btn.addEventListener('click', function() { document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active')); this.classList.add('active'); const tab = this.getAttribute('data-tab'); document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none'; document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none'; });
     });
 
     document.querySelectorAll('.tf-btn').forEach(btn => {
-        btn.addEventListener('click', async function() {
-            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentDays = parseInt(this.getAttribute('data-tf'));
-            await updateChart();
-        });
+        btn.addEventListener('click', async function() { document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentDays = parseInt(this.getAttribute('data-tf')); await updateChart(); });
     });
 
     document.getElementById('buyBtn').addEventListener('click', executeBuy);
@@ -1116,378 +1088,30 @@
     document.getElementById('buyBtnMarket').addEventListener('click', executeBuy);
     document.getElementById('sellBtnMarket').addEventListener('click', executeSell);
 
-    window.addEventListener('resize', function() {
-        if (priceChart) {
-            priceChart.resize();
-        }
-    });
+    window.addEventListener('resize', function() { if (priceChart) priceChart.resize(); });
 
     async function init() {
         await loadCoins();
         await loadUserData();
-
         const selectedCoin = localStorage.getItem('selectedCoin');
-        if (selectedCoin) {
-            currentSymbol = selectedCoin;
-            localStorage.removeItem('selectedCoin');
-            selectCoin(currentSymbol);
-        }
-
+        if (selectedCoin) { currentSymbol = selectedCoin; localStorage.removeItem('selectedCoin'); selectCoin(currentSymbol); }
         await updateChart();
         renderOrderBook();
         updateButtonState();
-
         setInterval(() => renderOrderBook(), 3000);
-        setInterval(async () => {
-            await loadCoins();
-            await loadUserData();
-            await updateChart();
-        }, 120000);
+        setInterval(async () => { await loadCoins(); await loadUserData(); await updateChart(); }, 120000);
+        addCardBotIcons();
     }
 
     init();
-
-
-
-// Trading Bot System - Complete Working Version
-
-// Bot state tracking
-let tradingBotActive = {};
-let botIntervals = {};
-let botTradeSimulations = {};
-
-// Bot configuration for different tokens
-const botConfig = {
-    'BTC': { strategy: 'Scalping + Trend Following', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 100 },
-    'ETH': { strategy: 'Grid Trading', risk: 'Medium', profitTarget: 4, stopLoss: 1.5, minAmount: 10, maxAmount: 80 },
-    'BNB': { strategy: 'Arbitrage', risk: 'Low', profitTarget: 3, stopLoss: 1, minAmount: 5, maxAmount: 50 },
-    'SOL': { strategy: 'Momentum', risk: 'High', profitTarget: 8, stopLoss: 3, minAmount: 10, maxAmount: 60 },
-    'XRP': { strategy: 'Range Trading', risk: 'Low', profitTarget: 2, stopLoss: 1, minAmount: 5, maxAmount: 40 },
-    'ADA': { strategy: 'DCA (Dollar Cost Avg)', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 35 },
-    'DOGE': { strategy: 'Meme Momentum', risk: 'High', profitTarget: 10, stopLoss: 5, minAmount: 5, maxAmount: 30 },
-    'AVAX': { strategy: 'Breakout', risk: 'Medium', profitTarget: 6, stopLoss: 2.5, minAmount: 10, maxAmount: 50 },
-    'DOT': { strategy: 'Mean Reversion', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 40 },
-    'LINK': { strategy: 'Oracle Based', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 45 }
-};
-
-// Generate bot analysis
-function generateBotAnalysis(symbol, currentPrice, change24h) {
-    const config = botConfig[symbol] || botConfig['BTC'];
-
-    let signal = 'NEUTRAL';
-    let signalColor = 'bot-signal-neutral';
-    let confidence = 65;
-
-    if (change24h > 5) {
-        signal = 'STRONG SELL';
-        signalColor = 'bot-signal-sell';
-        confidence = 75 + Math.min(20, change24h / 2);
-    } else if (change24h > 2) {
-        signal = 'SELL';
-        signalColor = 'bot-signal-sell';
-        confidence = 60 + change24h;
-    } else if (change24h < -5) {
-        signal = 'STRONG BUY';
-        signalColor = 'bot-signal-buy';
-        confidence = 75 + Math.min(20, Math.abs(change24h) / 2);
-    } else if (change24h < -2) {
-        signal = 'BUY';
-        signalColor = 'bot-signal-buy';
-        confidence = 60 + Math.abs(change24h);
-    }
-
-    const rsi = 30 + (Math.random() * 70);
-    const rsiSignal = rsi > 70 ? 'Overbought - SELL' : (rsi < 30 ? 'Oversold - BUY' : 'Neutral');
-    const macd = (Math.random() - 0.5) * 2;
-    const macdSignal = macd > 0.5 ? 'Bullish' : (macd < -0.5 ? 'Bearish' : 'Flat');
-
-    return {
-        signal: signal,
-        signalColor: signalColor,
-        confidence: Math.floor(confidence),
-        strategy: config.strategy,
-        risk: config.risk,
-        profitTarget: config.profitTarget,
-        stopLoss: config.stopLoss,
-        rsi: Math.floor(rsi),
-        rsiSignal: rsiSignal,
-        macd: macd.toFixed(2),
-        macdSignal: macdSignal,
-        lastTrade: new Date().toLocaleTimeString(),
-        activeTrades: botTradeSimulations[symbol]?.length || 0
-    };
-}
-
-// Show toast notification
-function showToast(message, type = 'info') {
-    const toast = document.createElement('div');
-    toast.style.cssText = `
-        position: fixed;
-        bottom: 20px;
-        left: 20px;
-        background: ${type === 'buy' ? '#0ECB81' : type === 'sell' ? '#F6465D' : '#1E2329'};
-        color: white;
-        padding: 12px 20px;
-        border-radius: 8px;
-        z-index: 10000;
-        animation: slideIn 0.3s ease;
-        font-size: 13px;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    `;
-    toast.innerHTML = message;
-    document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-}
-
-// Toggle bot status
-function toggleBot(symbol) {
-    tradingBotActive[symbol] = !tradingBotActive[symbol];
-
-    // Update all bot icons for this symbol
-    updateBotIcons(symbol);
-
-    if (tradingBotActive[symbol]) {
-        startBotTrading(symbol);
-        showToast(`🤖 Trading bot for ${symbol} has been activated!`, 'start');
-        // Update signal in modal if open
-        updateBotSignalInModal(symbol);
-    } else {
-        stopBotTrading(symbol);
-        showToast(`⏹️ Trading bot for ${symbol} has been stopped.`, 'stop');
-    }
-}
-
-// Start bot trading simulation
-function startBotTrading(symbol) {
-    if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
-
-    botTradeSimulations[symbol] = botTradeSimulations[symbol] || [];
-
-    botIntervals[symbol] = setInterval(() => {
-        if (!tradingBotActive[symbol]) return;
-
-        const random = Math.random();
-        if (random > 0.7) {
-            const isBuy = random > 0.85;
-            const config = botConfig[symbol] || botConfig['BTC'];
-            const amount = (Math.random() * (config.maxAmount - config.minAmount) + config.minAmount).toFixed(2);
-
-            const trade = {
-                type: isBuy ? 'buy' : 'sell',
-                amount: amount,
-                time: new Date().toLocaleTimeString(),
-                price: currentPrice
-            };
-
-            botTradeSimulations[symbol].unshift(trade);
-            if (botTradeSimulations[symbol].length > 10) botTradeSimulations[symbol].pop();
-
-            showToast(`${isBuy ? '🟢 BOT BUY' : '🔴 BOT SELL'}: ${amount} USDC of ${symbol} at $${currentPrice}`, isBuy ? 'buy' : 'sell');
-
-            // Update modal if open for this symbol
-            updateBotSignalInModal(symbol);
-        }
-    }, 45000 + Math.random() * 30000);
-}
-
-// Stop bot trading
-function stopBotTrading(symbol) {
-    if (botIntervals[symbol]) {
-        clearInterval(botIntervals[symbol]);
-        delete botIntervals[symbol];
-    }
-}
-
-// Update bot icons everywhere
-function updateBotIcons(symbol) {
-    const isActive = tradingBotActive[symbol] || false;
-
-    // Update chart header icon
-    const chartIcon = document.getElementById(`chart-bot-icon-${symbol}`);
-    if (chartIcon) {
-        chartIcon.style.background = isActive ? '#0ECB81' : '#707A8A';
-        chartIcon.style.boxShadow = isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none';
-        chartIcon.style.animation = isActive ? 'pulse 2s infinite' : 'none';
-    }
-
-    // Update all card icons
-    document.querySelectorAll(`.card-bot-icon[data-symbol="${symbol}"]`).forEach(icon => {
-        icon.style.background = isActive ? '#0ECB81' : '#707A8A';
-        icon.style.boxShadow = isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none';
-        icon.style.animation = isActive ? 'pulse 2s infinite' : 'none';
-    });
-}
-
-// Show bot analysis modal
-function showBotAnalysis(symbol, currentPrice, change24h) {
-    const analysis = generateBotAnalysis(symbol, currentPrice, change24h);
-    const isActive = tradingBotActive[symbol] || false;
-    const trades = botTradeSimulations[symbol] || [];
-
-    let modal = document.getElementById('botModal');
-    if (!modal) {
-        modal = document.createElement('div');
-        modal.id = 'botModal';
-        modal.className = 'bot-modal';
-        modal.innerHTML = `<div class="bot-modal-content"><div id="botModalContent"></div></div>`;
-        document.body.appendChild(modal);
-    }
-
-    const tradesHtml = trades.length > 0 ? trades.map(t => `
-        <div class="bot-analysis-item">
-            <span class="bot-analysis-label">${t.time}</span>
-            <span class="bot-analysis-value ${t.type === 'buy' ? 'bot-signal-buy' : 'bot-signal-sell'}">
-                ${t.type === 'buy' ? 'BUY' : 'SELL'} ${t.amount} USDC
-            </span>
-        </div>
-    `).join('') : '<div class="bot-analysis-item">No trades yet</div>';
-
-    document.getElementById('botModalContent').innerHTML = `
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-            <h3 style="margin: 0;">🤖 ${symbol} Trading Bot</h3>
-            <button onclick="closeBotModal()" style="background: none; border: none; font-size: 24px; cursor: pointer;">×</button>
-        </div>
-
-        <div style="background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-            <div style="display: flex; justify-content: space-between; align-items: center;">
-                <div>
-                    <div style="font-size: 11px; color: #707A8A;">Bot Status</div>
-                    <div style="display: flex; align-items: center; gap: 8px;">
-                        <span class="bot-status ${isActive ? 'active' : 'inactive'}"></span>
-                        <span>${isActive ? 'Active' : 'Inactive'}</span>
-                    </div>
-                </div>
-                <button onclick="toggleBot('${symbol}'); closeBotModal(); setTimeout(() => showBotAnalysis('${symbol}', ${currentPrice}, ${change24h}), 100);" style="background: ${isActive ? '#F6465D' : '#0ECB81'}; border: none; padding: 8px 16px; border-radius: 8px; color: white; cursor: pointer;">
-                    ${isActive ? 'Stop Bot' : 'Start Bot'}
-                </button>
-            </div>
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <h4 style="font-size: 14px; margin-bottom: 10px;">📊 Trading Signal</h4>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Signal</span><span class="bot-analysis-value ${analysis.signalColor}">${analysis.signal}</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Confidence</span><span class="bot-analysis-value">${analysis.confidence}%</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Strategy</span><span class="bot-analysis-value">${analysis.strategy}</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Risk Level</span><span class="bot-analysis-value">${analysis.risk}</span></div>
-        </div>
-
-        <div style="margin-bottom: 20px;">
-            <h4 style="font-size: 14px; margin-bottom: 10px;">📈 Technical Analysis</h4>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">RSI (14)</span><span class="bot-analysis-value">${analysis.rsi} - ${analysis.rsiSignal}</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">MACD</span><span class="bot-analysis-value">${analysis.macd} (${analysis.macdSignal})</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Profit Target</span><span class="bot-analysis-value">+${analysis.profitTarget}%</span></div>
-            <div class="bot-analysis-item"><span class="bot-analysis-label">Stop Loss</span><span class="bot-analysis-value">-${analysis.stopLoss}%</span></div>
-        </div>
-
-        <div>
-            <h4 style="font-size: 14px; margin-bottom: 10px;">🔄 Recent Trades</h4>
-            ${tradesHtml}
-        </div>
-    `;
-
-    modal.style.display = 'flex';
-}
-
-function closeBotModal() {
-    const modal = document.getElementById('botModal');
-    if (modal) modal.style.display = 'none';
-}
-
-function updateBotSignalInModal(symbol) {
-    const modal = document.getElementById('botModal');
-    if (modal && modal.style.display === 'flex') {
-        const content = document.getElementById('botModalContent');
-        if (content && content.innerHTML.includes(symbol)) {
-            showBotAnalysis(symbol, currentPrice, 0);
-        }
-    }
-}
-
-// Add bot icon to chart header
-function addBotIconToChart() {
-    const chartHeader = document.querySelector('.chart-header .symbol-price');
-    if (chartHeader && !document.getElementById(`chart-bot-icon-${currentSymbol}`)) {
-        const isActive = tradingBotActive[currentSymbol] || false;
-        const botIcon = document.createElement('div');
-        botIcon.id = `chart-bot-icon-${currentSymbol}`;
-        botIcon.className = 'trading-bot-icon';
-        botIcon.style.cssText = `
-            width: 32px;
-            height: 32px;
-            background: ${isActive ? '#0ECB81' : '#707A8A'};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            margin-left: 15px;
-            transition: all 0.3s;
-            font-size: 16px;
-            box-shadow: ${isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none'};
-            animation: ${isActive ? 'pulse 2s infinite' : 'none'};
-        `;
-        botIcon.innerHTML = '🤖';
-        botIcon.onclick = (e) => {
-            e.stopPropagation();
-            showBotAnalysis(currentSymbol, currentPrice, 0);
-        };
-        chartHeader.appendChild(botIcon);
-    }
-}
-
-// Add bot icons to all token cards
-function addBotIconsToCards() {
-    document.querySelectorAll('.coin-item').forEach(card => {
-        const symbolElem = card.querySelector('.coin-symbol');
-        if (!symbolElem) return;
-
-        const symbol = symbolElem.innerText;
-        const priceElem = card.querySelector('.coin-price');
-        const price = parseFloat(priceElem?.innerText.replace('$', '').replace(',', '')) || 0;
-        const changeElem = card.querySelector('.coin-change');
-        const change = parseFloat(changeElem?.innerText) || 0;
-
-        if (!card.querySelector(`.card-bot-icon[data-symbol="${symbol}"]`)) {
-            const isActive = tradingBotActive[symbol] || false;
-            const botIcon = document.createElement('div');
-            botIcon.className = 'card-bot-icon';
-            botIcon.setAttribute('data-symbol', symbol);
-            botIcon.style.cssText = `
-                position: absolute;
-                top: 8px;
-                right: 8px;
-                width: 28px;
-                height: 28px;
-                background: ${isActive ? '#0ECB81' : '#707A8A'};
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                font-size: 14px;
-                transition: all 0.3s;
-                box-shadow: ${isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none'};
-                animation: ${isActive ? 'pulse 2s infinite' : 'none'};
-                z-index: 10;
-            `;
-            botIcon.innerHTML = '🤖';
-            botIcon.onclick = (e) => {
-                e.stopPropagation();
-                showBotAnalysis(symbol, price, change);
-            };
-            card.style.position = 'relative';
-            card.appendChild(botIcon);
-        }
-    });
-}
-
-// Initialize bot icons after coins load
-function initBotIcons() {
-    addBotIconToChart();
-    addBotIconsToCards();
-}
-
-// Call this after coins load and after any DOM updates
-setInterval(initBotIcons, 2000);
 </script>
+
+<style>
+.bot-buy { color: #0ECB81; font-weight: bold; }
+.bot-sell { color: #F6465D; font-weight: bold; }
+.bot-neutral { color: #F0B90B; font-weight: bold; }
+.bot-icon { transition: all 0.3s; }
+.bot-icon:hover { transform: scale(1.1); }
+@keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+</style>
 {% endblock %}
