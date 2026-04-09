@@ -739,20 +739,27 @@
             return iconUrls[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
         }
 
-        // Notification Functions
+        // ============ NOTIFICATION FUNCTIONS ============
         let notificationPanelOpen = false;
 
         function toggleNotificationPanel() {
+            const token = getToken();
+            if (!token) return;
+
             notificationPanelOpen = !notificationPanelOpen;
-            document.getElementById('notificationPanel').style.display = notificationPanelOpen ? 'block' : 'none';
-            if (notificationPanelOpen) {
-                loadNotifications();
+            const panel = document.getElementById('notificationPanel');
+            if (panel) {
+                panel.style.display = notificationPanelOpen ? 'block' : 'none';
+                if (notificationPanelOpen) {
+                    loadNotifications();
+                }
             }
         }
 
         function closeNotificationPanel() {
             notificationPanelOpen = false;
-            document.getElementById('notificationPanel').style.display = 'none';
+            const panel = document.getElementById('notificationPanel');
+            if (panel) panel.style.display = 'none';
         }
 
         async function loadNotifications() {
@@ -761,48 +768,61 @@
 
             try {
                 const response = await fetch('/api/chatbot/notifications/', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!response.ok) return;
 
                 const notifications = await response.json();
                 const listDiv = document.getElementById('notificationList');
                 const badge = document.getElementById('notificationBadge');
 
-                if (!notifications || notifications.length === 0) {
-                    listDiv.innerHTML = '<div style="text-align: center; padding: 20px; color: #707A8A;">No notifications</div>';
-                    badge.style.display = 'none';
+                // Ensure notifications is an array
+                if (!notifications || !Array.isArray(notifications)) {
+                    if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
+                    return;
+                }
+
+                if (notifications.length === 0) {
+                    if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
+                    if (badge) badge.style.display = 'none';
                     return;
                 }
 
                 const unreadCount = notifications.filter(n => !n.is_read).length;
-                if (unreadCount > 0) {
-                    badge.style.display = 'flex';
-                    badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                } else {
-                    badge.style.display = 'none';
+                if (badge) {
+                    if (unreadCount > 0) {
+                        badge.style.display = 'flex';
+                        badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+                    } else {
+                        badge.style.display = 'none';
+                    }
                 }
 
-                listDiv.innerHTML = notifications.map(n => `
-                    <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
-                        <div class="notification-title">${n.title}</div>
-                        <div class="notification-message">${n.message}</div>
-                        <div class="notification-time">${n.created_at}</div>
-                    </div>
-                `).join('');
+                if (listDiv) {
+                    listDiv.innerHTML = notifications.map(n => `
+                        <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
+                            <div class="notification-title">${escapeHtml(n.title)}</div>
+                            <div class="notification-message">${escapeHtml(n.message)}</div>
+                            <div class="notification-time">${n.created_at}</div>
+                        </div>
+                    `).join('');
+                }
             } catch (error) {
                 console.error('Error loading notifications:', error);
             }
         }
 
         async function markAsRead(notificationId) {
+            const token = getToken();
+            if (!token) return;
+
             try {
                 await fetch('/api/chatbot/notifications/mark-read/', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     },
                     body: JSON.stringify({ notification_id: notificationId })
                 });
@@ -813,11 +833,14 @@
         }
 
         async function markAllAsRead() {
+            const token = getToken();
+            if (!token) return;
+
             try {
                 await fetch('/api/chatbot/notifications/mark-all-read/', {
                     method: 'POST',
                     headers: {
-                        'Authorization': `Bearer ${getToken()}`
+                        'Authorization': `Bearer ${token}`
                     }
                 });
                 loadNotifications();
@@ -826,9 +849,19 @@
             }
         }
 
+        // Helper function to escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML();
+        }
+
         // Browser Notifications
         async function requestNotificationPermission() {
-            if ('Notification' in window) {
+            const token = getToken();
+            if (!token) return;
+
+            if ('Notification' in window && Notification.permission !== 'granted' && Notification.permission !== 'denied') {
                 const permission = await Notification.requestPermission();
                 if (permission === 'granted') {
                     console.log('Notification permission granted');
@@ -853,11 +886,14 @@
 
             try {
                 const response = await fetch('/api/chatbot/notifications/?unread_only=true', {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
+
+                if (!response.ok) return;
+
                 const notifications = await response.json();
+                if (!Array.isArray(notifications)) return;
+
                 const unreadCount = notifications.length;
 
                 if (unreadCount > lastNotificationCount && unreadCount > 0) {
@@ -872,10 +908,12 @@
             }
         }
 
-        // Initialize notifications
-        if (getToken()) {
+        // Initialize notifications ONLY on pages where user is logged in
+        const isLoginPage = window.location.pathname === '/login/' || window.location.pathname === '/register/';
+
+        if (getToken() && !isLoginPage) {
             loadNotifications();
-            requestNotificationPermission();
+            setTimeout(requestNotificationPermission, 2000);
             setInterval(loadNotifications, 300000); // Every 5 minutes
             setInterval(checkNewNotifications, 60000); // Every minute
         }
@@ -884,101 +922,10 @@
         document.addEventListener('click', function(event) {
             const panel = document.getElementById('notificationPanel');
             const bell = document.querySelector('.notification-bell');
-            if (notificationPanelOpen && panel && !panel.contains(event.target) && !bell.contains(event.target)) {
+            if (notificationPanelOpen && panel && !panel.contains(event.target) && bell && !bell.contains(event.target)) {
                 closeNotificationPanel();
             }
         });
-
-        // Notification Functions - Safe version
-window.toggleNotificationPanel = function() {
-    const panel = document.getElementById('notificationPanel');
-    if (!panel) return;
-
-    if (panel.style.display === 'none' || panel.style.display === '') {
-        panel.style.display = 'block';
-        loadNotifications();
-    } else {
-        panel.style.display = 'none';
-    }
-};
-
-window.closeNotificationPanel = function() {
-    const panel = document.getElementById('notificationPanel');
-    if (panel) panel.style.display = 'none';
-};
-
-// Make sure loadNotifications exists
-window.loadNotifications = async function() {
-    const token = localStorage.getItem('access_token');
-    if (!token) return;
-
-    try {
-        const response = await fetch('/api/chatbot/notifications/', {
-            headers: { 'Authorization': `Bearer ${token}` }
-        });
-        const notifications = await response.json();
-        const listDiv = document.getElementById('notificationList');
-        const badge = document.getElementById('notificationBadge');
-
-        if (!notifications || notifications.length === 0) {
-            if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
-            if (badge) badge.style.display = 'none';
-            return;
-        }
-
-        const unreadCount = notifications.filter(n => !n.is_read).length;
-        if (badge) {
-            if (unreadCount > 0) {
-                badge.style.display = 'flex';
-                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-            } else {
-                badge.style.display = 'none';
-            }
-        }
-
-        if (listDiv) {
-            listDiv.innerHTML = notifications.map(n => `
-                <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
-                    <div class="notification-title">${n.title}</div>
-    <div class="notification-message">${n.message}</div>
-                    <div class="notification-time">${n.created_at}</div>
-                </div>
-            `).join('');
-        }
-    } catch (error) {
-        console.error('Error loading notifications:', error);
-    }
-};
-
-window.markAsRead = async function(notificationId) {
-    try {
-        await fetch('/api/chatbot/notifications/mark-read/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            },
-            body: JSON.stringify({ notification_id: notificationId })
-        });
-        loadNotifications();
-    } catch (error) {
-        console.error('Error marking as read:', error);
-    }
-};
-
-window.markAllAsRead = async function() {
-    try {
-        await fetch('/api/chatbot/notifications/mark-all-read/', {
-            method: 'POST',
-            headers: {
-                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-            }
-        });
-        loadNotifications();
-    } catch (error) {
-        console.error('Error marking all as read:', error);
-    }
-};
     </script>
     {% block extra_js %}{% endblock %}
 
