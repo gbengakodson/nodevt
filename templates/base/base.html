@@ -62,7 +62,7 @@
             font-size: 20px;
             padding: 8px;
             border-radius: 50%;
-            transition: background 0.2s;
+            transition: background 0.2 s;
         }
 
         .notification-bell:hover {
@@ -101,7 +101,7 @@
             padding: 12px 15px;
             border-bottom: 1px solid #E2E4E8;
             cursor: pointer;
-            transition: background 0.2s;
+            transition: background 0.2 s;
         }
 
         .notification-item:hover {
@@ -189,7 +189,7 @@
 
                 <!-- Notification Bell -->
                 {% if user.is_authenticated %}
-                <div style="position: relative; margin-right: 10px;">
+                <div class="nav-item" style="position: relative; margin-right: 10px;">
                     <button class="notification-bell" onclick="toggleNotificationPanel()">
                         🔔
                         <span id="notificationBadge" class="notification-badge">0</span>
@@ -287,9 +287,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // ============ GLOBAL VARIABLES ============
-        let notificationPanelOpen = false;
-
         // ============ LOADING FUNCTIONS ============
         function showLoading() {
             const loader = document.querySelector('.loading');
@@ -311,6 +308,8 @@
         } else {
             hideLoading();
         }
+
+        // Fallback: force hide loading after 2 seconds
         setTimeout(hideLoading, 2000);
         // ============ END LOADING FUNCTIONS ============
 
@@ -320,16 +319,20 @@
             const hours = String(now.getHours()).padStart(2, '0');
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
             const clockElement = document.getElementById('liveClock');
             if (clockElement) {
-                clockElement.innerHTML = `${hours}:${minutes}:${seconds}`;
+                clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span>`;
             }
         }
-        setInterval(updateLiveClock, 1000);
+        setInterval(updateLiveClock, 50);
         updateLiveClock();
         // ============ END LIVE CLOCK ============
 
         // ============ NOTIFICATION FUNCTIONS ============
+        let notificationPanelOpen = false;
+
         function toggleNotificationPanel() {
             notificationPanelOpen = !notificationPanelOpen;
             const panel = document.getElementById('notificationPanel');
@@ -355,12 +358,14 @@
                 const response = await fetch('/api/chatbot/notifications/', {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
+
                 if (!response.ok) return;
+
                 const notifications = await response.json();
                 const listDiv = document.getElementById('notificationList');
                 const badge = document.getElementById('notificationBadge');
 
-                if (!notifications || notifications.length === 0) {
+                if (!notifications || !Array.isArray(notifications) || notifications.length === 0) {
                     if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
                     if (badge) badge.style.display = 'none';
                     return;
@@ -416,7 +421,9 @@
             try {
                 await fetch('/api/chatbot/notifications/mark-all-read/', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
                 });
                 loadNotifications();
             } catch (error) {
@@ -511,6 +518,7 @@
             window.location.href = '/login/';
         }
 
+        // Start refresh interval only if logged in
         if (getToken()) {
             setInterval(refreshToken, 55 * 60 * 1000);
         }
@@ -520,10 +528,13 @@
             if (e.key === 'access_token') updateAuthLinks();
         });
 
-        // Load notifications if logged in
+        // Load notifications if logged in and not on public page
         if (getToken() && !isPublicPath) {
-            setTimeout(loadNotifications, 1000);
-            setInterval(loadNotifications, 30000);
+            // Wait for page to fully load before loading notifications
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(loadNotifications, 500);
+            });
+            setInterval(loadNotifications, 300000);
         }
         // ============ END AUTH FUNCTIONS ============
     </script>
