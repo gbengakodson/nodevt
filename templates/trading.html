@@ -662,6 +662,7 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API_BASE = '/api';
     const COINGECKO_API = 'https://api.coingecko.com/api/v3';
@@ -675,26 +676,58 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // ============ TRADING BOT SYSTEM ============
+    // ============ TRADING BOT SYSTEM - DYNAMIC FOR ALL COINS ============
     let allBotConfigs = {};
     let botIntervals = {};
 
-    const botConfig = {
-        'BTC': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 100 },
-        'ETH': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 80 },
-        'BNB': { strategy: 'Spot Grid', risk: 'Low', minAmount: 5, maxAmount: 50 },
-        'SOL': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 60 }
-    };
+    // Dynamic bot configuration - works for ANY coin
+    function getBotConfigForSymbol(symbol, currentPrice) {
+        // Specific configs for popular coins
+        const specificConfigs = {
+            'BTC': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 100 },
+            'ETH': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 80 },
+            'BNB': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 5, maxAmount: 50 },
+            'SOL': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 60 }
+        };
 
+        if (specificConfigs[symbol]) {
+            return specificConfigs[symbol];
+        }
+
+        // Dynamic config for any other coin
+        let risk = 'Medium';
+        if (currentPrice > 1000) risk = 'High';
+        if (currentPrice < 10) risk = 'Low';
+
+        let minAmount = 5;
+        let maxAmount = 50;
+        if (currentPrice > 100) {
+            minAmount = 10;
+            maxAmount = 100;
+        } else if (currentPrice < 1) {
+            minAmount = 1;
+            maxAmount = 20;
+        }
+
+        return { strategy: 'Spot Grid', risk: risk, minAmount: minAmount, maxAmount: maxAmount };
+    }
+
+    // Dynamic grid config for analysis
     function getBotConfig(symbol, currentPrice) {
+        if (allBotConfigs[symbol]) return allBotConfigs[symbol];
+
         const lowerPrice = currentPrice * 0.85;
         const upperPrice = currentPrice * 1.15;
+        let risk = 'Medium';
+        if (currentPrice > 1000) risk = 'High';
+        if (currentPrice < 10) risk = 'Low';
+
         return {
             strategy: 'Spot Grid',
             lowerPrice: lowerPrice,
             upperPrice: upperPrice,
             grids: 100,
-            risk: currentPrice > 1000 ? 'High' : (currentPrice < 10 ? 'Low' : 'Medium'),
+            risk: risk,
             priceRange: upperPrice - lowerPrice,
             gridStep: (upperPrice - lowerPrice) / 100
         };
@@ -733,7 +766,8 @@
         if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
         botIntervals[symbol] = setInterval(() => {
             const isBuy = Math.random() > 0.7;
-            const amount = (Math.random() * 90 + 10).toFixed(2);
+            const config = getBotConfigForSymbol(symbol, currentPrice || 100);
+            const amount = (Math.random() * (config.maxAmount - config.minAmount) + config.minAmount).toFixed(2);
             showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, currentPrice || 100);
         }, 60000);
     }
@@ -827,14 +861,32 @@
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
             'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
             'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png'
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png'
         };
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    const symbolToCoinGeckoId = {
-        'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana'
-    };
+    // Dynamic CoinGecko ID mapping with fallback
+    async function getCoinGeckoId(symbol) {
+        const mapping = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+            'DOT': 'polkadot', 'LINK': 'chainlink', 'MATIC': 'matic-network', 'LTC': 'litecoin',
+            'NEAR': 'near', 'ATOM': 'cosmos', 'ALGO': 'algorand', 'VET': 'vechain',
+            'UNI': 'uniswap', 'AAVE': 'aave', 'CRV': 'curve-dao-token', 'SUSHI': 'sushi'
+        };
+
+        if (mapping[symbol]) return mapping[symbol];
+
+        const token = tokens.find(t => t.symbol === symbol);
+        if (token && token.coingecko_id) return token.coingecko_id;
+
+        return symbol.toLowerCase();
+    }
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -871,40 +923,91 @@
 
     async function updateChart() {
         if (!currentSymbol) return;
+
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
-        chartContainer.innerHTML = '<div class="loading-chart">Loading chart...</div><canvas id="priceChart" style="display:none;"></canvas>';
-        const coinId = symbolToCoinGeckoId[currentSymbol];
-        if (!coinId) { chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>'; return; }
+
+        const coinId = await getCoinGeckoId(currentSymbol);
+        if (!coinId) {
+            chartContainer.innerHTML = `<div class="loading-chart">Coin ${currentSymbol} not found</div>`;
+            return;
+        }
+
+        chartContainer.innerHTML = `<div class="loading-chart">Loading ${currentSymbol} chart...</div><canvas id="priceChart" style="display:none;"></canvas>`;
+
         try {
-            const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`);
+            const url = `${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`;
+            const response = await fetch(url);
             const data = await response.json();
-            if (!data?.prices?.length) { chartContainer.innerHTML = '<div class="loading-chart">No data</div>'; return; }
+
+            if (!data?.prices?.length) {
+                chartContainer.innerHTML = `<div class="loading-chart">No data for ${currentSymbol}</div>`;
+                return;
+            }
+
             const prices = data.prices;
-            const labels = [], priceValues = [];
+            const labels = [];
+            const priceValues = [];
+
             for (let i = 0; i < prices.length; i++) {
                 const date = new Date(prices[i][0]);
-                labels.push(currentDays <= 2 ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
+                let label;
+                if (currentDays <= 2) {
+                    label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                } else {
+                    label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                }
+                labels.push(label);
                 priceValues.push(prices[i][1]);
             }
+
             chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
             const ctx = document.getElementById('priceChart').getContext('2d');
+
             if (priceChart) priceChart.destroy();
+
             const lastPrice = priceValues[priceValues.length - 1];
-            const changePercent = ((lastPrice - priceValues[0]) / priceValues[0]) * 100;
+            const firstPrice = priceValues[0];
+            const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
+            const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
+
             document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
             document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
-            document.getElementById('priceChange').className = `price-change ${changePercent >= 0 ? 'price-up' : 'price-down'}`;
+            document.getElementById('priceChange').className = `price-change ${changeClass}`;
             document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
             document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
             currentPrice = lastPrice;
+
             priceChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: labels, datasets: [{ label: `${currentSymbol} Price`, data: priceValues, borderColor: '#1E2329', fill: true, tension: 0.2 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: `${currentSymbol} Price (USD)`,
+                        data: priceValues,
+                        borderColor: '#F0B90B',
+                        backgroundColor: 'rgba(240, 185, 11, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.2,
+                        pointRadius: 0,
+                        pointHoverRadius: 5
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: { legend: { display: false } },
+                    scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
+                }
             });
+
             addChartBotIcon();
-        } catch (error) { console.error(error); chartContainer.innerHTML = '<div class="loading-chart">Error</div>'; }
+
+        } catch (error) {
+            console.error('Chart error:', error);
+            chartContainer.innerHTML = `<div class="loading-chart">Error loading ${currentSymbol} chart</div>`;
+        }
     }
 
     function generateOrderBook(price) {
@@ -946,15 +1049,45 @@
             if (container) {
                 container.innerHTML = tokens.slice(0, 10).map(token => {
                     const change = (Math.random() - 0.5) * 8;
-                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')"><div class="coin-info"><img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;"><div><div class="coin-symbol">${token.symbol}</div><div class="coin-name">${token.name}</div></div></div><div style="text-align:right;"><div class="coin-price">${formatCurrency(token.current_price)}</div><div class="coin-change ${change >= 0 ? 'price-up' : 'price-down'}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div></div></div>`;
+                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')">
+                        <div class="coin-info">
+                            <img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                            <div>
+                                <div class="coin-symbol">${token.symbol}</div>
+                                <div class="coin-name">${token.name}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div class="coin-price">${formatCurrency(token.current_price)}</div>
+                            <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
+                        </div>
+                    </div>`;
                 }).join('');
             }
+
+            const selectedCoin = localStorage.getItem('selectedCoin');
+            if (selectedCoin) {
+                currentSymbol = selectedCoin;
+                localStorage.removeItem('selectedCoin');
+            } else {
+                const currentToken = tokens.find(t => t.symbol === currentSymbol);
+                if (!currentToken && tokens.length > 0) currentSymbol = tokens[0].symbol;
+            }
+
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) currentPrice = parseFloat(currentToken.current_price);
+            if (currentToken) {
+                currentPrice = parseFloat(currentToken.current_price);
+                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
+                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
+                document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+            }
+
             await updateButtonState();
             startAllBots();
             setTimeout(() => { addBotIconsToTradingCoins(); addChartBotIcon(); }, 500);
-        } catch (e) { console.error(e); }
+            await updateChart();
+        } catch (e) { console.error('Error loading coins:', e); }
     }
 
     function selectCoin(symbol) {
@@ -972,6 +1105,8 @@
         }
         document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
+        document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
+        document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
     }
     window.selectCoin = selectCoin;
 
@@ -987,19 +1122,24 @@
         } catch (e) { console.error(e); }
     }
 
-    function setPrice(price) { document.getElementById('limitPrice').value = price.toFixed(2); }
+    function setPrice(price) {
+        document.getElementById('limitPrice').value = price.toFixed(2);
+        const amount = document.getElementById('limitAmount').value;
+        if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount));
+    }
     window.setPrice = setPrice;
 
     async function executeBuy() {
-        if (userGrandBalance <= 0) { alert('Insufficient balance'); return; }
+        if (userGrandBalance <= 0) { alert('Insufficient balance. Please deposit USDC first.'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
-        const amount = parseFloat(document.getElementById('limitAmount').value) || parseFloat(document.getElementById('marketAmount').value);
+        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
+        const amount = activeTab === 'limit' ? parseFloat(document.getElementById('limitAmount').value) : parseFloat(document.getElementById('marketAmount').value);
         if (!amount || amount <= 0) { alert('Enter amount'); return; }
         if (amount > userGrandBalance) { alert(`Insufficient balance: ${formatCurrency(userGrandBalance)}`); return; }
         try {
             const result = await apiCall('/trading/buy/', 'POST', { token_id: token.id, amount_usdc: amount });
-            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); }
+            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
             else alert('Purchase failed');
         } catch (e) { alert('Error: ' + e.message); }
     }
@@ -1009,22 +1149,71 @@
         if (!token) return;
         const userQty = userHoldings[currentSymbol] || 0;
         if (userQty === 0) { alert(`No ${currentSymbol} to sell`); return; }
-        const amount = parseFloat(document.getElementById('limitAmount').value) || parseFloat(document.getElementById('marketAmount').value);
-        if (!amount || amount <= 0) { alert('Enter amount'); return; }
-        const quantity = amount / parseFloat(token.current_price);
+        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
+        let quantity;
+        if (activeTab === 'limit') {
+            const amount = parseFloat(document.getElementById('limitAmount').value);
+            if (!amount || amount <= 0) { alert('Enter amount'); return; }
+            quantity = amount / parseFloat(token.current_price);
+        } else {
+            const amount = parseFloat(document.getElementById('marketAmount').value);
+            if (!amount || amount <= 0) { alert('Enter amount'); return; }
+            quantity = amount / parseFloat(token.current_price);
+        }
         if (quantity > userQty) { alert(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`); return; }
         try {
             const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
-            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); }
+            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
             else alert('Sale failed');
         } catch (e) { alert('Error: ' + e.message); }
     }
 
-    document.getElementById('limitAmount')?.addEventListener('input', function() { document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0); });
+    // Event Listeners
+    document.querySelectorAll('[data-perc]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percent = parseInt(this.getAttribute('data-perc'));
+            const amount = (userBalance * percent) / 100;
+            document.getElementById('limitAmount').value = amount.toFixed(2);
+            document.getElementById('limitTotal').innerHTML = formatCurrency(amount);
+        });
+    });
+
+    document.querySelectorAll('[data-market-perc]').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const percent = parseInt(this.getAttribute('data-market-perc'));
+            document.getElementById('marketAmount').value = ((userBalance * percent) / 100).toFixed(2);
+        });
+    });
+
+    document.getElementById('limitAmount')?.addEventListener('input', function() {
+        document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0);
+    });
+
+    document.querySelectorAll('.order-tab').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const tab = this.getAttribute('data-tab');
+            document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none';
+            document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none';
+        });
+    });
+
+    document.querySelectorAll('.tf-btn').forEach(btn => {
+        btn.addEventListener('click', async function() {
+            document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            currentDays = parseInt(this.getAttribute('data-tf'));
+            await updateChart();
+        });
+    });
+
     document.getElementById('buyBtn')?.addEventListener('click', executeBuy);
     document.getElementById('sellBtn')?.addEventListener('click', executeSell);
     document.getElementById('buyBtnMarket')?.addEventListener('click', executeBuy);
     document.getElementById('sellBtnMarket')?.addEventListener('click', executeSell);
+
+    window.addEventListener('resize', function() { if (priceChart) priceChart.resize(); });
 
     // Add CSS animations
     const style = document.createElement('style');
@@ -1041,12 +1230,11 @@
     async function init() {
         await loadCoins();
         await loadUserData();
-        await updateChart();
         renderOrderBook();
         updateButtonState();
         setInterval(() => renderOrderBook(), 3000);
-        setInterval(async () => { await loadCoins(); await loadUserData(); await updateChart(); }, 120000);
+        setInterval(async () => { await loadCoins(); await loadUserData(); }, 120000);
     }
     init();
- </script>
+</script>
 {% endblock %}
