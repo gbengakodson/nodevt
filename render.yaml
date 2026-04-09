@@ -20,3 +20,19 @@ services:
     name: daily-notifications
     schedule: "0 9 * * *"  # 9 AM daily
     command: python manage.py send_daily_notifications
+
+
+  - type: cron
+    name: morning-notifications
+    schedule: "0 8 * * *"  # 8 AM daily
+    command: python manage.py send_daily_notifications --time-slot morning
+
+  - type: cron
+    name: afternoon-notifications
+    schedule: "0 13 * * *"  # 1 PM daily
+    command: python manage.py send_daily_notifications --time-slot afternoon
+
+  - type: cron
+    name: evening-notifications
+    schedule: "0 19 * * *"  # 7 PM daily
+    command: python manage.py send_daily_notifications --time-slot evening

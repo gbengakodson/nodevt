@@ -453,3 +453,53 @@ Need help? Ask our chatbot anything!""",
             message=random.choice(tips),
             notification_type='TIP'
         )
+
+    @classmethod
+    def send_evening_summary(cls, user):
+        """Send evening performance summary"""
+        from apps.tokens.models import UserTokenBalance
+        from apps.wallets.models import Wallet
+
+        grand_wallet = Wallet.objects.filter(user=user, wallet_type='GRAND').first()
+        balances = UserTokenBalance.objects.filter(user=user, quantity__gt=0)
+
+        if balances.exists():
+            total_value = 0
+            for balance in balances:
+                value = balance.quantity * balance.token.current_price
+                total_value += value
+
+            cls.create_notification(
+                user=user,
+                title="🌙 Evening Portfolio Summary",
+                message=f"""**Today's Performance**
+
+    💰 **Portfolio Value:** ${total_value:,.2f} USDC
+    💵 **Available Balance:** ${float(grand_wallet.balance if grand_wallet else 0):,.2f} USDC
+    📈 **Holdings:** {balances.count()} token(s)
+
+    💡 **Tomorrow's opportunity:**
+    • Check for new yield rates
+    • Consider rebalancing your portfolio
+    • Invite friends for extra commissions
+
+    Rest well and see you tomorrow! 🚀""",
+                notification_type='PORTFOLIO'
+            )
+        else:
+            cls.create_notification(
+                user=user,
+                title="🌙 Start Your Crypto Journey Tomorrow!",
+                message=f"""**Get ready to earn!**
+
+    💰 **Your Balance:** ${float(grand_wallet.balance if grand_wallet else 0):,.2f} USDC
+
+    💡 **Tomorrow's plan:**
+    1. Deposit USDC to start trading
+    2. Buy your first token
+    3. Earn hourly yield
+    4. Refer friends for commission
+
+    The best time to start is tomorrow morning! 🌅""",
+                notification_type='REMINDER'
+            )
