@@ -675,40 +675,28 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // ============ TRADING BOT SYSTEM - WORKS WITH ALL COINS ============
+    // ============ TRADING BOT SYSTEM ============
     let allBotConfigs = {};
     let botIntervals = {};
-    let botTradeSimulations = {};
-    let tradingBotActive = {};
 
-    // Bot configuration
     const botConfig = {
-        'BTC': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 100 },
-        'ETH': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 4, stopLoss: 1.5, minAmount: 10, maxAmount: 80 },
-        'BNB': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 3, stopLoss: 1, minAmount: 5, maxAmount: 50 },
-        'SOL': { strategy: 'Spot Grid', risk: 'High', profitTarget: 8, stopLoss: 3, minAmount: 10, maxAmount: 60 },
-        'XRP': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 2, stopLoss: 1, minAmount: 5, maxAmount: 40 },
-        'ADA': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 35 },
-        'DOGE': { strategy: 'Spot Grid', risk: 'High', profitTarget: 10, stopLoss: 5, minAmount: 5, maxAmount: 30 },
-        'AVAX': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 6, stopLoss: 2.5, minAmount: 10, maxAmount: 50 }
+        'BTC': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 100 },
+        'ETH': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 80 },
+        'BNB': { strategy: 'Spot Grid', risk: 'Low', minAmount: 5, maxAmount: 50 },
+        'SOL': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 60 }
     };
 
-    // Dynamic bot configuration
     function getBotConfig(symbol, currentPrice) {
         const lowerPrice = currentPrice * 0.85;
         const upperPrice = currentPrice * 1.15;
-        const grids = 100;
-        let risk = 'Medium';
-        if (currentPrice > 1000) risk = 'High';
-        if (currentPrice < 10) risk = 'Low';
         return {
             strategy: 'Spot Grid',
             lowerPrice: lowerPrice,
             upperPrice: upperPrice,
-            grids: grids,
-            risk: risk,
+            grids: 100,
+            risk: currentPrice > 1000 ? 'High' : (currentPrice < 10 ? 'Low' : 'Medium'),
             priceRange: upperPrice - lowerPrice,
-            gridStep: (upperPrice - lowerPrice) / grids
+            gridStep: (upperPrice - lowerPrice) / 100
         };
     }
 
@@ -718,19 +706,8 @@
         }
     }
 
-    // Show toast notification
-    function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `position:fixed;bottom:20px;left:20px;background:${type === 'buy' ? '#0ECB81' : '#F6465D'};color:white;padding:10px 20px;border-radius:8px;z-index:10000;`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    // Show trade signal popup
     function showTradeSignal(symbol, action, amount, price) {
         const popup = document.createElement('div');
-        popup.className = 'trade-signal-popup';
         popup.style.cssText = `
             position: fixed;
             top: 20px;
@@ -742,21 +719,14 @@
             z-index: 10001;
             animation: slideInRight 0.5s ease, fadeOut 0.5s ease 3s forwards;
             box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-size: 14px;
             min-width: 250px;
         `;
-        popup.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="font-size: 24px;">${action === 'BUY' ? '🟢' : '🔴'}</div>
-                <div>
-                    <div style="font-weight: bold; margin-bottom: 4px;">${action} SIGNAL</div>
-                    <div style="font-size: 12px;">${symbol} | ${amount} USDC</div>
-                    <div style="font-size: 11px; opacity: 0.8;">Price: ${formatCurrency(price)}</div>
-                </div>
-            </div>
-        `;
+        popup.innerHTML = `<div style="display: flex; align-items: center; gap: 10px;">
+            <div style="font-size: 24px;">${action === 'BUY' ? '🟢' : '🔴'}</div>
+            <div><div style="font-weight: bold;">${action} SIGNAL</div><div>${symbol} | ${amount} USDC</div><div style="font-size: 11px;">Price: ${formatCurrency(price)}</div></div>
+        </div>`;
         document.body.appendChild(popup);
-        setTimeout(() => { if (popup && popup.parentNode) popup.remove(); }, 3500);
+        setTimeout(() => popup.remove(), 3500);
     }
 
     function startBotForSymbol(symbol) {
@@ -764,9 +734,7 @@
         botIntervals[symbol] = setInterval(() => {
             const isBuy = Math.random() > 0.7;
             const amount = (Math.random() * 90 + 10).toFixed(2);
-            const price = currentPrice || 100;
-            showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, price);
-            console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
+            showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, currentPrice || 100);
         }, 60000);
     }
 
@@ -794,59 +762,39 @@
         modal.id = 'botModal';
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
         modal.innerHTML = `
-            <div style="background:white;border-radius:16px;max-width:450px;width:90%;padding:20px;max-height:80vh;overflow-y:auto;">
+            <div style="background:white;border-radius:16px;max-width:450px;width:90%;padding:20px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-                    <h3 style="margin:0;">🤖 Spot Grid Trading - ${symbol}</h3>
+                    <h3 style="margin:0;">🤖 Spot Grid - ${symbol}</h3>
                     <button onclick="this.closest('#botModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
                 </div>
                 <div style="margin-bottom:15px;padding:12px;background:#F8F9FA;border-radius:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <span><strong>${symbol}</strong></span>
-                        <span>Current: ${formatCurrency(currentPrice)}</span>
-                    </div>
+                    <div><strong>${symbol}</strong> | Current: ${formatCurrency(currentPrice)} | 24h: ${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%</div>
+                </div>
+                <div style="padding:16px;background:linear-gradient(135deg, #1E2329 0%, #2B3139 100%);border-radius:12px;color:white;">
+                    <div style="text-align:center;margin-bottom:12px;"><strong>⚡ SPOT GRID</strong></div>
                     <div style="display:flex;justify-content:space-between;">
-                        <span>24h Change</span>
-                        <span class="${change24h >= 0 ? 'price-up' : 'price-down'}">${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%</span>
+                        <div>Lower: ${formatCurrency(config.lowerPrice)}</div>
+                        <div>Upper: ${formatCurrency(config.upperPrice)}</div>
+                    </div>
+                    <div style="margin:10px 0;"><div style="height:6px;background:#3A4149;border-radius:3px;"><div style="width:${gridProgress}%;height:100%;background:#F0B90B;border-radius:3px;"></div></div></div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <div>Grids: ${config.grids}</div>
+                        <div>Risk: ${config.risk}</div>
+                        <div>Grid Size: ${formatCurrency(gridStep)}</div>
                     </div>
                 </div>
-                <div style="margin-bottom:15px;padding:16px;background:linear-gradient(135deg, #1E2329 0%, #2B3139 100%);border-radius:12px;color:white;">
-                    <div style="text-align:center;margin-bottom:12px;">
-                        <span style="font-size:14px;font-weight:600;">⚡ SPOT GRID</span>
-                        <span style="font-size:11px;margin-left:8px;background:#F0B90B;color:#1E2329;padding:2px 8px;border-radius:12px;">${config.strategy}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
-                        <div><div style="font-size:10px;color:#8A8F9E;">LOWER PRICE</div><div style="font-size:16px;font-weight:600;">${formatCurrency(config.lowerPrice)}</div></div>
-                        <div style="text-align:right;"><div style="font-size:10px;color:#8A8F9E;">UPPER PRICE</div><div style="font-size:16px;font-weight:600;">${formatCurrency(config.upperPrice)}</div></div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Current Price</span><span>${formatCurrency(currentPrice)}</span></div>
-                        <div style="height:6px;background:#3A4149;border-radius:3px;overflow:hidden;"><div style="width:${gridProgress}%;height:100%;background:#F0B90B;border-radius:3px;"></div></div>
-                        <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px;color:#8A8F9E;">
-                            <span>${formatCurrency(config.lowerPrice)}</span>
-                            <span>Grid ${currentGridLevel}/${config.grids}</span>
-                            <span>${formatCurrency(config.upperPrice)}</span>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #3A4149;">
-                        <div><div style="font-size:10px;color:#8A8F9E;">GRIDS</div><div style="font-size:14px;font-weight:600;">${config.grids}</div></div>
-                        <div><div style="font-size:10px;color:#8A8F9E;">RISK</div><div style="font-size:14px;font-weight:600;">${config.risk}</div></div>
-                        <div><div style="font-size:10px;color:#8A8F9E;">GRID SIZE</div><div style="font-size:14px;font-weight:600;">${formatCurrency(gridStep)}</div></div>
-                    </div>
-                </div>
-                <div style="padding:12px;background:#F8F9FA;border-radius:12px;font-size:11px;color:#707A8A;text-align:center;">🤖 Bot permanently active • Grid trading 24/7</div>
+                <div style="margin-top:15px;text-align:center;font-size:11px;color:#707A8A;">🤖 Bot permanently active • 24/7</div>
             </div>
         `;
         document.body.appendChild(modal);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     }
 
     function addBotIconsToTradingCoins() {
         document.querySelectorAll('.coin-item').forEach(card => {
             const symbolElem = card.querySelector('.coin-symbol');
-            if (!symbolElem) return;
+            if (!symbolElem || card.querySelector('.trading-bot-icon')) return;
             const symbol = symbolElem.innerText;
-            if (card.querySelector('.trading-bot-icon')) return;
-
             const priceElem = card.querySelector('.coin-price');
             const price = parseFloat(priceElem?.innerText?.replace('$', '').replace(/,/g, '') || 0);
             const changeElem = card.querySelector('.coin-change');
@@ -855,9 +803,8 @@
             const icon = document.createElement('div');
             icon.className = 'trading-bot-icon';
             icon.innerHTML = '🤖';
-            icon.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;transition:all 0.3s;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
-            icon.title = `Spot Grid Bot for ${symbol}`;
-            icon.onclick = (e) => { e.stopPropagation(); e.preventDefault(); showBotAnalysis(symbol, price, change); };
+            icon.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
+            icon.onclick = (e) => { e.stopPropagation(); showBotAnalysis(symbol, price, change); };
             card.style.position = 'relative';
             card.appendChild(icon);
         });
@@ -870,36 +817,23 @@
             icon.className = 'chart-bot-icon';
             icon.innerHTML = '🤖';
             icon.style.cssText = 'width:32px;height:32px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:15px;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
-            icon.title = 'Spot Grid Bot';
-            icon.onclick = () => { showBotAnalysis(currentSymbol, currentPrice, 0); };
+            icon.onclick = () => showBotAnalysis(currentSymbol, currentPrice, 0);
             container.appendChild(icon);
         }
     }
-    // ============ END TRADING BOT SYSTEM ============
 
     function getTokenIcon(symbol) {
         const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
             'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
             'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png'
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png'
         };
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
     const symbolToCoinGeckoId = {
-        'BTC': 'bitcoin',
-        'ETH': 'ethereum',
-        'BNB': 'binancecoin',
-        'SOL': 'solana',
-        'XRP': 'ripple',
-        'ADA': 'cardano',
-        'DOGE': 'dogecoin',
-        'AVAX': 'avalanche-2'
+        'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana'
     };
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -920,7 +854,7 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
         if (value === 0) return '$0.00';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return `$${value.toFixed(8)}`;
+        if (Math.abs(value) < 0.01) return `$${value.toFixed(8)}`;
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
@@ -931,7 +865,7 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
         if (value === 0) return '0';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return value.toFixed(8);
+        if (Math.abs(value) < 0.01) return value.toFixed(8);
         return value.toFixed(decimals);
     }
 
@@ -939,41 +873,38 @@
         if (!currentSymbol) return;
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
-        chartContainer.innerHTML = '<div class="loading-chart">Loading chart data...</div><canvas id="priceChart" style="display:none;"></canvas>';
+        chartContainer.innerHTML = '<div class="loading-chart">Loading chart...</div><canvas id="priceChart" style="display:none;"></canvas>';
         const coinId = symbolToCoinGeckoId[currentSymbol];
         if (!coinId) { chartContainer.innerHTML = '<div class="loading-chart">Coin not found</div>'; return; }
         try {
             const response = await fetch(`${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`);
             const data = await response.json();
-            if (!data || !data.prices || data.prices.length === 0) { chartContainer.innerHTML = '<div class="loading-chart">No data available</div>'; return; }
+            if (!data?.prices?.length) { chartContainer.innerHTML = '<div class="loading-chart">No data</div>'; return; }
             const prices = data.prices;
             const labels = [], priceValues = [];
             for (let i = 0; i < prices.length; i++) {
                 const date = new Date(prices[i][0]);
-                let label = currentDays <= 2 ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                labels.push(label);
+                labels.push(currentDays <= 2 ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
                 priceValues.push(prices[i][1]);
             }
             chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
             const ctx = document.getElementById('priceChart').getContext('2d');
             if (priceChart) priceChart.destroy();
-            const firstPrice = priceValues[0];
             const lastPrice = priceValues[priceValues.length - 1];
-            const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
-            const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
+            const changePercent = ((lastPrice - priceValues[0]) / priceValues[0]) * 100;
             document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
             document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
-            document.getElementById('priceChange').className = `price-change ${changeClass}`;
+            document.getElementById('priceChange').className = `price-change ${changePercent >= 0 ? 'price-up' : 'price-down'}`;
             document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
             document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
             currentPrice = lastPrice;
             priceChart = new Chart(ctx, {
                 type: 'line',
-                data: { labels: labels, datasets: [{ label: `${currentSymbol} Price`, data: priceValues, borderColor: '#1E2329', backgroundColor: 'rgba(30,35,41,0.05)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0 }] },
-                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#EFF2F5' } } } }
+                data: { labels: labels, datasets: [{ label: `${currentSymbol} Price`, data: priceValues, borderColor: '#1E2329', fill: true, tension: 0.2 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } } }
             });
             addChartBotIcon();
-        } catch (error) { console.error('Error:', error); chartContainer.innerHTML = '<div class="loading-chart">Error loading chart</div>'; }
+        } catch (error) { console.error(error); chartContainer.innerHTML = '<div class="loading-chart">Error</div>'; }
     }
 
     function generateOrderBook(price) {
@@ -997,55 +928,33 @@
         try {
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
-            const buyBtn = document.getElementById('buyBtn'), buyBtnMarket = document.getElementById('buyBtnMarket');
-            const sellBtn = document.getElementById('sellBtn'), sellBtnMarket = document.getElementById('sellBtnMarket');
-            if (userGrandBalance <= 0) {
-                buyBtn?.classList.add('btn-buy-disabled');
-                buyBtnMarket?.classList.add('btn-buy-disabled');
-            } else {
-                buyBtn?.classList.remove('btn-buy-disabled');
-                buyBtnMarket?.classList.remove('btn-buy-disabled');
-            }
+            const buyBtn = document.getElementById('buyBtn');
+            const sellBtn = document.getElementById('sellBtn');
+            if (userGrandBalance <= 0) buyBtn?.classList.add('btn-buy-disabled');
+            else buyBtn?.classList.remove('btn-buy-disabled');
             const holdings = await apiCall('/trading/my_tokens/');
-            const currentHoldings = holdings.find(h => h.token_symbol === currentSymbol);
-            const hasCurrentToken = currentHoldings && parseFloat(currentHoldings.quantity) > 0;
-            if (!hasCurrentToken) {
-                sellBtn?.classList.add('btn-sell-disabled');
-                sellBtnMarket?.classList.add('btn-sell-disabled');
-            } else {
-                sellBtn?.classList.remove('btn-sell-disabled');
-                sellBtnMarket?.classList.remove('btn-sell-disabled');
-            }
+            const hasToken = holdings.some(h => h.token_symbol === currentSymbol && parseFloat(h.quantity) > 0);
+            if (!hasToken) sellBtn?.classList.add('btn-sell-disabled');
+            else sellBtn?.classList.remove('btn-sell-disabled');
         } catch (e) { console.error(e); }
     }
 
     async function loadCoins() {
         try {
             tokens = await apiCall('/trading/');
-            const topCoins = tokens.slice(0, 10);
             const container = document.getElementById('coinList');
             if (container) {
-                container.innerHTML = topCoins.map(token => {
+                container.innerHTML = tokens.slice(0, 10).map(token => {
                     const change = (Math.random() - 0.5) * 8;
-                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')"><div class="coin-info"><img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;"><div><div class="coin-symbol">${token.symbol}</div><div class="coin-name">${token.name}</div></div></div><div style="text-align:right;"><div class="coin-price">${formatCurrency(token.current_price)}</div><div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div></div></div>`;
+                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')"><div class="coin-info"><img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;"><div><div class="coin-symbol">${token.symbol}</div><div class="coin-name">${token.name}</div></div></div><div style="text-align:right;"><div class="coin-price">${formatCurrency(token.current_price)}</div><div class="coin-change ${change >= 0 ? 'price-up' : 'price-down'}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div></div></div>`;
                 }).join('');
             }
-            const totalVolume = Math.random() * 500000000;
-            document.getElementById('globalVolume').innerHTML = formatNumber(totalVolume / 1000000, 2) + 'M';
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) {
-                currentPrice = parseFloat(currentToken.current_price);
-                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-            }
+            if (currentToken) currentPrice = parseFloat(currentToken.current_price);
             await updateButtonState();
             startAllBots();
-            setTimeout(() => {
-                addBotIconsToTradingCoins();
-                addChartBotIcon();
-            }, 500);
-        } catch (e) { console.error('Error loading coins:', e); }
+            setTimeout(() => { addBotIconsToTradingCoins(); addChartBotIcon(); }, 500);
+        } catch (e) { console.error(e); }
     }
 
     function selectCoin(symbol) {
@@ -1063,8 +972,6 @@
         }
         document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
-        document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
-        document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
     }
     window.selectCoin = selectCoin;
 
@@ -1080,24 +987,19 @@
         } catch (e) { console.error(e); }
     }
 
-    function setPrice(price) {
-        document.getElementById('limitPrice').value = price.toFixed(2);
-        const amount = document.getElementById('limitAmount').value;
-        if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount));
-    }
+    function setPrice(price) { document.getElementById('limitPrice').value = price.toFixed(2); }
     window.setPrice = setPrice;
 
     async function executeBuy() {
-        if (userGrandBalance <= 0) { alert('Insufficient balance. Please deposit USDC first.'); return; }
+        if (userGrandBalance <= 0) { alert('Insufficient balance'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
-        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
-        const amount = activeTab === 'limit' ? parseFloat(document.getElementById('limitAmount').value) : parseFloat(document.getElementById('marketAmount').value);
+        const amount = parseFloat(document.getElementById('limitAmount').value) || parseFloat(document.getElementById('marketAmount').value);
         if (!amount || amount <= 0) { alert('Enter amount'); return; }
         if (amount > userGrandBalance) { alert(`Insufficient balance: ${formatCurrency(userGrandBalance)}`); return; }
         try {
             const result = await apiCall('/trading/buy/', 'POST', { token_id: token.id, amount_usdc: amount });
-            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
+            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); }
             else alert('Purchase failed');
         } catch (e) { alert('Error: ' + e.message); }
     }
@@ -1107,49 +1009,22 @@
         if (!token) return;
         const userQty = userHoldings[currentSymbol] || 0;
         if (userQty === 0) { alert(`No ${currentSymbol} to sell`); return; }
-        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
-        let quantity;
-        if (activeTab === 'limit') {
-            const amount = parseFloat(document.getElementById('limitAmount').value);
-            if (!amount || amount <= 0) { alert('Enter amount'); return; }
-            quantity = amount / parseFloat(token.current_price);
-        } else {
-            const amount = parseFloat(document.getElementById('marketAmount').value);
-            if (!amount || amount <= 0) { alert('Enter amount'); return; }
-            quantity = amount / parseFloat(token.current_price);
-        }
+        const amount = parseFloat(document.getElementById('limitAmount').value) || parseFloat(document.getElementById('marketAmount').value);
+        if (!amount || amount <= 0) { alert('Enter amount'); return; }
+        const quantity = amount / parseFloat(token.current_price);
         if (quantity > userQty) { alert(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`); return; }
         try {
             const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
-            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
+            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); }
             else alert('Sale failed');
         } catch (e) { alert('Error: ' + e.message); }
     }
 
-    document.querySelectorAll('[data-perc]').forEach(btn => {
-        btn.addEventListener('click', function() { const percent = parseInt(this.getAttribute('data-perc')); const amount = (userBalance * percent) / 100; document.getElementById('limitAmount').value = amount.toFixed(2); document.getElementById('limitTotal').innerHTML = formatCurrency(amount); });
-    });
-
-    document.querySelectorAll('[data-market-perc]').forEach(btn => {
-        btn.addEventListener('click', function() { const percent = parseInt(this.getAttribute('data-market-perc')); document.getElementById('marketAmount').value = ((userBalance * percent) / 100).toFixed(2); });
-    });
-
-    document.getElementById('limitAmount').addEventListener('input', function() { document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0); });
-
-    document.querySelectorAll('.order-tab').forEach(btn => {
-        btn.addEventListener('click', function() { document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active')); this.classList.add('active'); const tab = this.getAttribute('data-tab'); document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none'; document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none'; });
-    });
-
-    document.querySelectorAll('.tf-btn').forEach(btn => {
-        btn.addEventListener('click', async function() { document.querySelectorAll('.tf-btn').forEach(b => b.classList.remove('active')); this.classList.add('active'); currentDays = parseInt(this.getAttribute('data-tf')); await updateChart(); });
-    });
-
+    document.getElementById('limitAmount')?.addEventListener('input', function() { document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0); });
     document.getElementById('buyBtn')?.addEventListener('click', executeBuy);
     document.getElementById('sellBtn')?.addEventListener('click', executeSell);
     document.getElementById('buyBtnMarket')?.addEventListener('click', executeBuy);
     document.getElementById('sellBtnMarket')?.addEventListener('click', executeSell);
-
-    window.addEventListener('resize', function() { if (priceChart) priceChart.resize(); });
 
     // Add CSS animations
     const style = document.createElement('style');
@@ -1157,8 +1032,7 @@
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); } 100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); } }
-        .price-up { color: #0ECB81; }
-        .price-down { color: #F6465D; }
+        .price-up { color: #0ECB81; } .price-down { color: #F6465D; }
         .trading-bot-icon:hover, .chart-bot-icon:hover { transform: scale(1.1); }
         .btn-buy-disabled, .btn-sell-disabled { opacity: 0.5; cursor: not-allowed; }
     `;
@@ -1167,15 +1041,12 @@
     async function init() {
         await loadCoins();
         await loadUserData();
-        const selectedCoin = localStorage.getItem('selectedCoin');
-        if (selectedCoin) { currentSymbol = selectedCoin; localStorage.removeItem('selectedCoin'); selectCoin(currentSymbol); }
         await updateChart();
         renderOrderBook();
         updateButtonState();
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => { await loadCoins(); await loadUserData(); await updateChart(); }, 120000);
     }
-
     init();
 </script>
 {% endblock %}
