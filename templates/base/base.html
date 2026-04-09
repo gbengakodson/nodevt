@@ -521,15 +521,28 @@
             {% include 'base/logo.html' %}
         </a>
 
-        <!-- Notification Bell - Always visible (outside mobile menu) -->
-        {% if user.is_authenticated %}
-        <div class="notification-bell-container" style="margin-left: auto; margin-right: 10px;">
-            <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 50%; transition: background 0.2s;">
-                🔔
-                <span id="notificationBadge" class="notification-badge" style="position: absolute; top: -5px; right: -5px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
-            </button>
+        <!-- Notification Bell - Make sure this is outside the collapse menu -->
+<div class="d-flex align-items-center">
+    {% if user.is_authenticated %}
+    <div class="nav-item" style="position: relative; margin-right: 10px;">
+        <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 50%;">
+            🔔
+            <span id="notificationBadge" class="notification-badge" style="position: absolute; top: -5px; right: -5px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
+        </button>
+    </div>
+
+    <!-- Live Clock -->
+    <div class="nav-item" style="margin-right: 15px;">
+        <div id="liveClock" style="font-family: monospace; font-size: 13px; background: rgba(240,185,11,0.1); padding: 6px 12px; border-radius: 20px; color: #F0B90B;">
+            Loading...
         </div>
-        {% endif %}
+    </div>
+    {% endif %}
+
+    <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+        <i class="fas fa-bars" style="color: #1E2329;"></i>
+    </button>
+</div>
 
         <!-- Mobile Menu Toggle -->
         <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -998,6 +1011,97 @@
                 closeNotificationPanel();
             }
         });
+
+        // Live Clock with Nanoseconds
+        function updateLiveClock() {
+               const now = new Date();
+               const hours = String(now.getHours()).padStart(2, '0');
+               const minutes = String(now.getMinutes()).padStart(2, '0');
+               const seconds = String(now.getSeconds()).padStart(2, '0');
+               const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+               const nanoseconds = String(Math.floor(performance.now() * 1000000) % 1000000).padStart(6, '0');
+
+               const clockElement = document.getElementById('liveClock');
+               if (clockElement) {
+                    clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 10px;">.${milliseconds}</span><span style="font-size: 8px; color: #8A8F9E;">ns</span>`;
+               }
+        }
+
+         // Update clock every millisecond for smooth animation
+         setInterval(updateLiveClock, 1);
+
+
+
+        // Trading Activity Summary every 2 hours
+let lastTradeSummaryTime = Date.now();
+const TRADE_SUMMARY_INTERVAL = 2 * 60 * 60 * 1000; // 2 hours
+
+async function sendTradingActivitySummary() {
+    const token = getToken();
+    if (!token) return;
+
+    try {
+        // Get user's holdings
+        const holdings = await apiCall('/trading/my_tokens/');
+        const balance = await apiCall('/trading/my_balance/');
+
+        let totalValue = 0;
+        let totalYield = 0;
+        let activeBots = 0;
+
+        holdings.forEach(h => {
+            const value = parseFloat(h.quantity) * parseFloat(h.current_price);
+            totalValue += value;
+            totalYield += value * 0.00014; // Approximate hourly yield
+            activeBots++;
+        });
+
+        const message = `📊 Trading Activity Summary (Last 2 Hours)
+
+🤖 Active Bots: ${activeBots}
+💰 Portfolio Value: ${formatCurrency(totalValue)}
+✨ Yield Earned: ${formatCurrency(totalYield * 2)}
+📈 Grand Balance: ${formatCurrency(parseFloat(balance.grand_balance))}
+
+Continue trading to maximize your earnings!`;
+
+        // Create notification
+        await fetch('/api/chatbot/notifications/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+            body: JSON.stringify({
+                title: '📊 2-Hour Trading Summary',
+                message: message,
+                type: 'TRADING_UPDATE'
+            })
+        });
+
+        // Show browser notification
+        if (Notification.permission === 'granted') {
+            new Notification('📊 Trading Activity Summary', {
+                body: `Portfolio: ${formatCurrency(totalValue)} | Active Bots: ${activeBots}`,
+                icon: '/static/favicon.svg'
+            });
+        }
+
+        // Show in-app notification
+        showToast('📊 Trading summary available - Check notifications', 'info');
+
+    } catch (error) {
+        console.error('Error sending trading summary:', error);
+    }
+}
+
+// Start trading summary interval if user is logged in
+if (getToken()) {
+    setInterval(sendTradingActivitySummary, TRADE_SUMMARY_INTERVAL);
+}
+
+
+
     </script>
     {% block extra_js %}{% endblock %}
 
