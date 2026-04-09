@@ -662,7 +662,6 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<!--<script src="{% static 'js/trading.js' %}?v=20250409"></script>-->
 <script>
     const API_BASE = '/api';
     const COINGECKO_API = 'https://api.coingecko.com/api/v3';
@@ -1049,5 +1048,5 @@
         setInterval(async () => { await loadCoins(); await loadUserData(); await updateChart(); }, 120000);
     }
     init();
-</script>
+ </script>
 {% endblock %}
