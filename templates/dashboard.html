@@ -719,23 +719,43 @@
         setTimeout(() => { if (popup && popup.parentNode) popup.remove(); }, 3500);
     }
 
+    // Replace the existing startBotForSymbol function
     function startBotForSymbol(symbol) {
         if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
+
         botIntervals[symbol] = setInterval(() => {
             const isBuy = Math.random() > 0.7;
             const amount = (Math.random() * 90 + 10).toFixed(2);
-            const config = botConfig[symbol] || botConfig['BTC'];
             const price = currentPrice || 100;
+
+            // Show signal for the actual token you hold
             showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, price);
             console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
         }, 60000);
     }
 
+    // Update startAllBots to use your actual holdings
     function startAllBots() {
-        if (tokens && tokens.length > 0) {
-            tokens.forEach(token => {
+        // Get all tokens you actually hold
+        const holdingsList = document.querySelectorAll('.holding-symbol');
+
+        if (holdingsList.length > 0) {
+            holdingsList.forEach(holding => {
+                const symbol = holding.innerText;
+                const token = tokens.find(t => t.symbol === symbol);
+                if (token) {
+                    initBotForToken(symbol, token.current_price);
+                    startBotForSymbol(symbol);
+                    tradingBotActive[symbol] = true;
+                    console.log(`🤖 Bot activated for ${symbol}`);
+                }
+            });
+        } else if (tokens && tokens.length > 0) {
+            // Fallback: use top coins if no holdings
+            tokens.slice(0, 5).forEach(token => {
                 initBotForToken(token.symbol, token.current_price);
                 startBotForSymbol(token.symbol);
+                tradingBotActive[token.symbol] = true;
             });
         }
     }
