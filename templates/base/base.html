@@ -287,23 +287,33 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-
+        // ============ LOADING FUNCTIONS ============
         function showLoading() {
-             const loader = document.querySelector('.loading');
-             if (loader) {
-                 loader.style.display = 'block';
-             }
+            const loader = document.querySelector('.loading');
+            if (loader) {
+                loader.style.display = 'flex';
+            }
         }
 
         function hideLoading() {
-             const loader = document.querySelector('.loading');
-             if (loader) {
-                 loader.style.display = 'none';
-             }
+            const loader = document.querySelector('.loading');
+            if (loader) {
+                loader.style.display = 'none';
+            }
         }
 
+        // Hide loading immediately when page is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', hideLoading);
+        } else {
+            hideLoading();
+        }
 
-        // ============ LIVE CLOCK WITH NANOSECONDS ============
+        // Fallback: force hide loading after 2 seconds
+        setTimeout(hideLoading, 2000);
+        // ============ END LOADING FUNCTIONS ============
+
+        // ============ LIVE CLOCK ============
         function updateLiveClock() {
             const now = new Date();
             const hours = String(now.getHours()).padStart(2, '0');
@@ -316,7 +326,7 @@
                 clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span>`;
             }
         }
-        setInterval(updateLiveClock, 10);
+        setInterval(updateLiveClock, 50);
         updateLiveClock();
         // ============ END LIVE CLOCK ============
 
@@ -461,13 +471,13 @@
             const authContainer = document.getElementById('authLinks');
             const token = getToken();
 
-            if (token) {
+            if (token && authContainer) {
                 authContainer.innerHTML = `
                     <a class="nav-link" href="#" onclick="logout(); return false;">
                         <i class="fas fa-sign-out-alt me-1"></i>Logout
                     </a>
                 `;
-            } else {
+            } else if (authContainer) {
                 authContainer.innerHTML = `
                     <a class="nav-link" href="/login/">
                         <i class="fas fa-sign-in-alt me-1"></i>Login
@@ -508,15 +518,22 @@
             window.location.href = '/login/';
         }
 
-        setInterval(refreshToken, 55 * 60 * 1000);
+        // Start refresh interval only if logged in
+        if (getToken()) {
+            setInterval(refreshToken, 55 * 60 * 1000);
+        }
+
         document.addEventListener('DOMContentLoaded', updateAuthLinks);
         window.addEventListener('storage', function(e) {
             if (e.key === 'access_token') updateAuthLinks();
         });
 
-        // Load notifications if logged in
+        // Load notifications if logged in and not on public page
         if (getToken() && !isPublicPath) {
-            loadNotifications();
+            // Wait for page to fully load before loading notifications
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(loadNotifications, 500);
+            });
             setInterval(loadNotifications, 300000);
         }
         // ============ END AUTH FUNCTIONS ============
