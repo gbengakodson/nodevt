@@ -550,7 +550,6 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        const API_BASE = '/api';
 
         // Simple logout function
         function logout() {
@@ -889,6 +888,97 @@
                 closeNotificationPanel();
             }
         });
+
+        // Notification Functions - Safe version
+window.toggleNotificationPanel = function() {
+    const panel = document.getElementById('notificationPanel');
+    if (!panel) return;
+
+    if (panel.style.display === 'none' || panel.style.display === '') {
+        panel.style.display = 'block';
+        loadNotifications();
+    } else {
+        panel.style.display = 'none';
+    }
+};
+
+window.closeNotificationPanel = function() {
+    const panel = document.getElementById('notificationPanel');
+    if (panel) panel.style.display = 'none';
+};
+
+// Make sure loadNotifications exists
+window.loadNotifications = async function() {
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+
+    try {
+        const response = await fetch('/api/chatbot/notifications/', {
+            headers: { 'Authorization': `Bearer ${token}` }
+        });
+        const notifications = await response.json();
+        const listDiv = document.getElementById('notificationList');
+        const badge = document.getElementById('notificationBadge');
+
+        if (!notifications || notifications.length === 0) {
+            if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
+            if (badge) badge.style.display = 'none';
+            return;
+        }
+
+        const unreadCount = notifications.filter(n => !n.is_read).length;
+        if (badge) {
+            if (unreadCount > 0) {
+                badge.style.display = 'flex';
+                badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (listDiv) {
+            listDiv.innerHTML = notifications.map(n => `
+                <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
+                    <div class="notification-title">${n.title}</div>
+    <div class="notification-message">${n.message}</div>
+                    <div class="notification-time">${n.created_at}</div>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+    }
+};
+
+window.markAsRead = async function(notificationId) {
+    try {
+        await fetch('/api/chatbot/notifications/mark-read/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            },
+            body: JSON.stringify({ notification_id: notificationId })
+        });
+        loadNotifications();
+    } catch (error) {
+        console.error('Error marking as read:', error);
+    }
+};
+
+window.markAllAsRead = async function() {
+    try {
+        await fetch('/api/chatbot/notifications/mark-all-read/', {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+            }
+        });
+        loadNotifications();
+    } catch (error) {
+        console.error('Error marking all as read:', error);
+    }
+};
     </script>
     {% block extra_js %}{% endblock %}
 
@@ -896,5 +986,7 @@
     {% if user.is_authenticated %}
         {% include 'chatbot/widget.html' %}
     {% endif %}
+
+
 </body>
 </html>
