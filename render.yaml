@@ -17,9 +17,9 @@ services:
           property: connectionString
 
   - type: cron
-    name: daily-notifications
-    schedule: "0 9 * * *"  # 9 AM daily
-    command: python manage.py send_daily_notifications
+    name: hourly-notifications
+    schedule: "0 * * * *"  # Runs at minute 0 of every hour
+    command: python manage.py send_hourly_notifications
 
 
   - type: cron
