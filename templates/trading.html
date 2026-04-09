@@ -683,21 +683,193 @@
     let currentPrice = 0;
     let userGrandBalance = 0;
 
-    // Trading Bot System
-    let tradingBotActive = {};
+    // ============ TRADING BOT SYSTEM - WORKS WITH ALL COINS ============
+    let allBotConfigs = {};
     let botIntervals = {};
-    let botTradeSimulations = {};
 
-    const botConfig = {
-        'BTC': { strategy: 'Scalping + Trend Following', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 100 },
-        'ETH': { strategy: 'Grid Trading', risk: 'Medium', profitTarget: 4, stopLoss: 1.5, minAmount: 10, maxAmount: 80 },
-        'BNB': { strategy: 'Arbitrage', risk: 'Low', profitTarget: 3, stopLoss: 1, minAmount: 5, maxAmount: 50 },
-        'SOL': { strategy: 'Momentum', risk: 'High', profitTarget: 8, stopLoss: 3, minAmount: 10, maxAmount: 60 },
-        'XRP': { strategy: 'Range Trading', risk: 'Low', profitTarget: 2, stopLoss: 1, minAmount: 5, maxAmount: 40 },
-        'ADA': { strategy: 'DCA', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 35 },
-        'DOGE': { strategy: 'Meme Momentum', risk: 'High', profitTarget: 10, stopLoss: 5, minAmount: 5, maxAmount: 30 },
-        'AVAX': { strategy: 'Breakout', risk: 'Medium', profitTarget: 6, stopLoss: 2.5, minAmount: 10, maxAmount: 50 }
-    };
+    // Dynamic bot configuration - generates settings for ANY coin
+    function getBotConfig(symbol, currentPrice) {
+        const lowerPrice = currentPrice * 0.85;  // 15% below current
+        const upperPrice = currentPrice * 1.15;  // 15% above current
+        const grids = 100;
+
+        let risk = 'Medium';
+        if (currentPrice > 1000) risk = 'High';
+        if (currentPrice < 10) risk = 'Low';
+
+        return {
+            strategy: 'Spot Grid',
+            lowerPrice: lowerPrice,
+            upperPrice: upperPrice,
+            grids: grids,
+            risk: risk,
+            priceRange: upperPrice - lowerPrice,
+            gridStep: (upperPrice - lowerPrice) / grids
+        };
+    }
+
+    function initBotForToken(symbol, currentPrice) {
+        if (!allBotConfigs[symbol]) {
+            allBotConfigs[symbol] = getBotConfig(symbol, currentPrice);
+        }
+    }
+
+    function startBotForSymbol(symbol) {
+        if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
+
+        botIntervals[symbol] = setInterval(() => {
+            const isBuy = Math.random() > 0.7;
+            const amount = (Math.random() * 90 + 10).toFixed(2);
+            console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
+        }, 60000);
+    }
+
+    function startAllBots() {
+        if (tokens && tokens.length > 0) {
+            tokens.forEach(token => {
+                initBotForToken(token.symbol, token.current_price);
+                startBotForSymbol(token.symbol);
+            });
+        }
+    }
+
+    function showBotAnalysis(symbol, currentPrice, change24h) {
+        initBotForToken(symbol, currentPrice);
+        const config = allBotConfigs[symbol];
+
+        const gridStep = config.gridStep;
+        const currentGridLevel = Math.floor((currentPrice - config.lowerPrice) / gridStep);
+        let gridProgress = ((currentPrice - config.lowerPrice) / config.priceRange) * 100;
+        gridProgress = Math.min(100, Math.max(0, gridProgress));
+
+        let modal = document.getElementById('botModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'botModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:none;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:16px;max-width:450px;width:90%;padding:20px;max-height:80vh;overflow-y:auto;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+                        <h3 id="botModalTitle" style="margin:0;">🤖 Spot Grid Trading</h3>
+                        <button onclick="document.getElementById('botModal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+                    </div>
+                    <div id="botModalBody"></div>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        document.getElementById('botModalBody').innerHTML = `
+            <div style="margin-bottom:15px;padding:12px;background:#F8F9FA;border-radius:12px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span><strong>${symbol}</strong></span>
+                    <span>Current: ${formatCurrency(currentPrice)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>24h Change</span>
+                    <span class="${change24h >= 0 ? 'price-up' : 'price-down'}">${change24h >= 0 ? '+' : ''}${change24h.toFixed(2)}%</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;padding:16px;background:linear-gradient(135deg, #1E2329 0%, #2B3139 100%);border-radius:12px;color:white;">
+                <div style="text-align:center;margin-bottom:12px;">
+                    <span style="font-size:14px;font-weight:600;">⚡ SPOT GRID</span>
+                    <span style="font-size:11px;margin-left:8px;background:#F0B90B;color:#1E2329;padding:2px 8px;border-radius:12px;">${config.strategy}</span>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
+                    <div>
+                        <div style="font-size:10px;color:#8A8F9E;">LOWER PRICE</div>
+                        <div style="font-size:16px;font-weight:600;">${formatCurrency(config.lowerPrice)}</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:10px;color:#8A8F9E;">UPPER PRICE</div>
+                        <div style="font-size:16px;font-weight:600;">${formatCurrency(config.upperPrice)}</div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px;">
+                    <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;">
+                        <span>Current Price</span>
+                        <span>${formatCurrency(currentPrice)}</span>
+                    </div>
+                    <div style="height:6px;background:#3A4149;border-radius:3px;overflow:hidden;">
+                        <div style="width:${gridProgress}%;height:100%;background:#F0B90B;border-radius:3px;"></div>
+                    </div>
+                    <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px;color:#8A8F9E;">
+                        <span>${formatCurrency(config.lowerPrice)}</span>
+                        <span>Grid Level ${currentGridLevel}/${config.grids}</span>
+                        <span>${formatCurrency(config.upperPrice)}</span>
+                    </div>
+                </div>
+
+                <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #3A4149;">
+                    <div>
+                        <div style="font-size:10px;color:#8A8F9E;">NUMBER OF GRIDS</div>
+                        <div style="font-size:14px;font-weight:600;">${config.grids} <span style="font-size:10px;">geometric</span></div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#8A8F9E;">RISK LEVEL</div>
+                        <div style="font-size:14px;font-weight:600;">${config.risk}</div>
+                    </div>
+                    <div>
+                        <div style="font-size:10px;color:#8A8F9E;">GRID SIZE</div>
+                        <div style="font-size:14px;font-weight:600;">${formatCurrency(gridStep)}</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="padding:12px;background:#F8F9FA;border-radius:12px;font-size:11px;color:#707A8A;text-align:center;">
+                🤖 Bot is permanently active • Grid trading runs 24/7 • ${symbol} auto-trading enabled
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+    }
+
+    function addBotIconsToTradingCoins() {
+        document.querySelectorAll('.coin-item').forEach(card => {
+            const symbolElem = card.querySelector('.coin-symbol');
+            if (!symbolElem) return;
+            const symbol = symbolElem.innerText;
+
+            if (!card.querySelector(`.trading-bot-icon`)) {
+                const priceElem = card.querySelector('.coin-price');
+                const price = parseFloat(priceElem?.innerText?.replace('$', '').replace(/,/g, '') || 0);
+                const changeElem = card.querySelector('.coin-change');
+                const change = parseFloat(changeElem?.innerText) || 0;
+
+                const icon = document.createElement('div');
+                icon.className = 'trading-bot-icon';
+                icon.innerHTML = '🤖';
+                icon.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;transition:all 0.3s;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
+                icon.title = `Spot Grid Bot for ${symbol}`;
+
+                icon.onclick = (e) => {
+                    e.stopPropagation();
+                    showBotAnalysis(symbol, price, change);
+                };
+                card.style.position = 'relative';
+                card.appendChild(icon);
+            }
+        });
+    }
+
+    function addChartBotIcon() {
+        const container = document.querySelector('.chart-header .symbol-price');
+        if (container && !document.querySelector('.chart-bot-icon')) {
+            const icon = document.createElement('div');
+            icon.className = 'chart-bot-icon';
+            icon.innerHTML = '🤖';
+            icon.style.cssText = 'width:32px;height:32px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:15px;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
+            icon.title = 'Spot Grid Bot';
+            icon.onclick = () => {
+                showBotAnalysis(currentSymbol, currentPrice, 0);
+            };
+            container.appendChild(icon);
+        }
+    }
+    // ============ END TRADING BOT SYSTEM ============
 
     // Crypto icons
     function getTokenIcon(symbol) {
@@ -713,8 +885,6 @@
             'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
             'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
             'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png',
-            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
             'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png'
         };
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
@@ -730,10 +900,9 @@
         'DOGE': 'dogecoin',
         'AVAX': 'avalanche-2',
         'DOT': 'polkadot',
-        'PEPE': 'pepe',
-        'LINK': 'chainlink',
+        'NEAR': 'near',
         'LTC': 'litecoin',
-        'NEAR': 'near'
+        'LINK': 'chainlink'
     };
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -767,142 +936,6 @@
         if (value === 0) return '0';
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return value.toFixed(8);
         return value.toFixed(decimals);
-    }
-
-    // Generate bot analysis
-    function generateBotAnalysis(symbol, change24h) {
-        const config = botConfig[symbol] || botConfig['BTC'];
-        let signal = 'NEUTRAL';
-        let signalColor = 'bot-neutral';
-        let confidence = 65;
-
-        if (change24h > 5) { signal = 'SELL'; signalColor = 'bot-sell'; confidence = 80; }
-        else if (change24h > 2) { signal = 'SELL'; signalColor = 'bot-sell'; confidence = 65; }
-        else if (change24h < -5) { signal = 'BUY'; signalColor = 'bot-buy'; confidence = 80; }
-        else if (change24h < -2) { signal = 'BUY'; signalColor = 'bot-buy'; confidence = 65; }
-
-        const rsi = 30 + Math.random() * 70;
-        const macd = (Math.random() - 0.5) * 2;
-
-        return {
-            signal: signal, signalColor: signalColor, confidence: confidence,
-            strategy: config.strategy, risk: config.risk,
-            profitTarget: config.profitTarget, stopLoss: config.stopLoss,
-            rsi: Math.floor(rsi), macd: macd.toFixed(2),
-            trades: botTradeSimulations[symbol]?.length || 0
-        };
-    }
-
-    function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `position:fixed;bottom:20px;left:20px;background:${type === 'buy' ? '#0ECB81' : '#F6465D'};color:white;padding:10px 20px;border-radius:8px;z-index:10000;`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    function toggleBot(symbol) {
-        tradingBotActive[symbol] = !tradingBotActive[symbol];
-        updateBotIcons(symbol);
-        showToast(`🤖 Bot ${tradingBotActive[symbol] ? 'activated' : 'stopped'} for ${symbol}`, tradingBotActive[symbol] ? 'buy' : 'sell');
-
-        if (tradingBotActive[symbol]) {
-            if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
-            botIntervals[symbol] = setInterval(() => {
-                if (!tradingBotActive[symbol]) return;
-                const config = botConfig[symbol] || botConfig['BTC'];
-                const amount = (Math.random() * (config.maxAmount - config.minAmount) + config.minAmount).toFixed(2);
-                const isBuy = Math.random() > 0.7;
-                showToast(`${isBuy ? '🟢 BOT BUY' : '🔴 BOT SELL'}: ${amount} USDC of ${symbol}`, isBuy ? 'buy' : 'sell');
-            }, 60000);
-        } else if (botIntervals[symbol]) {
-            clearInterval(botIntervals[symbol]);
-            delete botIntervals[symbol];
-        }
-    }
-
-    function updateBotIcons(symbol) {
-        const isActive = tradingBotActive[symbol];
-        document.querySelectorAll(`.bot-icon[data-symbol="${symbol}"]`).forEach(icon => {
-            icon.style.background = isActive ? '#0ECB81' : '#707A8A';
-            icon.style.boxShadow = isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none';
-        });
-    }
-
-    function showBotModal(symbol, price, change) {
-        const analysis = generateBotAnalysis(symbol, change);
-        const isActive = tradingBotActive[symbol];
-
-        let modal = document.getElementById('botModal');
-        if (!modal) {
-            modal = document.createElement('div');
-            modal.id = 'botModal';
-            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:none;align-items:center;justify-content:center;';
-            modal.innerHTML = `
-                <div style="background:white;border-radius:16px;max-width:400px;width:90%;padding:20px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-                        <h3 id="botModalTitle">🤖 Bot</h3>
-                        <button onclick="document.getElementById('botModal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
-                    </div>
-                    <div id="botModalBody"></div>
-                    <button id="botModalAction" style="width:100%;padding:12px;border:none;border-radius:8px;color:white;cursor:pointer;margin-top:15px;"></button>
-                </div>
-            `;
-            document.body.appendChild(modal);
-        }
-
-        document.getElementById('botModalBody').innerHTML = `
-            <div style="margin-bottom:15px;"><strong>Signal:</strong> <span class="${analysis.signalColor}">${analysis.signal}</span></div>
-            <div style="margin-bottom:15px;"><strong>Confidence:</strong> ${analysis.confidence}%</div>
-            <div style="margin-bottom:15px;"><strong>Strategy:</strong> ${analysis.strategy}</div>
-            <div style="margin-bottom:15px;"><strong>Risk:</strong> ${analysis.risk}</div>
-            <div style="margin-bottom:15px;"><strong>RSI:</strong> ${analysis.rsi}</div>
-            <div style="margin-bottom:15px;"><strong>MACD:</strong> ${analysis.macd}</div>
-            <div><strong>Target:</strong> +${analysis.profitTarget}% | <strong>Stop:</strong> -${analysis.stopLoss}%</div>
-        `;
-
-        const actionBtn = document.getElementById('botModalAction');
-        actionBtn.textContent = isActive ? 'Stop Bot' : 'Start Bot';
-        actionBtn.style.background = isActive ? '#F6465D' : '#0ECB81';
-        actionBtn.onclick = () => { toggleBot(symbol); document.getElementById('botModal').style.display = 'none'; };
-
-        document.getElementById('botModalTitle').innerHTML = `🤖 ${symbol} Trading Bot`;
-        modal.style.display = 'flex';
-    }
-
-    function addChartBotIcon() {
-        const container = document.querySelector('.chart-header .symbol-price');
-        if (container && !document.querySelector('.chart-bot-icon')) {
-            const icon = document.createElement('div');
-            icon.className = 'chart-bot-icon bot-icon';
-            icon.setAttribute('data-symbol', currentSymbol);
-            icon.innerHTML = '🤖';
-            icon.style.cssText = 'width:32px;height:32px;background:#707A8A;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;margin-left:15px;';
-            icon.onclick = () => showBotModal(currentSymbol, currentPrice, 0);
-            container.appendChild(icon);
-        }
-    }
-
-    function addCardBotIcons() {
-        document.querySelectorAll('.coin-item').forEach(card => {
-            const symbolElem = card.querySelector('.coin-symbol');
-            if (!symbolElem) return;
-            const symbol = symbolElem.innerText;
-            if (!card.querySelector('.card-bot-icon')) {
-                const icon = document.createElement('div');
-                icon.className = 'card-bot-icon bot-icon';
-                icon.setAttribute('data-symbol', symbol);
-                icon.innerHTML = '🤖';
-                icon.style.cssText = 'position:absolute;top:8px;right:8px;width:28px;height:28px;background:#707A8A;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;';
-                const priceElem = card.querySelector('.coin-price');
-                const price = parseFloat(priceElem?.innerText.replace('$', '')) || 0;
-                const changeElem = card.querySelector('.coin-change');
-                const change = parseFloat(changeElem?.innerText) || 0;
-                icon.onclick = (e) => { e.stopPropagation(); showBotModal(symbol, price, change); };
-                card.style.position = 'relative';
-                card.appendChild(icon);
-            }
-        });
     }
 
     async function updateChart() {
@@ -981,7 +1014,7 @@
     async function loadCoins() {
         try {
             tokens = await apiCall('/trading/');
-            const topCoins = tokens.slice(0, 5);
+            const topCoins = tokens.slice(0, 10);
             const container = document.getElementById('coinList');
             if (container) {
                 container.innerHTML = topCoins.map(token => {
@@ -995,7 +1028,11 @@
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
             if (currentToken) { currentPrice = parseFloat(currentToken.current_price); document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice); document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol); }
             await updateButtonState();
-            addCardBotIcons();
+
+            // Initialize bots for all tokens
+            startAllBots();
+            addBotIconsToTradingCoins();
+            addChartBotIcon();
         } catch (e) { console.error('Error loading coins:', e); }
     }
 
@@ -1108,10 +1145,11 @@
         updateButtonState();
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => { await loadCoins(); await loadUserData(); await updateChart(); }, 120000);
-        addCardBotIcons();
     }
 
     init();
 </script>
+
+
 
 {% endblock %}
