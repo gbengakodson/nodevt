@@ -443,108 +443,180 @@
         .modal-btn-secondary:hover {
             background: #EFF2F5;
         }
+
+        /* Mobile styles for notification bell */
+@media (max-width: 768px) {
+    .notification-bell-container {
+        margin-left: auto !important;
+        margin-right: 10px !important;
+    }
+
+    .notification-panel {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        border-radius: 0 !important;
+        z-index: 2000 !important;
+    }
+
+    .notification-bell {
+        padding: 8px !important;
+    }
+
+    .notification-bell:hover {
+        background: rgba(0,0,0,0.05);
+    }
+}
+
+.notification-bell:hover {
+    background: #F8F9FA;
+}
+
+.notification-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #E2E4E8;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.notification-item:hover {
+    background: #F8F9FA;
+}
+
+.notification-item.unread {
+    background: #FFF4E5;
+}
+
+.notification-item.unread:hover {
+    background: #FFF0D4;
+}
+
+.notification-title {
+    font-weight: 600;
+    font-size: 13px;
+    margin-bottom: 4px;
+}
+
+.notification-message {
+    font-size: 12px;
+    color: #707A8A;
+}
+
+.notification-time {
+    font-size: 10px;
+    color: #8A8F9E;
+    margin-top: 4px;
+}
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid px-3">
-            <a class="navbar-brand" href="/coins/" style="padding: 0;">
-               {% include 'base/logo.html' %}
-            </a>
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                <i class="fas fa-bars" style="color: #1E2329;"></i>
+    <div class="container-fluid px-3">
+        <a class="navbar-brand" href="/coins/" style="padding: 0;">
+            {% include 'base/logo.html' %}
+        </a>
+
+        <!-- Notification Bell - Always visible (outside mobile menu) -->
+        {% if user.is_authenticated %}
+        <div class="notification-bell-container" style="margin-left: auto; margin-right: 10px;">
+            <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 50%; transition: background 0.2s;">
+                🔔
+                <span id="notificationBadge" class="notification-badge" style="position: absolute; top: -5px; right: -5px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
             </button>
-
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard/">
-                            <i class="fas fa-chart-line me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/coins/">
-                            <i class="fas fa-coins me-1"></i>Coins
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/trading/">
-                            <i class="fas fa-exchange-alt me-1"></i>Trading
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/portfolio/">
-                            <i class="fas fa-wallet me-1"></i>Portfolio
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="earnDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-line me-1"></i>Earn
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
-                            <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="walletDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-money-bill-wave me-1"></i>Wallet
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
-                            <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/profile/">
-                            <i class="fas fa-user me-1"></i>Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/chat/">
-                            <i class="fas fa-headset me-1"></i>Support
-                        </a>
-                    </li>
-
-                    <!-- Notification Bell -->
-                    <li class="nav-item" style="position: relative;">
-                        <button class="notification-bell" onclick="toggleNotificationPanel()">
-                            🔔
-                            <span id="notificationBadge" class="notification-badge">0</span>
-                        </button>
-                    </li>
-
-                    <!-- Dynamic auth links -->
-                    <li class="nav-item" id="authLinks"></li>
-                </ul>
-            </div>
         </div>
-    </nav>
+        {% endif %}
 
-    <!-- Notification Panel -->
-    <div id="notificationPanel" class="notification-panel" style="display: none;">
-        <div style="background: #F0B90B; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
-            <span>🔔 Notifications</span>
-            <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
-        </div>
-        <div id="notificationList" style="max-height: calc(100% - 120px); overflow-y: auto;">
-            <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
-        </div>
-        <div style="padding: 12px; border-top: 1px solid #E2E4E8; text-align: center;">
-            <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 13px; font-weight: 500;">Mark all as read</button>
+        <!-- Mobile Menu Toggle -->
+        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+            <i class="fas fa-bars" style="color: #1E2329;"></i>
+        </button>
+
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item">
+                    <a class="nav-link" href="/dashboard/">
+                        <i class="fas fa-chart-line me-1"></i>Dashboard
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/coins/">
+                        <i class="fas fa-coins me-1"></i>Coins
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/trading/">
+                        <i class="fas fa-exchange-alt me-1"></i>Trading
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/portfolio/">
+                        <i class="fas fa-wallet me-1"></i>Portfolio
+                    </a>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="earnDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-chart-line me-1"></i>Earn
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
+                        <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" id="walletDropdown" role="button" data-bs-toggle="dropdown">
+                        <i class="fas fa-money-bill-wave me-1"></i>Wallet
+                    </a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
+                        <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/profile/">
+                        <i class="fas fa-user me-1"></i>Profile
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/chat/">
+                        <i class="fas fa-headset me-1"></i>Support
+                    </a>
+                </li>
+
+                <!-- Dynamic auth links -->
+                <li class="nav-item" id="authLinks"></li>
+            </ul>
         </div>
     </div>
+</nav>
 
-    <main class="container-fluid px-3 py-3">
-        <div class="loading">
-            <div class="spinner-border" role="status">
-                <span class="visually-hidden">Loading...</span>
-            </div>
+<!-- Notification Panel -->
+<div id="notificationPanel" class="notification-panel" style="display: none; position: absolute; top: 60px; right: 20px; width: 350px; max-height: 400px; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.15); z-index: 1001; overflow: hidden;">
+    <div style="background: #F0B90B; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+        <span>🔔 Notifications</span>
+        <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
+    </div>
+    <div id="notificationList" style="max-height: 350px; overflow-y: auto;">
+        <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
+    </div>
+    <div style="padding: 12px; border-top: 1px solid #E2E4E8; text-align: center;">
+        <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 13px; font-weight: 500;">Mark all as read</button>
+    </div>
+</div>
+
+<main class="container-fluid px-3 py-3">
+    <div class="loading">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
         </div>
-        {% block content %}
-        {% endblock %}
-    </main>
+    </div>
+    {% block content %}
+    {% endblock %}
+</main>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
@@ -853,7 +925,7 @@
         function escapeHtml(text) {
             const div = document.createElement('div');
             div.textContent = text;
-            return div.innerHTML();
+            return div.innerHTML;
         }
 
         // Browser Notifications
