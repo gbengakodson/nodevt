@@ -189,11 +189,11 @@
 
                 <!-- Notification Bell -->
                 {% if user.is_authenticated %}
-                <div style="position: relative; margin-right: 15px;">
-                    <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; position: relative; padding: 8px; border-radius: 50%;">
-                                       🔔
-                   <span id="notificationBadge" style="position: absolute; top: -5px; right: -5px; background: #F6465D; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; display: none; align-items: center; justify-content: center;">0</span>
-                   </button>
+                <div class="nav-item" style="position: relative; margin-right: 10px;">
+                    <button class="notification-bell" onclick="toggleNotificationPanel()">
+                        🔔
+                        <span id="notificationBadge" class="notification-badge">0</span>
+                    </button>
                 </div>
                 {% endif %}
 
