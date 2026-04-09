@@ -549,6 +549,14 @@
         box-shadow: 0 0 0 0 rgba(14, 203, 129, 0);
     }
 }
+
+.bot-buy { color: #0ECB81; font-weight: bold; }
+.bot-sell { color: #F6465D; font-weight: bold; }
+.bot-neutral { color: #F0B90B; font-weight: bold; }
+.bot-icon { transition: all 0.3s; }
+.bot-icon:hover { transform: scale(1.1); }
+@keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
 </style>
 {% endblock %}
 
@@ -1106,12 +1114,4 @@
     init();
 </script>
 
-<style>
-.bot-buy { color: #0ECB81; font-weight: bold; }
-.bot-sell { color: #F6465D; font-weight: bold; }
-.bot-neutral { color: #F0B90B; font-weight: bold; }
-.bot-icon { transition: all 0.3s; }
-.bot-icon:hover { transform: scale(1.1); }
-@keyframes slideIn { from { transform: translateX(-100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-</style>
 {% endblock %}

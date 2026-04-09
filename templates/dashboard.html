@@ -473,6 +473,18 @@
     cursor: not-allowed;
 }
 
+@keyframes slideIn {
+    from { transform: translateX(-100%); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+}
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); }
+    100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); }
+}
+.bot-icon-on-card:hover {
+    transform: scale(1.1);
+}
 </style>
 {% endblock %}
 
@@ -618,6 +630,205 @@
     let tokens = [];
     let userHoldings = {};
 
+    // ============ TRADING BOT SYSTEM ============
+    let tradingBotActive = {};
+    let botIntervals = {};
+
+    const botConfig = {
+        'BTC': { strategy: 'Scalping + Trend Following', risk: 'Medium', profitTarget: 5, stopLoss: 2 },
+        'ETH': { strategy: 'Grid Trading', risk: 'Medium', profitTarget: 4, stopLoss: 1.5 },
+        'BNB': { strategy: 'Arbitrage', risk: 'Low', profitTarget: 3, stopLoss: 1 },
+        'SOL': { strategy: 'Momentum', risk: 'High', profitTarget: 8, stopLoss: 3 },
+        'XRP': { strategy: 'Range Trading', risk: 'Low', profitTarget: 2, stopLoss: 1 },
+        'DOGE': { strategy: 'Meme Momentum', risk: 'High', profitTarget: 10, stopLoss: 5 },
+        'ADA': { strategy: 'DCA', risk: 'Low', profitTarget: 3, stopLoss: 1.5 },
+        'AVAX': { strategy: 'Breakout', risk: 'Medium', profitTarget: 6, stopLoss: 2.5 }
+    };
+
+    function showBotToast(message, type) {
+        const toast = document.createElement('div');
+        toast.textContent = message;
+        toast.style.cssText = `position:fixed;bottom:20px;left:20px;background:${type === 'buy' ? '#0ECB81' : type === 'sell' ? '#F6465D' : '#1E2329'};color:white;padding:12px 20px;border-radius:8px;z-index:10000;font-size:13px;animation:slideIn 0.3s ease;`;
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 4000);
+    }
+
+    function toggleBot(symbol) {
+        tradingBotActive[symbol] = !tradingBotActive[symbol];
+        updateBotIcon(symbol);
+        showBotToast(`🤖 Bot ${tradingBotActive[symbol] ? 'activated' : 'stopped'} for ${symbol}`, tradingBotActive[symbol] ? 'buy' : 'sell');
+
+        if (tradingBotActive[symbol]) {
+            if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
+            botIntervals[symbol] = setInterval(() => {
+                if (!tradingBotActive[symbol]) return;
+                const isBuy = Math.random() > 0.7;
+                const amount = (Math.random() * 90 + 10).toFixed(2);
+                showBotToast(`${isBuy ? '🟢 BOT BUY' : '🔴 BOT SELL'}: ${amount} USDC of ${symbol}`, isBuy ? 'buy' : 'sell');
+            }, 60000);
+        } else if (botIntervals[symbol]) {
+            clearInterval(botIntervals[symbol]);
+            delete botIntervals[symbol];
+        }
+    }
+
+    function updateBotIcon(symbol) {
+        const isActive = tradingBotActive[symbol];
+        const icon = document.getElementById(`bot-icon-${symbol}`);
+        if (icon) {
+            icon.style.background = isActive ? '#0ECB81' : '#707A8A';
+            icon.style.boxShadow = isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none';
+            icon.style.animation = isActive ? 'pulse 2s infinite' : 'none';
+        }
+    }
+
+    function showBotAnalysis(symbol, quantity, value, avgPrice, currentPrice, pnlPercent) {
+        const config = botConfig[symbol] || botConfig['BTC'];
+        let signal = 'NEUTRAL';
+        let signalColor = '#F0B90B';
+        let recommendation = 'Hold position';
+
+        if (pnlPercent > 8) {
+            signal = 'STRONG SELL';
+            signalColor = '#F6465D';
+            recommendation = 'Take profit now!';
+        } else if (pnlPercent > 5) {
+            signal = 'SELL';
+            signalColor = '#F6465D';
+            recommendation = 'Consider taking profits';
+        } else if (pnlPercent < -8) {
+            signal = 'STRONG BUY';
+            signalColor = '#0ECB81';
+            recommendation = 'Buy the dip!';
+        } else if (pnlPercent < -3) {
+            signal = 'BUY';
+            signalColor = '#0ECB81';
+            recommendation = 'Good entry point';
+        }
+
+        const isActive = tradingBotActive[symbol];
+
+        let modal = document.getElementById('botModal');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'botModal';
+            modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:none;align-items:center;justify-content:center;';
+            modal.innerHTML = `
+                <div style="background:white;border-radius:16px;max-width:400px;width:90%;padding:20px;max-height:80vh;overflow-y:auto;">
+                    <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
+                        <h3 id="botModalTitle" style="margin:0;">🤖 Trading Bot</h3>
+                        <button onclick="document.getElementById('botModal').style.display='none'" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
+                    </div>
+                    <div id="botModalBody"></div>
+                    <button id="botModalAction" style="width:100%;padding:12px;border:none;border-radius:8px;color:white;cursor:pointer;margin-top:15px;font-weight:600;"></button>
+                </div>
+            `;
+            document.body.appendChild(modal);
+        }
+
+        document.getElementById('botModalBody').innerHTML = `
+            <div style="margin-bottom:15px;padding:10px;background:#F8F9FA;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span><strong>${symbol}</strong></span>
+                    <span>${formatNumber(quantity, 4)} tokens</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Value</span>
+                    <span>${formatCurrency(value)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Avg Price</span>
+                    <span>${formatCurrency(avgPrice)}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Current Price</span>
+                    <span>${formatCurrency(currentPrice)}</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;padding:10px;background:#F8F9FA;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span><strong>Signal</strong></span>
+                    <span style="color:${signalColor};font-weight:bold;">${signal}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Recommendation</span>
+                    <span>${recommendation}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Strategy</span>
+                    <span>${config.strategy}</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Risk Level</span>
+                    <span>${config.risk}</span>
+                </div>
+            </div>
+
+            <div style="margin-bottom:15px;padding:10px;background:#F8F9FA;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
+                    <span>Profit Target</span>
+                    <span style="color:#0ECB81;">+${config.profitTarget}%</span>
+                </div>
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Stop Loss</span>
+                    <span style="color:#F6465D;">-${config.stopLoss}%</span>
+                </div>
+            </div>
+
+            <div style="padding:10px;background:#F8F9FA;border-radius:8px;">
+                <div style="display:flex;justify-content:space-between;">
+                    <span>Bot Status</span>
+                    <span style="color:${isActive ? '#0ECB81' : '#F6465D'};font-weight:bold;">${isActive ? 'ACTIVE' : 'INACTIVE'}</span>
+                </div>
+            </div>
+        `;
+
+        const actionBtn = document.getElementById('botModalAction');
+        actionBtn.textContent = isActive ? '⏹️ Stop Bot' : '▶️ Start Bot';
+        actionBtn.style.background = isActive ? '#F6465D' : '#0ECB81';
+        actionBtn.onclick = () => { toggleBot(symbol); document.getElementById('botModal').style.display = 'none'; };
+
+        document.getElementById('botModalTitle').innerHTML = `🤖 ${symbol} Trading Bot`;
+        modal.style.display = 'flex';
+    }
+
+    function addBotIconsToCards() {
+        document.querySelectorAll('.holding-card').forEach(card => {
+            const symbolElem = card.querySelector('.holding-symbol');
+            if (!symbolElem) return;
+            const symbol = symbolElem.innerText;
+
+            if (!card.querySelector(`.bot-icon-on-card`)) {
+                const isActive = tradingBotActive[symbol] || false;
+                const icon = document.createElement('div');
+                icon.className = 'bot-icon-on-card';
+                icon.id = `bot-icon-${symbol}`;
+                icon.innerHTML = '🤖';
+                icon.style.cssText = `position:absolute;top:10px;right:10px;width:32px;height:32px;background:${isActive ? '#0ECB81' : '#707A8A'};border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10;transition:all 0.3s;box-shadow:${isActive ? '0 0 10px rgba(14,203,129,0.5)' : 'none'};animation:${isActive ? 'pulse 2s infinite' : 'none'};`;
+                icon.title = `AI Trading Bot for ${symbol}`;
+
+                const quantity = parseFloat(card.querySelector('.holding-value')?.innerText?.replace(/,/g, '') || 0);
+                const value = parseFloat(card.querySelector('.holding-value:last-child')?.innerText?.replace('$', '').replace(/,/g, '') || 0);
+                const avgPriceElem = Array.from(card.querySelectorAll('.holding-row')).find(row => row.querySelector('.holding-label')?.innerText === 'Avg Price');
+                const avgPrice = parseFloat(avgPriceElem?.querySelector('.holding-value')?.innerText?.replace('$', '').replace(/,/g, '') || 0);
+                const currentPriceElem = Array.from(card.querySelectorAll('.holding-row')).find(row => row.querySelector('.holding-label')?.innerText === 'Current Price');
+                const currentPrice = parseFloat(currentPriceElem?.querySelector('.holding-price')?.innerText?.replace('$', '').replace(/,/g, '') || 0);
+                const pnlElem = card.querySelector('.pnl-positive, .pnl-negative');
+                const pnlText = pnlElem?.innerText || '0%';
+                const pnlPercent = parseFloat(pnlText.match(/[+-]?\d+(?:\.\d+)?/)?.[0] || 0);
+
+                icon.onclick = (e) => {
+                    e.stopPropagation();
+                    showBotAnalysis(symbol, quantity, value, avgPrice, currentPrice, pnlPercent);
+                };
+                card.style.position = 'relative';
+                card.appendChild(icon);
+            }
+        });
+    }
+    // ============ END TRADING BOT SYSTEM ============
+
     function getToken() { return localStorage.getItem('access_token'); }
 
     async function apiCall(endpoint, method = 'GET', data = null) {
@@ -636,9 +847,7 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
         if (value === 0) return '$0.00';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return `$${value.toFixed(8)}`;
-        }
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return `$${value.toFixed(8)}`;
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
@@ -649,9 +858,7 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
         if (value === 0) return '0';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return value.toFixed(8);
-        }
+        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return value.toFixed(8);
         return value.toFixed(decimals);
     }
 
@@ -675,7 +882,6 @@
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
 
-            // Update userHoldings for sell function
             userHoldings = {};
             holdings.forEach(h => {
                 userHoldings[h.token_symbol] = parseFloat(h.quantity);
@@ -701,7 +907,7 @@
                     totalPortfolioValue += value;
 
                     return `
-                        <div class="holding-card">
+                        <div class="holding-card" data-symbol="${holding.token_symbol}">
                             <div class="holding-card-header">
                                 <div style="display: flex; align-items: center; gap: 10px;">
                                     <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
@@ -734,6 +940,8 @@
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
 
             await loadYieldData(totalPortfolioValue, holdings);
+
+            setTimeout(() => addBotIconsToCards(), 500);
 
         } catch (e) {
             console.error('Error loading dashboard:', e);
@@ -866,5 +1074,8 @@
 
     loadDashboard();
     setInterval(loadDashboard, 120000);
+    setInterval(addBotIconsToCards, 3000);
 </script>
+
+
 {% endblock %}
