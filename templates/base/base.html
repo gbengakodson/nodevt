@@ -291,6 +291,20 @@
 
     <script>
 
+        function showLoading() {
+             const loader = document.querySelector('.loading');
+             if (loader) {
+                 loader.style.display = 'block';
+             }
+        }
+
+        function hideLoading() {
+             const loader = document.querySelector('.loading');
+             if (loader) {
+                 loader.style.display = 'none';
+             }
+        }
+
 
         // ============ LIVE CLOCK WITH NANOSECONDS ============
         function updateLiveClock() {
