@@ -12,7 +12,7 @@
     /* Cards */
     .stat-card {
         background: #F5F7FA;
-        border-radius: 16px;
+        border-radius: 10px;
         padding: 16px;
         border: 1px solid #E2E4E8;
         transition: all 0.2s;
@@ -804,6 +804,9 @@
     async function loadYieldData(totalPortfolioValue) {
         try {
             const hourlyRate = (totalPortfolioValue * 0.10) / 720;
+
+            const isMobile = window.innerWidth <= 768;
+            const barCount = isMobile ? 11 : 24;
             const histogramData = [];
             for (let i = 23; i >= 0; i--) {
                 const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
