@@ -828,7 +828,7 @@
         try {
             const hourlyRate = (totalPortfolioValue * 0.10) / 720;
             const histogramData = [];
-            for (let i = 23; i >= 0; i--) {
+            for (let i = 12; i >= 0; i--) {
                 const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
                 histogramData.push(Math.max(0.0001, hourlyRate + variation));
             }
