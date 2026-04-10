@@ -1220,10 +1220,10 @@
         const timeTo100k = findYearsToTarget(initial, 100000);
         const timeTo1M = findYearsToTarget(initial, 1000000);
 
-        document.getElementById('timeTo10k').innerHTML = timeTo10k < 1 ? '< 1 year' : Math.floor(timeTo10k) + ' years';
-        document.getElementById('timeTo50k').innerHTML = timeTo50k < 1 ? '< 1 year' : Math.floor(timeTo50k) + ' years';
-        document.getElementById('timeTo100k').innerHTML = timeTo100k < 1 ? '< 1 year' : Math.floor(timeTo100k) + ' years';
-        document.getElementById('timeTo1M').innerHTML = timeTo1M < 1 ? '< 1 year' : Math.floor(timeTo1M) + ' years';
+        document.getElementById('timeTo10k').innerHTML = timeTo10k < 1 ? '< 1 year' : Math.floor(timeTo10k) + 'y';
+        document.getElementById('timeTo50k').innerHTML = timeTo50k < 1 ? '< 1 year' : Math.floor(timeTo50k) + 'y';
+        document.getElementById('timeTo100k').innerHTML = timeTo100k < 1 ? '< 1 year' : Math.floor(timeTo100k) + 'y';
+        document.getElementById('timeTo1M').innerHTML = timeTo1M < 1 ? '< 1 year' : Math.floor(timeTo1M) + 'y';
 
         updateGrowthChart(initial, years);
     }
@@ -1239,7 +1239,7 @@
 
         for (let y = 0; y <= years; y++) {
             const result = calculateCompoundGrowth(initial, y);
-            labels.push(y === 0 ? 'Start' : `Year ${y}`);
+            labels.push(y === 0 ? '0' : y.toString());
             dataPoints.push(result.finalBalance);
         }
 
@@ -1248,29 +1248,49 @@
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Portfolio Value ($)',
+                    label: 'Value ($)',
                     data: dataPoints,
                     borderColor: '#F0B90B',
-                    backgroundColor: 'rgba(240, 185, 11, 0.1)',
-                    borderWidth: 3,
+                    backgroundColor: 'rgba(240, 185, 11, 0.05)',
+                    borderWidth: 2,
                     fill: true,
                     tension: 0.3,
-                    pointBackgroundColor: '#F0B90B',
-                    pointBorderColor: '#F0B90B',
-                    pointRadius: 4,
-                    pointHoverRadius: 6
+                    pointRadius: 3,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#F0B90B'
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: true,
                 plugins: {
-                    legend: { labels: { color: '#8A8F9E', font: { size: 11 } } },
-                    tooltip: { callbacks: { label: function(context) { return 'Value: ' + formatCurrency(context.raw); } } }
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return formatCurrency(context.raw);
+                            }
+                        }
+                    }
                 },
                 scales: {
-                    x: { grid: { color: '#2B3139' }, ticks: { color: '#8A8F9E' } },
-                    y: { grid: { color: '#2B3139' }, ticks: { color: '#8A8F9E', callback: function(value) { return formatCurrency(value); } } }
+                    x: {
+                        grid: { display: false },
+                        ticks: { color: '#8A8F9E', font: { size: 10 } },
+                        title: { display: true, text: 'Years', color: '#8A8F9E', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { color: '#2B3139' },
+                        ticks: {
+                            color: '#8A8F9E',
+                            font: { size: 10 },
+                            callback: function(value) {
+                                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
+                                if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
+                                return '$' + value;
+                            }
+                        }
+                    }
                 }
             }
         });
@@ -1362,15 +1382,9 @@
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
 
-            // Update yield balance display for growth projector
-            const yieldBalanceElement = document.getElementById('yieldBalance');
-            if (yieldBalanceElement) yieldBalanceElement.innerHTML = formatCurrency(userYieldBalance);
-
             await loadYieldData(totalPortfolioValue, holdings);
             startAllBots();
             setTimeout(() => addBotIconsToCards(), 500);
-
-            // Initialize growth projector after dashboard loads
             setTimeout(() => initGrowthProjector(), 500);
 
         } catch (e) {
@@ -1474,6 +1488,52 @@
         .pnl-positive { color: #0ECB81; }
         .pnl-negative { color: #F6465D; }
         .bot-icon-on-card:hover { transform: scale(1.1); }
+
+        /* Growth Projector Styles */
+        .growth-card {
+            background: rgba(30, 35, 41, 0.6);
+            border-radius: 16px;
+            padding: 20px;
+            margin-top: 20px;
+            border: 1px solid rgba(240, 185, 11, 0.1);
+        }
+        .year-btn {
+            background: #1A1C23;
+            border: 1px solid #2B3139;
+            color: #8A8F9E;
+            padding: 6px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        .year-btn.active {
+            background: #F0B90B;
+            color: #0B0E11;
+            border-color: #F0B90B;
+        }
+        .milestone-card {
+            background: #1A1C23;
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+        .milestone-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #F0B90B;
+        }
+        .milestone-time {
+            font-size: 10px;
+            color: #0ECB81;
+            margin-top: 4px;
+        }
+        .form-range {
+            height: 4px;
+        }
+        .form-range::-webkit-slider-thumb {
+            background: #F0B90B;
+        }
     `;
     document.head.appendChild(style);
 

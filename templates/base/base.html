@@ -129,34 +129,24 @@
             margin-top: 4px;
         }
 
-        /* Live Clock */
         .live-clock {
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            background: rgba(240, 185, 11, 0.1);
-            padding: 6px 12px;
-            border-radius: 20px;
-            color: #F0B90B;
-            margin-right: 10px;
-        }
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+    background: #FFFFFF;
+    padding: 6px 12px;
+    border-radius: 20px;
+    color: #1E2329;
+    margin-right: 10px;
+    font-weight: 600;
+    border: 1px solid #E2E4E8;
+}
 
         @media (max-width: 768px) {
-            .live-clock {
-                font-size: 10px;
-                padding: 4px 8px;
-            }
-            .notification-panel {
-                position: fixed;
-                top: 0;
-                right: 0;
-                left: 0;
-                bottom: 0;
-                width: 100%;
-                height: 100%;
-                border-radius: 0;
-                z-index: 2000;
-            }
-        }
+    .live-clock {
+        font-size: 10px;
+        padding: 4px 8px;
+    }
+}
 
         @keyframes slideInRight {
             from { transform: translateX(100%); opacity: 0; }
@@ -183,8 +173,8 @@
             <!-- Desktop Navigation Items -->
             <div class="d-flex align-items-center ms-auto">
                 <!-- Live Clock -->
-                <div class="live-clock" id="liveClock">
-                    Loading...
+                <div class="live-clock" id="liveClock" style="font-family: 'Courier New', monospace; font-size: 13px; background: white; padding: 6px 12px; border-radius: 20px; color: #1E2329; margin-right: 10px; font-weight: 600; border: 1px solid #E2E4E8;">
+                    --:--:--
                 </div>
 
                 <!-- Notification Bell -->
