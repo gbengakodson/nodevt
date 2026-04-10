@@ -489,6 +489,189 @@
 .pnl-negative { color: #F6465D; }
 .price-up { color: #0ECB81; }
 .price-down { color: #F6465D; }
+
+
+    /* Yield & Growth Styles */
+.current-yield-card {
+    background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+    border: 1px solid rgba(240, 185, 11, 0.2);
+}
+
+.yield-number {
+    font-size: 32px;
+    font-weight: 700;
+    color: #F0B90B;
+}
+
+.yield-label {
+    font-size: 12px;
+    color: #8A8F9E;
+    margin-top: 5px;
+}
+
+.growth-card {
+    background: rgba(30, 35, 41, 0.8);
+    border-radius: 20px;
+    padding: 20px;
+    border: 1px solid rgba(240, 185, 11, 0.15);
+}
+
+.section-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: white;
+    margin-bottom: 15px;
+}
+
+.section-title i {
+    color: #F0B90B;
+    margin-right: 8px;
+}
+
+.investment-slider {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    background: #2B3139;
+    border-radius: 3px;
+    outline: none;
+}
+
+.investment-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px;
+    height: 20px;
+    background: #F0B90B;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 0 10px rgba(240, 185, 11, 0.5);
+}
+
+.investment-amount {
+    font-size: 28px;
+    font-weight: 700;
+    color: #F0B90B;
+    text-align: center;
+    margin: 15px 0;
+}
+
+.year-selector {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+.year-btn {
+    background: #1A1C23;
+    border: 1px solid #2B3139;
+    color: #8A8F9E;
+    padding: 8px 20px;
+    border-radius: 30px;
+    cursor: pointer;
+    transition: all 0.3s;
+    font-size: 13px;
+}
+
+.year-btn.active {
+    background: #F0B90B;
+    color: #0B0E11;
+    border-color: #F0B90B;
+}
+
+.year-btn:hover {
+    border-color: #F0B90B;
+    color: #F0B90B;
+}
+
+.result-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+.result-item {
+    background: #1A1C23;
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+}
+
+.result-value {
+    font-size: 22px;
+    font-weight: 700;
+}
+
+.result-value.gold {
+    color: #F0B90B;
+}
+
+.result-value.green {
+    color: #0ECB81;
+}
+
+.result-label {
+    font-size: 11px;
+    color: #8A8F9E;
+    margin-top: 5px;
+}
+
+.chart-container {
+    position: relative;
+    height: 280px;
+    margin: 20px 0;
+}
+
+.milestone-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-top: 20px;
+}
+
+.milestone-card {
+    background: linear-gradient(135deg, #1E2329 0%, #252A32 100%);
+    border-radius: 12px;
+    padding: 15px;
+    text-align: center;
+    border: 1px solid rgba(240, 185, 11, 0.15);
+}
+
+.milestone-value {
+    font-size: 16px;
+    font-weight: 700;
+    color: #F0B90B;
+}
+
+.milestone-label {
+    font-size: 10px;
+    color: #8A8F9E;
+    margin-top: 5px;
+}
+
+.milestone-time {
+    font-size: 11px;
+    font-weight: 600;
+    margin-top: 8px;
+    color: #0ECB81;
+}
+
+@media (max-width: 768px) {
+    .result-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .milestone-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    .yield-number {
+        font-size: 24px;
+    }
+}
+
 </style>
 {% endblock %}
 
@@ -524,23 +707,117 @@
     </div>
 
     <!-- Yield Earnings Section with Chart -->
-    <div class="yield-detail-section">
-        <div class="section-header">
-            <span class="section-title">💰 Yield Earnings (Up to 20% Monthly)</span>
-            <span class="section-link" onclick="location.href='/yield/'">Full Report →</span>
-        </div>
-        <div class="yield-chart-container">
-            <canvas id="yieldChart"></canvas>
-        </div>
-        <div class="recent-distributions">
-            <div class="dist-header">
-                <span>Distribution</span>
-                <span>Amount</span>
-                <span>Time</span>
+    <!-- Yield Earnings Section - Enhanced with Growth Projection -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <i class="fas fa-chart-line me-2"></i>Yield Earnings & Growth Projection
             </div>
-            <div id="recentDistributions" class="dist-list"></div>
+            <div class="card-body">
+                <!-- Current Yield Stats -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="current-yield-card">
+                            <div class="yield-number" id="monthlyYield">$0</div>
+                            <div class="yield-label">Monthly Yield (10%)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="current-yield-card">
+                            <div class="yield-number" id="hourlyYield">$0</div>
+                            <div class="yield-label">Hourly Yield (0.014%)</div>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="current-yield-card">
+                            <div class="yield-number" id="yieldBalance">$0</div>
+                            <div class="yield-label">Yield Wallet Balance</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Compound Growth Projector -->
+                <div class="growth-card mt-3">
+                    <h4 class="section-title"><i class="fas fa-chart-simple"></i> Compound Growth Projector</h4>
+                    <p class="text-muted small">See how your investment grows when you reinvest your hourly yield (10% monthly compounded)</p>
+
+                    <!-- Investment Slider -->
+                    <div class="row mt-3">
+                        <div class="col-md-6">
+                            <label class="small text-muted">Initial Investment ($)</label>
+                            <input type="range" id="growthSlider" class="investment-slider" min="10" max="10000" step="10" value="100">
+                            <div class="investment-amount" id="sliderAmount">$100</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="small text-muted">Time Period (Years)</label>
+                            <div class="year-selector">
+                                <button class="year-btn" data-years="2">2 Years</button>
+                                <button class="year-btn active" data-years="3">3 Years</button>
+                                <button class="year-btn" data-years="4">4 Years</button>
+                                <button class="year-btn" data-years="5">5 Years</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Results Grid -->
+                    <div class="result-grid">
+                        <div class="result-item">
+                            <div class="result-label">Final Value</div>
+                            <div class="result-value gold" id="finalValue">$0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Total Yield Earned</div>
+                            <div class="result-value green" id="totalYieldEarned">$0</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">ROI</div>
+                            <div class="result-value" id="roiValue">0%</div>
+                        </div>
+                        <div class="result-item">
+                            <div class="result-label">Growth Multiple</div>
+                            <div class="result-value" id="growthMultiple">0x</div>
+                        </div>
+                    </div>
+
+                    <!-- Growth Chart -->
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+
+                    <!-- Milestone Targets -->
+                    <div class="milestone-grid">
+                        <div class="milestone-card" id="milestone1">
+                            <div class="milestone-value">$10,000</div>
+                            <div class="milestone-label">Target 1</div>
+                            <div class="milestone-time" id="timeTo10k">—</div>
+                        </div>
+                        <div class="milestone-card" id="milestone2">
+                            <div class="milestone-value">$50,000</div>
+                            <div class="milestone-label">Target 2</div>
+                            <div class="milestone-time" id="timeTo50k">—</div>
+                        </div>
+                        <div class="milestone-card" id="milestone3">
+                            <div class="milestone-value">$100,000</div>
+                            <div class="milestone-label">Target 3</div>
+                            <div class="milestone-time" id="timeTo100k">—</div>
+                        </div>
+                        <div class="milestone-card" id="milestone4">
+                            <div class="milestone-value">$1,000,000</div>
+                            <div class="milestone-label">Target 4</div>
+                            <div class="milestone-time" id="timeTo1M">—</div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info small mt-3">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Based on 10% monthly yield compounded. Your hourly yield is automatically reinvested into your holdings.
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+</div>
 
     <div class="yield-preview">
         <div class="yield-header">
@@ -719,26 +996,19 @@
         setTimeout(() => { if (popup && popup.parentNode) popup.remove(); }, 3500);
     }
 
-    // Replace the existing startBotForSymbol function
     function startBotForSymbol(symbol) {
         if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
-
         botIntervals[symbol] = setInterval(() => {
             const isBuy = Math.random() > 0.7;
             const amount = (Math.random() * 90 + 10).toFixed(2);
             const price = currentPrice || 100;
-
-            // Show signal for the actual token you hold
             showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, price);
             console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
         }, 60000);
     }
 
-    // Update startAllBots to use your actual holdings
     function startAllBots() {
-        // Get all tokens you actually hold
         const holdingsList = document.querySelectorAll('.holding-symbol');
-
         if (holdingsList.length > 0) {
             holdingsList.forEach(holding => {
                 const symbol = holding.innerText;
@@ -751,7 +1021,6 @@
                 }
             });
         } else if (tokens && tokens.length > 0) {
-            // Fallback: use top coins if no holdings
             tokens.slice(0, 5).forEach(token => {
                 initBotForToken(token.symbol, token.current_price);
                 startBotForSymbol(token.symbol);
@@ -890,6 +1159,141 @@
         return `/static/coins/${symbol}.png`;
     }
 
+    // ============ COMPOUND GROWTH PROJECTOR ============
+    let growthChart = null;
+    const MONTHLY_RATE = 0.10; // 10% monthly yield
+
+    function calculateCompoundGrowth(initial, years) {
+        let balance = initial;
+        let yearlyData = [];
+        let months = years * 12;
+
+        for (let month = 1; month <= months; month++) {
+            balance += balance * MONTHLY_RATE;
+            if (month % 12 === 0) {
+                yearlyData.push({
+                    year: month / 12,
+                    balance: balance
+                });
+            }
+        }
+
+        return {
+            finalBalance: balance,
+            totalYield: balance - initial,
+            roi: ((balance - initial) / initial) * 100,
+            multiple: balance / initial,
+            yearlyData: yearlyData
+        };
+    }
+
+    function findYearsToTarget(initial, target) {
+        let balance = initial;
+        let months = 0;
+
+        while (balance < target && months < 600) {
+            balance += balance * MONTHLY_RATE;
+            months++;
+        }
+
+        return months / 12;
+    }
+
+    function updateGrowthProjection() {
+        const slider = document.getElementById('growthSlider');
+        if (!slider) return;
+
+        let initial = parseFloat(slider.value);
+        let years = parseInt(document.querySelector('.year-btn.active')?.getAttribute('data-years') || '3');
+
+        document.getElementById('sliderAmount').innerHTML = formatCurrency(initial);
+
+        const result = calculateCompoundGrowth(initial, years);
+
+        document.getElementById('finalValue').innerHTML = formatCurrency(result.finalBalance);
+        document.getElementById('totalYieldEarned').innerHTML = formatCurrency(result.totalYield);
+        document.getElementById('roiValue').innerHTML = result.roi.toFixed(1) + '%';
+        document.getElementById('growthMultiple').innerHTML = result.multiple.toFixed(1) + 'x';
+
+        const timeTo10k = findYearsToTarget(initial, 10000);
+        const timeTo50k = findYearsToTarget(initial, 50000);
+        const timeTo100k = findYearsToTarget(initial, 100000);
+        const timeTo1M = findYearsToTarget(initial, 1000000);
+
+        document.getElementById('timeTo10k').innerHTML = timeTo10k < 1 ? '< 1 year' : Math.floor(timeTo10k) + ' years';
+        document.getElementById('timeTo50k').innerHTML = timeTo50k < 1 ? '< 1 year' : Math.floor(timeTo50k) + ' years';
+        document.getElementById('timeTo100k').innerHTML = timeTo100k < 1 ? '< 1 year' : Math.floor(timeTo100k) + ' years';
+        document.getElementById('timeTo1M').innerHTML = timeTo1M < 1 ? '< 1 year' : Math.floor(timeTo1M) + ' years';
+
+        updateGrowthChart(initial, years);
+    }
+
+    function updateGrowthChart(initial, years) {
+        const ctx = document.getElementById('growthChart')?.getContext('2d');
+        if (!ctx) return;
+
+        if (growthChart) growthChart.destroy();
+
+        let labels = [];
+        let dataPoints = [];
+
+        for (let y = 0; y <= years; y++) {
+            const result = calculateCompoundGrowth(initial, y);
+            labels.push(y === 0 ? 'Start' : `Year ${y}`);
+            dataPoints.push(result.finalBalance);
+        }
+
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Portfolio Value ($)',
+                    data: dataPoints,
+                    borderColor: '#F0B90B',
+                    backgroundColor: 'rgba(240, 185, 11, 0.1)',
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.3,
+                    pointBackgroundColor: '#F0B90B',
+                    pointBorderColor: '#F0B90B',
+                    pointRadius: 4,
+                    pointHoverRadius: 6
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: {
+                    legend: { labels: { color: '#8A8F9E', font: { size: 11 } } },
+                    tooltip: { callbacks: { label: function(context) { return 'Value: ' + formatCurrency(context.raw); } } }
+                },
+                scales: {
+                    x: { grid: { color: '#2B3139' }, ticks: { color: '#8A8F9E' } },
+                    y: { grid: { color: '#2B3139' }, ticks: { color: '#8A8F9E', callback: function(value) { return formatCurrency(value); } } }
+                }
+            }
+        });
+    }
+
+    function initGrowthProjector() {
+        const slider = document.getElementById('growthSlider');
+        if (!slider) return;
+
+        slider.addEventListener('input', updateGrowthProjection);
+
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                updateGrowthProjection();
+            });
+        });
+
+        updateGrowthProjection();
+    }
+    // ============ END COMPOUND GROWTH PROJECTOR ============
+
     async function loadDashboard() {
         try {
             const balance = await apiCall('/trading/my_balance/');
@@ -957,9 +1361,18 @@
             const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
+
+            // Update yield balance display for growth projector
+            const yieldBalanceElement = document.getElementById('yieldBalance');
+            if (yieldBalanceElement) yieldBalanceElement.innerHTML = formatCurrency(userYieldBalance);
+
             await loadYieldData(totalPortfolioValue, holdings);
             startAllBots();
             setTimeout(() => addBotIconsToCards(), 500);
+
+            // Initialize growth projector after dashboard loads
+            setTimeout(() => initGrowthProjector(), 500);
+
         } catch (e) {
             console.error('Error loading dashboard:', e);
             const container = document.getElementById('holdingsCards');
