@@ -38,20 +38,43 @@
     .stat-value.red { color: #F6465D; }
     .stat-value.dark { color: #1E2329; }
 
-    /* Holding Cards */
+    /* Holdings Grid - Desktop 3 columns */
+    .holdings-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 16px;
+    }
+
     .holding-card {
         background: #FFFFFF;
         border-radius: 12px;
         padding: 16px;
-        margin-bottom: 12px;
         border: 1px solid #E2E4E8;
         transition: all 0.2s;
         position: relative;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
     }
 
     .holding-card:hover {
         border-color: #F0B90B;
         box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    /* Mobile: 1 column */
+    @media (max-width: 768px) {
+        .holdings-grid {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+    }
+
+    /* Tablet: 2 columns */
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .holdings-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
     }
 
     .holding-card-header {
@@ -368,9 +391,9 @@
                 </h5>
             </div>
             <div class="card-body p-4">
-                <div id="holdingsCards">
-                    <div class="empty-holdings">Loading holdings...</div>
-                </div>
+                <div id="holdingsCards" class="holdings-grid">
+                <div class="empty-holdings" style="grid-column: 1/-1;">Loading holdings...</div>
+            </div>
             </div>
         </div>
 
@@ -804,9 +827,6 @@
     async function loadYieldData(totalPortfolioValue) {
         try {
             const hourlyRate = (totalPortfolioValue * 0.10) / 720;
-
-            const isMobile = window.innerWidth <= 768;
-            const barCount = isMobile ? 11 : 24;
             const histogramData = [];
             for (let i = 23; i >= 0; i--) {
                 const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
