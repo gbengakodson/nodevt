@@ -1,135 +1,57 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Dashboard{% endblock %}
+{% block title %}Dashboard | NODE AI Autotrader{% endblock %}
 
 {% block extra_css %}
 <style>
-    .dashboard-grid {
-        display: flex;
-        flex-direction: column;
-        gap: 20px;
+    /* Base Styles */
+    .dashboard-section {
+        padding: 20px 0;
     }
 
-    .stats-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 16px;
-    }
-
+    /* Cards */
     .stat-card {
-        background: white;
-        border-radius: 12px;
+        background: #F5F7FA;
+        border-radius: 16px;
+        padding: 16px;
         border: 1px solid #E2E4E8;
-        padding: 20px;
-        transition: transform 0.2s;
+        transition: all 0.2s;
     }
 
     .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        border-color: #F0B90B;
     }
 
     .stat-label {
-        font-size: 12px;
-        color: #707A8A;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        font-size: 11px;
+        color: #5E6673;
+        margin-bottom: 6px;
     }
 
     .stat-value {
-        font-size: 28px;
-        font-weight: 600;
-        color: #1E2329;
+        font-size: 20px;
+        font-weight: 700;
     }
 
-    .stat-action {
-        font-size: 11px;
-        margin-top: 12px;
-        cursor: pointer;
-        color: #F0B90B;
-    }
+    .stat-value.gold { color: #F0B90B; }
+    .stat-value.green { color: #0ECB81; }
+    .stat-value.red { color: #F6465D; }
+    .stat-value.dark { color: #1E2329; }
 
-    .stat-action:hover {
-        text-decoration: underline;
-    }
-
-    /* Holdings Scrollable Cards */
-    .holdings-section {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .section-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
-
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1E2329;
-    }
-
-    .section-link {
-        font-size: 12px;
-        color: #F0B90B;
-        cursor: pointer;
-    }
-
-    .section-link:hover {
-        text-decoration: underline;
-    }
-
-    .holdings-scroll-container {
-        overflow-x: auto;
-        overflow-y: hidden;
-        scrollbar-width: thin;
-        -webkit-overflow-scrolling: touch;
-        margin: 0 -20px;
-        padding: 0 20px;
-    }
-
-    .holdings-scroll-container::-webkit-scrollbar {
-        height: 6px;
-    }
-
-    .holdings-scroll-container::-webkit-scrollbar-track {
-        background: #EFF2F5;
-        border-radius: 3px;
-    }
-
-    .holdings-scroll-container::-webkit-scrollbar-thumb {
-        background: #F0B90B;
-        border-radius: 3px;
-    }
-
-    .holdings-cards-wrapper {
-        display: flex;
-        gap: 16px;
-        padding-bottom: 8px;
-        min-width: min-content;
-    }
-
+    /* Holding Cards */
     .holding-card {
-        flex: 0 0 280px;
-        background: #F8F9FA;
+        background: #FFFFFF;
         border-radius: 12px;
-        border: 1px solid #E2E4E8;
         padding: 16px;
-        transition: transform 0.2s, box-shadow 0.2s;
-        cursor: pointer;
+        margin-bottom: 12px;
+        border: 1px solid #E2E4E8;
+        transition: all 0.2s;
+        position: relative;
     }
 
     .holding-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         border-color: #F0B90B;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
     }
 
     .holding-card-header {
@@ -140,24 +62,26 @@
     }
 
     .holding-symbol {
-        font-size: 18px;
+        font-size: 14px;
         font-weight: 600;
         color: #1E2329;
     }
 
     .holding-details {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
         margin-bottom: 12px;
     }
 
     .holding-row {
         display: flex;
         justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 12px;
+        font-size: 11px;
     }
 
     .holding-label {
-        color: #707A8A;
+        color: #8A8F9E;
     }
 
     .holding-value {
@@ -166,738 +90,396 @@
     }
 
     .holding-price {
-        font-size: 16px;
         font-weight: 600;
         color: #1E2329;
     }
 
     .holding-pnl {
-        margin-top: 12px;
-        padding-top: 12px;
+        padding: 8px 0;
         border-top: 1px solid #E2E4E8;
+        margin-bottom: 12px;
         display: flex;
         justify-content: space-between;
-        align-items: center;
+        font-size: 11px;
     }
 
-    .pnl-positive {
-        color: #0ECB81;
-        font-weight: 600;
+    .pnl-positive { color: #0ECB81; font-weight: 600; }
+    .pnl-negative { color: #F6465D; font-weight: 600; }
+
+    .btn-sell-small {
+        background: #F0B90B;
+        color: #0B0E11;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        font-weight: 500;
+        width: 100%;
+        cursor: pointer;
+        transition: all 0.2s;
     }
 
-    .pnl-negative {
-        color: #F6465D;
-        font-weight: 600;
+    .btn-sell-small:hover {
+        background: #E0A800;
+    }
+
+    .btn-sell-disabled-small {
+        background: #E2E4E8;
+        color: #8A8F9E;
+        border: none;
+        padding: 8px;
+        border-radius: 8px;
+        font-size: 11px;
+        width: 100%;
+        cursor: not-allowed;
     }
 
     .empty-holdings {
         text-align: center;
         padding: 40px;
-        color: #707A8A;
+        color: #8A8F9E;
         font-size: 13px;
     }
 
-    /* Yield Detail Section */
-    .yield-detail-section {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 20px;
+    /* Yield Section */
+    .yield-histogram {
+        display: flex;
+        gap: 6px;
+        align-items: flex-end;
+        height: 160px;
+        margin-bottom: 10px;
     }
 
-    .yield-chart-container {
-        height: 220px;
-        margin: 16px 0;
+    .histogram-bar {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
     }
 
-    #yieldChart {
+    .histogram-bar-fill {
         width: 100%;
-        height: 100%;
+        border-radius: 4px 4px 0 0;
+        transition: height 0.3s;
     }
 
-    .recent-distributions {
-        margin-top: 16px;
-        border-top: 1px solid #E2E4E8;
-        padding-top: 16px;
-    }
-
-    .dist-header {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1.5fr;
-        padding: 8px 0;
-        font-size: 11px;
-        color: #707A8A;
-        text-transform: uppercase;
-        font-weight: 500;
-        border-bottom: 1px solid #E2E4E8;
-    }
-
-    .dist-list {
-        max-height: 200px;
-        overflow-y: auto;
+    .histogram-bar-value {
+        font-size: 9px;
+        color: #5E6673;
+        margin-top: 4px;
     }
 
     .dist-row {
-        display: grid;
-        grid-template-columns: 2fr 1fr 1.5fr;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         padding: 8px 0;
-        font-size: 12px;
-        border-bottom: 1px solid #F0F2F5;
+        border-bottom: 1px solid #E2E4E8;
+        transition: background 0.2s;
     }
 
     .dist-row:hover {
         background: #F8F9FA;
     }
 
-    .dist-amount {
-        color: #0ECB81;
-        font-weight: 500;
-    }
-
-    .dist-time {
-        color: #707A8A;
-        font-size: 11px;
-    }
-
-    .empty-dist {
-        text-align: center;
-        padding: 30px;
-        color: #707A8A;
-        font-size: 12px;
-    }
-
-    .yield-preview {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 16px;
-    }
-
-    .yield-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 12px;
-    }
-
-    .yield-title {
-        font-weight: 600;
-        font-size: 14px;
-    }
-
-    .yield-stats {
-        display: flex;
-        gap: 24px;
-        margin-top: 12px;
-    }
-
-    .yield-stat {
-        flex: 1;
-    }
-
-    .yield-stat-label {
-        font-size: 11px;
-        color: #707A8A;
-    }
-
-    .yield-stat-value {
-        font-size: 16px;
-        font-weight: 600;
-        color: #0ECB81;
-    }
-
-    .price-up { color: #0ECB81; }
-    .price-down { color: #F6465D; }
-
-    /* Modal Styles */
-    .modal-overlay {
-        display: none;
-        position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0,0,0,0.5);
-        z-index: 1000;
-        align-items: center;
-        justify-content: center;
-    }
-
-    .modal-container {
-        background: white;
+    /* Growth Projector */
+    .growth-card {
+        background: #F5F7FA;
         border-radius: 16px;
-        max-width: 500px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-        box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+        padding: 16px;
+        margin-top: 20px;
+        border: 1px solid #E2E4E8;
     }
 
-    .modal-header {
-        padding: 20px;
-        border-bottom: 1px solid #E2E4E8;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .modal-title {
-        font-size: 18px;
-        font-weight: 600;
-    }
-
-    .modal-close {
-        background: none;
-        border: none;
-        font-size: 24px;
+    .year-btn {
+        background: #FFFFFF;
+        border: 1px solid #E2E4E8;
+        color: #5E6673;
+        padding: 6px 16px;
+        border-radius: 20px;
         cursor: pointer;
-        color: #707A8A;
-    }
-
-    .modal-body {
-        padding: 20px;
-    }
-
-    .modal-footer {
-        padding: 16px 20px;
-        border-top: 1px solid #E2E4E8;
-        display: flex;
-        justify-content: flex-end;
-        gap: 12px;
-    }
-
-    .address-box {
-        background: #F8F9FA;
-        border-radius: 8px;
-        padding: 12px;
-        font-family: monospace;
         font-size: 12px;
-        word-break: break-all;
+        transition: all 0.2s;
+    }
+
+    .year-btn.active {
+        background: #F0B90B;
+        color: #0B0E11;
+        border-color: #F0B90B;
+    }
+
+    .year-btn:hover {
+        border-color: #F0B90B;
+        color: #F0B90B;
+    }
+
+    .milestone-card {
+        background: #FFFFFF;
+        border-radius: 10px;
+        padding: 8px;
         text-align: center;
         border: 1px solid #E2E4E8;
-        margin: 12px 0;
     }
 
-    .perc-buttons {
-        display: flex;
-        gap: 8px;
-        margin-top: 8px;
+    .milestone-value {
+        font-size: 12px;
+        font-weight: 600;
+        color: #F0B90B;
     }
 
-    .perc-btn {
-        flex: 1;
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        border-radius: 6px;
-        padding: 6px;
-        font-size: 11px;
-        cursor: pointer;
+    .milestone-time {
+        font-size: 10px;
+        color: #0ECB81;
+        margin-top: 4px;
     }
 
-    .perc-btn:hover {
+    /* Range Slider */
+    .form-range {
+        height: 4px;
+    }
+
+    .form-range::-webkit-slider-thumb {
         background: #F0B90B;
-        color: white;
     }
 
-    .form-input {
-        width: 100%;
-        padding: 10px;
-        border: 1px solid #E2E4E8;
-        border-radius: 8px;
-        font-size: 13px;
-    }
-
-    .btn-primary {
-        background: #F0B90B;
-        color: white;
-        border: none;
-        border-radius: 8px;
-        padding: 10px 20px;
-        cursor: pointer;
-    }
-
-    .btn-secondary {
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        border-radius: 8px;
-        padding: 10px 20px;
-        cursor: pointer;
-    }
-
-    .warning-text {
-        font-size: 11px;
-        color: #F6465D;
-        margin-top: 12px;
-        padding: 8px;
-        background: rgba(246,70,93,0.1);
-        border-radius: 6px;
-    }
-
+    /* Responsive */
     @media (max-width: 768px) {
-        .stats-row { grid-template-columns: 1fr; }
-        .yield-stats { flex-direction: column; gap: 12px; }
-        .holding-card { flex: 0 0 260px; }
-        .dist-header, .dist-row { grid-template-columns: 1.5fr 1fr 1.2fr; font-size: 10px; }
+        .stat-value {
+            font-size: 16px;
+        }
+        .holding-details {
+            grid-template-columns: 1fr;
+        }
+        .yield-histogram {
+            height: 120px;
+        }
     }
-
-    .btn-sell-small {
-    width: 100%;
-    background: #F6465D;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    padding: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 12px;
-    cursor: pointer;
-    transition: all 0.2s;
-}
-
-.btn-sell-small:hover {
-    background: #E03E54;
-    transform: translateY(-1px);
-}
-
-.btn-sell-disabled-small {
-    width: 100%;
-    background: #E2E4E8;
-    color: #707A8A;
-    border: none;
-    border-radius: 8px;
-    padding: 8px;
-    font-size: 12px;
-    font-weight: 500;
-    margin-top: 12px;
-    cursor: not-allowed;
-}
-
-@keyframes slideIn {
-    from { transform: translateX(-100%); opacity: 0; }
-    to { transform: translateX(0); opacity: 1; }
-}
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); }
-    100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); }
-}
-.bot-icon-on-card:hover {
-    transform: scale(1.1);
-}
-.pnl-positive { color: #0ECB81; }
-.pnl-negative { color: #F6465D; }
-.price-up { color: #0ECB81; }
-.price-down { color: #F6465D; }
-
-
-    /* Yield & Growth Styles */
-.current-yield-card {
-    background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
-    border-radius: 16px;
-    padding: 20px;
-    text-align: center;
-    border: 1px solid rgba(240, 185, 11, 0.2);
-}
-
-.yield-number {
-    font-size: 32px;
-    font-weight: 700;
-    color: #F0B90B;
-}
-
-.yield-label {
-    font-size: 12px;
-    color: #8A8F9E;
-    margin-top: 5px;
-}
-
-.growth-card {
-    background: rgba(30, 35, 41, 0.8);
-    border-radius: 20px;
-    padding: 20px;
-    border: 1px solid rgba(240, 185, 11, 0.15);
-}
-
-.section-title {
-    font-size: 18px;
-    font-weight: 600;
-    color: white;
-    margin-bottom: 15px;
-}
-
-.section-title i {
-    color: #F0B90B;
-    margin-right: 8px;
-}
-
-.investment-slider {
-    width: 100%;
-    height: 6px;
-    -webkit-appearance: none;
-    background: #2B3139;
-    border-radius: 3px;
-    outline: none;
-}
-
-.investment-slider::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    width: 20px;
-    height: 20px;
-    background: #F0B90B;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 0 10px rgba(240, 185, 11, 0.5);
-}
-
-.investment-amount {
-    font-size: 28px;
-    font-weight: 700;
-    color: #F0B90B;
-    text-align: center;
-    margin: 15px 0;
-}
-
-.year-selector {
-    display: flex;
-    gap: 10px;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.year-btn {
-    background: #1A1C23;
-    border: 1px solid #2B3139;
-    color: #8A8F9E;
-    padding: 8px 20px;
-    border-radius: 30px;
-    cursor: pointer;
-    transition: all 0.3s;
-    font-size: 13px;
-}
-
-.year-btn.active {
-    background: #F0B90B;
-    color: #0B0E11;
-    border-color: #F0B90B;
-}
-
-.year-btn:hover {
-    border-color: #F0B90B;
-    color: #F0B90B;
-}
-
-.result-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 15px;
-    margin: 20px 0;
-}
-
-.result-item {
-    background: #1A1C23;
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-}
-
-.result-value {
-    font-size: 22px;
-    font-weight: 700;
-}
-
-.result-value.gold {
-    color: #F0B90B;
-}
-
-.result-value.green {
-    color: #0ECB81;
-}
-
-.result-label {
-    font-size: 11px;
-    color: #8A8F9E;
-    margin-top: 5px;
-}
-
-.chart-container {
-    position: relative;
-    height: 280px;
-    margin: 20px 0;
-}
-
-.milestone-grid {
-    display: grid;
-    grid-template-columns: repeat(4, 1fr);
-    gap: 12px;
-    margin-top: 20px;
-}
-
-.milestone-card {
-    background: linear-gradient(135deg, #1E2329 0%, #252A32 100%);
-    border-radius: 12px;
-    padding: 15px;
-    text-align: center;
-    border: 1px solid rgba(240, 185, 11, 0.15);
-}
-
-.milestone-value {
-    font-size: 16px;
-    font-weight: 700;
-    color: #F0B90B;
-}
-
-.milestone-label {
-    font-size: 10px;
-    color: #8A8F9E;
-    margin-top: 5px;
-}
-
-.milestone-time {
-    font-size: 11px;
-    font-weight: 600;
-    margin-top: 8px;
-    color: #0ECB81;
-}
-
-@media (max-width: 768px) {
-    .result-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .milestone-grid {
-        grid-template-columns: repeat(2, 1fr);
-    }
-    .yield-number {
-        font-size: 24px;
-    }
-}
-
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-grid">
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Grand Balance</div>
-            <div class="stat-value" id="grandBalance">$0.00</div>
-            <div class="stat-action" onclick="openDepositModal()">+ Deposit USDC</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Yield Wallet</div>
-            <div class="stat-value" id="yieldBalance">$0.00</div>
-            <div class="stat-action" onclick="openWithdrawYieldModal()">Withdraw Yield</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Portfolio Value</div>
-            <div class="stat-value" id="portfolioValue">$0.00</div>
-            <div class="stat-action" onclick="location.href='/portfolio/'">View Details</div>
-        </div>
-    </div>
+<div class="dashboard-section">
+    <div class="container-fluid px-3">
 
-    <!-- Token Holdings Section - Horizontal Scrollable Cards -->
-    <div class="holdings-section">
-        <div class="section-header">
-            <span class="section-title">📦 Your Portfolio Holdings</span>
-            <span class="section-link" onclick="location.href='/portfolio/'">View All →</span>
-        </div>
-        <div class="holdings-scroll-container">
-            <div class="holdings-cards-wrapper" id="holdingsCards"></div>
-        </div>
-    </div>
-
-    <!-- Yield Earnings Section with Chart -->
-    <!-- Yield Earnings Section - Enhanced with Growth Projection -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card">
-            <div class="card-header">
-                <i class="fas fa-chart-line me-2"></i>Yield Earnings & Growth Projection
+        <!-- Top Stats Row -->
+        <div class="row g-3 mb-4">
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-label">Grand Balance</div>
+                    <div class="stat-value gold" id="grandBalance">$0</div>
+                </div>
             </div>
-            <div class="card-body">
-                <!-- Current Yield Stats -->
-                <div class="row mb-4">
-                    <div class="col-md-4 mb-3">
-                        <div class="current-yield-card">
-                            <div class="yield-number" id="monthlyYield">$0</div>
-                            <div class="yield-label">Monthly Yield (10%)</div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-label">Portfolio Value</div>
+                    <div class="stat-value gold" id="portfolioValue">$0</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-label">Yield Balance</div>
+                    <div class="stat-value green" id="yieldBalance">$0</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6">
+                <div class="stat-card">
+                    <div class="stat-label">Total Value</div>
+                    <div class="stat-value dark" id="totalValue">$0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Holdings Section -->
+        <div class="card mb-4" style="background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 16px;">
+            <div class="card-header" style="background: transparent; border-bottom: 1px solid #E2E4E8; padding: 15px 20px;">
+                <h5 class="mb-0" style="font-size: 13px; font-weight: 600; color: #1E2329;">
+                    <i class="fas fa-coins me-2" style="color: #F0B90B;"></i>Your Holdings
+                </h5>
+            </div>
+            <div class="card-body p-4">
+                <div id="holdingsCards">
+                    <!-- Holdings will load here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Yield Earnings Section -->
+        <div class="card" style="background: #F5F7FA; border: none; border-radius: 16px;">
+            <div class="card-header" style="background: transparent; border-bottom: 1px solid #E2E4E8; padding: 15px 20px;">
+                <h5 class="mb-0" style="font-size: 13px; font-weight: 600; color: #1E2329;">
+                    <i class="fas fa-chart-bar me-2" style="color: #F0B90B;"></i>Yield Earnings Overview
+                </h5>
+            </div>
+            <div class="card-body p-4">
+
+                <!-- Histogram for Yield Distribution -->
+                <div class="mb-4">
+                    <div class="d-flex justify-content-between align-items-baseline mb-2">
+                        <span style="font-size: 11px; color: #5E6673; font-weight: 500;">Hourly Yield Distribution (Last 24 Hours)</span>
+                        <span style="font-size: 10px; color: #8A8F9E;">Amount (USDC)</span>
+                    </div>
+                    <div id="yieldHistogram" class="yield-histogram"></div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <span style="font-size: 9px; color: #8A8F9E;">24h ago</span>
+                        <span style="font-size: 9px; color: #8A8F9E;">18h ago</span>
+                        <span style="font-size: 9px; color: #8A8F9E;">12h ago</span>
+                        <span style="font-size: 9px; color: #8A8F9E;">6h ago</span>
+                        <span style="font-size: 9px; color: #8A8F9E;">Now</span>
+                    </div>
+                </div>
+
+                <!-- Key Stats Row -->
+                <div class="row g-3 mb-3">
+                    <div class="col-4">
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 10px; border: 1px solid #E2E4E8;">
+                            <div style="font-size: 10px; color: #5E6673;">Monthly Yield (10%)</div>
+                            <div style="font-size: 14px; font-weight: 700; color: #0ECB81;" id="monthlyYield">$0</div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="current-yield-card">
-                            <div class="yield-number" id="hourlyYield">$0</div>
-                            <div class="yield-label">Hourly Yield (0.014%)</div>
+                    <div class="col-4">
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 10px; border: 1px solid #E2E4E8;">
+                            <div style="font-size: 10px; color: #5E6673;">Hourly Yield</div>
+                            <div style="font-size: 14px; font-weight: 700; color: #0ECB81;" id="hourlyYield">$0</div>
                         </div>
                     </div>
-                    <div class="col-md-4 mb-3">
-                        <div class="current-yield-card">
-                            <div class="yield-number" id="yieldBalance">$0</div>
-                            <div class="yield-label">Yield Wallet Balance</div>
+                    <div class="col-4">
+                        <div style="background: #FFFFFF; border-radius: 12px; padding: 10px; border: 1px solid #E2E4E8;">
+                            <div style="font-size: 10px; color: #5E6673;">Yield Balance</div>
+                            <div style="font-size: 14px; font-weight: 700; color: #F0B90B;" id="yieldBalanceSmall">$0</div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Compound Growth Projector -->
-                <div class="growth-card mt-3">
-                    <h4 class="section-title"><i class="fas fa-chart-simple"></i> Compound Growth Projector</h4>
-                    <p class="text-muted small">See how your investment grows when you reinvest your hourly yield (10% monthly compounded)</p>
+                <!-- Recent Distributions -->
+                <div>
+                    <div style="font-size: 11px; font-weight: 600; color: #1E2329; margin-bottom: 12px;">
+                        <i class="fas fa-clock me-2" style="color: #F0B90B;"></i>Recent Distributions
+                    </div>
+                    <div id="recentDistributions" style="max-height: 200px; overflow-y: auto;">
+                        <!-- Distribution items will load here -->
+                    </div>
+                </div>
 
-                    <!-- Investment Slider -->
-                    <div class="row mt-3">
-                        <div class="col-md-6">
-                            <label class="small text-muted">Initial Investment ($)</label>
-                            <input type="range" id="growthSlider" class="investment-slider" min="10" max="10000" step="10" value="100">
-                            <div class="investment-amount" id="sliderAmount">$100</div>
+                <!-- Withdraw Button -->
+                <div class="mt-3">
+                    <button onclick="openWithdrawYieldModal()" style="background: #F0B90B; color: #0B0E11; border: none; padding: 8px 16px; border-radius: 20px; font-size: 11px; font-weight: 500; width: 100%;">
+                        <i class="fas fa-arrow-right me-1"></i>Withdraw Yield to Grand Balance
+                    </button>
+                </div>
+
+                <!-- Compound Growth Projector -->
+                <div class="growth-card mt-4">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h6 class="mb-0" style="font-size: 12px; font-weight: 600; color: #F0B90B;">
+                            <i class="fas fa-chart-line me-1"></i>Compound Growth Projector
+                        </h6>
+                        <span class="badge" style="background: rgba(240,185,11,0.1); color: #F0B90B; font-size: 9px;">10% monthly</span>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-7">
+                            <input type="range" id="growthSlider" class="form-range w-100" min="10" max="10000" step="10" value="100">
                         </div>
-                        <div class="col-md-6">
-                            <label class="small text-muted">Time Period (Years)</label>
-                            <div class="year-selector">
-                                <button class="year-btn" data-years="2">2 Years</button>
-                                <button class="year-btn active" data-years="3">3 Years</button>
-                                <button class="year-btn" data-years="4">4 Years</button>
-                                <button class="year-btn" data-years="5">5 Years</button>
+                        <div class="col-5 text-end">
+                            <span style="color: #F0B90B; font-size: 16px; font-weight: 600;" id="sliderAmount">$100</span>
+                        </div>
+                    </div>
+
+                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                        <button class="year-btn" data-years="2">2Y</button>
+                        <button class="year-btn active" data-years="3">3Y</button>
+                        <button class="year-btn" data-years="4">4Y</button>
+                        <button class="year-btn" data-years="5">5Y</button>
+                    </div>
+
+                    <div class="row g-2 mb-3">
+                        <div class="col-6">
+                            <div style="background: #FFFFFF; border-radius: 10px; padding: 8px; border: 1px solid #E2E4E8;">
+                                <div style="font-size: 10px; color: #5E6673;">Final Value</div>
+                                <div style="font-size: 14px; font-weight: 600; color: #F0B90B;" id="finalValue">$0</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div style="background: #FFFFFF; border-radius: 10px; padding: 8px; border: 1px solid #E2E4E8;">
+                                <div style="font-size: 10px; color: #5E6673;">Total Yield</div>
+                                <div style="font-size: 14px; font-weight: 600; color: #0ECB81;" id="totalYieldEarned">$0</div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- Results Grid -->
-                    <div class="result-grid">
-                        <div class="result-item">
-                            <div class="result-label">Final Value</div>
-                            <div class="result-value gold" id="finalValue">$0</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Total Yield Earned</div>
-                            <div class="result-value green" id="totalYieldEarned">$0</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">ROI</div>
-                            <div class="result-value" id="roiValue">0%</div>
-                        </div>
-                        <div class="result-item">
-                            <div class="result-label">Growth Multiple</div>
-                            <div class="result-value" id="growthMultiple">0x</div>
-                        </div>
-                    </div>
-
-                    <!-- Growth Chart -->
-                    <div class="chart-container">
+                    <div class="mb-3" style="height: 140px;">
                         <canvas id="growthChart"></canvas>
                     </div>
 
-                    <!-- Milestone Targets -->
-                    <div class="milestone-grid">
-                        <div class="milestone-card" id="milestone1">
-                            <div class="milestone-value">$10,000</div>
-                            <div class="milestone-label">Target 1</div>
-                            <div class="milestone-time" id="timeTo10k">—</div>
+                    <div class="row g-2">
+                        <div class="col-3">
+                            <div class="milestone-card">
+                                <div class="milestone-value">$10K</div>
+                                <div class="milestone-time" id="timeTo10k">—</div>
+                            </div>
                         </div>
-                        <div class="milestone-card" id="milestone2">
-                            <div class="milestone-value">$50,000</div>
-                            <div class="milestone-label">Target 2</div>
-                            <div class="milestone-time" id="timeTo50k">—</div>
+                        <div class="col-3">
+                            <div class="milestone-card">
+                                <div class="milestone-value">$50K</div>
+                                <div class="milestone-time" id="timeTo50k">—</div>
+                            </div>
                         </div>
-                        <div class="milestone-card" id="milestone3">
-                            <div class="milestone-value">$100,000</div>
-                            <div class="milestone-label">Target 3</div>
-                            <div class="milestone-time" id="timeTo100k">—</div>
+                        <div class="col-3">
+                            <div class="milestone-card">
+                                <div class="milestone-value">$100K</div>
+                                <div class="milestone-time" id="timeTo100k">—</div>
+                            </div>
                         </div>
-                        <div class="milestone-card" id="milestone4">
-                            <div class="milestone-value">$1,000,000</div>
-                            <div class="milestone-label">Target 4</div>
-                            <div class="milestone-time" id="timeTo1M">—</div>
+                        <div class="col-3">
+                            <div class="milestone-card">
+                                <div class="milestone-value">$1M</div>
+                                <div class="milestone-time" id="timeTo1M">—</div>
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="alert alert-info small mt-3">
-                        <i class="fas fa-info-circle me-2"></i>
-                        Based on 10% monthly yield compounded. Your hourly yield is automatically reinvested into your holdings.
                     </div>
                 </div>
-            </div>
-        </div>
-    </div>
-</div>
 
-    <div class="yield-preview">
-        <div class="yield-header">
-            <span class="yield-title">📊 Yield Summary (up to 20% Monthly)</span>
-            <span class="stat-action" onclick="location.href='/yield/'">View Full Report →</span>
-        </div>
-        <div class="yield-stats">
-            <div class="yield-stat">
-                <div class="yield-stat-label">Monthly Yield</div>
-                <div class="yield-stat-value" id="monthlyYield">$0.00</div>
-            </div>
-            <div class="yield-stat">
-                <div class="yield-stat-label">Hourly Distribution</div>
-                <div class="yield-stat-value" id="hourlyYield">$0.00</div>
-            </div>
-            <div class="yield-stat">
-                <div class="yield-stat-label">Available to Claim</div>
-                <div class="yield-stat-value" id="availableYield">$0.00</div>
             </div>
         </div>
+
     </div>
 </div>
 
 <!-- Deposit Modal -->
-<div id="depositModal" class="modal-overlay">
+<div id="depositModal" class="modal-overlay" style="display: none;">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Deposit USDC</div>
-            <button class="modal-close" onclick="closeDepositModal()">&times;</button>
+            <h5 class="modal-title">Deposit USDC</h5>
+            <button class="modal-close" onclick="closeDepositModal()">×</button>
         </div>
         <div class="modal-body">
-            <div style="background: #F8F9FA; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                <div style="font-size: 11px; color: #707A8A; margin-bottom: 4px;">Network</div>
-                <div><strong>BSC (BEP20)</strong></div>
+            <p style="font-size: 12px; color: #5E6673;">Send USDC to this address on BSC (BEP-20) network:</p>
+            <div style="background: #F8F9FA; padding: 12px; border-radius: 8px; word-break: break-all; font-family: monospace; font-size: 11px;" id="depositAddress">Loading...</div>
+            <button onclick="copyDepositAddress()" class="btn btn-sm w-100 mt-2" style="background: #F0B90B; color: #0B0E11;">Copy Address</button>
+            <div id="qrContainer" style="text-align: center; margin-top: 15px; display: none;">
+                <img id="qrCode" style="width: 120px; height: 120px;">
             </div>
-            <div class="address-box" id="depositAddress">Loading...</div>
-            <div style="text-align: center; margin: 20px 0;">
-                <img id="qrCode" src="" alt="QR Code" style="width: 150px; height: 150px; border: 1px solid #E2E4E8; border-radius: 12px; padding: 8px;">
-                <p class="small text-muted mt-2">Scan to copy address</p>
-            </div>
-            <button class="btn-primary" style="width: 100%; margin-bottom: 16px;" onclick="copyDepositAddress()">📋 Copy Address</button>
-            <div class="warning-text">
-                ⚠️ Send only USDC on BEP20 network to this address. Sending other tokens may result in loss.
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" onclick="closeDepositModal()">Close</button>
         </div>
     </div>
 </div>
 
 <!-- Withdraw Yield Modal -->
-<div id="withdrawYieldModal" class="modal-overlay">
+<div id="withdrawYieldModal" class="modal-overlay" style="display: none;">
     <div class="modal-container">
         <div class="modal-header">
-            <div class="modal-title">Withdraw Yield</div>
-            <button class="modal-close" onclick="closeWithdrawYieldModal()">&times;</button>
+            <h5 class="modal-title">Withdraw Yield</h5>
+            <button class="modal-close" onclick="closeWithdrawYieldModal()">×</button>
         </div>
         <div class="modal-body">
-            <div style="background: #F8F9FA; border-radius: 8px; padding: 12px; margin-bottom: 16px;">
-                <div style="font-size: 11px; color: #707A8A; margin-bottom: 4px;">Available Yield</div>
-                <div style="font-size: 24px; font-weight: 600; color: #0ECB81;" id="withdrawYieldAmount">$0.00</div>
+            <p style="font-size: 12px; color: #5E6673;">Available: <span id="availableYield">$0</span></p>
+            <input type="number" id="withdrawAmount" class="form-control" placeholder="Amount" style="margin-bottom: 10px;">
+            <div class="d-flex gap-2 mb-3">
+                <button class="btn btn-sm" onclick="setWithdrawPercent(25)" style="background: #EFF2F5; border: none;">25%</button>
+                <button class="btn btn-sm" onclick="setWithdrawPercent(50)" style="background: #EFF2F5; border: none;">50%</button>
+                <button class="btn btn-sm" onclick="setWithdrawPercent(75)" style="background: #EFF2F5; border: none;">75%</button>
+                <button class="btn btn-sm" onclick="setWithdrawPercent(100)" style="background: #EFF2F5; border: none;">100%</button>
             </div>
-            <div class="form-group">
-                <label class="form-label" style="font-size: 12px;">Amount to Withdraw</label>
-                <input type="number" id="withdrawAmount" class="form-input" step="0.01" placeholder="0.00">
-                <div class="perc-buttons">
-                    <button class="perc-btn" onclick="setWithdrawPercent(25)">25%</button>
-                    <button class="perc-btn" onclick="setWithdrawPercent(50)">50%</button>
-                    <button class="perc-btn" onclick="setWithdrawPercent(75)">75%</button>
-                    <button class="perc-btn" onclick="setWithdrawPercent(100)">100%</button>
-                </div>
-            </div>
-            <div class="warning-text">
-                💰 Withdrawal goes directly to your Grand Balance with no fees.
-            </div>
-        </div>
-        <div class="modal-footer">
-            <button class="btn-secondary" onclick="closeWithdrawYieldModal()">Cancel</button>
-            <button class="btn-primary" onclick="confirmWithdrawYield()">Withdraw</button>
+            <button onclick="confirmWithdrawYield()" class="btn btn-primary w-100" style="background: #F0B90B; color: #0B0E11;">Withdraw</button>
         </div>
     </div>
 </div>
@@ -912,25 +494,22 @@
     let userHoldings = {};
     let currentPrice = 0;
 
-    // ============ TRADING BOT SYSTEM - WORKS WITH ALL COINS ============
+    // ============ TRADING BOT SYSTEM ============
     let allBotConfigs = {};
     let botIntervals = {};
-    let botTradeSimulations = {};
     let tradingBotActive = {};
 
-    // Bot configuration
     const botConfig = {
-        'BTC': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 5, stopLoss: 2, minAmount: 10, maxAmount: 100 },
-        'ETH': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 4, stopLoss: 1.5, minAmount: 10, maxAmount: 80 },
-        'BNB': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 3, stopLoss: 1, minAmount: 5, maxAmount: 50 },
-        'SOL': { strategy: 'Spot Grid', risk: 'High', profitTarget: 8, stopLoss: 3, minAmount: 10, maxAmount: 60 },
-        'XRP': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 2, stopLoss: 1, minAmount: 5, maxAmount: 40 },
-        'ADA': { strategy: 'Spot Grid', risk: 'Low', profitTarget: 3, stopLoss: 1.5, minAmount: 5, maxAmount: 35 },
-        'DOGE': { strategy: 'Spot Grid', risk: 'High', profitTarget: 10, stopLoss: 5, minAmount: 5, maxAmount: 30 },
-        'AVAX': { strategy: 'Spot Grid', risk: 'Medium', profitTarget: 6, stopLoss: 2.5, minAmount: 10, maxAmount: 50 }
+        'BTC': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 100 },
+        'ETH': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 80 },
+        'BNB': { strategy: 'Spot Grid', risk: 'Low', minAmount: 5, maxAmount: 50 },
+        'SOL': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 60 },
+        'XRP': { strategy: 'Spot Grid', risk: 'Low', minAmount: 5, maxAmount: 40 },
+        'ADA': { strategy: 'Spot Grid', risk: 'Low', minAmount: 5, maxAmount: 35 },
+        'DOGE': { strategy: 'Spot Grid', risk: 'High', minAmount: 5, maxAmount: 30 },
+        'AVAX': { strategy: 'Spot Grid', risk: 'Medium', minAmount: 10, maxAmount: 50 }
     };
 
-    // Dynamic bot configuration
     function getBotConfig(symbol, currentPrice) {
         const lowerPrice = currentPrice * 0.85;
         const upperPrice = currentPrice * 1.15;
@@ -955,73 +534,18 @@
         }
     }
 
-    // Show toast notification
-    function showToast(message, type) {
-        const toast = document.createElement('div');
-        toast.textContent = message;
-        toast.style.cssText = `position:fixed;bottom:20px;left:20px;background:${type === 'buy' ? '#0ECB81' : '#F6465D'};color:white;padding:10px 20px;border-radius:8px;z-index:10000;`;
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 3000);
-    }
-
-    // Show trade signal popup
-    function showTradeSignal(symbol, action, amount, price) {
-        const popup = document.createElement('div');
-        popup.className = 'trade-signal-popup';
-        popup.style.cssText = `
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: ${action === 'BUY' ? '#0ECB81' : '#F6465D'};
-            color: white;
-            padding: 15px 20px;
-            border-radius: 12px;
-            z-index: 10001;
-            animation: slideInRight 0.5s ease, fadeOut 0.5s ease 3s forwards;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            font-size: 14px;
-            min-width: 250px;
-        `;
-        popup.innerHTML = `
-            <div style="display: flex; align-items: center; gap: 10px;">
-                <div style="font-size: 24px;">${action === 'BUY' ? '🟢' : '🔴'}</div>
-                <div>
-                    <div style="font-weight: bold; margin-bottom: 4px;">${action} SIGNAL</div>
-                    <div style="font-size: 12px;">${symbol} | ${amount} USDC</div>
-                    <div style="font-size: 11px; opacity: 0.8;">Price: ${formatCurrency(price)}</div>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(popup);
-        setTimeout(() => { if (popup && popup.parentNode) popup.remove(); }, 3500);
-    }
-
     function startBotForSymbol(symbol) {
         if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
         botIntervals[symbol] = setInterval(() => {
             const isBuy = Math.random() > 0.7;
             const amount = (Math.random() * 90 + 10).toFixed(2);
-            const price = currentPrice || 100;
-            showTradeSignal(symbol, isBuy ? 'BUY' : 'SELL', amount, price);
             console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
         }, 60000);
     }
 
     function startAllBots() {
-        const holdingsList = document.querySelectorAll('.holding-symbol');
-        if (holdingsList.length > 0) {
-            holdingsList.forEach(holding => {
-                const symbol = holding.innerText;
-                const token = tokens.find(t => t.symbol === symbol);
-                if (token) {
-                    initBotForToken(symbol, token.current_price);
-                    startBotForSymbol(symbol);
-                    tradingBotActive[symbol] = true;
-                    console.log(`🤖 Bot activated for ${symbol}`);
-                }
-            });
-        } else if (tokens && tokens.length > 0) {
-            tokens.slice(0, 5).forEach(token => {
+        if (tokens && tokens.length > 0) {
+            tokens.forEach(token => {
                 initBotForToken(token.symbol, token.current_price);
                 startBotForSymbol(token.symbol);
                 tradingBotActive[token.symbol] = true;
@@ -1044,52 +568,34 @@
         modal.id = 'botModal';
         modal.style.cssText = 'position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.7);z-index:10000;display:flex;align-items:center;justify-content:center;';
         modal.innerHTML = `
-            <div style="background:white;border-radius:16px;max-width:450px;width:90%;padding:20px;max-height:80vh;overflow-y:auto;">
+            <div style="background:white;border-radius:16px;max-width:450px;width:90%;padding:20px;">
                 <div style="display:flex;justify-content:space-between;margin-bottom:20px;">
-                    <h3 style="margin:0;">🤖 Spot Grid Trading - ${symbol}</h3>
+                    <h3 style="margin:0;">🤖 Spot Grid - ${symbol}</h3>
                     <button onclick="this.closest('#botModal').remove()" style="background:none;border:none;font-size:24px;cursor:pointer;">×</button>
                 </div>
                 <div style="margin-bottom:15px;padding:12px;background:#F8F9FA;border-radius:12px;">
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <span><strong>${symbol}</strong></span>
-                        <span>${quantity ? formatNumber(quantity, 4) + ' tokens' : 'Trading active'}</span>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:8px;">
-                        <span>Current Price</span>
-                        <span>${formatCurrency(currentPrice)}</span>
-                    </div>
-                    ${avgPrice ? `<div style="display:flex;justify-content:space-between;"><span>P&L</span><span class="${pnlPercent >= 0 ? 'pnl-positive' : 'pnl-negative'}">${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%</span></div>` : ''}
-                    ${value ? `<div style="display:flex;justify-content:space-between;margin-top:8px;"><span>Portfolio Value</span><span>${formatCurrency(value)}</span></div>` : ''}
+                    <div><strong>${symbol}</strong> | Current: ${formatCurrency(currentPrice)} | P&L: ${pnlPercent >= 0 ? '+' : ''}${pnlPercent.toFixed(2)}%</div>
+                    ${quantity ? `<div>Quantity: ${formatNumber(quantity, 4)} tokens</div>` : ''}
+                    ${value ? `<div>Value: ${formatCurrency(value)}</div>` : ''}
                 </div>
-                <div style="margin-bottom:15px;padding:16px;background:linear-gradient(135deg, #1E2329 0%, #2B3139 100%);border-radius:12px;color:white;">
-                    <div style="text-align:center;margin-bottom:12px;">
-                        <span style="font-size:14px;font-weight:600;">⚡ SPOT GRID</span>
-                        <span style="font-size:11px;margin-left:8px;background:#F0B90B;color:#1E2329;padding:2px 8px;border-radius:12px;">${config.strategy}</span>
+                <div style="padding:16px;background:linear-gradient(135deg, #1E2329 0%, #2B3139 100%);border-radius:12px;color:white;">
+                    <div style="text-align:center;margin-bottom:12px;"><strong>⚡ SPOT GRID</strong></div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <div>Lower: ${formatCurrency(config.lowerPrice)}</div>
+                        <div>Upper: ${formatCurrency(config.upperPrice)}</div>
                     </div>
-                    <div style="display:flex;justify-content:space-between;margin-bottom:16px;">
-                        <div><div style="font-size:10px;color:#8A8F9E;">LOWER PRICE</div><div style="font-size:16px;font-weight:600;">${formatCurrency(config.lowerPrice)}</div></div>
-                        <div style="text-align:right;"><div style="font-size:10px;color:#8A8F9E;">UPPER PRICE</div><div style="font-size:16px;font-weight:600;">${formatCurrency(config.upperPrice)}</div></div>
-                    </div>
-                    <div style="margin-bottom:12px;">
-                        <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:4px;"><span>Current Price</span><span>${formatCurrency(currentPrice)}</span></div>
-                        <div style="height:6px;background:#3A4149;border-radius:3px;overflow:hidden;"><div style="width:${gridProgress}%;height:100%;background:#F0B90B;border-radius:3px;"></div></div>
-                        <div style="display:flex;justify-content:space-between;font-size:10px;margin-top:4px;color:#8A8F9E;">
-                            <span>${formatCurrency(config.lowerPrice)}</span>
-                            <span>Grid ${currentGridLevel}/${config.grids}</span>
-                            <span>${formatCurrency(config.upperPrice)}</span>
-                        </div>
-                    </div>
-                    <div style="display:flex;justify-content:space-between;padding-top:12px;border-top:1px solid #3A4149;">
-                        <div><div style="font-size:10px;color:#8A8F9E;">GRIDS</div><div style="font-size:14px;font-weight:600;">${config.grids}</div></div>
-                        <div><div style="font-size:10px;color:#8A8F9E;">RISK</div><div style="font-size:14px;font-weight:600;">${config.risk}</div></div>
-                        <div><div style="font-size:10px;color:#8A8F9E;">GRID SIZE</div><div style="font-size:14px;font-weight:600;">${formatCurrency(gridStep)}</div></div>
+                    <div style="margin:10px 0;"><div style="height:6px;background:#3A4149;border-radius:3px;"><div style="width:${gridProgress}%;height:100%;background:#F0B90B;border-radius:3px;"></div></div></div>
+                    <div style="display:flex;justify-content:space-between;">
+                        <div>Grids: ${config.grids}</div>
+                        <div>Risk: ${config.risk}</div>
+                        <div>Grid Size: ${formatCurrency(gridStep)}</div>
                     </div>
                 </div>
-                <div style="padding:12px;background:#F8F9FA;border-radius:12px;font-size:11px;color:#707A8A;text-align:center;">🤖 Bot permanently active • Grid trading 24/7</div>
+                <div style="margin-top:15px;text-align:center;font-size:11px;color:#707A8A;">🤖 Bot permanently active • 24/7</div>
             </div>
         `;
         document.body.appendChild(modal);
-        modal.addEventListener('click', function(e) { if (e.target === modal) modal.remove(); });
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     }
 
     function addBotIconsToCards() {
@@ -1113,7 +619,7 @@
             const icon = document.createElement('div');
             icon.className = 'bot-icon-on-card';
             icon.innerHTML = '🤖';
-            icon.style.cssText = 'position:absolute;top:10px;right:10px;width:32px;height:32px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:16px;z-index:10;transition:all 0.3s;box-shadow:0 0 10px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
+            icon.style.cssText = 'position:absolute;top:10px;right:10px;width:28px;height:28px;background:#0ECB81;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:14px;z-index:10;box-shadow:0 0 8px rgba(14,203,129,0.5);animation:pulse 2s infinite;';
             icon.title = `Spot Grid Bot for ${symbol}`;
             icon.onclick = (e) => { e.stopPropagation(); showBotAnalysis(symbol, currentPriceVal, pnlPercent, quantity, value, avgPrice); };
             card.style.position = 'relative';
@@ -1121,6 +627,134 @@
         });
     }
     // ============ END TRADING BOT SYSTEM ============
+
+    // ============ COMPOUND GROWTH PROJECTOR ============
+    let growthChart = null;
+    const MONTHLY_RATE = 0.10;
+
+    function calculateCompoundGrowth(initial, years) {
+        let balance = initial;
+        let months = years * 12;
+        for (let month = 1; month <= months; month++) {
+            balance += balance * MONTHLY_RATE;
+        }
+        return {
+            finalBalance: balance,
+            totalYield: balance - initial,
+            roi: ((balance - initial) / initial) * 100,
+            multiple: balance / initial
+        };
+    }
+
+    function findYearsToTarget(initial, target) {
+        let balance = initial;
+        let months = 0;
+        while (balance < target && months < 600) {
+            balance += balance * MONTHLY_RATE;
+            months++;
+        }
+        return months / 12;
+    }
+
+    function updateGrowthProjection() {
+        const slider = document.getElementById('growthSlider');
+        if (!slider) return;
+
+        let initial = parseFloat(slider.value);
+        let years = parseInt(document.querySelector('.year-btn.active')?.getAttribute('data-years') || '3');
+
+        document.getElementById('sliderAmount').innerHTML = formatCurrency(initial);
+        const result = calculateCompoundGrowth(initial, years);
+
+        document.getElementById('finalValue').innerHTML = formatCurrency(result.finalBalance);
+        document.getElementById('totalYieldEarned').innerHTML = formatCurrency(result.totalYield);
+
+        const timeTo10k = findYearsToTarget(initial, 10000);
+        const timeTo50k = findYearsToTarget(initial, 50000);
+        const timeTo100k = findYearsToTarget(initial, 100000);
+        const timeTo1M = findYearsToTarget(initial, 1000000);
+
+        document.getElementById('timeTo10k').innerHTML = timeTo10k < 1 ? '< 1y' : Math.floor(timeTo10k) + 'y';
+        document.getElementById('timeTo50k').innerHTML = timeTo50k < 1 ? '< 1y' : Math.floor(timeTo50k) + 'y';
+        document.getElementById('timeTo100k').innerHTML = timeTo100k < 1 ? '< 1y' : Math.floor(timeTo100k) + 'y';
+        document.getElementById('timeTo1M').innerHTML = timeTo1M < 1 ? '< 1y' : Math.floor(timeTo1M) + 'y';
+
+        updateGrowthChart(initial, years);
+    }
+
+    function updateGrowthChart(initial, years) {
+        const ctx = document.getElementById('growthChart')?.getContext('2d');
+        if (!ctx) return;
+        if (growthChart) growthChart.destroy();
+
+        let labels = [];
+        let dataPoints = [];
+        for (let y = 0; y <= years; y++) {
+            const result = calculateCompoundGrowth(initial, y);
+            labels.push(y === 0 ? '0' : y.toString());
+            dataPoints.push(result.finalBalance);
+        }
+
+        growthChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Value ($)',
+                    data: dataPoints,
+                    borderColor: '#F0B90B',
+                    backgroundColor: 'rgba(240,185,11,0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 3,
+                    pointBackgroundColor: '#F0B90B'
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: { grid: { display: false }, ticks: { color: '#8A8F9E', font: { size: 10 } } },
+                    y: { grid: { color: '#EFF2F5' }, ticks: { color: '#8A8F9E', font: { size: 10 }, callback: function(v) { return '$' + v.toLocaleString(); } } }
+                }
+            }
+        });
+    }
+
+    function initGrowthProjector() {
+        const slider = document.getElementById('growthSlider');
+        if (!slider) return;
+        slider.addEventListener('input', updateGrowthProjection);
+        document.querySelectorAll('.year-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                updateGrowthProjection();
+            });
+        });
+        updateGrowthProjection();
+    }
+    // ============ END COMPOUND GROWTH PROJECTOR ============
+
+    // ============ YIELD HISTOGRAM ============
+    function renderYieldHistogram(yieldValues) {
+        const container = document.getElementById('yieldHistogram');
+        if (!container) return;
+        const maxYield = Math.max(...yieldValues, 0.01);
+        container.innerHTML = yieldValues.map(value => {
+            const height = (value / maxYield) * 130;
+            const color = '#0ECB81';
+            return `
+                <div class="histogram-bar">
+                    <div class="histogram-bar-fill" style="background: ${color}; height: ${height}px;"></div>
+                    <div class="histogram-bar-value">$${value.toFixed(4)}</div>
+                </div>
+            `;
+        }).join('');
+    }
+    // ============ END YIELD HISTOGRAM ============
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -1140,7 +774,7 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
         if (value === 0) return '$0.00';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return `$${value.toFixed(8)}`;
+        if (Math.abs(value) < 0.01) return `$${value.toFixed(6)}`;
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
@@ -1151,168 +785,13 @@
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
         if (value === 0) return '0';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) return value.toFixed(8);
+        if (Math.abs(value) < 0.01) return value.toFixed(8);
         return value.toFixed(decimals);
     }
 
     function getTokenIcon(symbol) {
         return `/static/coins/${symbol}.png`;
     }
-
-    // ============ COMPOUND GROWTH PROJECTOR ============
-    let growthChart = null;
-    const MONTHLY_RATE = 0.10; // 10% monthly yield
-
-    function calculateCompoundGrowth(initial, years) {
-        let balance = initial;
-        let yearlyData = [];
-        let months = years * 12;
-
-        for (let month = 1; month <= months; month++) {
-            balance += balance * MONTHLY_RATE;
-            if (month % 12 === 0) {
-                yearlyData.push({
-                    year: month / 12,
-                    balance: balance
-                });
-            }
-        }
-
-        return {
-            finalBalance: balance,
-            totalYield: balance - initial,
-            roi: ((balance - initial) / initial) * 100,
-            multiple: balance / initial,
-            yearlyData: yearlyData
-        };
-    }
-
-    function findYearsToTarget(initial, target) {
-        let balance = initial;
-        let months = 0;
-
-        while (balance < target && months < 600) {
-            balance += balance * MONTHLY_RATE;
-            months++;
-        }
-
-        return months / 12;
-    }
-
-    function updateGrowthProjection() {
-        const slider = document.getElementById('growthSlider');
-        if (!slider) return;
-
-        let initial = parseFloat(slider.value);
-        let years = parseInt(document.querySelector('.year-btn.active')?.getAttribute('data-years') || '3');
-
-        document.getElementById('sliderAmount').innerHTML = formatCurrency(initial);
-
-        const result = calculateCompoundGrowth(initial, years);
-
-        document.getElementById('finalValue').innerHTML = formatCurrency(result.finalBalance);
-        document.getElementById('totalYieldEarned').innerHTML = formatCurrency(result.totalYield);
-        document.getElementById('roiValue').innerHTML = result.roi.toFixed(1) + '%';
-        document.getElementById('growthMultiple').innerHTML = result.multiple.toFixed(1) + 'x';
-
-        const timeTo10k = findYearsToTarget(initial, 10000);
-        const timeTo50k = findYearsToTarget(initial, 50000);
-        const timeTo100k = findYearsToTarget(initial, 100000);
-        const timeTo1M = findYearsToTarget(initial, 1000000);
-
-        document.getElementById('timeTo10k').innerHTML = timeTo10k < 1 ? '< 1 year' : Math.floor(timeTo10k) + 'y';
-        document.getElementById('timeTo50k').innerHTML = timeTo50k < 1 ? '< 1 year' : Math.floor(timeTo50k) + 'y';
-        document.getElementById('timeTo100k').innerHTML = timeTo100k < 1 ? '< 1 year' : Math.floor(timeTo100k) + 'y';
-        document.getElementById('timeTo1M').innerHTML = timeTo1M < 1 ? '< 1 year' : Math.floor(timeTo1M) + 'y';
-
-        updateGrowthChart(initial, years);
-    }
-
-    function updateGrowthChart(initial, years) {
-        const ctx = document.getElementById('growthChart')?.getContext('2d');
-        if (!ctx) return;
-
-        if (growthChart) growthChart.destroy();
-
-        let labels = [];
-        let dataPoints = [];
-
-        for (let y = 0; y <= years; y++) {
-            const result = calculateCompoundGrowth(initial, y);
-            labels.push(y === 0 ? '0' : y.toString());
-            dataPoints.push(result.finalBalance);
-        }
-
-        growthChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: 'Value ($)',
-                    data: dataPoints,
-                    borderColor: '#F0B90B',
-                    backgroundColor: 'rgba(240, 185, 11, 0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: '#F0B90B'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: function(context) {
-                                return formatCurrency(context.raw);
-                            }
-                        }
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#8A8F9E', font: { size: 10 } },
-                        title: { display: true, text: 'Years', color: '#8A8F9E', font: { size: 10 } }
-                    },
-                    y: {
-                        grid: { color: '#2B3139' },
-                        ticks: {
-                            color: '#8A8F9E',
-                            font: { size: 10 },
-                            callback: function(value) {
-                                if (value >= 1000000) return '$' + (value / 1000000).toFixed(1) + 'M';
-                                if (value >= 1000) return '$' + (value / 1000).toFixed(0) + 'K';
-                                return '$' + value;
-                            }
-                        }
-                    }
-                }
-            }
-        });
-    }
-
-    function initGrowthProjector() {
-        const slider = document.getElementById('growthSlider');
-        if (!slider) return;
-
-        slider.addEventListener('input', updateGrowthProjection);
-
-        document.querySelectorAll('.year-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                updateGrowthProjection();
-            });
-        });
-
-        updateGrowthProjection();
-    }
-    // ============ END COMPOUND GROWTH PROJECTOR ============
 
     async function loadDashboard() {
         try {
@@ -1322,6 +801,7 @@
 
             document.getElementById('grandBalance').innerHTML = formatCurrency(userGrandBalance);
             document.getElementById('yieldBalance').innerHTML = formatCurrency(userYieldBalance);
+            document.getElementById('yieldBalanceSmall').innerHTML = formatCurrency(userYieldBalance);
             document.getElementById('availableYield').innerHTML = formatCurrency(userYieldBalance);
             document.getElementById('withdrawYieldAmount').innerHTML = formatCurrency(userYieldBalance);
 
@@ -1348,13 +828,12 @@
                     const pnlSymbol = pnl >= 0 ? '+' : '';
                     const canSell = currentPriceVal >= avgPrice;
                     const sellButtonClass = canSell ? 'btn-sell-small' : 'btn-sell-disabled-small';
-                    const sellButtonTitle = canSell ? `Sell ${holding.token_symbol}` : `Cannot sell (price below purchase price)`;
                     totalPortfolioValue += value;
                     return `
                         <div class="holding-card" data-symbol="${holding.token_symbol}">
                             <div class="holding-card-header">
                                 <div style="display: flex; align-items: center; gap: 10px;">
-                                    <img src="${getTokenIcon(holding.token_symbol)}" style="width:36px;height:36px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
+                                    <img src="${getTokenIcon(holding.token_symbol)}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
                                     <span class="holding-symbol">${holding.token_symbol}</span>
                                 </div>
                             </div>
@@ -1368,7 +847,7 @@
                                 <span class="holding-label">P&L</span>
                                 <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
                             </div>
-                            <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${quantity}, ${currentPriceVal})" ${!canSell ? 'disabled' : ''} title="${sellButtonTitle}">
+                            <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${quantity}, ${currentPriceVal})" ${!canSell ? 'disabled' : ''}>
                                 Sell ${holding.token_symbol}
                             </button>
                         </div>
@@ -1377,12 +856,14 @@
             }
 
             document.getElementById('portfolioValue').innerHTML = formatCurrency(totalPortfolioValue);
+            document.getElementById('totalValue').innerHTML = formatCurrency(userGrandBalance + totalPortfolioValue);
+
             const monthlyYield = totalPortfolioValue * 0.10;
             const hourlyYield = monthlyYield / 720;
             document.getElementById('monthlyYield').innerHTML = formatCurrency(monthlyYield);
             document.getElementById('hourlyYield').innerHTML = formatCurrency(hourlyYield);
 
-            await loadYieldData(totalPortfolioValue, holdings);
+            await loadYieldData(totalPortfolioValue);
             startAllBots();
             setTimeout(() => addBotIconsToCards(), 500);
             setTimeout(() => initGrowthProjector(), 500);
@@ -1394,35 +875,31 @@
         }
     }
 
-    async function loadYieldData(totalPortfolioValue, holdings) {
+    async function loadYieldData(totalPortfolioValue) {
         try {
-            const labels = [], yields = [];
-            const dailyYield = totalPortfolioValue * 0.00333;
-            for (let i = 29; i >= 0; i--) {
-                const date = new Date();
-                date.setDate(date.getDate() - i);
-                labels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-                yields.push(Math.max(0, dailyYield + (Math.random() - 0.5) * dailyYield * 0.2));
+            const hourlyRate = (totalPortfolioValue * 0.10) / 720;
+            const histogramData = [];
+            for (let i = 23; i >= 0; i--) {
+                const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
+                histogramData.push(Math.max(0.0001, hourlyRate + variation));
             }
-            const ctx = document.getElementById('yieldChart')?.getContext('2d');
-            if (ctx) {
-                if (yieldChartInstance) yieldChartInstance.destroy();
-                yieldChartInstance = new Chart(ctx, {
-                    type: 'line',
-                    data: { labels: labels, datasets: [{ label: 'Daily Yield', data: yields, borderColor: '#0ECB81', backgroundColor: 'rgba(14,203,129,0.1)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0 }] },
-                    options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { grid: { color: '#EFF2F5' } } } }
-                });
-            }
+            renderYieldHistogram(histogramData);
+
             const distContainer = document.getElementById('recentDistributions');
             if (distContainer) {
-                const hourlyRate = (totalPortfolioValue * 0.10) / 720;
                 const now = new Date();
                 let html = '';
                 for (let i = 0; i < 8; i++) {
                     const hourAgo = new Date(now.getTime() - i * 3600000);
-                    html += `<div class="dist-row"><span>Yield Distribution</span><span class="dist-amount">+${formatCurrency(hourlyRate)}</span><span class="dist-time">${hourAgo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span></div>`;
+                    const amount = hourlyRate * (0.9 + Math.random() * 0.2);
+                    html += `
+                        <div class="dist-row">
+                            <span style="font-size: 11px; color: #5E6673;">${hourAgo.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                            <span style="font-size: 12px; font-weight: 500; color: #0ECB81;">+$${amount.toFixed(4)}</span>
+                        </div>
+                    `;
                 }
-                distContainer.innerHTML = html + `<div style="margin-top:12px;padding:8px;background:#F8F9FA;border-radius:6px;font-size:10px;color:#707A8A;text-align:center;">💰 10% monthly yield distributed hourly (720 times per month)</div>`;
+                distContainer.innerHTML = html;
             }
         } catch (e) { console.error('Error loading yield data:', e); }
     }
@@ -1441,19 +918,19 @@
     }
 
     function closeDepositModal() { document.getElementById('depositModal').style.display = 'none'; }
-    function copyDepositAddress() { const address = document.getElementById('depositAddress').innerText; navigator.clipboard.writeText(address); alert('Address copied to clipboard!'); }
+    function copyDepositAddress() { const address = document.getElementById('depositAddress').innerText; navigator.clipboard.writeText(address); alert('Address copied!'); }
     function openWithdrawYieldModal() { document.getElementById('withdrawYieldModal').style.display = 'flex'; document.getElementById('withdrawAmount').value = ''; }
     function closeWithdrawYieldModal() { document.getElementById('withdrawYieldModal').style.display = 'none'; }
     function setWithdrawPercent(percent) { const amount = (userYieldBalance * percent) / 100; document.getElementById('withdrawAmount').value = amount.toFixed(2); }
 
     async function confirmWithdrawYield() {
         const amount = parseFloat(document.getElementById('withdrawAmount').value);
-        if (!amount || amount <= 0) { alert('Please enter a valid amount'); return; }
+        if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
         if (amount > userYieldBalance) { alert(`Insufficient yield balance. You have ${formatCurrency(userYieldBalance)}`); return; }
         try {
             const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-            if (result.success) { alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`); closeWithdrawYieldModal(); loadDashboard(); }
-            else { alert('Withdrawal failed: ' + (result.error || 'Unknown error')); }
+            if (result.success) { alert(`Withdrew ${formatCurrency(amount)} to Grand Balance`); closeWithdrawYieldModal(); loadDashboard(); }
+            else { alert('Withdrawal failed'); }
         } catch (e) { alert('Error: ' + e.message); }
     }
 
@@ -1462,14 +939,14 @@
         if (!token) { alert('Token not found'); return; }
         const userQty = userHoldings[symbol] || 0;
         if (userQty === 0) { alert(`No ${symbol} to sell`); return; }
-        if (quantity > userQty) { alert(`You only have ${formatNumber(userQty)} ${symbol}`); return; }
+        if (quantity > userQty) { alert(`You have ${formatNumber(userQty)} ${symbol}`); return; }
         const avgPrice = parseFloat(token.average_buy_price);
         if (currentPriceVal < avgPrice) { alert(`Cannot sell ${symbol}. Current price below purchase price.`); return; }
         if (confirm(`Sell ${formatNumber(quantity)} ${symbol} at ${formatCurrency(currentPriceVal)}?`)) {
             try {
                 const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
                 if (result.success) { alert(`Sold ${result.sale.quantity} ${symbol}`); loadDashboard(); }
-                else { alert('Sale failed: ' + (result.reason || 'Unknown error')); }
+                else { alert('Sale failed'); }
             } catch (e) { alert('Error: ' + e.message); }
         }
     }
@@ -1479,65 +956,19 @@
         window.location.href = '/trading/';
     }
 
-    // Add CSS animations
     const style = document.createElement('style');
     style.textContent = `
-        @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-        @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
-        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); } 100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); } }
-        .pnl-positive { color: #0ECB81; }
-        .pnl-negative { color: #F6465D; }
-        .bot-icon-on-card:hover { transform: scale(1.1); }
-
-        /* Growth Projector Styles */
-        .growth-card {
-            background: rgba(30, 35, 41, 0.6);
-            border-radius: 16px;
-            padding: 20px;
-            margin-top: 20px;
-            border: 1px solid rgba(240, 185, 11, 0.1);
-        }
-        .year-btn {
-            background: #1A1C23;
-            border: 1px solid #2B3139;
-            color: #8A8F9E;
-            padding: 6px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-size: 12px;
-            transition: all 0.2s;
-        }
-        .year-btn.active {
-            background: #F0B90B;
-            color: #0B0E11;
-            border-color: #F0B90B;
-        }
-        .milestone-card {
-            background: #1A1C23;
-            border-radius: 10px;
-            padding: 10px;
-            text-align: center;
-        }
-        .milestone-value {
-            font-size: 14px;
-            font-weight: 600;
-            color: #F0B90B;
-        }
-        .milestone-time {
-            font-size: 10px;
-            color: #0ECB81;
-            margin-top: 4px;
-        }
-        .form-range {
-            height: 4px;
-        }
-        .form-range::-webkit-slider-thumb {
-            background: #F0B90B;
-        }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); } 70% { box-shadow: 0 0 0 8px rgba(14,203,129,0); } 100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); } }
+        .modal-overlay { position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:center;justify-content:center; }
+        .modal-container { background:white;border-radius:16px;max-width:450px;width:90%; }
+        .modal-header { padding:16px 20px;border-bottom:1px solid #E2E4E8;display:flex;justify-content:space-between; }
+        .modal-body { padding:20px; }
+        .modal-close { background:none;border:none;font-size:24px;cursor:pointer; }
+        .form-control { width:100%;padding:10px;border:1px solid #E2E4E8;border-radius:8px; }
+        .btn { padding:8px 16px;border-radius:8px;cursor:pointer; }
     `;
     document.head.appendChild(style);
 
-    // Initialize dashboard
     loadDashboard();
     setInterval(loadDashboard, 120000);
     setInterval(addBotIconsToCards, 3000);
