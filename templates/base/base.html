@@ -204,89 +204,63 @@
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid px-3">
-            <a class="navbar-brand" href="/coins/" style="padding: 0;">
-               {% include 'base/logo.html' %}
-            </a>
+    <div class="container-fluid px-3">
+        <!-- Logo - Left -->
+        <a class="navbar-brand" href="/coins/" style="padding: 0;">
+            {% include 'base/logo.html' %}
+        </a>
 
-            <!-- Desktop Navigation Items -->
-            <div class="d-flex align-items-center ms-auto">
-                <!-- Live Clock -->
-                <div class="live-clock" id="liveClock" style="font-family: 'Courier New', monospace; font-size: 15px; background: white; padding: 6px 12px; border-radius: 20px; color: #1E2329; margin-right: 10px; font-weight: 600; border: 1px solid #E2E4E8;">
-                    --:--:--
-                </div>
+        <!-- Right side items (always visible, no ms-auto) -->
+        <div class="d-flex align-items-center">
+            <!-- Live Clock -->
+            <div class="live-clock" id="liveClock" style="font-family: 'Courier New', monospace; font-size: 13px; background: white; padding: 5px 10px; border-radius: 20px; color: #1E2329; margin-right: 8px; font-weight: 600; border: 1px solid #E2E4E8;">
+                --:--:--
+            </div>
 
-                <!-- Notification Bell -->
-                {% if user.is_authenticated %}
-                <div class="nav-item" style="position: relative; margin-right: 10px;">
-                    <button class="notification-bell" onclick="toggleNotificationPanel()">
-                        🔔
-                        <span id="notificationBadge" class="notification-badge">0</span>
-                    </button>
-                </div>
-                {% endif %}
-
-                <!-- Mobile Menu Toggle -->
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <i class="fas fa-bars" style="color: #1E2329;"></i>
+            <!-- Notification Bell -->
+            {% if user.is_authenticated %}
+            <div style="position: relative; margin-right: 8px;">
+                <button class="notification-bell" onclick="toggleNotificationPanel()" style="background: none; border: none; cursor: pointer; font-size: 20px; padding: 5px;">
+                    🔔
+                    <span id="notificationBadge" class="notification-badge" style="position: absolute; top: -3px; right: -3px; background: #F6465D; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: none;">0</span>
                 </button>
             </div>
+            {% endif %}
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item">
-                        <a class="nav-link" href="/dashboard/">
-                            <i class="fas fa-chart-line me-1"></i>Dashboard
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/coins/">
-                            <i class="fas fa-coins me-1"></i>Coins
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/trading/">
-                            <i class="fas fa-exchange-alt me-1"></i>Trading
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/portfolio/">
-                            <i class="fas fa-wallet me-1"></i>Portfolio
-                        </a>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="earnDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-chart-line me-1"></i>Earn
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
-                            <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" id="walletDropdown" role="button" data-bs-toggle="dropdown">
-                            <i class="fas fa-money-bill-wave me-1"></i>Wallet
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
-                            <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/profile/">
-                            <i class="fas fa-user me-1"></i>Profile
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="/chat/">
-                            <i class="fas fa-headset me-1"></i>Support
-                        </a>
-                    </li>
-                    <li class="nav-item" id="authLinks"></li>
-                </ul>
-            </div>
+            <!-- Mobile Menu Toggle -->
+            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" style="padding: 5px 8px;">
+                <i class="fas fa-bars" style="color: #1E2329; font-size: 18px;"></i>
+            </button>
         </div>
-    </nav>
+
+        <!-- Collapsible Menu (nav links) -->
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav ms-auto">
+                <li class="nav-item"><a class="nav-link" href="/dashboard/"><i class="fas fa-chart-line me-1"></i>Dashboard</a></li>
+                <li class="nav-item"><a class="nav-link" href="/coins/"><i class="fas fa-coins me-1"></i>Coins</a></li>
+                <li class="nav-item"><a class="nav-link" href="/trading/"><i class="fas fa-exchange-alt me-1"></i>Trading</a></li>
+                <li class="nav-item"><a class="nav-link" href="/portfolio/"><i class="fas fa-wallet me-1"></i>Portfolio</a></li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-1"></i>Earn</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
+                        <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-money-bill-wave me-1"></i>Wallet</a>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
+                        <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
+                    </ul>
+                </li>
+                <li class="nav-item"><a class="nav-link" href="/profile/"><i class="fas fa-user me-1"></i>Profile</a></li>
+                <li class="nav-item"><a class="nav-link" href="/chat/"><i class="fas fa-headset me-1"></i>Support</a></li>
+                <li class="nav-item" id="authLinks"></li>
+            </ul>
+        </div>
+    </div>
+</nav>
 
     <!-- Notification Panel -->
     <div id="notificationPanel" class="notification-panel" style="display: none;">
