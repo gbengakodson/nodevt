@@ -394,6 +394,26 @@
     </div>
 </div>
 
+
+    <!-- Simple Chat Window for Mobile -->
+<div id="simpleChatWindow" style="display: none; position: fixed; bottom: 70px; left: 10px; right: 10px; width: auto; height: 400px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; flex-direction: column; overflow: hidden;">
+    <div style="background: #F0B90B; padding: 12px; font-weight: 600; display: flex; justify-content: space-between;">
+        <span>🤖 Crypto Assistant</span>
+        <button onclick="closeSimpleChat()" style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
+    </div>
+    <div id="simpleChatMessages" style="flex: 1; overflow-y: auto; padding: 10px; background: #F8F9FA;">
+        <div class="chat-message bot">
+            <div style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; max-width: 80%;">
+                👋 Hi! Ask me anything about trading, deposits, or referrals!
+            </div>
+        </div>
+    </div>
+    <div style="padding: 10px; border-top: 1px solid #E2E4E8; display: flex; gap: 8px;">
+        <input type="text" id="simpleChatInput" placeholder="Type your question..." style="flex: 1; padding: 10px; border: 1px solid #E2E4E8; border-radius: 20px; outline: none;">
+        <button onclick="sendSimpleMessage()" style="background: #F0B90B; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Send</button>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
@@ -417,18 +437,23 @@
     setTimeout(hideLoading, 2000);
     // ============ END LOADING FUNCTIONS ============
 
-    // ============ LIVE CLOCK ============
+    // ============ LIVE CLOCK WITH NANOSECONDS ============
     function updateLiveClock() {
         const now = new Date();
         const hours = String(now.getHours()).padStart(2, '0');
         const minutes = String(now.getMinutes()).padStart(2, '0');
         const seconds = String(now.getSeconds()).padStart(2, '0');
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+
+        // Simulate nanoseconds based on milliseconds
+        const nanoseconds = String(Math.floor(performance.now() * 1000000) % 1000000).padStart(6, '0');
+
         const clockElement = document.getElementById('liveClock');
         if (clockElement) {
-            clockElement.innerHTML = `${hours}:${minutes}:${seconds}`;
+            clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span><span style="font-size: 7px; color: #8A8F9E;">ns</span>`;
         }
     }
-    setInterval(updateLiveClock, 1000);
+    setInterval(updateLiveClock, 10);
     updateLiveClock();
     // ============ END LIVE CLOCK ============
 
@@ -468,7 +493,6 @@
             if (!notifications || !Array.isArray(notifications) || notifications.length === 0) {
                 if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
                 if (badge) badge.style.display = 'none';
-                // Update mobile badge
                 const mobileBadge = document.getElementById('mobileBadge');
                 if (mobileBadge) mobileBadge.style.display = 'none';
                 return;
@@ -476,7 +500,6 @@
 
             const unreadCount = notifications.filter(n => !n.is_read).length;
 
-            // Update desktop badge
             if (badge) {
                 if (unreadCount > 0) {
                     badge.style.display = 'flex';
@@ -486,7 +509,6 @@
                 }
             }
 
-            // Update mobile badge
             const mobileBadge = document.getElementById('mobileBadge');
             if (mobileBadge) {
                 if (unreadCount > 0) {
@@ -555,9 +577,75 @@
 
     // ============ CHATBOT FUNCTIONS ============
     function toggleSimpleChat() {
-        const window = document.getElementById('simpleChatWindow');
-        if (window) {
-            window.style.display = window.style.display === 'none' ? 'flex' : 'none';
+        const chatWindow = document.getElementById('simpleChatWindow');
+        if (chatWindow) {
+            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
+                chatWindow.style.display = 'flex';
+            } else {
+                chatWindow.style.display = 'none';
+            }
+        }
+    }
+
+    function closeSimpleChat() {
+        const chatWindow = document.getElementById('simpleChatWindow');
+        if (chatWindow) {
+            chatWindow.style.display = 'none';
+        }
+    }
+
+    async function sendSimpleMessage() {
+        const input = document.getElementById('simpleChatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const messagesDiv = document.getElementById('simpleChatMessages');
+
+        // Add user message
+        messagesDiv.innerHTML += `
+            <div class="chat-message user" style="text-align: right; margin-bottom: 10px;">
+                <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; text-align: left; color: #0B0E11;">
+                    ${escapeHtml(message)}
+                </div>
+            </div>
+        `;
+        input.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        // Add typing indicator
+        const typingId = 'typingMsg_' + Date.now();
+        messagesDiv.innerHTML += `<div id="${typingId}" class="chat-message bot" style="margin-bottom: 10px;"><div style="background: white; padding: 10px 14px; border-radius: 18px; display: inline-block; color: #707A8A;">Typing...</div></div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chatbot/message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await response.json();
+
+            document.getElementById(typingId)?.remove();
+            messagesDiv.innerHTML += `
+                <div class="chat-message bot" style="margin-bottom: 10px;">
+                    <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
+                        ${escapeHtml(data.response)}
+                    </div>
+                </div>
+            `;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        } catch (error) {
+            document.getElementById(typingId)?.remove();
+            messagesDiv.innerHTML += `
+                <div class="chat-message bot" style="margin-bottom: 10px;">
+                    <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #F6465D;">
+                        Sorry, something went wrong. Please try again.
+                    </div>
+                </div>
+            `;
         }
     }
     // ============ END CHATBOT FUNCTIONS ============
@@ -655,6 +743,18 @@
         setTimeout(loadNotifications, 1000);
         setInterval(loadNotifications, 30000);
     }
+
+    // Enter key support for chat input
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatInput = document.getElementById('simpleChatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendSimpleMessage();
+                }
+            });
+        }
+    });
     // ============ END AUTH FUNCTIONS ============
 </script>
     {% block extra_js %}{% endblock %}
