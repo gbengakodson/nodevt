@@ -494,3 +494,223 @@ Need help? Ask our chatbot anything!""",
     The best time to start is tomorrow morning! 🌅""",
                 notification_type='REMINDER'
             )
+
+
+import random
+from datetime import datetime
+from decimal import Decimal
+
+
+class HourlyNotificationService:
+    # 24 different messages (one per hour)
+    MESSAGES = [
+        {
+            "title": "💰 Hourly Balance Update",
+            "template": "Your current Grand Balance: {grand_balance}\nYield Balance: {yield_balance}\n\nKeep trading to grow your portfolio!"
+        },
+        {
+            "title": "💡 Zero Balance Alert",
+            "template": "⚠️ Your balance is empty!\n\n💵 Fund with just $10 USDC to start earning:\n• 10% monthly yield\n• AI Grid trading 24/7\n• Referral commissions\n\nGet started today!"
+        },
+        {
+            "title": "🎯 Your Monthly Target",
+            "template": "To reach ${target} in 12 months, you need to invest ${needed} today.\n\nCurrent balance: {grand_balance}\nRemaining: ${remaining}"
+        },
+        {
+            "title": "⏰ Hourly Earnings Update",
+            "template": "You're earning ${hourly_yield}/hour from your holdings.\n\n📊 That's ${daily_yield}/day and ${monthly_yield}/month!\n\nKeep holding to maximize returns."
+        },
+        {
+            "title": "💰 $50/Day Goal",
+            "template": "Want to earn $50 per day?\n\n💵 Invest ${needed_to_earn_50} at 10% monthly yield.\n\nCurrent balance: {grand_balance}\nProgress: ${progress_to_50}/day"
+        },
+        {
+            "title": "🌍 Total Market Cap",
+            "template": "Total NODE Platform Value: ${total_market_cap}\n\n💰 Total Yield Paid: ${total_yield_paid}\n\n🤖 Total AI Trades: {total_trades}\n\nYou're part of something growing!"
+        },
+        {
+            "title": "🚀 $100,000 Goal",
+            "template": "Want to reach $100,000?\n\n📈 With 10% monthly compound interest:\n• Start with ${start_amount}\n• Time needed: {years_to_100k} years\n• Monthly contribution: ${monthly_contribution}\n\nStart today and watch it grow!"
+        },
+        {
+            "title": "🤝 Referral Income",
+            "template": "If you refer 50 active traders:\n\n💰 You could earn ${referral_income}/month in node fees!\n\n👥 Each active trader generates ~${per_trader}/month\n\nShare your referral code: {referral_code}"
+        },
+        {
+            "title": "📈 $10 Growth Projection",
+            "template": "Starting with just $10:\n\n📊 After 5 years with 10% monthly compound interest:\n• Year 1: ${year1}\n• Year 2: ${year2}\n• Year 3: ${year3}\n• Year 4: ${year4}\n• Year 5: ${year5}\n\nImagine what ${grand_balance} could become!"
+        },
+        {
+            "title": "💵 How to Deposit",
+            "template": "📝 To deposit USDC:\n\n1️⃣ Go to Wallet → Deposit\n2️⃣ Copy the BSC (BEP-20) address\n3️⃣ Send minimum $10 USDC\n4️⃣ Submit transaction hash\n\n⏰ Deposits credited within 24 hours"
+        },
+        {
+            "title": "📊 Portfolio Performance",
+            "template": "Your portfolio: ${portfolio_value}\n\n📈 24h Change: {daily_change}\n\n💪 Top holding: {top_holding}\n\nKeep diversifying!"
+        },
+        {
+            "title": "⚡ AI Trading Update",
+            "template": "🤖 AI Grid Bot executed {trades_today} trades in the last 24 hours!\n\n📊 Grid profit: ${grid_profit}\n\n🎯 Current grid level: {grid_level}/100\n\nYour AI is working 24/7!"
+        },
+        {
+            "title": "🏆 Top Earners This Week",
+            "template": "🏅 Weekly Leaderboard:\n1️⃣ {top1}: ${earn1}\n2️⃣ {top2}: ${earn2}\n3️⃣ {top3}: ${earn3}\n\nYou're at position #{user_rank} with ${user_earnings}\n\nInvite more to climb the ranks!"
+        },
+        {
+            "title": "📅 Compounding Power",
+            "template": "Did you know?\n\n🧮 With 10% monthly compound interest:\n• Your money doubles every ~7.3 months\n• In 5 years, $1,000 becomes ${future_value}\n• In 10 years, $1,000 becomes ${future_value_10}\n\nTime is your greatest asset!"
+        },
+        {
+            "title": "💎 Yield Wallet Tips",
+            "template": "💡 Your Yield Wallet: ${yield_balance}\n\n✨ You can:\n• Withdraw anytime to Grand Wallet\n• Reinvest to compound returns\n• Use for more trading\n\nCurrent yield rate: 10% monthly"
+        },
+        {
+            "title": "🔄 Referral Program",
+            "template": "🤝 Your referral code: {referral_code}\n\n💰 Each friend who joins earns you:\n• Level 1 (direct): 50% of node fee\n• Up to 7 levels deep!\n\nShare your link: https://www.nodevt.com/register?ref={referral_code}"
+        },
+        {
+            "title": "📊 Daily Trading Volume",
+            "template": "📈 24h Trading Volume: ${daily_volume}\n\n🔄 Buy/Sell Ratio: {buy_sell_ratio}\n\n🔥 Most traded: {top_traded_token}\n\nMarket is {market_sentiment}!"
+        },
+        {
+            "title": "🎯 Your Next Milestone",
+            "template": "Next target: ${next_target}\n\n📊 Current: {grand_balance}\n\n🚀 Need: ${needed_to_target}\n\n💪 You're {progress_to_target}% there!\n\nKeep going!"
+        },
+        {
+            "title": "💰 Passive Income Report",
+            "template": "📊 Your passive income this month:\n\n• Yield earnings: ${yield_earned}\n• Referral commissions: ${referral_earned}\n• AI trading profits: ${grid_earned}\n\n💵 Total: ${total_passive}\n\nThat's ${per_day}/day without lifting a finger!"
+        },
+        {
+            "title": "⚡ Market Opportunity",
+            "template": "🔥 {token} is down {drop_percent}% in the last hour!\n\n🎯 This could be a buying opportunity:\n• AI Grid buys at every 1.2% dip\n• Your yield continues regardless\n\nSmart money accumulates during dips!"
+        },
+        {
+            "title": "📈 Compound Interest Calculator",
+            "template": "🧮 If you invest ${amount} today:\n\n• In 1 year: ${year1}\n• In 3 years: ${year3}\n• In 5 years: ${year5}\n• In 10 years: ${year10}\n\nStart small, think big!"
+        },
+        {
+            "title": "🤖 AI Bot Performance",
+            "template": "Your AI Grid Bot this week:\n\n✅ Trades executed: {bot_trades}\n💰 Profit: ${bot_profit}\n🎯 Win rate: {win_rate}%\n\nBot is actively trading for you 24/7!"
+        },
+        {
+            "title": "💡 Tip of the Hour",
+            "template": "💡 {tip}\n\n📊 Your current stats:\n• Balance: ${grand_balance}\n• Portfolio: ${portfolio_value}\n• Yield: ${hourly_yield}/hour\n\nApply this tip to maximize returns!"
+        },
+        {
+            "title": "🌟 Weekly Summary",
+            "template": "📊 Your Weekly Performance:\n\n• Starting balance: ${start_balance}\n• Current balance: {grand_balance}\n• Weekly growth: {weekly_growth}%\n• Yield earned: ${weekly_yield}\n\nGreat work! Keep it up! 🚀"
+        }
+    ]
+
+    TIPS = [
+        "The more tokens you hold, the higher your hourly yield!",
+        "Reinvest your yield earnings to compound returns faster.",
+        "Invite friends - each active trader adds to your passive income.",
+        "Diversify across multiple tokens to spread risk.",
+        "Set take-profit orders to lock in gains automatically.",
+        "Check your portfolio daily to track progress.",
+        "Withdraw yield to Grand Wallet for more trading power.",
+        "The AI Grid works best in volatile markets - let it run!",
+        "Every $1000 invested earns ~$100/month passive income.",
+        "Node fee commissions are paid instantly - no waiting!"
+    ]
+
+    @classmethod
+    def get_hourly_message(cls, hour, user_data):
+        """Get message based on hour of day (0-23)"""
+        message_index = hour % len(cls.MESSAGES)
+        message = cls.MESSAGES[message_index]
+
+        # Format the message with user data
+        content = cls._format_message(message["template"], user_data)
+
+        return {
+            "title": message["title"],
+            "message": content
+        }
+
+    @classmethod
+    def _format_message(cls, template, data):
+        """Format template with user data"""
+        try:
+            # Calculate various metrics
+            hourly_yield = data.get('portfolio_value', 0) * 0.10 / 720
+            daily_yield = hourly_yield * 24
+            monthly_yield = hourly_yield * 720
+
+            # Calculate referral income (assuming $10 average trade per referred user)
+            referral_income = data.get('referral_count', 0) * 10 * 0.10 * 0.50
+
+            # Calculate compound growth
+            def compound_growth(principal, months):
+                return principal * (1.10) ** months
+
+            # Format all variables
+            vars_dict = {
+                'grand_balance': f"${data.get('grand_balance', 0):,.2f}",
+                'yield_balance': f"${data.get('yield_balance', 0):,.2f}",
+                'portfolio_value': f"${data.get('portfolio_value', 0):,.2f}",
+                'hourly_yield': f"${hourly_yield:.4f}",
+                'daily_yield': f"${daily_yield:.2f}",
+                'monthly_yield': f"${monthly_yield:.2f}",
+                'target': data.get('target', '1000'),
+                'needed': f"${max(0, 1000 - data.get('grand_balance', 0)):.2f}",
+                'remaining': f"${max(0, 1000 - data.get('grand_balance', 0)):.2f}",
+                'needed_to_earn_50': f"${(50 * 30 / 0.10):.2f}",
+                'progress_to_50': f"{(data.get('daily_yield', 0) / 50 * 100):.1f}",
+                'total_market_cap': f"${data.get('total_market_cap', 5000000):,.0f}",
+                'total_yield_paid': f"${data.get('total_yield_paid', 125000):,.0f}",
+                'total_trades': f"{data.get('total_trades', 15000):,}",
+                'start_amount': f"${data.get('grand_balance', 100):,.2f}",
+                'years_to_100k': f"{compound_growth(data.get('grand_balance', 100), 12) / 100000:.1f}",
+                'monthly_contribution': f"${max(0, (100000 - data.get('grand_balance', 0)) / 60):.2f}",
+                'referral_income': f"${referral_income:.2f}",
+                'per_trader': f"${referral_income / max(1, data.get('referral_count', 0)):.2f}",
+                'referral_code': data.get('referral_code', 'N/A'),
+                'year1': f"${compound_growth(10, 12):.2f}",
+                'year2': f"${compound_growth(10, 24):.2f}",
+                'year3': f"${compound_growth(10, 36):.2f}",
+                'year4': f"${compound_growth(10, 48):.2f}",
+                'year5': f"${compound_growth(10, 60):.2f}",
+                'daily_change': f"+{(data.get('daily_change', 2.5)):.1f}%",
+                'top_holding': data.get('top_holding', 'BTC'),
+                'trades_today': f"{data.get('trades_today', 12)}",
+                'grid_profit': f"${data.get('grid_profit', 25.50):.2f}",
+                'grid_level': f"{data.get('grid_level', 47)}",
+                'future_value': f"${compound_growth(1000, 60):,.2f}",
+                'future_value_10': f"${compound_growth(1000, 120):,.2f}",
+                'daily_volume': f"${data.get('daily_volume', 250000):,.0f}",
+                'buy_sell_ratio': f"{data.get('buy_sell_ratio', '1.2:1')}",
+                'top_traded_token': data.get('top_traded_token', 'BTC'),
+                'market_sentiment': data.get('market_sentiment', 'Bullish 📈'),
+                'next_target': f"${data.get('next_target', 500):,.0f}",
+                'needed_to_target': f"${max(0, data.get('next_target', 500) - data.get('grand_balance', 0)):.2f}",
+                'progress_to_target': f"{(data.get('grand_balance', 0) / data.get('next_target', 500) * 100):.1f}",
+                'yield_earned': f"${data.get('yield_earned', monthly_yield):.2f}",
+                'referral_earned': f"${data.get('referral_earned', 25.00):.2f}",
+                'grid_earned': f"${data.get('grid_earned', 50.00):.2f}",
+                'total_passive': f"${data.get('total_passive', monthly_yield + 25 + 50):.2f}",
+                'per_day': f"${(monthly_yield + 25 + 50) / 30:.2f}",
+                'token': data.get('token', 'BTC'),
+                'drop_percent': f"{data.get('drop_percent', 3.5):.1f}",
+                'amount': f"${data.get('grand_balance', 100):.2f}",
+                'year1_compound': f"${compound_growth(data.get('grand_balance', 100), 12):.2f}",
+                'year3_compound': f"${compound_growth(data.get('grand_balance', 100), 36):.2f}",
+                'year5_compound': f"${compound_growth(data.get('grand_balance', 100), 60):.2f}",
+                'year10_compound': f"${compound_growth(data.get('grand_balance', 100), 120):.2f}",
+                'bot_trades': f"{data.get('bot_trades', 45)}",
+                'bot_profit': f"${data.get('bot_profit', 125.00):.2f}",
+                'win_rate': f"{data.get('win_rate', 68)}",
+                'tip': random.choice(cls.TIPS),
+                'start_balance': f"${data.get('start_balance', data.get('grand_balance', 0)):.2f}",
+                'weekly_growth': f"{data.get('weekly_growth', 3.5):.1f}",
+                'weekly_yield': f"${monthly_yield / 4:.2f}",
+            }
+
+            # Replace all placeholders
+            for key, value in vars_dict.items():
+                template = template.replace(f'{{{key}}}', str(value))
+
+            return template
+        except Exception as e:
+            return f"📊 Your balance: ${data.get('grand_balance', 0):.2f}\nContinue trading to grow your portfolio!"
