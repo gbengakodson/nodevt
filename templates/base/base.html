@@ -117,18 +117,61 @@
         }
 
         /* Marquee Footer */
+        /* Sticky Marquee Footer */
+    .marquee-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1A1C23;
+        color: #F0B90B;
+        padding: 6px 0;
+        overflow: hidden;
+        white-space: nowrap;
+        border-top: 1px solid rgba(240,185,11,0.2);
+        font-size: 11px;
+        z-index: 999;
+    }
+
+    /* Adjust for mobile footer */
+    @media (max-width: 768px) {
         .marquee-footer {
-            background: #1A1C23;
-            color: #F0B90B;
-            padding: 6px 0;
-            overflow: hidden;
-            white-space: nowrap;
-            border-top: 1px solid rgba(240,185,11,0.2);
-            border-bottom: 1px solid rgba(240,185,11,0.2);
-            font-size: 11px;
-            position: relative;
-            z-index: 999;
+            bottom: 50px; /* Above mobile footer */
         }
+    }
+
+    /* For non-mobile, no adjustment needed */
+    @media (min-width: 769px) {
+        .marquee-footer {
+            bottom: 0;
+        }
+    }
+
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    .marquee-content {
+        display: inline-block;
+        animation: marquee 80s linear infinite;
+        padding-left: 20px;
+    }
+
+    .marquee-footer:hover .marquee-content {
+        animation-play-state: paused;
+    }
+
+    /* Add padding to body to prevent content from hiding behind fixed marquee */
+    body {
+        padding-bottom: 35px;
+    }
+
+    @media (max-width: 768px) {
+        body {
+            padding-bottom: 85px; /* More space for mobile footer + marquee */
+        }
+    }
 
         .marquee-content {
             display: inline-block;
