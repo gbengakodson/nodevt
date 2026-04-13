@@ -362,369 +362,362 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-        // ============ LOADING FUNCTIONS ============
-        function showLoading() {
-            const loader = document.querySelector('.loading');
-            if (loader) loader.style.display = 'flex';
+    // ============ LOADING FUNCTIONS ============
+    function showLoading() {
+        const loader = document.querySelector('.loading');
+        if (loader) loader.style.display = 'flex';
+    }
+
+    function hideLoading() {
+        const loader = document.querySelector('.loading');
+        if (loader) loader.style.display = 'none';
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', hideLoading);
+    } else {
+        hideLoading();
+    }
+    setTimeout(hideLoading, 2000);
+    // ============ END LOADING FUNCTIONS ============
+
+    // ============ LIVE CLOCK ============
+    function updateLiveClock() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+        const clockElement = document.getElementById('liveClock');
+        if (clockElement) {
+            clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span>`;
         }
+    }
+    setInterval(updateLiveClock, 100);
+    updateLiveClock();
+    // ============ END LIVE CLOCK ============
 
-        function hideLoading() {
-            const loader = document.querySelector('.loading');
-            if (loader) loader.style.display = 'none';
-        }
+    // ============ MARQUEE UPDATER ============
+    let isUpdatingMarquee = false;
 
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', hideLoading);
-        } else {
-            hideLoading();
-        }
-        setTimeout(hideLoading, 2000);
-        // ============ END LOADING FUNCTIONS ============
+    async function updateMarquee() {
+        if (isUpdatingMarquee) return;
 
-        // ============ LIVE CLOCK ============
-        function updateLiveClock() {
-            const now = new Date();
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-            const clockElement = document.getElementById('liveClock');
-            if (clockElement) {
-                clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span>`;
-            }
-        }
-        setInterval(updateLiveClock, 100);
-        updateLiveClock();
-        // ============ END LIVE CLOCK ============
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
 
-        // ============ MARQUEE UPDATER ============
-        async function updateMarquee() {
-            // Force marquee to start on mobile
-            setTimeout(function() {
-                if (localStorage.getItem('access_token')) {
-                    updateMarquee();
-                    setInterval(updateMarquee, 10000);
-                }
-            }, 500);
+        isUpdatingMarquee = true;
 
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
+        try {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+            const balanceRes = await fetch('/api/trading/my_balance/', {
+                headers: { 'Authorization': `Bearer ${token}` },
+                signal: controller.signal
+            });
+            clearTimeout(timeoutId);
+
+            if (!balanceRes.ok) throw new Error('API error');
+
+            const balance = await balanceRes.json();
+            const grandBalance = parseFloat(balance.grand_balance) || 0;
+            const yieldBalance = parseFloat(balance.yield_balance) || 0;
+
+            let portfolioValue = 0;
+            let topHolding = 'None';
 
             try {
-                const balanceRes = await fetch('/api/trading/my_balance/', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                const balance = await balanceRes.json();
-
                 const holdingsRes = await fetch('/api/trading/my_tokens/', {
-                    headers: { 'Authorization': `Bearer ${token}` }
+                    headers: { 'Authorization': `Bearer ${token}` },
+                    signal: controller.signal
                 });
                 const holdings = await holdingsRes.json();
 
-                let portfolioValue = 0;
                 holdings.forEach(h => {
                     portfolioValue += parseFloat(h.quantity) * parseFloat(h.current_price);
                 });
-
-                const grandBalance = parseFloat(balance.grand_balance) || 0;
-                const yieldBalance = parseFloat(balance.yield_balance) || 0;
-                const hourlyYield = (portfolioValue * 0.10) / 720;
-                const dailyYield = hourlyYield * 24;
-
-                const messages = [
-                    `💰 Your Balance: $${grandBalance.toFixed(2)} | Yield: $${yieldBalance.toFixed(2)}`,
-                    `⚠️ Balance empty? Deposit $10 USDC to start earning 10% monthly!`,
-                    `🎯 Reach $1,000 in 12 months - Need $${Math.max(0, 1000 - grandBalance).toFixed(2)} more!`,
-                    `⏰ You're earning $${hourlyYield.toFixed(4)}/hour! That's $${dailyYield.toFixed(2)}/day!`,
-                    `💎 Want $50/day? Invest $${(50 * 30 / 0.10).toFixed(0)} at 10% monthly yield!`,
-                    `🚀 $10 becomes $3,048 in 5 years with compounding! Start today!`,
-                    `🤝 Refer 50 people = earn $${(50 * 10 * 0.10 * 0.50).toFixed(2)}/month in node fees!`,
-                    `📈 $1,000 becomes $${(1000 * Math.pow(1.10, 60)).toFixed(0)} in 5 years!`,
-                    `💵 Deposit USDC: BSC network, minimum $10, credited within 24h`,
-                    `📊 Your portfolio: $${portfolioValue.toFixed(2)} | Top: ${holdings[0]?.token_symbol || 'None'}`,
-                    `⚡ AI Grid trades 24/7 - Buying dips and selling pumps automatically!`,
-                    `🔄 Your referral code: ${balance.referral_code || 'Login to see'} - Share to earn!`,
-                    `🎯 Next target: $${grandBalance < 500 ? 500 : 1000} - Keep going!`,
-                    `💰 Passive income: $${(hourlyYield * 720).toFixed(2)}/month from yield alone!`,
-                    `💡 Tip: Reinvest your yield to compound returns faster!`,
-                    `🌟 $100 becomes $${(100 * Math.pow(1.10, 60)).toFixed(0)} in 5 years! Start small!`,
-                    `🤖 AI Bot works 24/7 - Even while you sleep!`,
-                    `📈 10% monthly yield compounds to 213% APY!`,
-                    `💎 Yield wallet: $${yieldBalance.toFixed(2)} - Withdraw anytime to Grand Balance`,
-                    `🎉 You're earning while holding - No need to sell!`,
-                    `💪 Keep holding - Your yield grows with your portfolio!`,
-                    `🔥 Referral commissions paid instantly - No waiting!`,
-                    `🚀 $500 becomes $${(500 * Math.pow(1.10, 60)).toFixed(0)} in 5 years!`
-                ];
-
-                const randomIndex = Math.floor(Math.random() * messages.length);
-                const marqueeText = document.getElementById('marqueeText');
-                if (marqueeText) {
-                    marqueeText.innerHTML = messages[randomIndex];
+                if (holdings.length > 0) {
+                    topHolding = holdings[0].token_symbol;
                 }
-
-                setTimeout(updateMarquee, 10000);
-
-            } catch (error) {
-                console.error('Marquee error:', error);
-                setTimeout(updateMarquee, 15000);
+            } catch (e) {
+                console.log('Could not fetch holdings');
             }
-        }
-        // Check if on mobile
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
-            console.log('Mobile device detected - forcing marquee update');
-            setTimeout(updateMarquee, 500);
-        }
-        // ============ END MARQUEE UPDATER ============
 
-        // ============ NOTIFICATION FUNCTIONS ============
-        let notificationPanelOpen = false;
+            const hourlyYield = (portfolioValue * 0.10) / 720;
 
-        function toggleNotificationPanel() {
-            notificationPanelOpen = !notificationPanelOpen;
-            const panel = document.getElementById('notificationPanel');
-            if (panel) {
-                panel.style.display = notificationPanelOpen ? 'block' : 'none';
-                if (notificationPanelOpen) {
-                    loadNotifications();
-                }
+            const messages = [
+                `💰 Balance: $${grandBalance.toFixed(2)} | Yield: $${yieldBalance.toFixed(2)}`,
+                `⏰ Earning $${hourlyYield.toFixed(4)}/hour | $${(hourlyYield * 24).toFixed(2)}/day`,
+                `📊 Portfolio: $${portfolioValue.toFixed(2)} | Top: ${topHolding}`,
+                `🚀 $10 becomes $3,048 in 5 years with compounding!`,
+                `🤝 Refer friends - Earn node fees from 7 levels!`,
+                `💎 Yield wallet: $${yieldBalance.toFixed(2)} - Withdraw anytime`,
+                `📈 10% monthly yield compounds to 213% APY!`,
+                `⚡ AI Grid trades 24/7 - Buying dips and selling pumps!`
+            ];
+
+            const randomIndex = Math.floor(Math.random() * messages.length);
+            const marqueeText = document.getElementById('marqueeText');
+            if (marqueeText) {
+                marqueeText.innerHTML = messages[randomIndex];
             }
-        }
 
-        function closeNotificationPanel() {
-            notificationPanelOpen = false;
-            const panel = document.getElementById('notificationPanel');
-            if (panel) panel.style.display = 'none';
-        }
-
-        async function loadNotifications() {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
-
-            try {
-                const response = await fetch('/api/chatbot/notifications/', {
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                if (!response.ok) return;
-                const notifications = await response.json();
-                const listDiv = document.getElementById('notificationList');
-                const badge = document.getElementById('notificationBadge');
-                const mobileBadge = document.getElementById('mobileBadge');
-
-                if (!notifications || notifications.length === 0) {
-                    if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
-                    return;
-                }
-
-                const unreadCount = notifications.filter(n => !n.is_read).length;
-                if (badge) {
-                    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
-                    if (unreadCount > 0) badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                }
-                if (mobileBadge) {
-                    mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
-                    if (unreadCount > 0) mobileBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                }
-
-                if (listDiv) {
-                    listDiv.innerHTML = notifications.map(n => `
-                        <div class="notification-item" onclick="markAsRead('${n.id}')">
-                            <div style="font-weight: 600; font-size: 12px;">${escapeHtml(n.title)}</div>
-                            <div style="font-size: 11px; color: #707A8A; margin-top: 4px;">${escapeHtml(n.message.substring(0, 100))}...</div>
-                            <div style="font-size: 10px; color: #8A8F9E; margin-top: 4px;">${n.created_at}</div>
-                        </div>
-                    `).join('');
-                }
-            } catch (error) {
-                console.error('Error loading notifications:', error);
+        } catch (error) {
+            console.error('Marquee error:', error);
+            const marqueeText = document.getElementById('marqueeText');
+            if (marqueeText && !marqueeText.innerHTML.includes('Welcome')) {
+                marqueeText.innerHTML = '📊 Welcome back! Check your dashboard for updates →';
             }
+        } finally {
+            isUpdatingMarquee = false;
         }
+    }
+    // ============ END MARQUEE UPDATER ============
 
-        async function markAsRead(notificationId) {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
+    // ============ NOTIFICATION FUNCTIONS ============
+    let notificationPanelOpen = false;
 
-            try {
-                await fetch('/api/chatbot/notifications/mark-read/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${token}`
-                    },
-                    body: JSON.stringify({ notification_id: notificationId })
-                });
+    function toggleNotificationPanel() {
+        notificationPanelOpen = !notificationPanelOpen;
+        const panel = document.getElementById('notificationPanel');
+        if (panel) {
+            panel.style.display = notificationPanelOpen ? 'block' : 'none';
+            if (notificationPanelOpen) {
                 loadNotifications();
-            } catch (error) {
-                console.error('Error marking as read:', error);
             }
         }
+    }
 
-        async function markAllAsRead() {
-            const token = localStorage.getItem('access_token');
-            if (!token) return;
+    function closeNotificationPanel() {
+        notificationPanelOpen = false;
+        const panel = document.getElementById('notificationPanel');
+        if (panel) panel.style.display = 'none';
+    }
 
-            try {
-                await fetch('/api/chatbot/notifications/mark-all-read/', {
-                    method: 'POST',
-                    headers: { 'Authorization': `Bearer ${token}` }
-                });
-                loadNotifications();
-            } catch (error) {
-                console.error('Error marking all as read:', error);
+    async function loadNotifications() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        try {
+            const response = await fetch('/api/chatbot/notifications/', {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!response.ok) return;
+            const notifications = await response.json();
+            const listDiv = document.getElementById('notificationList');
+            const badge = document.getElementById('notificationBadge');
+            const mobileBadge = document.getElementById('mobileBadge');
+
+            if (!notifications || notifications.length === 0) {
+                if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
+                return;
             }
-        }
 
-        function escapeHtml(text) {
-            if (!text) return '';
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
-        // ============ END NOTIFICATION FUNCTIONS ============
-
-        // ============ CHATBOT FUNCTIONS ============
-        function toggleSimpleChat() {
-            const chatWindow = document.getElementById('simpleChatWindow');
-            if (chatWindow) {
-                chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+            const unreadCount = notifications.filter(n => !n.is_read).length;
+            if (badge) {
+                badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                if (unreadCount > 0) badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
             }
-        }
-
-        function closeSimpleChat() {
-            const chatWindow = document.getElementById('simpleChatWindow');
-            if (chatWindow) {
-                chatWindow.style.display = 'none';
+            if (mobileBadge) {
+                mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                if (unreadCount > 0) mobileBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
             }
+
+            if (listDiv) {
+                listDiv.innerHTML = notifications.map(n => `
+                    <div class="notification-item" onclick="markAsRead('${n.id}')">
+                        <div style="font-weight: 600; font-size: 12px;">${escapeHtml(n.title)}</div>
+                        <div style="font-size: 11px; color: #707A8A; margin-top: 4px;">${escapeHtml(n.message.substring(0, 100))}...</div>
+                        <div style="font-size: 10px; color: #8A8F9E; margin-top: 4px;">${n.created_at}</div>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error loading notifications:', error);
         }
+    }
 
-        async function sendSimpleMessage() {
-            const input = document.getElementById('simpleChatInput');
-            const message = input.value.trim();
-            if (!message) return;
+    async function markAsRead(notificationId) {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
 
-            const messagesDiv = document.getElementById('simpleChatMessages');
+        try {
+            await fetch('/api/chatbot/notifications/mark-read/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ notification_id: notificationId })
+            });
+            loadNotifications();
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
+    }
 
+    async function markAllAsRead() {
+        const token = localStorage.getItem('access_token');
+        if (!token) return;
+
+        try {
+            await fetch('/api/chatbot/notifications/mark-all-read/', {
+                method: 'POST',
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            loadNotifications();
+        } catch (error) {
+            console.error('Error marking all as read:', error);
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    // ============ END NOTIFICATION FUNCTIONS ============
+
+    // ============ CHATBOT FUNCTIONS ============
+    function toggleSimpleChat() {
+        const chatWindow = document.getElementById('simpleChatWindow');
+        if (chatWindow) {
+            chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+        }
+    }
+
+    function closeSimpleChat() {
+        const chatWindow = document.getElementById('simpleChatWindow');
+        if (chatWindow) {
+            chatWindow.style.display = 'none';
+        }
+    }
+
+    async function sendSimpleMessage() {
+        const input = document.getElementById('simpleChatInput');
+        const message = input.value.trim();
+        if (!message) return;
+
+        const messagesDiv = document.getElementById('simpleChatMessages');
+
+        messagesDiv.innerHTML += `
+            <div style="text-align: right; margin-bottom: 10px;">
+                <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #0B0E11;">
+                    ${escapeHtml(message)}
+                </div>
+            </div>
+        `;
+        input.value = '';
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        const typingId = 'typing_' + Date.now();
+        messagesDiv.innerHTML += `<div id="${typingId}" style="margin-bottom: 10px;"><div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; color: #707A8A;">Typing...</div></div>`;
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+        try {
+            const response = await fetch('/api/chatbot/message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                },
+                body: JSON.stringify({ message: message })
+            });
+            const data = await response.json();
+
+            document.getElementById(typingId)?.remove();
             messagesDiv.innerHTML += `
-                <div style="text-align: right; margin-bottom: 10px;">
-                    <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #0B0E11;">
-                        ${escapeHtml(message)}
+                <div style="margin-bottom: 10px;">
+                    <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
+                        ${escapeHtml(data.response)}
                     </div>
                 </div>
             `;
-            input.value = '';
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-            const typingId = 'typing_' + Date.now();
-            messagesDiv.innerHTML += `<div id="${typingId}" style="margin-bottom: 10px;"><div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; color: #707A8A;">Typing...</div></div>`;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-            try {
-                const response = await fetch('/api/chatbot/message/', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                    },
-                    body: JSON.stringify({ message: message })
-                });
-                const data = await response.json();
-
-                document.getElementById(typingId)?.remove();
-                messagesDiv.innerHTML += `
-                    <div style="margin-bottom: 10px;">
-                        <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
-                            ${escapeHtml(data.response)}
-                        </div>
+        } catch (error) {
+            document.getElementById(typingId)?.remove();
+            messagesDiv.innerHTML += `
+                <div style="margin-bottom: 10px;">
+                    <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; color: #F6465D;">
+                        Sorry, something went wrong. Please try again.
                     </div>
-                `;
-                messagesDiv.scrollTop = messagesDiv.scrollHeight;
-            } catch (error) {
-                document.getElementById(typingId)?.remove();
-                messagesDiv.innerHTML += `
-                    <div style="margin-bottom: 10px;">
-                        <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; color: #F6465D;">
-                            Sorry, something went wrong. Please try again.
-                        </div>
-                    </div>
-                `;
+                </div>
+            `;
+        }
+    }
+    // ============ END CHATBOT FUNCTIONS ============
+
+    // ============ AUTH FUNCTIONS ============
+    function logout() {
+        localStorage.clear();
+        window.location.href = '/login/';
+    }
+
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    function updateAuthLinks() {
+        const authContainer = document.getElementById('authLinks');
+        const token = getToken();
+
+        if (token && authContainer) {
+            authContainer.innerHTML = `<a class="nav-link" href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>`;
+        } else if (authContainer) {
+            authContainer.innerHTML = `<a class="nav-link" href="/login/"><i class="fas fa-sign-in-alt me-1"></i>Login</a><a class="nav-link" href="/register/"><i class="fas fa-user-plus me-1"></i>Register</a>`;
+        }
+    }
+
+    async function refreshToken() {
+        const refreshToken = localStorage.getItem('refresh_token');
+        if (!refreshToken) return;
+
+        try {
+            const response = await fetch('/api/token/refresh/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ refresh: refreshToken })
+            });
+            const data = await response.json();
+            if (data.access) {
+                localStorage.setItem('access_token', data.access);
             }
+        } catch (e) {
+            console.error('Token refresh failed:', e);
         }
-        // ============ END CHATBOT FUNCTIONS ============
+    }
 
-        // ============ AUTH FUNCTIONS ============
-        function logout() {
-            localStorage.clear();
-            window.location.href = '/login/';
-        }
+    const publicPaths = ['/', '/login/', '/register/'];
+    const isPublicPath = publicPaths.includes(window.location.pathname);
 
-        function getToken() {
-            return localStorage.getItem('access_token');
-        }
+    if (!getToken() && !isPublicPath) {
+        window.location.href = '/login/';
+    }
 
-        function updateAuthLinks() {
-            const authContainer = document.getElementById('authLinks');
-            const token = getToken();
+    if (getToken()) {
+        setInterval(refreshToken, 55 * 60 * 1000);
+        // Start marquee with delay and reduced frequency
+        setTimeout(updateMarquee, 3000);
+        setInterval(updateMarquee, 30000);
+        setTimeout(loadNotifications, 1000);
+    }
 
-            if (token && authContainer) {
-                authContainer.innerHTML = `<a class="nav-link" href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>`;
-            } else if (authContainer) {
-                authContainer.innerHTML = `<a class="nav-link" href="/login/"><i class="fas fa-sign-in-alt me-1"></i>Login</a><a class="nav-link" href="/register/"><i class="fas fa-user-plus me-1"></i>Register</a>`;
-            }
-        }
+    document.addEventListener('DOMContentLoaded', updateAuthLinks);
 
-        async function refreshToken() {
-            const refreshToken = localStorage.getItem('refresh_token');
-            if (!refreshToken) return;
-
-            try {
-                const response = await fetch('/api/token/refresh/', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ refresh: refreshToken })
-                });
-                const data = await response.json();
-                if (data.access) {
-                    localStorage.setItem('access_token', data.access);
+    document.addEventListener('DOMContentLoaded', function() {
+        const chatInput = document.getElementById('simpleChatInput');
+        if (chatInput) {
+            chatInput.addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    sendSimpleMessage();
                 }
-            } catch (e) {
-                console.error('Token refresh failed:', e);
-            }
+            });
         }
-
-        const publicPaths = ['/', '/login/', '/register/'];
-        const isPublicPath = publicPaths.includes(window.location.pathname);
-
-        if (!getToken() && !isPublicPath) {
-            window.location.href = '/login/';
-        }
-
-        if (getToken()) {
-            setInterval(refreshToken, 55 * 60 * 1000);
-            setTimeout(updateMarquee, 1000);
-            setTimeout(loadNotifications, 1000);
-        }
-
-        document.addEventListener('DOMContentLoaded', updateAuthLinks);
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const chatInput = document.getElementById('simpleChatInput');
-            if (chatInput) {
-                chatInput.addEventListener('keypress', function(e) {
-                    if (e.key === 'Enter') {
-                        sendSimpleMessage();
-                    }
-                });
-            }
-        });
-        // ============ END AUTH FUNCTIONS ============
-        // Mobile check - ensure marquee runs
-        if (window.innerWidth <= 768 && localStorage.getItem('access_token')) {
-            console.log('Mobile: Starting marquee');
-            updateMarquee();
-            setInterval(updateMarquee, 10000);
-        }
-    </script>
+    });
+    // ============ END AUTH FUNCTIONS ============
+</script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>
