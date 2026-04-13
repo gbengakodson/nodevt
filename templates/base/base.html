@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Node Ai crypto autotrader - {% block title %}Dashboard{% endblock %}</title>
+    <title>Node volatility tokens market - {% block title %}Dashboard{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -53,82 +53,7 @@
             color: #F0B90B !important;
         }
 
-        /* Notification Bell Styles */
-        .notification-bell {
-            background: none;
-            border: none;
-            cursor: pointer;
-            position: relative;
-            font-size: 20px;
-            padding: 8px;
-            border-radius: 50%;
-            transition: background 0.2 s;
-        }
-
-        .notification-bell:hover {
-            background: #F8F9FA;
-        }
-
-        .notification-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #F6465D;
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            font-size: 10px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .notification-panel {
-            position: absolute;
-            top: 50px;
-            right: 0;
-            width: 320px;
-            max-height: 400px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
-            z-index: 1001;
-            overflow: hidden;
-        }
-
-        .notification-item {
-            padding: 12px 15px;
-            border-bottom: 1px solid #E2E4E8;
-            cursor: pointer;
-            transition: background 0.2 s;
-        }
-
-        .notification-item:hover {
-            background: #F8F9FA;
-        }
-
-        .notification-item.unread {
-            background: #FFF4E5;
-        }
-
-        .notification-title {
-            font-weight: 600;
-            font-size: 11px;
-            margin-bottom: 4px;
-        }
-
-        .notification-message {
-            font-size: 9px;
-            color: #707A8A;
-        }
-
-        .notification-time {
-            font-size: 10px;
-            color: #8A8F9E;
-            margin-top: 4px;
-        }
-
+        /* Live Clock */
         .live-clock {
             font-family: 'Courier New', monospace;
             font-size: 13px;
@@ -141,225 +66,179 @@
             border: 1px solid #E2E4E8;
         }
 
-        @media (max-width: 768px) {
-        .live-clock {
+        /* Mobile Footer Bar */
+        .mobile-footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: #1A1C23;
+            border-top: 1px solid #F0B90B;
+            display: none;
+            justify-content: space-around;
+            align-items: center;
+            padding: 8px 12px;
+            z-index: 1000;
+        }
+
+        .mobile-footer-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            color: #8A8F9E;
+            transition: all 0.2s;
             font-size: 10px;
-            padding: 4px 8px;
+            position: relative;
+        }
+
+        .mobile-footer-item i {
+            font-size: 20px;
+        }
+
+        .mobile-footer-item.active {
+            color: #F0B90B;
+        }
+
+        .mobile-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #F6465D;
+            color: white;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 9px;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Marquee Footer */
+        .marquee-footer {
+            background: #1A1C23;
+            color: #F0B90B;
+            padding: 6px 0;
+            overflow: hidden;
+            white-space: nowrap;
+            border-top: 1px solid rgba(240,185,11,0.2);
+            border-bottom: 1px solid rgba(240,185,11,0.2);
+            font-size: 11px;
+            position: relative;
+            z-index: 999;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 80s linear infinite;
+            padding-left: 20px;
+        }
+
+        @keyframes marquee {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+
+        .marquee-footer:hover .marquee-content {
+            animation-play-state: paused;
+        }
+
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 350px;
+            max-height: 400px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 10001;
+            overflow: hidden;
+        }
+
+        .notification-item {
+            padding: 12px;
+            border-bottom: 1px solid #E2E4E8;
+            cursor: pointer;
+        }
+
+        .notification-item:hover {
+            background: #F8F9FA;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .live-clock {
+                font-size: 9px;
+                padding: 4px 8px;
+            }
+            .mobile-footer {
+                display: flex;
+            }
+            body {
+                padding-bottom: 60px;
+            }
+            .notification-panel {
+                width: 90%;
+                left: 5%;
+                transform: translate(0, -50%);
             }
         }
 
-        @media (max-width: 768px) {
-        .notification-bell {
-            display: inline-block !important;
-            visibility: visible !important;
+        @media (min-width: 769px) and (max-width: 1024px) {
+            .mobile-footer {
+                display: none;
+            }
         }
-
-        .nav-item {
-            display: inline-block !important;
-        }
-
-        /* Chatbot button mobile fix */
-        .chatbot-button {
-            display: flex !important;
-            visibility: visible !important;
-            bottom: 15px !important;
-            right: 15px !important;
-            width: 50px !important;
-            height: 50px !important;
-            z-index: 9999 !important;
-        }
-
-        .chatbot-widget {
-            display: block !important;
-            visibility: visible !important;
-        }
-    }
-
-        @keyframes slideInRight {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-        @keyframes fadeOut {
-            to { opacity: 0; visibility: hidden; }
-        }
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); }
-            70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); }
-            100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); }
-        }
-
-    @media (max-width: 768px) {
-    /* Chatbot button - ensure visible on mobile */
-        .chatbot-button {
-            bottom: 15px !important;
-            right: 15px !important;
-            width: 48px !important;
-            height: 48px !important;
-            z-index: 999 !important;
-        }
-
-        .chatbot-button img {
-            width: 24px !important;
-            height: 24px !important;
-        }
-
-    /* Chat window on mobile */
-        .chatbot-window {
-            position: fixed !important;
-            top: 0 !important;
-            left: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-            width: 100% !important;
-            height: 100% !important;
-            border-radius: 0 !important;
-            z-index: 10000 !important;
-        }
-    }
-
-        /* Mobile Footer Bar */
-.mobile-footer {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #1A1C23;
-    border-top: 1px solid #F0B90B;
-    display: none;
-    justify-content: space-around;
-    align-items: center;
-    padding: 8px 12px;
-    z-index: 1000;
-}
-
-.mobile-footer-item {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 4px;
-    cursor: pointer;
-    color: #8A8F9E;
-    transition: all 0.2s;
-    font-size: 10px;
-    position: relative;
-}
-
-.mobile-footer-item i {
-    font-size: 20px;
-}
-
-.mobile-footer-item.active {
-    color: #F0B90B;
-}
-
-.mobile-badge {
-    position: absolute;
-    top: -8px;
-    right: -8px;
-    background: #F6465D;
-    color: white;
-    border-radius: 50%;
-    width: 16px;
-    height: 16px;
-    font-size: 9px;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Show only on mobile */
-@media (max-width: 768px) {
-    .mobile-footer {
-        display: flex;
-    }
-
-    /* Hide the old navbar bell and chatbot on mobile */
-    .navbar .notification-bell,
-    .navbar .chatbot-trigger {
-        display: none !important;
-    }
-
-    /* Add padding to body to prevent content hiding behind footer */
-    body {
-        padding-bottom: 60px;
-    }
-}
-
     </style>
-    <link rel="stylesheet" href="?v=2">
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
-    <div class="container-fluid px-3">
-        <!-- Logo - Left -->
-        <a class="navbar-brand" href="/coins/" style="padding: 0;">
-            {% include 'base/logo.html' %}
-        </a>
+        <div class="container-fluid px-3">
+            <a class="navbar-brand" href="/coins/" style="padding: 0;">
+               {% include 'base/logo.html' %}
+            </a>
 
-        <!-- Right side items (always visible, no ms-auto) -->
-        <div class="d-flex align-items-center">
-            <!-- Live Clock -->
-            <div class="live-clock" id="liveClock" style="font-family: 'Courier New', monospace; font-size: 13px; background: white; padding: 5px 10px; border-radius: 20px; color: #1E2329; margin-right: 8px; font-weight: 600; border: 1px solid #E2E4E8;">
-                --:--:--
+            <div class="d-flex align-items-center">
+                <div class="live-clock" id="liveClock">--:--:--</div>
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <i class="fas fa-bars" style="color: #1E2329;"></i>
+                </button>
             </div>
 
-            <!-- Notification Dot -->
-{% if user.is_authenticated %}
-<div style="position: relative; cursor: pointer; margin-right: 10px;" onclick="toggleNotificationPanel()">
-    <span style="font-size: 18px;">🔔</span>
-    <span id="notificationBadge" style="position: absolute; top: -5px; right: -8px; background: #F6465D; color: white; border-radius: 50%; width: 16px; height: 16px; font-size: 9px; display: none; align-items: center; justify-content: center;">0</span>
-</div>
-{% endif %}
-
-            <!-- Mobile Menu Toggle -->
-            <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-             <i class="fas fa-bars"></i>
-            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="/dashboard/"><i class="fas fa-chart-line me-1"></i>Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/coins/"><i class="fas fa-coins me-1"></i>Coins</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/trading/"><i class="fas fa-exchange-alt me-1"></i>Trading</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/portfolio/"><i class="fas fa-wallet me-1"></i>Portfolio</a></li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-1"></i>Earn</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
+                            <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
+                            <li><a class="dropdown-item" href="/calculator/">Growth Calculator</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-money-bill-wave me-1"></i>Wallet</a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
+                            <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item"><a class="nav-link" href="/profile/"><i class="fas fa-user me-1"></i>Profile</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chat/"><i class="fas fa-headset me-1"></i>Support</a></li>
+                    <li class="nav-item" id="authLinks"></li>
+                </ul>
+            </div>
         </div>
-
-        <!-- Collapsible Menu (nav links) -->
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item"><a class="nav-link" href="/dashboard/"><i class="fas fa-chart-line me-1"></i>Dashboard</a></li>
-                <li class="nav-item"><a class="nav-link" href="/coins/"><i class="fas fa-coins me-1"></i>Coins</a></li>
-                <li class="nav-item"><a class="nav-link" href="/trading/"><i class="fas fa-exchange-alt me-1"></i>Trading</a></li>
-                <li class="nav-item"><a class="nav-link" href="/portfolio/"><i class="fas fa-wallet me-1"></i>Portfolio</a></li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-1"></i>Earn</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
-                        <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-money-bill-wave me-1"></i>Wallet</a>
-                    <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
-                        <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
-                    </ul>
-                </li>
-                <li class="nav-item"><a class="nav-link" href="/profile/"><i class="fas fa-user me-1"></i>Profile</a></li>
-                <li class="nav-item"><a class="nav-link" href="/chat/"><i class="fas fa-headset me-1"></i>Support</a></li>
-                <li class="nav-item" id="authLinks"></li>
-            </ul>
-        </div>
-    </div>
-</nav>
-
-    <!-- Notification Panel -->
-    <div id="notificationPanel" class="notification-panel" style="display: none;">
-        <div style="background: #F0B90B; padding: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
-            <span>🔔 Notifications</span>
-            <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 20px; cursor: pointer;">×</button>
-        </div>
-        <div id="notificationList" style="max-height: calc(100% - 120px); overflow-y: auto;">
-            <div style="text-align: center; padding: 20px; color: #707A8A;">Loading...</div>
-        </div>
-        <div style="padding: 12px; border-top: 1px solid #E2E4E8; text-align: center;">
-            <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; cursor: pointer; font-size: 13px; font-weight: 500;">Mark all as read</button>
-        </div>
-    </div>
+    </nav>
 
     <main class="container-fluid px-3 py-3">
         <div class="loading">
@@ -371,397 +250,418 @@
         {% endblock %}
     </main>
 
-
-
-    <!-- Mobile Footer Bar -->
-<div class="mobile-footer">
-    <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
-        <i class="fas fa-bell"></i>
-        <span id="mobileBadge" class="mobile-badge">0</span>
-        <span>Alerts</span>
-    </div>
-    <div class="mobile-footer-item" onclick="toggleSimpleChat()">
-        <i class="fas fa-robot"></i>
-        <span>AI Bot</span>
-    </div>
-    <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
-        <i class="fas fa-chart-line"></i>
-        <span>Portfolio</span>
-    </div>
-    <div class="mobile-footer-item" onclick="window.location.href='/trading/'">
-        <i class="fas fa-exchange-alt"></i>
-        <span>Trade</span>
-    </div>
-</div>
-
-
-    <!-- Simple Chat Window for Mobile -->
-<div id="simpleChatWindow" style="display: none; position: fixed; bottom: 70px; left: 10px; right: 10px; width: auto; height: 400px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; flex-direction: column; overflow: hidden;">
-    <div style="background: #F0B90B; padding: 12px; font-weight: 600; display: flex; justify-content: space-between;">
-        <span>🤖 Crypto Assistant</span>
-        <button onclick="closeSimpleChat()" style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
-    </div>
-    <div id="simpleChatMessages" style="flex: 1; overflow-y: auto; padding: 10px; background: #F8F9FA;">
-        <div class="chat-message bot">
-            <div style="background: white; padding: 10px; border-radius: 12px; margin-bottom: 10px; max-width: 80%;">
-                👋 Hi! Ask me anything about trading, deposits, or referrals!
-            </div>
+    <!-- Rolling Notification Marquee - Above Footer -->
+    <div class="marquee-footer">
+        <div class="marquee-content">
+            {% if user.is_authenticated %}
+            <span id="marqueeText">Loading messages...</span>
+            {% else %}
+            <span>🚀 Join NodeVT today - Start earning 10% monthly yield! • 💰 Minimum deposit $10 USDC • 🤖 AI Grid Trading 24/7 • 📈 Refer friends earn 7 levels deep! • 💎 $10 grows to $3,048 in 5 years!</span>
+            {% endif %}
         </div>
     </div>
-    <div style="padding: 10px; border-top: 1px solid #E2E4E8; display: flex; gap: 8px;">
-        <input type="text" id="simpleChatInput" placeholder="Type your question..." style="flex: 1; padding: 10px; border: 1px solid #E2E4E8; border-radius: 20px; outline: none;">
-        <button onclick="sendSimpleMessage()" style="background: #F0B90B; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer;">Send</button>
+
+    <!-- Mobile Footer Bar -->
+    <div class="mobile-footer">
+        <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
+            <i class="fas fa-bell"></i>
+            <span id="mobileBadge" class="mobile-badge">0</span>
+            <span>Alerts</span>
+        </div>
+        <div class="mobile-footer-item" onclick="toggleSimpleChat()">
+            <i class="fas fa-robot"></i>
+            <span>AI Bot</span>
+        </div>
+        <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
+            <i class="fas fa-chart-line"></i>
+            <span>Portfolio</span>
+        </div>
+        <div class="mobile-footer-item" onclick="window.location.href='/trading/'">
+            <i class="fas fa-exchange-alt"></i>
+            <span>Trade</span>
+        </div>
     </div>
-</div>
+
+    <!-- Notification Panel -->
+    <div id="notificationPanel" class="notification-panel" style="display: none;">
+        <div style="background: #F0B90B; padding: 12px 15px; font-weight: 600; display: flex; justify-content: space-between;">
+            <span>🔔 Notifications</span>
+            <button onclick="closeNotificationPanel()" style="background: none; border: none; font-size: 18px; cursor: pointer;">×</button>
+        </div>
+        <div id="notificationList" style="max-height: 350px; overflow-y: auto;">
+            <div style="text-align: center; padding: 20px;">Loading...</div>
+        </div>
+        <div style="padding: 10px; text-align: center; border-top: 1px solid #E2E4E8;">
+            <button onclick="markAllAsRead()" style="background: none; border: none; color: #F0B90B; font-size: 12px;">Mark all as read</button>
+        </div>
+    </div>
+
+    <!-- Simple Chat Window for Mobile -->
+    <div id="simpleChatWindow" style="display: none; position: fixed; bottom: 70px; left: 10px; right: 10px; width: auto; height: 450px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; flex-direction: column; overflow: hidden;">
+        <div style="background: #F0B90B; padding: 12px 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+            <span>🤖 Crypto Assistant</span>
+            <button onclick="closeSimpleChat()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #0B0E11;">×</button>
+        </div>
+        <div id="simpleChatMessages" style="flex: 1; overflow-y: auto; padding: 12px; background: #F8F9FA;">
+            <div class="chat-message bot" style="margin-bottom: 10px;">
+                <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
+                    👋 Hi! I'm your crypto assistant. Ask me anything about trading, deposits, referrals, or yield!
+                </div>
+            </div>
+        </div>
+        <div style="padding: 12px; border-top: 1px solid #E2E4E8; display: flex; gap: 8px; background: white;">
+            <input type="text" id="simpleChatInput" placeholder="Type your question..." style="flex: 1; padding: 10px 14px; border: 1px solid #E2E4E8; border-radius: 25px; outline: none; font-size: 14px;">
+            <button onclick="sendSimpleMessage()" style="background: #F0B90B; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Send</button>
+        </div>
+    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
     <script>
-    // ============ LOADING FUNCTIONS ============
-    function showLoading() {
-        const loader = document.querySelector('.loading');
-        if (loader) loader.style.display = 'flex';
-    }
-
-    function hideLoading() {
-        const loader = document.querySelector('.loading');
-        if (loader) loader.style.display = 'none';
-    }
-
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', hideLoading);
-    } else {
-        hideLoading();
-    }
-    setTimeout(hideLoading, 2000);
-    // ============ END LOADING FUNCTIONS ============
-
-    // ============ LIVE CLOCK WITH NANOSECONDS ============
-    function updateLiveClock() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
-
-        // Simulate nanoseconds based on milliseconds
-        const nanoseconds = String(Math.floor(performance.now() * 1000000) % 1000000).padStart(6, '0');
-
-        const clockElement = document.getElementById('liveClock');
-        if (clockElement) {
-            clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span><span style="font-size: 7px; color: #8A8F9E;">ns</span>`;
+        // ============ LOADING FUNCTIONS ============
+        function showLoading() {
+            const loader = document.querySelector('.loading');
+            if (loader) loader.style.display = 'flex';
         }
-    }
-    setInterval(updateLiveClock, 10);
-    updateLiveClock();
-    // ============ END LIVE CLOCK ============
 
-    // ============ NOTIFICATION FUNCTIONS ============
-    let notificationPanelOpen = false;
+        function hideLoading() {
+            const loader = document.querySelector('.loading');
+            if (loader) loader.style.display = 'none';
+        }
 
-    function toggleNotificationPanel() {
-        notificationPanelOpen = !notificationPanelOpen;
-        const panel = document.getElementById('notificationPanel');
-        if (panel) {
-            panel.style.display = notificationPanelOpen ? 'block' : 'none';
-            if (notificationPanelOpen) {
-                loadNotifications();
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', hideLoading);
+        } else {
+            hideLoading();
+        }
+        setTimeout(hideLoading, 2000);
+        // ============ END LOADING FUNCTIONS ============
+
+        // ============ LIVE CLOCK ============
+        function updateLiveClock() {
+            const now = new Date();
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const milliseconds = String(now.getMilliseconds()).padStart(3, '0');
+            const clockElement = document.getElementById('liveClock');
+            if (clockElement) {
+                clockElement.innerHTML = `${hours}:${minutes}:${seconds}<span style="font-size: 9px;">.${milliseconds}</span>`;
             }
         }
-    }
+        setInterval(updateLiveClock, 100);
+        updateLiveClock();
+        // ============ END LIVE CLOCK ============
 
-    function closeNotificationPanel() {
-        notificationPanelOpen = false;
-        const panel = document.getElementById('notificationPanel');
-        if (panel) panel.style.display = 'none';
-    }
+        // ============ MARQUEE UPDATER ============
+        async function updateMarquee() {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
 
-    async function loadNotifications() {
-        const token = getToken();
-        if (!token) return;
+            try {
+                const balanceRes = await fetch('/api/trading/my_balance/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const balance = await balanceRes.json();
 
-        try {
-            const response = await fetch('/api/chatbot/notifications/', {
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            if (!response.ok) return;
-            const notifications = await response.json();
-            const listDiv = document.getElementById('notificationList');
-            const badge = document.getElementById('notificationBadge');
+                const holdingsRes = await fetch('/api/trading/my_tokens/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const holdings = await holdingsRes.json();
 
-            if (!notifications || !Array.isArray(notifications) || notifications.length === 0) {
-                if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
-                if (badge) badge.style.display = 'none';
+                let portfolioValue = 0;
+                holdings.forEach(h => {
+                    portfolioValue += parseFloat(h.quantity) * parseFloat(h.current_price);
+                });
+
+                const grandBalance = parseFloat(balance.grand_balance) || 0;
+                const yieldBalance = parseFloat(balance.yield_balance) || 0;
+                const hourlyYield = (portfolioValue * 0.10) / 720;
+                const dailyYield = hourlyYield * 24;
+
+                const messages = [
+                    `💰 Your Balance: $${grandBalance.toFixed(2)} | Yield: $${yieldBalance.toFixed(2)}`,
+                    `⚠️ Balance empty? Deposit $10 USDC to start earning 10% monthly!`,
+                    `🎯 Reach $1,000 in 12 months - Need $${Math.max(0, 1000 - grandBalance).toFixed(2)} more!`,
+                    `⏰ You're earning $${hourlyYield.toFixed(4)}/hour! That's $${dailyYield.toFixed(2)}/day!`,
+                    `💎 Want $50/day? Invest $${(50 * 30 / 0.10).toFixed(0)} at 10% monthly yield!`,
+                    `🚀 $10 becomes $3,048 in 5 years with compounding! Start today!`,
+                    `🤝 Refer 50 people = earn $${(50 * 10 * 0.10 * 0.50).toFixed(2)}/month in node fees!`,
+                    `📈 $1,000 becomes $${(1000 * Math.pow(1.10, 60)).toFixed(0)} in 5 years!`,
+                    `💵 Deposit USDC: BSC network, minimum $10, credited within 24h`,
+                    `📊 Your portfolio: $${portfolioValue.toFixed(2)} | Top: ${holdings[0]?.token_symbol || 'None'}`,
+                    `⚡ AI Grid trades 24/7 - Buying dips and selling pumps automatically!`,
+                    `🔄 Your referral code: ${balance.referral_code || 'Login to see'} - Share to earn!`,
+                    `🎯 Next target: $${grandBalance < 500 ? 500 : 1000} - Keep going!`,
+                    `💰 Passive income: $${(hourlyYield * 720).toFixed(2)}/month from yield alone!`,
+                    `💡 Tip: Reinvest your yield to compound returns faster!`,
+                    `🌟 $100 becomes $${(100 * Math.pow(1.10, 60)).toFixed(0)} in 5 years! Start small!`,
+                    `🤖 AI Bot works 24/7 - Even while you sleep!`,
+                    `📈 10% monthly yield compounds to 213% APY!`,
+                    `💎 Yield wallet: $${yieldBalance.toFixed(2)} - Withdraw anytime to Grand Balance`,
+                    `🎉 You're earning while holding - No need to sell!`,
+                    `💪 Keep holding - Your yield grows with your portfolio!`,
+                    `🔥 Referral commissions paid instantly - No waiting!`,
+                    `🚀 $500 becomes $${(500 * Math.pow(1.10, 60)).toFixed(0)} in 5 years!`
+                ];
+
+                const randomIndex = Math.floor(Math.random() * messages.length);
+                const marqueeText = document.getElementById('marqueeText');
+                if (marqueeText) {
+                    marqueeText.innerHTML = messages[randomIndex];
+                }
+
+                setTimeout(updateMarquee, 10000);
+
+            } catch (error) {
+                console.error('Marquee error:', error);
+                setTimeout(updateMarquee, 15000);
+            }
+        }
+        // ============ END MARQUEE UPDATER ============
+
+        // ============ NOTIFICATION FUNCTIONS ============
+        let notificationPanelOpen = false;
+
+        function toggleNotificationPanel() {
+            notificationPanelOpen = !notificationPanelOpen;
+            const panel = document.getElementById('notificationPanel');
+            if (panel) {
+                panel.style.display = notificationPanelOpen ? 'block' : 'none';
+                if (notificationPanelOpen) {
+                    loadNotifications();
+                }
+            }
+        }
+
+        function closeNotificationPanel() {
+            notificationPanelOpen = false;
+            const panel = document.getElementById('notificationPanel');
+            if (panel) panel.style.display = 'none';
+        }
+
+        async function loadNotifications() {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            try {
+                const response = await fetch('/api/chatbot/notifications/', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (!response.ok) return;
+                const notifications = await response.json();
+                const listDiv = document.getElementById('notificationList');
+                const badge = document.getElementById('notificationBadge');
                 const mobileBadge = document.getElementById('mobileBadge');
-                if (mobileBadge) mobileBadge.style.display = 'none';
-                return;
-            }
 
-            const unreadCount = notifications.filter(n => !n.is_read).length;
-
-            if (badge) {
-                if (unreadCount > 0) {
-                    badge.style.display = 'flex';
-                    badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                } else {
-                    badge.style.display = 'none';
+                if (!notifications || notifications.length === 0) {
+                    if (listDiv) listDiv.innerHTML = '<div style="text-align: center; padding: 20px;">No notifications</div>';
+                    return;
                 }
-            }
 
-            const mobileBadge = document.getElementById('mobileBadge');
-            if (mobileBadge) {
-                if (unreadCount > 0) {
-                    mobileBadge.style.display = 'flex';
-                    mobileBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
-                } else {
-                    mobileBadge.style.display = 'none';
+                const unreadCount = notifications.filter(n => !n.is_read).length;
+                if (badge) {
+                    badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                    if (unreadCount > 0) badge.innerText = unreadCount > 9 ? '9+' : unreadCount;
                 }
+                if (mobileBadge) {
+                    mobileBadge.style.display = unreadCount > 0 ? 'flex' : 'none';
+                    if (unreadCount > 0) mobileBadge.innerText = unreadCount > 9 ? '9+' : unreadCount;
+                }
+
+                if (listDiv) {
+                    listDiv.innerHTML = notifications.map(n => `
+                        <div class="notification-item" onclick="markAsRead('${n.id}')">
+                            <div style="font-weight: 600; font-size: 12px;">${escapeHtml(n.title)}</div>
+                            <div style="font-size: 11px; color: #707A8A; margin-top: 4px;">${escapeHtml(n.message.substring(0, 100))}...</div>
+                            <div style="font-size: 10px; color: #8A8F9E; margin-top: 4px;">${n.created_at}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (error) {
+                console.error('Error loading notifications:', error);
             }
+        }
 
-            if (listDiv) {
-                listDiv.innerHTML = notifications.map(n => `
-                    <div class="notification-item ${!n.is_read ? 'unread' : ''}" onclick="markAsRead('${n.id}')">
-                        <div class="notification-title">${escapeHtml(n.title)}</div>
-                        <div class="notification-message">${escapeHtml(n.message)}</div>
-                        <div class="notification-time">${n.created_at}</div>
-                    </div>
-                `).join('');
+        async function markAsRead(notificationId) {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            try {
+                await fetch('/api/chatbot/notifications/mark-read/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${token}`
+                    },
+                    body: JSON.stringify({ notification_id: notificationId })
+                });
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking as read:', error);
             }
-        } catch (error) {
-            console.error('Error loading notifications:', error);
         }
-    }
 
-    async function markAsRead(notificationId) {
-        const token = getToken();
-        if (!token) return;
+        async function markAllAsRead() {
+            const token = localStorage.getItem('access_token');
+            if (!token) return;
 
-        try {
-            await fetch('/api/chatbot/notifications/mark-read/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ notification_id: notificationId })
-            });
-            loadNotifications();
-        } catch (error) {
-            console.error('Error marking as read:', error);
+            try {
+                await fetch('/api/chatbot/notifications/mark-all-read/', {
+                    method: 'POST',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                loadNotifications();
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+            }
         }
-    }
 
-    async function markAllAsRead() {
-        const token = getToken();
-        if (!token) return;
-
-        try {
-            await fetch('/api/chatbot/notifications/mark-all-read/', {
-                method: 'POST',
-                headers: { 'Authorization': `Bearer ${token}` }
-            });
-            loadNotifications();
-        } catch (error) {
-            console.error('Error marking all as read:', error);
+        function escapeHtml(text) {
+            if (!text) return '';
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
-    }
+        // ============ END NOTIFICATION FUNCTIONS ============
 
-    function escapeHtml(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-    // ============ END NOTIFICATION FUNCTIONS ============
+        // ============ CHATBOT FUNCTIONS ============
+        function toggleSimpleChat() {
+            const chatWindow = document.getElementById('simpleChatWindow');
+            if (chatWindow) {
+                chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+            }
+        }
 
-    // ============ CHATBOT FUNCTIONS ============
-    function toggleSimpleChat() {
-        const chatWindow = document.getElementById('simpleChatWindow');
-        if (chatWindow) {
-            if (chatWindow.style.display === 'none' || chatWindow.style.display === '') {
-                chatWindow.style.display = 'flex';
-            } else {
+        function closeSimpleChat() {
+            const chatWindow = document.getElementById('simpleChatWindow');
+            if (chatWindow) {
                 chatWindow.style.display = 'none';
             }
         }
-    }
 
-    function closeSimpleChat() {
-        const chatWindow = document.getElementById('simpleChatWindow');
-        if (chatWindow) {
-            chatWindow.style.display = 'none';
-        }
-    }
+        async function sendSimpleMessage() {
+            const input = document.getElementById('simpleChatInput');
+            const message = input.value.trim();
+            if (!message) return;
 
-    async function sendSimpleMessage() {
-        const input = document.getElementById('simpleChatInput');
-        const message = input.value.trim();
-        if (!message) return;
+            const messagesDiv = document.getElementById('simpleChatMessages');
 
-        const messagesDiv = document.getElementById('simpleChatMessages');
-
-        // Add user message
-        messagesDiv.innerHTML += `
-            <div class="chat-message user" style="text-align: right; margin-bottom: 10px;">
-                <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; text-align: left; color: #0B0E11;">
-                    ${escapeHtml(message)}
-                </div>
-            </div>
-        `;
-        input.value = '';
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        // Add typing indicator
-        const typingId = 'typingMsg_' + Date.now();
-        messagesDiv.innerHTML += `<div id="${typingId}" class="chat-message bot" style="margin-bottom: 10px;"><div style="background: white; padding: 10px 14px; border-radius: 18px; display: inline-block; color: #707A8A;">Typing...</div></div>`;
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        try {
-            const response = await fetch('/api/chatbot/message/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ message: message })
-            });
-            const data = await response.json();
-
-            document.getElementById(typingId)?.remove();
             messagesDiv.innerHTML += `
-                <div class="chat-message bot" style="margin-bottom: 10px;">
-                    <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
-                        ${escapeHtml(data.response)}
+                <div style="text-align: right; margin-bottom: 10px;">
+                    <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #0B0E11;">
+                        ${escapeHtml(message)}
                     </div>
                 </div>
             `;
+            input.value = '';
             messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        } catch (error) {
-            document.getElementById(typingId)?.remove();
-            messagesDiv.innerHTML += `
-                <div class="chat-message bot" style="margin-bottom: 10px;">
-                    <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #F6465D;">
-                        Sorry, something went wrong. Please try again.
+
+            const typingId = 'typing_' + Date.now();
+            messagesDiv.innerHTML += `<div id="${typingId}" style="margin-bottom: 10px;"><div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; color: #707A8A;">Typing...</div></div>`;
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+
+            try {
+                const response = await fetch('/api/chatbot/message/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+                const data = await response.json();
+
+                document.getElementById(typingId)?.remove();
+                messagesDiv.innerHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
+                            ${escapeHtml(data.response)}
+                        </div>
                     </div>
-                </div>
-            `;
-        }
-    }
-    // ============ END CHATBOT FUNCTIONS ============
-
-    // ============ AUTH FUNCTIONS ============
-    function logout() {
-        clearTokens();
-        window.location.href = '/login/';
-    }
-
-    function getToken() {
-        return localStorage.getItem('access_token');
-    }
-
-    function setToken(token) {
-        localStorage.setItem('access_token', token);
-    }
-
-    function setRefreshToken(token) {
-        localStorage.setItem('refresh_token', token);
-    }
-
-    function getRefreshToken() {
-        return localStorage.getItem('refresh_token');
-    }
-
-    function clearTokens() {
-        localStorage.removeItem('access_token');
-        localStorage.removeItem('refresh_token');
-        sessionStorage.clear();
-    }
-
-    function updateAuthLinks() {
-        const authContainer = document.getElementById('authLinks');
-        const token = getToken();
-
-        if (token && authContainer) {
-            authContainer.innerHTML = `
-                <a class="nav-link" href="#" onclick="logout(); return false;">
-                    <i class="fas fa-sign-out-alt me-1"></i>Logout
-                </a>
-            `;
-        } else if (authContainer) {
-            authContainer.innerHTML = `
-                <a class="nav-link" href="/login/">
-                    <i class="fas fa-sign-in-alt me-1"></i>Login
-                </a>
-                <a class="nav-link" href="/register/">
-                    <i class="fas fa-user-plus me-1"></i>Register
-                </a>
-            `;
-        }
-    }
-
-    async function refreshToken() {
-        const refreshToken = getRefreshToken();
-        if (!refreshToken) return;
-
-        try {
-            const baseUrl = window.API_BASE || '/api';
-            const response = await fetch(`${baseUrl}/token/refresh/`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ refresh: refreshToken })
-            });
-
-            const data = await response.json();
-            if (data.access) {
-                localStorage.setItem('access_token', data.access);
+                `;
+                messagesDiv.scrollTop = messagesDiv.scrollHeight;
+            } catch (error) {
+                document.getElementById(typingId)?.remove();
+                messagesDiv.innerHTML += `
+                    <div style="margin-bottom: 10px;">
+                        <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; color: #F6465D;">
+                            Sorry, something went wrong. Please try again.
+                        </div>
+                    </div>
+                `;
             }
-        } catch (e) {
-            console.error('Token refresh failed:', e);
         }
-    }
+        // ============ END CHATBOT FUNCTIONS ============
 
-    // Check if user is logged in
-    const publicPaths = ['/', '/login/', '/register/'];
-    const isPublicPath = publicPaths.includes(window.location.pathname);
+        // ============ AUTH FUNCTIONS ============
+        function logout() {
+            localStorage.clear();
+            window.location.href = '/login/';
+        }
 
-    if (!getToken() && !isPublicPath) {
-        window.location.href = '/login/';
-    }
+        function getToken() {
+            return localStorage.getItem('access_token');
+        }
 
-    if (getToken()) {
-        setInterval(refreshToken, 55 * 60 * 1000);
-    }
+        function updateAuthLinks() {
+            const authContainer = document.getElementById('authLinks');
+            const token = getToken();
 
-    document.addEventListener('DOMContentLoaded', updateAuthLinks);
-    window.addEventListener('storage', function(e) {
-        if (e.key === 'access_token') updateAuthLinks();
-    });
+            if (token && authContainer) {
+                authContainer.innerHTML = `<a class="nav-link" href="#" onclick="logout(); return false;"><i class="fas fa-sign-out-alt me-1"></i>Logout</a>`;
+            } else if (authContainer) {
+                authContainer.innerHTML = `<a class="nav-link" href="/login/"><i class="fas fa-sign-in-alt me-1"></i>Login</a><a class="nav-link" href="/register/"><i class="fas fa-user-plus me-1"></i>Register</a>`;
+            }
+        }
 
-    // Load notifications if logged in
-    if (getToken() && !isPublicPath) {
-        setTimeout(loadNotifications, 1000);
-        setInterval(loadNotifications, 30000);
-    }
+        async function refreshToken() {
+            const refreshToken = localStorage.getItem('refresh_token');
+            if (!refreshToken) return;
 
-    // Enter key support for chat input
-    document.addEventListener('DOMContentLoaded', function() {
-        const chatInput = document.getElementById('simpleChatInput');
-        if (chatInput) {
-            chatInput.addEventListener('keypress', function(e) {
-                if (e.key === 'Enter') {
-                    sendSimpleMessage();
+            try {
+                const response = await fetch('/api/token/refresh/', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ refresh: refreshToken })
+                });
+                const data = await response.json();
+                if (data.access) {
+                    localStorage.setItem('access_token', data.access);
                 }
-            });
+            } catch (e) {
+                console.error('Token refresh failed:', e);
+            }
         }
-    });
-    // ============ END AUTH FUNCTIONS ============
-</script>
-    {% block extra_js %}{% endblock %}
 
-    <!-- Chatbot Widget -->
-    {% if user.is_authenticated %}
-        {% include 'chatbot/widget.html' %}
-    {% endif %}
+        const publicPaths = ['/', '/login/', '/register/'];
+        const isPublicPath = publicPaths.includes(window.location.pathname);
+
+        if (!getToken() && !isPublicPath) {
+            window.location.href = '/login/';
+        }
+
+        if (getToken()) {
+            setInterval(refreshToken, 55 * 60 * 1000);
+            setTimeout(updateMarquee, 1000);
+            setTimeout(loadNotifications, 1000);
+        }
+
+        document.addEventListener('DOMContentLoaded', updateAuthLinks);
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const chatInput = document.getElementById('simpleChatInput');
+            if (chatInput) {
+                chatInput.addEventListener('keypress', function(e) {
+                    if (e.key === 'Enter') {
+                        sendSimpleMessage();
+                    }
+                });
+            }
+        });
+        // ============ END AUTH FUNCTIONS ============
+    </script>
+    {% block extra_js %}{% endblock %}
 </body>
 </html>
