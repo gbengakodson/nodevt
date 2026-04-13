@@ -356,6 +356,14 @@
 
         // ============ MARQUEE UPDATER ============
         async function updateMarquee() {
+            // Force marquee to start on mobile
+            setTimeout(function() {
+                if (localStorage.getItem('access_token')) {
+                    updateMarquee();
+                    setInterval(updateMarquee, 10000);
+                }
+            }, 500);
+
             const token = localStorage.getItem('access_token');
             if (!token) return;
 
@@ -418,6 +426,12 @@
                 console.error('Marquee error:', error);
                 setTimeout(updateMarquee, 15000);
             }
+        }
+        // Check if on mobile
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            console.log('Mobile device detected - forcing marquee update');
+            setTimeout(updateMarquee, 500);
         }
         // ============ END MARQUEE UPDATER ============
 
@@ -661,6 +675,12 @@
             }
         });
         // ============ END AUTH FUNCTIONS ============
+        // Mobile check - ensure marquee runs
+        if (window.innerWidth <= 768 && localStorage.getItem('access_token')) {
+            console.log('Mobile: Starting marquee');
+            updateMarquee();
+            setInterval(updateMarquee, 10000);
+        }
     </script>
     {% block extra_js %}{% endblock %}
 </body>
