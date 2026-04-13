@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Portfolio{% endblock %}
+{% block title %}Portfolio | Goal Journey Tracker{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -64,6 +64,14 @@
         color: #1E2329;
     }
 
+    .stat-value.gold {
+        color: #F0B90B;
+    }
+
+    .stat-value.green {
+        color: #0ECB81;
+    }
+
     .stat-change {
         font-size: 11px;
         margin-top: 4px;
@@ -78,37 +86,161 @@
         color: #F6465D;
     }
 
-    /* Charts Row */
-    .charts-row {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
+    /* Goal Journey Card */
+    .journey-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
         margin-bottom: 24px;
     }
 
-    .chart-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 16px;
+    .journey-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid #E2E4E8;
+        background: #F8F9FA;
     }
 
-    .chart-title {
+    .journey-title {
         font-size: 13px;
         font-weight: 600;
         color: #1E2329;
-        margin-bottom: 12px;
-        text-align: center;
     }
 
-    .chart-container {
-        height: 180px;
+    .journey-body {
+        padding: 20px;
+    }
+
+    /* Journey Map Container */
+    .journey-map-container {
         position: relative;
+        height: 320px;
+        background: linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
+        border-radius: 12px;
+        overflow: hidden;
+        margin-bottom: 20px;
     }
 
-    canvas.mini-chart {
+    .journey-canvas {
         width: 100%;
         height: 100%;
+        display: block;
+    }
+
+    /* Animated Marker */
+    .animated-marker {
+        position: absolute;
+        z-index: 20;
+        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        cursor: pointer;
+    }
+
+    .marker-pin {
+        width: 32px;
+        height: 32px;
+        background: #F0B90B;
+        border-radius: 50%;
+        border: 3px solid white;
+        box-shadow: 0 0 0 4px rgba(240, 185, 11, 0.3), 0 4px 12px rgba(0,0,0,0.15);
+        animation: markerPulse 1.5s infinite;
+    }
+
+    .marker-label {
+        position: absolute;
+        bottom: -24px;
+        left: 50%;
+        transform: translateX(-50%);
+        white-space: nowrap;
+        background: #1E2329;
+        color: white;
+        padding: 4px 8px;
+        border-radius: 12px;
+        font-size: 10px;
+        font-weight: 500;
+    }
+
+    @keyframes markerPulse {
+        0% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0.4); }
+        70% { box-shadow: 0 0 0 12px rgba(240, 185, 11, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0); }
+    }
+
+    /* Milestone Markers */
+    .milestone-row {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+        flex-wrap: wrap;
+        gap: 12px;
+    }
+
+    .milestone-point {
+        flex: 1;
+        text-align: center;
+        padding: 10px;
+        background: #F8F9FA;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .milestone-point.active {
+        background: #FFF4E5;
+        border: 1px solid #F0B90B;
+    }
+
+    .milestone-point:hover {
+        background: #EFF2F5;
+    }
+
+    .milestone-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: #F0B90B;
+    }
+
+    .milestone-label {
+        font-size: 10px;
+        color: #707A8A;
+        margin-top: 4px;
+    }
+
+    /* Goal Calculator */
+    .goal-calculator {
+        background: #F5F7FA;
+        border-radius: 12px;
+        padding: 16px;
+        margin-top: 16px;
+    }
+
+    .goal-calculator label {
+        font-size: 11px;
+        color: #5E6673;
+        margin-bottom: 4px;
+        display: block;
+    }
+
+    .goal-calculator input, .goal-calculator select {
+        width: 100%;
+        padding: 8px 12px;
+        background: white;
+        border: 1px solid #E2E4E8;
+        border-radius: 8px;
+        font-size: 13px;
+    }
+
+    .progress-bar {
+        height: 6px;
+        background: #E2E4E8;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+
+    .progress-fill {
+        height: 100%;
+        background: #F0B90B;
+        border-radius: 3px;
+        transition: width 0.5s ease;
     }
 
     /* Holdings Section */
@@ -131,17 +263,6 @@
     .section-title {
         font-size: 16px;
         font-weight: 600;
-        color: #1E2329;
-    }
-
-    .section-link {
-        font-size: 12px;
-        color: #707A8A;
-        cursor: pointer;
-        transition: color 0.2s;
-    }
-
-    .section-link:hover {
         color: #1E2329;
     }
 
@@ -231,8 +352,14 @@
         .stats-row {
             grid-template-columns: repeat(2, 1fr);
         }
-        .charts-row {
-            grid-template-columns: 1fr;
+        .journey-map-container {
+            height: 250px;
+        }
+        .milestone-row {
+            flex-wrap: wrap;
+        }
+        .milestone-point {
+            min-width: 80px;
         }
         .holdings-table th, .holdings-table td {
             padding: 8px 12px;
@@ -255,55 +382,113 @@
 {% block content %}
 <div class="portfolio-container">
     <div class="portfolio-header">
-        <div class="portfolio-title">📊 Portfolio Overview</div>
-        <div class="portfolio-subtitle">Track your crypto holdings and performance</div>
+        <div class="portfolio-title">🎯 Goal Journey Tracker</div>
+        <div class="portfolio-subtitle">Track your progress from current position to your financial destination</div>
     </div>
 
+    <!-- Stats Row -->
     <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-label">Total Value</div>
-            <div class="stat-value" id="totalValue">$0.00</div>
-            <div class="stat-change">Current portfolio value</div>
+            <div class="stat-label">🎯 Your Destination</div>
+            <div class="stat-value gold" id="userTarget">$10,000</div>
+            <div class="stat-change">Target: <span id="targetDate">2 Years</span></div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Total Invested</div>
-            <div class="stat-value" id="totalInvested">$0.00</div>
-            <div class="stat-change">Initial investment</div>
+            <div class="stat-label">📍 Current Position</div>
+            <div class="stat-value green" id="currentProgress">$0</div>
+            <div class="progress-bar mt-2">
+                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
+            </div>
+            <div class="stat-change mt-1"><span id="progressPercent">0</span>% Complete</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Total Profit/Loss</div>
-            <div class="stat-value" id="totalPnL">$0.00</div>
-            <div class="stat-change" id="pnlPercent">0.00%</div>
+            <div class="stat-label">⏰ Distance to Goal</div>
+            <div class="stat-value" id="remainingAmount">$0</div>
+            <div class="stat-change">Need to reach target</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">24h Yield</div>
-            <div class="stat-value" id="dailyYield">$0.00</div>
-            <div class="stat-change"> Up to 20% monthly yield</div>
+            <div class="stat-label">⚡ Required Monthly</div>
+            <div class="stat-value" id="requiredMonthly">$0</div>
+            <div class="stat-change">To hit your goal</div>
         </div>
     </div>
 
-    <!-- Three Charts Row -->
-    <div class="charts-row">
-        <div class="chart-card">
-            <div class="chart-title">📈 Portfolio Value Trend (24h)</div>
-            <div class="chart-container">
-                <canvas id="valueTrendChart" class="mini-chart"></canvas>
-            </div>
+    <!-- Goal Journey Map -->
+    <div class="journey-card">
+        <div class="journey-header">
+            <span class="journey-title"><i class="fas fa-map-marked-alt me-2" style="color: #F0B90B;"></i>Your Financial Journey</span>
         </div>
-        <div class="chart-card">
-            <div class="chart-title">💰 Yield Earnings Trend (24h)</div>
-            <div class="chart-container">
-                <canvas id="yieldTrendChart" class="mini-chart"></canvas>
+        <div class="journey-body">
+            <div class="journey-map-container" id="journeyMapContainer">
+                <canvas id="journeyCanvas" class="journey-canvas"></canvas>
+                <div id="animatedMarker" class="animated-marker" style="display: none;">
+                    <div class="marker-pin"></div>
+                    <div class="marker-label" id="markerLabel">Starting Point</div>
+                </div>
             </div>
-        </div>
-        <div class="chart-card">
-            <div class="chart-title">🔄 Total Trades (Last 30 Days)</div>
-            <div class="chart-container">
-                <canvas id="tradesChart" class="mini-chart"></canvas>
+
+            <!-- Milestone Points -->
+            <div class="milestone-row" id="milestoneRow">
+                <div class="milestone-point" data-position="0">
+                    <div class="milestone-value" id="startMilestone">$0</div>
+                    <div class="milestone-label">Start</div>
+                </div>
+                <div class="milestone-point" data-position="25">
+                    <div class="milestone-value" id="milestone25">$0</div>
+                    <div class="milestone-label">25%</div>
+                </div>
+                <div class="milestone-point" data-position="50">
+                    <div class="milestone-value" id="milestone50">$0</div>
+                    <div class="milestone-label">50%</div>
+                </div>
+                <div class="milestone-point" data-position="75">
+                    <div class="milestone-value" id="milestone75">$0</div>
+                    <div class="milestone-label">75%</div>
+                </div>
+                <div class="milestone-point" data-position="100">
+                    <div class="milestone-value" id="targetMilestone">$0</div>
+                    <div class="milestone-label">Goal 🎯</div>
+                </div>
             </div>
         </div>
     </div>
 
+    <!-- Goal Calculator -->
+    <div class="journey-card">
+        <div class="journey-header">
+            <span class="journey-title"><i class="fas fa-calculator me-2" style="color: #F0B90B;"></i>Plan Your Journey</span>
+        </div>
+        <div class="journey-body">
+            <div class="goal-calculator">
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label>🎯 Target Amount</label>
+                        <input type="number" id="goalTarget" class="form-control" value="10000" step="1000">
+                    </div>
+                    <div class="col-md-3">
+                        <label>⏱️ Time Period (Years)</label>
+                        <select id="goalYears" class="form-control">
+                            <option value="1">1 Year</option>
+                            <option value="2" selected>2 Years</option>
+                            <option value="3">3 Years</option>
+                            <option value="4">4 Years</option>
+                            <option value="5">5 Years</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>➕ Monthly Addition</label>
+                        <input type="number" id="monthlyAddition" class="form-control" value="0" step="50">
+                    </div>
+                    <div class="col-md-3">
+                        <label>&nbsp;</label>
+                        <button id="updateGoalBtn" class="btn btn-sm" style="background: #F0B90B; color: #0B0E11; width: 100%; padding: 8px;">Update Journey →</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Holdings Section -->
     <div class="holdings-section">
         <div class="section-header">
             <span class="section-title">📦 Your Holdings</span>
@@ -316,11 +501,11 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API_BASE = '/api';
-    let valueChart, yieldChart, tradesChart;
+    let journeyCanvas = null;
+    let currentMarkerPosition = 0;
+    let portfolioValue = 0;
 
-    // Crypto icons from CDN
     function getTokenIcon(symbol) {
-           // Use local static files
         return `/static/coins/${symbol}.png`;
     }
 
@@ -337,172 +522,167 @@
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-
-        // Convert to number first
         const value = parseFloat(num);
         if (isNaN(value)) return '$0.00';
-
         if (value === 0) return '$0.00';
-
-        // Handle very small numbers (like PEPE at 0.00000344)
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return `$${value.toFixed(8)}`;
-        }
-
-        // Handle large numbers
+        if (Math.abs(value) < 0.01) return `$${value.toFixed(6)}`;
         if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
         if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-
-        // Regular numbers
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
     function formatNumber(num, decimals = 6) {
         if (!num) return '0';
-
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
-
         if (value === 0) return '0';
-
-        // Handle very small numbers
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return value.toFixed(8);
-        }
-
+        if (Math.abs(value) < 0.01) return value.toFixed(8);
         return value.toFixed(decimals);
     }
 
-    async function getCurrentPrice(symbol) {
-        const symbolToId = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-            'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap',
-            'ATOM': 'cosmos', 'LTC': 'litecoin', 'NEAR': 'near', 'ALGO': 'algorand',
-            'VET': 'vechain', 'FTM': 'fantom', 'EGLD': 'elrond-erd-2', 'THETA': 'theta-token'
+    function calculateRequiredInitial(target, years, monthlyAdd) {
+        let low = 0;
+        let high = target;
+        let iterations = 0;
+        const monthlyRate = 0.10;
+
+        while (low < high && iterations < 50) {
+            let mid = (low + high) / 2;
+            let balance = mid;
+            let months = years * 12;
+
+            for (let month = 1; month <= months; month++) {
+                balance += balance * monthlyRate;
+                if (monthlyAdd > 0) {
+                    balance += monthlyAdd;
+                }
+            }
+
+            if (balance >= target) {
+                high = mid;
+            } else {
+                low = mid;
+            }
+            iterations++;
+        }
+        return low;
+    }
+
+    function drawJourneyMap(progressPercent) {
+        const canvas = document.getElementById('journeyCanvas');
+        if (!canvas) return;
+
+        const container = document.getElementById('journeyMapContainer');
+        const width = container.clientWidth;
+        const height = 280;
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+
+        // Clear canvas
+        ctx.clearRect(0, 0, width, height);
+
+        // Draw path line
+        const startX = 60;
+        const endX = width - 60;
+        const y = height / 2;
+
+        // Draw background path
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(endX, y);
+        ctx.strokeStyle = '#E2E4E8';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Draw progress path (gold)
+        const progressX = startX + (progressPercent / 100) * (endX - startX);
+        ctx.beginPath();
+        ctx.moveTo(startX, y);
+        ctx.lineTo(progressX, y);
+        ctx.strokeStyle = '#F0B90B';
+        ctx.lineWidth = 6;
+        ctx.stroke();
+
+        // Draw dashed line for remaining
+        ctx.beginPath();
+        ctx.setLineDash([8, 8]);
+        ctx.moveTo(progressX, y);
+        ctx.lineTo(endX, y);
+        ctx.strokeStyle = '#F0B90B';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        // Draw start point
+        ctx.beginPath();
+        ctx.arc(startX, y, 8, 0, 2 * Math.PI);
+        ctx.fillStyle = '#0ECB81';
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px Arial';
+        ctx.fillText('🚩', startX - 8, y - 5);
+
+        // Draw target point
+        ctx.beginPath();
+        ctx.arc(endX, y, 10, 0, 2 * Math.PI);
+        ctx.fillStyle = '#F0B90B';
+        ctx.fill();
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 14px Arial';
+        ctx.fillText('🏁', endX - 5, y - 5);
+
+        // Update marker position
+        const marker = document.getElementById('animatedMarker');
+        if (marker) {
+            const markerX = progressX - 16;
+            marker.style.left = markerX + 'px';
+            marker.style.top = (y - 16) + 'px';
+            marker.style.display = 'block';
+            document.getElementById('markerLabel').innerHTML = formatCurrency(portfolioValue);
+        }
+    }
+
+    function updateGoalTracker() {
+        const target = parseFloat(document.getElementById('goalTarget').value);
+        const years = parseInt(document.getElementById('goalYears').value);
+        const monthlyAdd = parseFloat(document.getElementById('monthlyAddition').value);
+
+        // Calculate milestones
+        const requiredInitial = calculateRequiredInitial(target, years, monthlyAdd);
+        const progressPercent = Math.min(100, (portfolioValue / target) * 100);
+
+        // Update displays
+        document.getElementById('userTarget').innerHTML = formatCurrency(target);
+        document.getElementById('currentProgress').innerHTML = formatCurrency(portfolioValue);
+        document.getElementById('progressFill').style.width = progressPercent + '%';
+        document.getElementById('progressPercent').innerHTML = progressPercent.toFixed(1);
+
+        const remaining = Math.max(0, target - portfolioValue);
+        document.getElementById('remainingAmount').innerHTML = formatCurrency(remaining);
+
+        const requiredMonthly = Math.max(0, (target - portfolioValue) / (years * 12));
+        document.getElementById('requiredMonthly').innerHTML = formatCurrency(requiredMonthly);
+        document.getElementById('targetDate').innerHTML = years + ' Year' + (years > 1 ? 's' : '');
+
+        // Update milestone values
+        const milestoneValues = {
+            0: portfolioValue,
+            25: portfolioValue + (target - portfolioValue) * 0.25,
+            50: portfolioValue + (target - portfolioValue) * 0.5,
+            75: portfolioValue + (target - portfolioValue) * 0.75,
+            100: target
         };
 
-        const id = symbolToId[symbol];
-        if (!id) return 0;
+        document.getElementById('startMilestone').innerHTML = formatCurrency(milestoneValues[0]);
+        document.getElementById('milestone25').innerHTML = formatCurrency(milestoneValues[25]);
+        document.getElementById('milestone50').innerHTML = formatCurrency(milestoneValues[50]);
+        document.getElementById('milestone75').innerHTML = formatCurrency(milestoneValues[75]);
+        document.getElementById('targetMilestone').innerHTML = formatCurrency(milestoneValues[100]);
 
-        try {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-            const data = await response.json();
-            return data[id]?.usd || 0;
-        } catch (e) {
-            return 0;
-        }
-    }
-
-    function generateTrendData(baseValue, hours = 24, volatility = 0.02) {
-        const data = [];
-        let value = baseValue * 0.7;
-
-        for (let i = hours; i >= 0; i--) {
-            const change = (Math.random() - 0.5) * baseValue * volatility;
-            value = value + change;
-            value = Math.max(value, baseValue * 0.5);
-            value = Math.min(value, baseValue * 1.2);
-            data.push(value);
-        }
-        return data;
-    }
-
-    function getHourlyLabels(hours = 24) {
-        const labels = [];
-        const now = new Date();
-        for (let i = hours; i >= 0; i--) {
-            const hour = new Date(now.getTime() - i * 3600000);
-            labels.push(hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-        }
-        return labels;
-    }
-
-    function updateCharts(totalValue, totalYield) {
-        const valueData = generateTrendData(totalValue, 24, 0.03);
-        const valueLabels = getHourlyLabels(24);
-
-        if (valueChart) valueChart.destroy();
-        valueChart = new Chart(document.getElementById('valueTrendChart'), {
-            type: 'line',
-            data: {
-                labels: valueLabels,
-                datasets: [{
-                    data: valueData,
-                    borderColor: '#F0B90B',
-                    backgroundColor: 'rgba(240, 185, 11, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(2)}` } } },
-                scales: { x: { display: false }, y: { display: false } }
-            }
-        });
-
-        const hourlyYield = totalValue * 0.10 / 720;
-        const yieldData = [];
-        for (let i = 0; i <= 24; i++) {
-            const variation = (Math.random() - 0.5) * hourlyYield * 0.3;
-            yieldData.push(Math.max(0, hourlyYield + variation));
-        }
-
-        if (yieldChart) yieldChart.destroy();
-        yieldChart = new Chart(document.getElementById('yieldTrendChart'), {
-            type: 'line',
-            data: {
-                labels: valueLabels,
-                datasets: [{
-                    data: yieldData,
-                    borderColor: '#0ECB81',
-                    backgroundColor: 'rgba(14, 203, 129, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(4)}` } } },
-                scales: { x: { display: false }, y: { display: false } }
-            }
-        });
-
-        const tradeLabels = [];
-        const tradeData = [];
-        for (let i = 29; i >= 0; i--) {
-            const date = new Date();
-            date.setDate(date.getDate() - i);
-            tradeLabels.push(date.toLocaleDateString([], { month: 'short', day: 'numeric' }));
-            tradeData.push(Math.floor(Math.random() * 20) + 1);
-        }
-
-        if (tradesChart) tradesChart.destroy();
-        tradesChart = new Chart(document.getElementById('tradesChart'), {
-            type: 'bar',
-            data: {
-                labels: tradeLabels,
-                datasets: [{
-                    data: tradeData,
-                    backgroundColor: '#F6465D',
-                    borderRadius: 4,
-                    barPercentage: 0.7
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false }, tooltip: { callbacks: { label: (ctx) => `${ctx.raw} trades` } } },
-                scales: { x: { ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 8 } }, y: { beginAtZero: true } }
-            }
-        });
+        // Draw journey map
+        drawJourneyMap(progressPercent);
     }
 
     async function loadPortfolio() {
@@ -522,12 +702,13 @@
                         <button class="trade-btn" onclick="location.href='/trading/'" style="margin-top: 16px;">Start Trading</button>
                     </div>
                 `;
+                portfolioValue = 0;
                 document.getElementById('totalValue').innerHTML = formatCurrency(0);
                 document.getElementById('totalInvested').innerHTML = formatCurrency(0);
                 document.getElementById('totalPnL').innerHTML = formatCurrency(0);
                 document.getElementById('pnlPercent').innerHTML = '0.00%';
                 document.getElementById('dailyYield').innerHTML = formatCurrency(0);
-                updateCharts(0, 0);
+                updateGoalTracker();
                 return;
             }
 
@@ -568,40 +749,64 @@
                                     <p>${holding.token_name || holding.token_symbol}</p>
                                 </div>
                             </div>
-                         </td>
-                         <td>${formatNumber(quantity, 6)}</td>
-                         <td>${formatCurrency(avgPrice)}</td>
-                         <td>${formatCurrency(currentPrice)}</td>
-                         <td>${formatCurrency(value)}</td>
+                          </td>
+                          <td>${formatNumber(quantity, 6)}</td>
+                          <td>${formatCurrency(avgPrice)}</td>
+                          <td>${formatCurrency(currentPrice)}</td>
+                          <td>${formatCurrency(value)}</td>
                         <td class="${pnlClass} profit-cell">${pnlSymbol}${formatCurrency(Math.abs(pnl))}<br><small>${pnlSymbol}${pnlPercent.toFixed(2)}%</small></td>
                         <td><button class="trade-btn" onclick="event.stopPropagation(); location.href='/trading/'">Trade</button></td>
                     </tr>
                 `;
             }
 
-            tableHtml += `</tbody>`;
-            tableHtml += `</table>`;
+            tableHtml += `</tbody></table>`;
             container.innerHTML = tableHtml;
 
-            const totalPnL = totalValue - totalInvested;
-            const totalPnLPercent = totalInvested > 0 ? (totalPnL / totalInvested) * 100 : 0;
-            const dailyYield = totalValue * 0.20 / 365;
+            portfolioValue = totalValue;
 
             document.getElementById('totalValue').innerHTML = formatCurrency(totalValue);
             document.getElementById('totalInvested').innerHTML = formatCurrency(totalInvested);
-            const pnlElement = document.getElementById('totalPnL');
-            pnlElement.innerHTML = `${totalPnL >= 0 ? '+' : ''}${formatCurrency(Math.abs(totalPnL))}`;
-            pnlElement.className = `stat-value ${totalPnL >= 0 ? 'positive' : 'negative'}`;
-            document.getElementById('pnlPercent').innerHTML = `${totalPnL >= 0 ? '+' : ''}${totalPnLPercent.toFixed(2)}%`;
-            document.getElementById('dailyYield').innerHTML = formatCurrency(dailyYield);
+            document.getElementById('dailyYield').innerHTML = formatCurrency(totalValue * 0.20 / 365);
 
-            updateCharts(totalValue, dailyYield);
+            updateGoalTracker();
 
         } catch (e) {
             console.error('Error loading portfolio:', e);
             document.getElementById('holdingsContainer').innerHTML = '<div class="empty-state">Unable to load portfolio. Please refresh the page.</div>';
         }
     }
+
+    async function getCurrentPrice(symbol) {
+        const symbolToId = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+            'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap'
+        };
+        const id = symbolToId[symbol];
+        if (!id) return 0;
+        try {
+            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
+            const data = await response.json();
+            return data[id]?.usd || 0;
+        } catch (e) {
+            return 0;
+        }
+    }
+
+    // Event listeners
+    document.getElementById('updateGoalBtn')?.addEventListener('click', updateGoalTracker);
+    document.getElementById('goalTarget')?.addEventListener('input', updateGoalTracker);
+    document.getElementById('goalYears')?.addEventListener('change', updateGoalTracker);
+    document.getElementById('monthlyAddition')?.addEventListener('input', updateGoalTracker);
+
+    window.addEventListener('resize', () => {
+        if (portfolioValue > 0) {
+            const target = parseFloat(document.getElementById('goalTarget').value);
+            const progressPercent = Math.min(100, (portfolioValue / target) * 100);
+            drawJourneyMap(progressPercent);
+        }
+    });
 
     loadPortfolio();
     setInterval(loadPortfolio, 120000);
