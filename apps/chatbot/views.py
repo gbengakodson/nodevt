@@ -51,12 +51,14 @@ class NotificationsAPIView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        """Get user notifications"""
-        unread_only = request.query_params.get('unread_only', 'false').lower() == 'true'
-        notifications = NotificationService.get_user_notifications(
-            request.user,
-            unread_only=unread_only
-        )
+        from .models import UserNotification
+
+        print(f"User: {request.user.email}")  # Debug
+        print(f"User ID: {request.user.id}")  # Debug
+
+        notifications = UserNotification.objects.filter(user=request.user).order_by('-created_at')[:50]
+
+        print(f"Found {notifications.count()} notifications")  # Debug
 
         data = [{
             'id': str(n.id),
@@ -68,13 +70,6 @@ class NotificationsAPIView(APIView):
         } for n in notifications]
 
         return Response(data)
-
-    def post(self, request):
-        """Mark notification as read"""
-        notification_id = request.data.get('notification_id')
-        if notification_id:
-            NotificationService.mark_as_read(notification_id)
-        return Response({'success': True})
 
 
 class MarkAllNotificationsReadAPIView(APIView):
