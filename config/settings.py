@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     'channels',
     'apps.chat',
     'apps.chatbot',
+    'apps.portfolio',
 
     # Local apps
     'apps.accounts.apps.AccountsConfig',

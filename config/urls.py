@@ -59,4 +59,6 @@ urlpatterns = [
     path('api/notifications/subscribe/', SubscribePushAPIView.as_view(), name='subscribe_push'),
     path('api/notifications/unsubscribe/', UnsubscribePushAPIView.as_view(), name='unsubscribe_push'),
 
+    path('api/portfolio/', include('apps.portfolio.urls')),
+
 ]
