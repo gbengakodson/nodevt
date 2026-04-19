@@ -412,6 +412,10 @@
             <div class="stat-change">To hit your goal</div>
         </div>
     </div>
+    <!-- Hidden elements for JavaScript -->
+<input type="hidden" id="totalValue" value="0">
+<input type="hidden" id="totalInvested" value="0">
+<input type="hidden" id="dailyYield" value="0">
 
     <!-- Goal Journey Map -->
     <div class="journey-card">
@@ -501,14 +505,12 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API_BASE = '/api';
-    let journeyCanvas = null;
     let portfolioValue = 0;
-    let goalTarget = 10000;
     let targetYears = 5;
     let monthlyAddition = 0;
-    let compoundProjection = [];
 
     function getTokenIcon(symbol) {
         return `/static/coins/${symbol}.png`;
@@ -547,24 +549,18 @@
         return value.toFixed(decimals);
     }
 
+    // Calculate compound growth with 10% monthly yield
     function calculateCompoundGrowth(initial, months, monthlyAdd = 0) {
         let balance = initial;
         const monthlyRate = 0.10;
-        const projections = [];
 
         for (let month = 1; month <= months; month++) {
             balance += balance * monthlyRate;
             if (monthlyAdd > 0) {
                 balance += monthlyAdd;
             }
-            if (month % 12 === 0 || month === months) {
-                projections.push({
-                    year: month / 12,
-                    balance: balance
-                });
-            }
         }
-        return { finalBalance: balance, projections: projections };
+        return balance;
     }
 
     function calculateProjectedValue(currentBalance, years, monthlyAdd = 0) {
@@ -577,6 +573,8 @@
         if (!canvas) return;
 
         const container = document.getElementById('journeyMapContainer');
+        if (!container) return;
+
         const width = container.clientWidth;
         const height = 280;
 
@@ -590,6 +588,7 @@
         const endX = width - 60;
         const y = height / 2;
 
+        // Background path
         ctx.beginPath();
         ctx.moveTo(startX, y);
         ctx.lineTo(endX, y);
@@ -597,6 +596,7 @@
         ctx.lineWidth = 6;
         ctx.stroke();
 
+        // Progress path
         const progressX = startX + (progressPercent / 100) * (endX - startX);
         ctx.beginPath();
         ctx.moveTo(startX, y);
@@ -605,6 +605,7 @@
         ctx.lineWidth = 6;
         ctx.stroke();
 
+        // Dashed remaining path
         ctx.beginPath();
         ctx.setLineDash([8, 8]);
         ctx.moveTo(progressX, y);
@@ -614,6 +615,7 @@
         ctx.stroke();
         ctx.setLineDash([]);
 
+        // Start marker
         ctx.beginPath();
         ctx.arc(startX, y, 8, 0, 2 * Math.PI);
         ctx.fillStyle = '#0ECB81';
@@ -622,6 +624,7 @@
         ctx.font = 'bold 12px Arial';
         ctx.fillText('🚩', startX - 8, y - 5);
 
+        // Target marker
         ctx.beginPath();
         ctx.arc(endX, y, 10, 0, 2 * Math.PI);
         ctx.fillStyle = '#F0B90B';
@@ -630,55 +633,68 @@
         ctx.font = 'bold 14px Arial';
         ctx.fillText('🏁', endX - 5, y - 5);
 
+        // Animated marker
         const marker = document.getElementById('animatedMarker');
         if (marker) {
             const markerX = progressX - 16;
             marker.style.left = markerX + 'px';
             marker.style.top = (y - 16) + 'px';
             marker.style.display = 'block';
-            document.getElementById('markerLabel').innerHTML = formatCurrency(portfolioValue);
+            const markerLabel = document.getElementById('markerLabel');
+            if (markerLabel) markerLabel.innerHTML = formatCurrency(portfolioValue);
         }
     }
 
     function updateGoalTracker() {
-        const projection = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-        const target = projection.finalBalance;
-        const progressPercent = Math.min(100, (portfolioValue / target) * 100);
+        // Calculate target based on 5-year plan
+        const target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
+        const progressPercent = portfolioValue > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0;
 
-        document.getElementById('userTarget').innerHTML = formatCurrency(target);
-        document.getElementById('currentProgress').innerHTML = formatCurrency(portfolioValue);
+        // Update stats cards
+        const userTarget = document.getElementById('userTarget');
+        const currentProgress = document.getElementById('currentProgress');
         const progressFill = document.getElementById('progressFill');
+        const progressPercentSpan = document.getElementById('progressPercent');
+        const remainingAmount = document.getElementById('remainingAmount');
+        const targetDateSpan = document.getElementById('targetDate');
+
+        if (userTarget) userTarget.innerHTML = formatCurrency(target);
+        if (currentProgress) currentProgress.innerHTML = formatCurrency(portfolioValue);
         if (progressFill) progressFill.style.width = progressPercent + '%';
-        document.getElementById('progressPercent').innerHTML = progressPercent.toFixed(1);
+        if (progressPercentSpan) progressPercentSpan.innerHTML = progressPercent.toFixed(1);
+        if (remainingAmount) remainingAmount.innerHTML = formatCurrency(Math.max(0, target - portfolioValue));
+        if (targetDateSpan) targetDateSpan.innerHTML = targetYears + ' Year' + (targetYears > 1 ? 's' : '');
 
-        const remaining = Math.max(0, target - portfolioValue);
-        document.getElementById('remainingAmount').innerHTML = formatCurrency(remaining);
-        document.getElementById('targetDate').innerHTML = targetYears + ' Year' + (targetYears > 1 ? 's' : '');
-
+        // Update milestone points
         const totalMonths = targetYears * 12;
-        const milestonePoints = [0, totalMonths * 0.25, totalMonths * 0.5, totalMonths * 0.75, totalMonths];
+        const startMilestone = document.getElementById('startMilestone');
+        const milestone25 = document.getElementById('milestone25');
+        const milestone50 = document.getElementById('milestone50');
+        const milestone75 = document.getElementById('milestone75');
+        const targetMilestone = document.getElementById('targetMilestone');
 
-        document.getElementById('startMilestone').innerHTML = formatCurrency(portfolioValue);
-        document.getElementById('milestone25').innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, milestonePoints[1], monthlyAddition).finalBalance);
-        document.getElementById('milestone50').innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, milestonePoints[2], monthlyAddition).finalBalance);
-        document.getElementById('milestone75').innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, milestonePoints[3], monthlyAddition).finalBalance);
-        document.getElementById('targetMilestone').innerHTML = formatCurrency(target);
+        if (startMilestone) startMilestone.innerHTML = formatCurrency(portfolioValue);
+        if (milestone25) milestone25.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.25, monthlyAddition));
+        if (milestone50) milestone50.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.5, monthlyAddition));
+        if (milestone75) milestone75.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.75, monthlyAddition));
+        if (targetMilestone) targetMilestone.innerHTML = formatCurrency(target);
+
+        // Update calculator inputs
+        const goalTargetInput = document.getElementById('goalTarget');
+        const goalYearsSelect = document.getElementById('goalYears');
+        const monthlyAdditionInput = document.getElementById('monthlyAddition');
+
+        if (goalTargetInput && !goalTargetInput.disabled) goalTargetInput.value = target.toFixed(0);
+        if (goalYearsSelect) goalYearsSelect.value = targetYears;
+        if (monthlyAdditionInput) monthlyAdditionInput.value = monthlyAddition;
 
         drawJourneyMap(progressPercent);
-        compoundProjection = projection.projections;
-    }
-
-    function refreshJourney() {
-        if (portfolioValue > 0) {
-            updateGoalTracker();
-        }
     }
 
     async function getCurrentPrice(symbol) {
         const symbolToId = {
             'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
-            'DOT': 'polkadot', 'PEPE': 'pepe', 'LINK': 'chainlink', 'UNI': 'uniswap'
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2'
         };
         const id = symbolToId[symbol];
         if (!id) return 0;
@@ -702,7 +718,6 @@
             const holdings = await apiCall('/trading/my_tokens/');
 
             let totalValue = 0;
-            let totalInvested = 0;
 
             if (!holdings || holdings.length === 0) {
                 container.innerHTML = `
@@ -743,13 +758,12 @@
                 const pnlSymbol = pnl >= 0 ? '+' : '';
 
                 totalValue += value;
-                totalInvested += invested;
 
                 tableHtml += `
                     <tr style="cursor: pointer;" onclick="location.href='/trading/'">
                         <td>
                             <div class="token-cell">
-                                <img src="${getTokenIcon(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 36px; height: 36px; border-radius: 50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
+                                <img src="${getTokenIcon(holding.token_symbol)}" style="width:36px;height:36px;border-radius:50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
                                 <div class="token-info">
                                     <h4>${holding.token_symbol}</h4>
                                     <p>${holding.token_name || holding.token_symbol}</p>
@@ -766,27 +780,22 @@
                 `;
             }
 
-            tableHtml += `</tbody>`;
-            tableHtml += `</table>`;
+            tableHtml += `</tbody></table>`;
             container.innerHTML = tableHtml;
 
             portfolioValue = totalValue;
 
-            document.getElementById('totalValue').innerHTML = formatCurrency(totalValue);
-            document.getElementById('totalInvested').innerHTML = formatCurrency(totalInvested);
-            document.getElementById('dailyYield').innerHTML = formatCurrency(totalValue * 0.20 / 365);
+            // Update stats
+            const totalValueSpan = document.getElementById('totalValue');
+            const totalInvestedSpan = document.getElementById('totalInvested');
+            const dailyYieldSpan = document.getElementById('dailyYield');
 
-            targetYears = 5;
-            monthlyAddition = 0;
-            const targetInput = document.getElementById('goalTarget');
-            const yearsSelect = document.getElementById('goalYears');
-            const monthlyInput = document.getElementById('monthlyAddition');
+            if (totalValueSpan) totalValueSpan.innerHTML = formatCurrency(totalValue);
+            if (totalInvestedSpan) totalInvestedSpan.innerHTML = formatCurrency(totalValue);
+            if (dailyYieldSpan) dailyYieldSpan.innerHTML = formatCurrency(totalValue * 0.20 / 365);
 
-            if (targetInput) targetInput.value = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition).finalBalance.toFixed(0);
-            if (yearsSelect) yearsSelect.value = targetYears;
-            if (monthlyInput) monthlyInput.value = monthlyAddition;
-
-            refreshJourney();
+            // Auto-update journey
+            updateGoalTracker();
 
         } catch (e) {
             console.error('Error loading portfolio:', e);
@@ -798,14 +807,11 @@
     const updateBtn = document.getElementById('updateGoalBtn');
     const goalYears = document.getElementById('goalYears');
     const monthlyAdditionInput = document.getElementById('monthlyAddition');
-    const goalTargetInput = document.getElementById('goalTarget');
 
     if (updateBtn) {
         updateBtn.addEventListener('click', function() {
             if (goalYears) targetYears = parseInt(goalYears.value);
             if (monthlyAdditionInput) monthlyAddition = parseFloat(monthlyAdditionInput.value) || 0;
-            const projection = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            if (goalTargetInput) goalTargetInput.value = projection.finalBalance.toFixed(0);
             updateGoalTracker();
         });
     }
@@ -813,8 +819,6 @@
     if (goalYears) {
         goalYears.addEventListener('change', function() {
             targetYears = parseInt(this.value);
-            const projection = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            if (goalTargetInput) goalTargetInput.value = projection.finalBalance.toFixed(0);
             updateGoalTracker();
         });
     }
@@ -822,27 +826,19 @@
     if (monthlyAdditionInput) {
         monthlyAdditionInput.addEventListener('input', function() {
             monthlyAddition = parseFloat(this.value) || 0;
-            const projection = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            if (goalTargetInput) goalTargetInput.value = projection.finalBalance.toFixed(0);
             updateGoalTracker();
         });
     }
 
     window.addEventListener('resize', () => {
         if (portfolioValue > 0) {
-            const projection = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            const progressPercent = Math.min(100, (portfolioValue / projection.finalBalance) * 100);
+            const target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
+            const progressPercent = Math.min(100, (portfolioValue / target) * 100);
             drawJourneyMap(progressPercent);
         }
     });
 
-    document.addEventListener('visibilitychange', function() {
-        if (!document.hidden && portfolioValue > 0) {
-            loadPortfolio();
-        }
-    });
-
-    // Start loading when DOM is ready
+    // Start loading
     document.addEventListener('DOMContentLoaded', function() {
         loadPortfolio();
         setInterval(loadPortfolio, 120000);
