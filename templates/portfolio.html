@@ -96,6 +96,9 @@
     }
 
     .journey-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         padding: 16px 20px;
         border-bottom: 1px solid #E2E4E8;
         background: #F8F9FA;
@@ -837,6 +840,21 @@
             drawJourneyMap(progressPercent);
         }
     });
+
+    // ============ LIVE CLOCK MINI ============
+    function updateLiveClockMini() {
+        const now = new Date();
+        const hours = String(now.getHours()).padStart(2, '0');
+        const minutes = String(now.getMinutes()).padStart(2, '0');
+        const seconds = String(now.getSeconds()).padStart(2, '0');
+        const clockElement = document.getElementById('liveClockMini');
+        if (clockElement) {
+            clockElement.innerHTML = `${hours}:${minutes}:${seconds}`;
+        }
+    }
+    setInterval(updateLiveClockMini, 1000);
+    updateLiveClockMini();
+    // ============ END LIVE CLOCK MINI ============
 
     // Start loading
     document.addEventListener('DOMContentLoaded', function() {

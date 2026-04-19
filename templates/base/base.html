@@ -53,17 +53,29 @@
         color: #F0B90B !important;
     }
 
-    /* Live Clock */
+    /* Live Clock - More visible */
     .live-clock {
         font-family: 'Courier New', monospace;
-        font-size: 13px;
-        background: #FFFFFF;
+        font-size: 14px;
+        background: #F0B90B;  /* Gold background */
         padding: 6px 12px;
         border-radius: 20px;
-        color: #1E2329;
+        color: #0B0E11;  /* Dark text for contrast */
         margin-right: 10px;
-        font-weight: 600;
-        border: 1px solid #E2E4E8;
+        font-weight: 700;
+        border: none;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+
+    /* Mobile */
+    @media (max-width: 768px) {
+        .live-clock {
+            font-size: 11px;
+            padding: 4px 10px;
+            font-weight: 700;
+            background: #F0B90B;
+            color: #0B0E11;
+        }
     }
 
     /* Mobile Footer Bar */
@@ -134,7 +146,7 @@
 
     .marquee-content {
         display: inline-block;
-        animation: marquee 50s linear infinite;
+        animation: marquee 60s linear infinite;
         white-space: nowrap;
         padding-left: 20px;
     }
@@ -372,7 +384,7 @@
     updateLiveClock();
     // ============ END LIVE CLOCK ============
 
-    // ============ STATIC MARQUEE - 24 MESSAGES, NO API ============
+    // ============ STATIC MARQUEE - COMPLETE JOURNEY ============
     const allMarqueeMessages = [
         "🚀 Join NodeVT - Start earning 10% monthly yield on your crypto!",
         "💰 Minimum deposit just $10 USDC to start your journey!",
@@ -401,8 +413,9 @@
     ];
 
     let marqueeMsgIndex = 0;
+    let animationDuration = 60000; // 60 seconds in milliseconds
 
-    function rotateMarqueeMessage() {
+    function setNextMarqueeMessage() {
         const marqueeText = document.getElementById('marqueeText');
         if (marqueeText) {
             marqueeText.innerHTML = allMarqueeMessages[marqueeMsgIndex % allMarqueeMessages.length];
@@ -410,9 +423,11 @@
         }
     }
 
-    // Change message every 8 seconds
-    setInterval(rotateMarqueeMessage, 15000);
-    rotateMarqueeMessage();
+    // Set first message immediately
+    setNextMarqueeMessage();
+
+    // Change message after full animation completes (60 seconds)
+    setInterval(setNextMarqueeMessage, animationDuration);
     // ============ END STATIC MARQUEE ============
 
     // ============ NOTIFICATION FUNCTIONS ============
