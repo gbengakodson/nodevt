@@ -397,97 +397,48 @@
     updateLiveClock();
     // ============ END LIVE CLOCK ============
 
-    // ============ MARQUEE UPDATER ============
-    let isUpdatingMarquee = false;
-    let marqueeAbortController = null;
+    // ============ STATIC MARQUEE - 24 MESSAGES, NO API ============
+    const allMarqueeMessages = [
+        "🚀 Join NodeVT - Start earning 10% monthly yield on your crypto!",
+        "💰 Minimum deposit just $10 USDC to start your journey!",
+        "🤖 AI Grid Trading works 24/7 - Buying dips and selling pumps automatically!",
+        "📈 Refer friends and earn node fees from 7 generations deep!",
+        "💎 $10 grows to $3,048 in 5 years with 10% monthly compounding!",
+        "⚡ Your crypto never sleeps - Neither does our AI trading bot!",
+        "🎯 Set your financial goals and watch them grow with NodeVT!",
+        "💵 Earn hourly yield - Paid directly to your wallet every hour!",
+        "🔒 Secure BSC (BEP-20) deposits and withdrawals!",
+        "🌟 Join thousands of traders already earning passive income!",
+        "📊 Track your portfolio growth with our interactive journey map!",
+        "💪 Start small, think big - Every dollar works for you 24/7!",
+        "🔄 Reinvest your yield to compound returns faster!",
+        "🏆 Top referrers earn unlimited commissions!",
+        "⚡ 1.2% grid strategy - Profit from every market movement!",
+        "💵 $10 becomes $3,048 in 5 years - Start today!",
+        "🎯 10% monthly yield = 213% APY - Unbeatable returns!",
+        "🤝 Invite friends - Earn from 7 levels of referrals!",
+        "📈 Your money works 24/7 with AI Grid Trading!",
+        "💰 No lock-up periods - Withdraw anytime!",
+        "🔐 Bank-grade security for your crypto assets!",
+        "🌍 Join a global community of smart investors!",
+        "⚡ Fast BSC transactions - Low fees!",
+        "💎 Compound your wealth - Reinvest your yield!"
+    ];
 
-    async function updateMarquee() {
-        // Cancel any ongoing request
-        if (marqueeAbortController) {
-            marqueeAbortController.abort();
-        }
+    let marqueeMsgIndex = 0;
 
-        if (isUpdatingMarquee) return;
-
-        const token = localStorage.getItem('access_token');
-        if (!token) return;
-
-        isUpdatingMarquee = true;
-        marqueeAbortController = new AbortController();
-
-        try {
-            const timeoutId = setTimeout(() => {
-                if (marqueeAbortController) marqueeAbortController.abort();
-            }, 5000);
-
-            const balanceRes = await fetch('/api/trading/my_balance/', {
-                headers: { 'Authorization': `Bearer ${token}` },
-                signal: marqueeAbortController.signal
-            });
-            clearTimeout(timeoutId);
-
-            if (!balanceRes.ok) throw new Error('API error');
-
-            const balance = await balanceRes.json();
-            const grandBalance = parseFloat(balance.grand_balance) || 0;
-            const yieldBalance = parseFloat(balance.yield_balance) || 0;
-
-            let portfolioValue = 0;
-            let topHolding = 'None';
-
-            try {
-                const holdingsRes = await fetch('/api/trading/my_tokens/', {
-                    headers: { 'Authorization': `Bearer ${token}` },
-                    signal: marqueeAbortController.signal
-                });
-                const holdings = await holdingsRes.json();
-
-                holdings.forEach(h => {
-                    portfolioValue += parseFloat(h.quantity) * parseFloat(h.current_price);
-                });
-                if (holdings.length > 0) {
-                    topHolding = holdings[0].token_symbol;
-                }
-            } catch (e) {
-                console.log('Could not fetch holdings');
-            }
-
-            const hourlyYield = (portfolioValue * 0.10) / 720;
-
-            const messages = [
-                `💰 Balance: $${grandBalance.toFixed(2)} | Yield: $${yieldBalance.toFixed(2)}`,
-                `⏰ Earning $${hourlyYield.toFixed(4)}/hour | $${(hourlyYield * 24).toFixed(2)}/day`,
-                `📊 Portfolio: $${portfolioValue.toFixed(2)} | Top: ${topHolding}`,
-                `🚀 $10 becomes $3,048 in 5 years with compounding!`,
-                `🤝 Refer friends - Earn node fees from 7 levels!`,
-                `💎 Yield wallet: $${yieldBalance.toFixed(2)} - Withdraw anytime`,
-                `📈 10% monthly yield compounds to 213% APY!`,
-                `⚡ AI Grid trades 24/7 - Buying dips and selling pumps!`
-            ];
-
-            const randomIndex = Math.floor(Math.random() * messages.length);
-            const marqueeText = document.getElementById('marqueeText');
-            if (marqueeText) {
-                marqueeText.innerHTML = messages[randomIndex];
-            }
-
-        } catch (error) {
-            if (error.name === 'AbortError') {
-                // Silently handle abort - this is expected when new request starts
-                console.log('Marquee request aborted');
-            } else {
-                console.error('Marquee error:', error);
-                const marqueeText = document.getElementById('marqueeText');
-                if (marqueeText && !marqueeText.innerHTML.includes('Welcome')) {
-                    marqueeText.innerHTML = '📊 Welcome back! Check your dashboard for updates →';
-                }
-            }
-        } finally {
-            isUpdatingMarquee = false;
-            marqueeAbortController = null;
+    function rotateMarqueeMessage() {
+        const marqueeText = document.getElementById('marqueeText');
+        if (marqueeText) {
+            marqueeText.innerHTML = allMarqueeMessages[marqueeMsgIndex % allMarqueeMessages.length];
+            marqueeMsgIndex++;
         }
     }
-    // ============ END MARQUEE UPDATER ============
+
+    // Change message every 8 seconds
+    setInterval(rotateMarqueeMessage, 8000);
+    rotateMarqueeMessage();
+    // ============ END STATIC MARQUEE ============
 
     // ============ NOTIFICATION FUNCTIONS ============
     let notificationPanelOpen = false;
@@ -712,9 +663,6 @@
 
     if (getToken()) {
         setInterval(refreshToken, 55 * 60 * 1000);
-        // Start marquee with delay and reduced frequency
-        setTimeout(updateMarquee, 3000);
-        setInterval(updateMarquee, 30000);
         setTimeout(loadNotifications, 1000);
     }
 
