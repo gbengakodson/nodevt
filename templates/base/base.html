@@ -399,22 +399,30 @@
 
     // ============ MARQUEE UPDATER ============
     let isUpdatingMarquee = false;
+    let marqueeAbortController = null;
 
     async function updateMarquee() {
+        // Cancel any ongoing request
+        if (marqueeAbortController) {
+            marqueeAbortController.abort();
+        }
+
         if (isUpdatingMarquee) return;
 
         const token = localStorage.getItem('access_token');
         if (!token) return;
 
         isUpdatingMarquee = true;
+        marqueeAbortController = new AbortController();
 
         try {
-            const controller = new AbortController();
-            const timeoutId = setTimeout(() => controller.abort(), 5000);
+            const timeoutId = setTimeout(() => {
+                if (marqueeAbortController) marqueeAbortController.abort();
+            }, 5000);
 
             const balanceRes = await fetch('/api/trading/my_balance/', {
                 headers: { 'Authorization': `Bearer ${token}` },
-                signal: controller.signal
+                signal: marqueeAbortController.signal
             });
             clearTimeout(timeoutId);
 
@@ -430,7 +438,7 @@
             try {
                 const holdingsRes = await fetch('/api/trading/my_tokens/', {
                     headers: { 'Authorization': `Bearer ${token}` },
-                    signal: controller.signal
+                    signal: marqueeAbortController.signal
                 });
                 const holdings = await holdingsRes.json();
 
@@ -464,13 +472,19 @@
             }
 
         } catch (error) {
-            console.error('Marquee error:', error);
-            const marqueeText = document.getElementById('marqueeText');
-            if (marqueeText && !marqueeText.innerHTML.includes('Welcome')) {
-                marqueeText.innerHTML = '📊 Welcome back! Check your dashboard for updates →';
+            if (error.name === 'AbortError') {
+                // Silently handle abort - this is expected when new request starts
+                console.log('Marquee request aborted');
+            } else {
+                console.error('Marquee error:', error);
+                const marqueeText = document.getElementById('marqueeText');
+                if (marqueeText && !marqueeText.innerHTML.includes('Welcome')) {
+                    marqueeText.innerHTML = '📊 Welcome back! Check your dashboard for updates →';
+                }
             }
         } finally {
             isUpdatingMarquee = false;
+            marqueeAbortController = null;
         }
     }
     // ============ END MARQUEE UPDATER ============
