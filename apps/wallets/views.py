@@ -192,7 +192,7 @@ class AdminStatisticsView(APIView):
         total_buys = Purchase.objects.count()
 
         # Platform USDC balance from BLOCKCHAIN (not database)
-        platform_wallet_address = "0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4"  # Your platform wallet
+        platform_wallet_address = "0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572"  # Your platform wallet
         platform_usdc_balance = Decimal('0')
 
         try:
@@ -203,7 +203,7 @@ class AdminStatisticsView(APIView):
 
             if w3.is_connected():
                 # USDC Contract on BSC
-                usdc_contract_address = "0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4"
+                usdc_contract_address = "0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572"
                 usdc_abi = '[{"constant":true,"inputs":[{"name":"_owner","type":"address"}],"name":"balanceOf","outputs":[{"name":"balance","type":"uint256"}],"type":"function"}]'
 
                 contract = w3.eth.contract(address=usdc_contract_address, abi=usdc_abi)

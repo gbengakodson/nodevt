@@ -71,7 +71,7 @@ Need help? Ask me about specific tokens!""",
 
 1. Go to **Deposit** page
 2. Copy the platform wallet address:
-   `0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4`
+   `0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572`
 3. Send USDC from your wallet (MetaMask, Trust Wallet, Binance)
 4. **IMPORTANT:** Use BSC (BEP-20) network only
 5. Minimum deposit: **$10 USDC**
@@ -146,7 +146,7 @@ Or check the Trading page for live prices with charts!""",
 
 **Supported Network:** BSC (BEP-20) only
 
-**Platform Wallet:** `0x3183f4c0a08D91717127534cFeF0ABDF320D2ca4`
+**Platform Wallet:** `0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572`
 
 ⚠️ **IMPORTANT:** Always use BSC (BEP-20) network for deposits!
 Sending on other networks (ERC20, TRC20) will result in LOST funds.
