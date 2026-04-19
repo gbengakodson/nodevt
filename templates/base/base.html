@@ -9,115 +9,114 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="icon" type="image/svg+xml" href="/static/favicon.svg">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
 
-        body {
-            background: #F0F2F5;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            font-size: 13px;
-            color: #1E2329;
-            line-height: 1.4;
-        }
+    body {
+        background: #F0F2F5;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        font-size: 13px;
+        color: #1E2329;
+        line-height: 1.4;
+    }
 
-        .navbar {
-            position: sticky;
-            top: 0;
-            z-index: 1030;
-            background: #ffffff;
-            border-bottom: 1px solid #E2E4E8;
-            padding: 0.75rem 1rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-        }
+    .navbar {
+        position: sticky;
+        top: 0;
+        z-index: 1030;
+        background: #ffffff;
+        border-bottom: 1px solid #E2E4E8;
+        padding: 0.75rem 1rem;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
 
-        .navbar-brand {
-            font-weight: 600;
-            font-size: 1.1rem;
-            color: #F0B90B !important;
-            text-decoration: none;
-        }
+    .navbar-brand {
+        font-weight: 600;
+        font-size: 1.1rem;
+        color: #F0B90B !important;
+        text-decoration: none;
+    }
 
-        .nav-link {
-            font-size: 13px;
-            color: #5e6673 !important;
-            padding: 0.5rem 1rem !important;
-            transition: color 0.2s;
-            text-decoration: none;
-            cursor: pointer;
-        }
+    .nav-link {
+        font-size: 13px;
+        color: #5e6673 !important;
+        padding: 0.5rem 1rem !important;
+        transition: color 0.2s;
+        text-decoration: none;
+        cursor: pointer;
+    }
 
-        .nav-link:hover, .nav-link.active {
-            color: #F0B90B !important;
-        }
+    .nav-link:hover, .nav-link.active {
+        color: #F0B90B !important;
+    }
 
-        /* Live Clock */
-        .live-clock {
-            font-family: 'Courier New', monospace;
-            font-size: 13px;
-            background: #FFFFFF;
-            padding: 6px 12px;
-            border-radius: 20px;
-            color: #1E2329;
-            margin-right: 10px;
-            font-weight: 600;
-            border: 1px solid #E2E4E8;
-        }
+    /* Live Clock */
+    .live-clock {
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        background: #FFFFFF;
+        padding: 6px 12px;
+        border-radius: 20px;
+        color: #1E2329;
+        margin-right: 10px;
+        font-weight: 600;
+        border: 1px solid #E2E4E8;
+    }
 
-        /* Mobile Footer Bar */
-        .mobile-footer {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background: #1A1C23;
-            border-top: 1px solid #F0B90B;
-            display: none;
-            justify-content: space-around;
-            align-items: center;
-            padding: 8px 12px;
-            z-index: 1000;
-        }
+    /* Mobile Footer Bar */
+    .mobile-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #1A1C23;
+        border-top: 1px solid #F0B90B;
+        display: none;
+        justify-content: space-around;
+        align-items: center;
+        padding: 8px 12px;
+        z-index: 1000;
+    }
 
-        .mobile-footer-item {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 4px;
-            cursor: pointer;
-            color: #8A8F9E;
-            transition: all 0.2s;
-            font-size: 10px;
-            position: relative;
-        }
+    .mobile-footer-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        color: #8A8F9E;
+        transition: all 0.2s;
+        font-size: 10px;
+        position: relative;
+    }
 
-        .mobile-footer-item i {
-            font-size: 20px;
-        }
+    .mobile-footer-item i {
+        font-size: 20px;
+    }
 
-        .mobile-footer-item.active {
-            color: #F0B90B;
-        }
+    .mobile-footer-item.active {
+        color: #F0B90B;
+    }
 
-        .mobile-badge {
-            position: absolute;
-            top: -8px;
-            right: -8px;
-            background: #F6465D;
-            color: white;
-            border-radius: 50%;
-            width: 16px;
-            height: 16px;
-            font-size: 9px;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
+    .mobile-badge {
+        position: absolute;
+        top: -8px;
+        right: -8px;
+        background: #F6465D;
+        color: white;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
 
-        /* Marquee Footer */
-        /* Sticky Marquee Footer */
+    /* Marquee Footer - Clean version */
     .marquee-footer {
         position: fixed;
         bottom: 0;
@@ -133,25 +132,6 @@
         z-index: 999;
     }
 
-    /* Adjust for mobile footer */
-    @media (max-width: 768px) {
-        .marquee-footer {
-            bottom: 50px; /* Above mobile footer */
-        }
-    }
-
-    /* For non-mobile, no adjustment needed */
-    @media (min-width: 769px) {
-        .marquee-footer {
-            bottom: 0;
-        }
-    }
-
-    @keyframes marquee {
-        0% { transform: translateX(0); }
-        100% { transform: translateX(-50%); }
-    }
-
     .marquee-content {
         display: inline-block;
         animation: marquee 80s linear infinite;
@@ -162,82 +142,76 @@
         animation-play-state: paused;
     }
 
-    /* Add padding to body to prevent content from hiding behind fixed marquee */
+    @keyframes marquee {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-50%); }
+    }
+
+    /* Adjust for mobile footer */
+    @media (max-width: 768px) {
+        .marquee-footer {
+            bottom: 50px;
+        }
+    }
+
+    /* Add padding to body */
     body {
         padding-bottom: 35px;
     }
 
     @media (max-width: 768px) {
         body {
-            padding-bottom: 85px; /* More space for mobile footer + marquee */
+            padding-bottom: 85px;
         }
     }
 
-        .marquee-content {
-            display: inline-block;
-            animation: marquee 80s linear infinite;
-            padding-left: 20px;
-        }
+    /* Notification Panel */
+    .notification-panel {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 350px;
+        max-height: 400px;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        z-index: 10001;
+        overflow: hidden;
+    }
 
-        @keyframes marquee {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-50%); }
-        }
+    .notification-item {
+        padding: 12px;
+        border-bottom: 1px solid #E2E4E8;
+        cursor: pointer;
+    }
 
-        .marquee-footer:hover .marquee-content {
-            animation-play-state: paused;
-        }
+    .notification-item:hover {
+        background: #F8F9FA;
+    }
 
-        /* Notification Panel */
+    /* Responsive */
+    @media (max-width: 768px) {
+        .live-clock {
+            font-size: 9px;
+            padding: 4px 8px;
+        }
+        .mobile-footer {
+            display: flex;
+        }
         .notification-panel {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 350px;
-            max-height: 400px;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
-            z-index: 10001;
-            overflow: hidden;
+            width: 90%;
+            left: 5%;
+            transform: translate(0, -50%);
         }
+    }
 
-        .notification-item {
-            padding: 12px;
-            border-bottom: 1px solid #E2E4E8;
-            cursor: pointer;
+    @media (min-width: 769px) and (max-width: 1024px) {
+        .mobile-footer {
+            display: none;
         }
-
-        .notification-item:hover {
-            background: #F8F9FA;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .live-clock {
-                font-size: 9px;
-                padding: 4px 8px;
-            }
-            .mobile-footer {
-                display: flex;
-            }
-            body {
-                padding-bottom: 60px;
-            }
-            .notification-panel {
-                width: 90%;
-                left: 5%;
-                transform: translate(0, -50%);
-            }
-        }
-
-        @media (min-width: 769px) and (max-width: 1024px) {
-            .mobile-footer {
-                display: none;
-            }
-        }
-    </style>
+    }
+</style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -294,15 +268,12 @@
     </main>
 
     <!-- Rolling Notification Marquee - Above Footer -->
-    <div class="marquee-footer">
-        <div class="marquee-content">
-            {% if user.is_authenticated %}
-            <span id="marqueeText">Loading messages...</span>
-            {% else %}
-            <span>🚀 Join NodeVT today - Start earning 10% monthly yield! • 💰 Minimum deposit $10 USDC • 🤖 AI Grid Trading 24/7 • 📈 Refer friends earn 7 levels deep! • 💎 $10 grows to $3,048 in 5 years!</span>
-            {% endif %}
-        </div>
+    <!-- Rolling Notification Marquee -->
+<div class="marquee-footer">
+    <div class="marquee-content">
+        <span id="marqueeText">🚀 Join NodeVT - Start earning 10% monthly yield on your crypto!</span>
     </div>
+</div>
 
     <!-- Mobile Footer Bar -->
     <div class="mobile-footer">
