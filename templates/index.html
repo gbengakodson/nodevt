@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NODE Volatility - AI-Powered Crypto Trading Platform</title>
+    <title>NODE - AI-Powered Crypto Trading Platform</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -20,7 +20,6 @@
             color: white;
         }
 
-        /* Navbar */
         .navbar {
             position: fixed;
             top: 0;
@@ -80,7 +79,6 @@
             transform: translateY(-2px);
         }
 
-        /* Hero Section */
         .hero {
             min-height: 100vh;
             display: flex;
@@ -146,7 +144,6 @@
             transform: translateY(-2px);
         }
 
-        /* Stats Section */
         .stats-section {
             padding: 80px 0;
             background: rgba(30, 35, 41, 0.5);
@@ -166,7 +163,6 @@
             color: #8A8F9E;
         }
 
-        /* Features Section */
         .features-section {
             padding: 80px 0;
         }
@@ -229,7 +225,6 @@
             line-height: 1.6;
         }
 
-        /* AI Grid Card */
         .ai-grid-card {
             background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
             border-radius: 20px;
@@ -246,19 +241,10 @@
             gap: 20px;
         }
 
-        .grid-stat {
-            text-align: center;
-        }
-
         .grid-stat-value {
             font-size: 36px;
             font-weight: 700;
             color: #F0B90B;
-        }
-
-        .grid-stat-label {
-            font-size: 12px;
-            color: #8A8F9E;
         }
 
         .price-movement {
@@ -283,59 +269,6 @@
             font-weight: 700;
         }
 
-        /* Table Styles */
-        .earnings-table {
-            width: 100%;
-            background: rgba(30, 35, 41, 0.8);
-            border-radius: 16px;
-            overflow: hidden;
-            border: 1px solid rgba(240, 185, 11, 0.2);
-        }
-
-        .earnings-table th {
-            background: rgba(240, 185, 11, 0.1);
-            padding: 16px;
-            text-align: left;
-            font-weight: 600;
-            font-size: 14px;
-        }
-
-        .earnings-table td {
-            padding: 16px;
-            border-top: 1px solid rgba(240, 185, 11, 0.1);
-            font-size: 14px;
-        }
-
-        .highlight {
-            color: #F0B90B;
-            font-weight: 600;
-        }
-
-        /* Referral Chain */
-        .referral-chain {
-            background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-        }
-
-        .chain-levels {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin: 30px 0;
-        }
-
-        .chain-level {
-            background: rgba(240, 185, 11, 0.15);
-            border: 1px solid #F0B90B;
-            border-radius: 40px;
-            padding: 8px 16px;
-            font-size: 12px;
-        }
-
-        /* CTA Section */
         .cta-section {
             padding: 80px 0;
             background: linear-gradient(135deg, #F0B90B 0%, #E0A800 100%);
@@ -371,7 +304,6 @@
             box-shadow: 0 8px 20px rgba(0,0,0,0.2);
         }
 
-        /* Footer */
         .footer {
             padding: 48px 0 24px;
             border-top: 1px solid rgba(240, 185, 11, 0.1);
@@ -394,13 +326,11 @@
             .stat-number { font-size: 32px; }
             .section-title { font-size: 28px; }
             .btn-hero-primary, .btn-hero-secondary { padding: 10px 24px; }
-            .earnings-table th, .earnings-table td { padding: 10px; font-size: 11px; }
             .grid-stat-value { font-size: 24px; }
         }
     </style>
 </head>
 <body>
-    <!-- Navbar -->
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="/">
@@ -416,7 +346,7 @@
                 </svg>
                 <div>
                     <div style="font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: white;">NODE</div>
-                    <div style="font-size: 7px; color: #F0B90B; letter-spacing: 1px;">VOLATILITY</div>
+                    <div style="font-size: 7px; color: #F0B90B; letter-spacing: 1px;">AUTOTRADER</div>
                 </div>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -425,9 +355,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#ai-bot">AI Bot</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#earnings">Earnings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#referral">Referral</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/about/">About</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/how-it-works/">How It Works</a></li>
                     <li class="nav-item ms-lg-3"><a href="/login/" class="btn-login">Login</a></li>
                     <li class="nav-item"><a href="/register/" class="btn-register">Get Started</a></li>
                 </ul>
@@ -435,7 +364,6 @@
         </div>
     </nav>
 
-    <!-- Hero Section (PRESERVED) -->
     <section class="hero">
         <div class="container">
             <div class="hero-logo">
@@ -448,12 +376,10 @@
                     <circle cx="40" cy="46" r="3.5" fill="#F0B90B"/>
                     <line x1="40" y1="28" x2="40" y2="46" stroke="#F0B90B" stroke-width="2"/>
                     <line x1="31" y1="37" x2="49" y2="37" stroke="#F0B90B" stroke-width="2"/>
-                    <path d="M62 62 L66 58 L70 62" stroke="#F6465D" stroke-width="2.5" stroke-linecap="round" fill="none"/>
-                    <path d="M10 18 L14 14 L18 18" stroke="#0ECB81" stroke-width="2.5" stroke-linecap="round" fill="none"/>
                 </svg>
             </div>
-            <h1>Infinite Yield <br>with Node Ai<br><span style="color: #F0B90B;">For Professional CRYPTO Holdlers.</span></h1>
-            <p>Buy, sell, and earn actively on your crypto holdings, Concurrent income even in a Market crash.</p>
+            <h1>AI-Powered Crypto Trading<br><span style="color: #F0B90B;">For Modern Investors</span></h1>
+            <p>Automated grid trading, transparent technology, and real-time portfolio tracking.</p>
             <div>
                 <a href="/register/" class="btn-hero-primary">Start Trading</a>
                 <a href="#features" class="btn-hero-secondary">Learn More</a>
@@ -461,242 +387,141 @@
         </div>
     </section>
 
-    <!-- Stats Section -->
     <section class="stats-section">
         <div class="container">
             <div class="row text-center">
-                <div class="col-md-3 col-6 mb-4 mb-md-0">
+                <div class="col-md-4 col-6 mb-4 mb-md-0">
                     <div class="stat-number">20+</div>
                     <div class="stat-label">Supported Tokens</div>
                 </div>
-                <div class="col-md-3 col-6 mb-4 mb-md-0">
-                    <div class="stat-number">Variable</div>
-                    <div class="stat-label">Monthly Yield*</div>
+                <div class="col-md-4 col-6 mb-4 mb-md-0">
+                    <div class="stat-number">24/7</div>
+                    <div class="stat-label">AI Grid Trading</div>
                 </div>
-                <div class="col-md-3 col-6 mb-4 mb-md-0">
-                    <div class="stat-number">1%</div>
-                    <div class="stat-label">Trading bonus</div>
-                </div>
-                <div class="col-md-3 col-6">
-                    <div class="stat-number">1.2%</div>
-                    <div class="stat-label">Grid Movement</div>
+                <div class="col-md-4">
+                    <div class="stat-number">100</div>
+                    <div class="stat-label">Geometric Grids</div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Problem vs Solution Section -->
-    <section class="features-section">
+    <section id="features" class="features-section">
         <div class="container">
-            <h2 class="section-title">The Problem with Traditional Trading</h2>
-            <div class="row">
-                <div class="col-md-6 mb-4">
-                    <div class="feature-card" style="background: rgba(246, 70, 93, 0.1); border-color: #F6465D;">
-                        <div class="feature-icon"><i class="fas fa-chart-line" style="color: #F6465D;"></i></div>
-                        <h3 class="feature-title">During Market Crash</h3>
-                        <p class="feature-text">
-                            When Bitcoin crashes from $126,000 to $60,000:<br>
-                            • Huge capital is lost<br>
-                            • Gains are completely eroded<br>
-                            • Wallets go empty<br>
-                            • Only 2 options: cut losses or hold for nothing
-                        </p>
-                    </div>
-                </div>
-                <div class="col-md-6 mb-4">
-                    <div class="feature-card" style="background: rgba(14, 203, 129, 0.1); border-color: #0ECB81;">
-                        <div class="feature-icon"><i class="fas fa-check-circle" style="color: #0ECB81;"></i></div>
-                        <h3 class="feature-title">With NODE Volatility</h3>
-                        <p class="feature-text">
-                            While the market crashes around you:<br>
-                            • You earn variable yield on your holdings<br>
-                            • AI Grid Trading profits from every 1.2% move<br>
-                            • No need to sell at a loss<br>
-                            • Your capital works for you 24/7
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- AI Autotrader Section -->
-    <section id="ai-bot" class="features-section" style="background: rgba(30, 35, 41, 0.3);">
-        <div class="container">
-            <h2 class="section-title">🤖 Node AI Autotrader</h2>
-            <p class="section-subtitle">Trade 24/7 without lifting a finger. Automatically activated on all your token holdings.</p>
-
-            <div class="row">
-                <div class="col-lg-6 mb-4">
+            <h2 class="section-title">Why Choose NODE?</h2>
+            <p class="section-subtitle">Powerful features designed for modern crypto traders</p>
+            <div class="row g-4">
+                <div class="col-md-4">
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-robot"></i></div>
-                        <h3 class="feature-title">Auto Market Tools</h3>
-                        <p class="feature-text">Switched ON immediately when you buy any token. Your invested capital is efficiently managed by Node AI 24/7.</p>
+                        <h3 class="feature-title">AI Grid Trading</h3>
+                        <p class="feature-text">Automated grid strategy that buys at dips and sells at rises, operating 24/7 on your behalf.</p>
                     </div>
                 </div>
-                <div class="col-lg-6 mb-4">
+                <div class="col-md-4">
                     <div class="feature-card">
-                        <div class="feature-icon"><i class="fas fa-chart-simple"></i></div>
-                        <h3 class="feature-title">Grid Strategy</h3>
-                        <p class="feature-text">Automatically placed on every coin you buy. Powered by Binance & Bybit Bots via API integration.</p>
+                        <div class="feature-icon"><i class="fas fa-chart-line"></i></div>
+                        <h3 class="feature-title">Real-Time Tracking</h3>
+                        <p class="feature-text">Monitor your portfolio performance with live updates and detailed analytics.</p>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="feature-card">
+                        <div class="feature-icon"><i class="fas fa-link"></i></div>
+                        <h3 class="feature-title">Exchange Integration</h3>
+                        <p class="feature-text">Powered by Binance and Bybit APIs for reliable trade execution.</p>
                     </div>
                 </div>
             </div>
+        </div>
+    </section>
+
+    <section id="ai-bot" class="features-section" style="background: rgba(30, 35, 41, 0.3);">
+        <div class="container">
+            <h2 class="section-title">🤖 How the AI Grid Works</h2>
+            <p class="section-subtitle">A transparent, rules-based trading strategy</p>
 
             <div class="ai-grid-card mt-4">
-                <h3 style="margin-bottom: 20px;">⚡ Grid Strategy in Action</h3>
+                <h3 style="margin-bottom: 20px;">⚡ Grid Strategy</h3>
                 <div class="price-movement">
                     <div class="movement-up">
                         <div class="movement-value">↑ 1.2%</div>
-                        <div>AI sells → Take Profit</div>
+                        <div>Strategy sells → Takes profit</div>
                     </div>
                     <div class="movement-down">
                         <div class="movement-value">↓ 1.2%</div>
-                        <div>AI buys → Accumulate</div>
+                        <div>Strategy buys → Accumulates</div>
                     </div>
                 </div>
                 <div class="grid-stats">
                     <div class="grid-stat">
                         <div class="grid-stat-value">100</div>
-                        <div class="grid-stat-label">Geometric Grids</div>
+                        <div class="grid-stat-label">Grid Levels</div>
                     </div>
                     <div class="grid-stat">
                         <div class="grid-stat-value">24/7</div>
-                        <div class="grid-stat-label">Trading Hours</div>
+                        <div class="grid-stat-label">Continuous Operation</div>
                     </div>
                     <div class="grid-stat">
                         <div class="grid-stat-value">Binance + Bybit</div>
-                        <div class="grid-stat-label">Power Source</div>
+                        <div class="grid-stat-label">Execution Partners</div>
                     </div>
                 </div>
-                <p class="small" style="color: #8A8F9E; margin-top: 20px;">The AI continuously buys at dips and sells at rises. Your hourly yield comes directly from these profitable trading activities.</p>
+                <p class="small" style="color: #8A8F9E; margin-top: 20px;">The strategy operates continuously, responding to market movements. Results vary based on market conditions.</p>
             </div>
         </div>
     </section>
 
-    <!-- Earnings Section -->
-    <!-- Live AI Trading Demo & Comparison Section -->
-<section class="features-section" style="background: #0B0E11;">
-    <div class="container">
-        <div class="row">
-            <!-- Live AI Trading Demo -->
-            <div class="col-lg-6 mb-4">
-                <div class="feature-card" style="background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%); border: 1px solid rgba(240,185,11,0.3);">
-                    <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                        <h3 style="font-size: 18px; margin: 0; color: #F0B90B;">
-                            <i class="fas fa-robot me-2"></i>Live Trading
-                        </h3>
-                        <span class="badge" style="background: #0ECB81; color: #0B0E11; padding: 4px 10px; border-radius: 20px; font-size: 11px;">
-                            <i class="fas fa-circle" style="font-size: 8px; margin-right: 4px;"></i> LIVE 24/7
-                        </span>
-                    </div>
+    <!-- Live AI Trading Demo -->
+    <section class="features-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 mx-auto">
+                    <div class="feature-card" style="background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%); border: 1px solid rgba(240,185,11,0.3);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+                            <h3 style="font-size: 18px; margin: 0; color: #F0B90B;">
+                                <i class="fas fa-robot me-2"></i>Live Trading Demo
+                            </h3>
+                            <span class="badge" style="background: #0ECB81; color: #0B0E11; padding: 4px 10px; border-radius: 20px; font-size: 11px;">
+                                SIMULATION
+                            </span>
+                        </div>
 
-                    <!-- Live Stats -->
-                    <div class="row g-3 mb-4">
-                        <div class="col-6">
-                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
-                                <div style="font-size: 11px; color: #8A8F9E;">Current Token</div>
-                                <div style="font-size: 20px; font-weight: 700; color: #F0B90B;" id="demoToken">BTC/USDC</div>
+                        <div class="row g-3 mb-4">
+                            <div class="col-6">
+                                <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
+                                    <div style="font-size: 11px; color: #8A8F9E;">Current Token</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #F0B90B;" id="demoToken">BTC/USDC</div>
+                                </div>
+                            </div>
+                            <div class="col-6">
+                                <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
+                                    <div style="font-size: 11px; color: #8A8F9E;">Grid Level</div>
+                                    <div style="font-size: 20px; font-weight: 700; color: #0ECB81;" id="demoGridLevel">47/100</div>
+                                </div>
                             </div>
                         </div>
-                        <div class="col-6">
-                            <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
-                                <div style="font-size: 11px; color: #8A8F9E;">Grid Level</div>
-                                <div style="font-size: 20px; font-weight: 700; color: #0ECB81;" id="demoGridLevel">47/100</div>
+
+                        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
+                                <i class="fas fa-exchange-alt" style="color: #0ECB81;"></i>
+                                <span style="font-size: 12px; color: #8A8F9E;">Last Grid Action</span>
                             </div>
+                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
+                                <span style="font-size: 18px; font-weight: 700;" id="demoTradeAction">🟢 BUY</span>
+                                <span style="font-size: 14px;" id="demoTradeAmount">$50 USDC</span>
+                            </div>
+                            <div style="font-size: 11px; color: #8A8F9E; margin-top: 5px;" id="demoTradeTime">Simulated activity</div>
                         </div>
-                    </div>
 
-                    <!-- Last AI Trade -->
-                    <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                            <i class="fas fa-exchange-alt" style="color: #0ECB81;"></i>
-                            <span style="font-size: 12px; color: #8A8F9E;">Last AI Trade</span>
+                        <div class="mt-3 text-center">
+                            <small style="color: #5E6673;">This is a simulation. Actual performance depends on market conditions.</small>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                            <span style="font-size: 18px; font-weight: 700;" id="demoTradeAction">🟢 BUY</span>
-                            <span style="font-size: 14px;" id="demoTradeAmount">$50 USDC</span>
-                        </div>
-                        <div style="font-size: 11px; color: #8A8F9E; margin-top: 5px;" id="demoTradeTime">3 minutes ago at 1.2% dip</div>
-                    </div>
-
-                    <!-- Running Profit -->
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <div>
-                            <div style="font-size: 11px; color: #8A8F9E;">Today's AI Profit</div>
-                            <div style="font-size: 24px; font-weight: 700; color: #0ECB81;" id="demoProfit">+$127.50</div>
-                        </div>
-                        <div style="text-align: right;">
-                            <div style="font-size: 11px; color: #8A8F9E;">Total Trades</div>
-                            <div style="font-size: 24px; font-weight: 700; color: #F0B90B;" id="demoTrades">12,345</div>
-                        </div>
-                    </div>
-
-                    <div class="mt-3 text-center">
-                        <small style="color: #5E6673;">Node Ai Crypto autotrader</small>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Compare Your Current Exchange -->
-            <div class="col-lg-6 mb-4">
-                <div class="feature-card" style="background: rgba(30, 35, 41, 0.8); border: 1px solid rgba(240,185,11,0.2);">
-                    <h3 style="font-size: 18px; margin-bottom: 20px; color: #F0B90B;">
-                        <i class="fas fa-chart-simple me-2"></i>Node vs Traditional Exchanges
-                    </h3>
-
-                    <div style="overflow-x: auto;">
-                        <table style="width: 100%; border-collapse: collapse;">
-                            <thead>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <th style="text-align: left; padding: 12px 8px; color: #8A8F9E; font-size: 12px;">Feature</th>
-                                    <th style="text-align: center; padding: 12px 8px; color: #F6465D; font-size: 12px;">Binance / Bybit</th>
-                                    <th style="text-align: center; padding: 12px 8px; color: #0ECB81; font-size: 12px;">NODE</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <td style="padding: 12px 8px; font-size: 12px;">Earn during market crash</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #F6465D;">❌</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">✅ 10% hourly yield</td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <td style="padding: 12px 8px; font-size: 12px;">Auto grid trading (24/7)</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #F6465D;">❌ Manual only</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">✅ AI automated</td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <td style="padding: 12px 8px; font-size: 12px;">Sell at a loss allowed?</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #F6465D;">✅ (you lose money)</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">❌ (only sell at profit)</td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <td style="padding: 12px 8px; font-size: 12px;">Referral depth</td>
-                                    <td style="text-align: center; padding: 12px 8px;">1 level</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">✅ 7 levels</td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid #2B3139;">
-                                    <td style="padding: 12px 8px; font-size: 12px;">Passive income on holdings</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #F6465D;">❌</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">✅ 10% monthly yield</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 12px 8px; font-size: 12px;">Minimum to start earning</td>
-                                    <td style="text-align: center; padding: 12px 8px;">$100+</td>
-                                    <td style="text-align: center; padding: 12px 8px; color: #0ECB81;">✅ $10</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="mt-3 text-center">
-                        <a href="/register/" class="btn-hero-primary" style="padding: 10px 24px; font-size: 14px;">Start Trading on NODE →</a>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
-</section>
+    </section>
 
     <!-- How It Works -->
     <section class="features-section" style="background: rgba(30, 35, 41, 0.3);">
@@ -708,7 +533,7 @@
                     <div class="feature-card">
                         <div class="feature-icon">1️⃣</div>
                         <h3 class="feature-title">Register</h3>
-                        <p class="feature-text">Create your free account and get your unique referral code</p>
+                        <p class="feature-text">Create your free account</p>
                     </div>
                 </div>
                 <div class="col-md-3">
@@ -722,16 +547,47 @@
                     <div class="feature-card">
                         <div class="feature-icon">3️⃣</div>
                         <h3 class="feature-title">Buy Tokens</h3>
-                        <p class="feature-text">Choose any coin. AI activates automatically on your holdings</p>
+                        <p class="feature-text">Choose from available tokens</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="feature-card">
                         <div class="feature-icon">4️⃣</div>
-                        <h3 class="feature-title">Earn 24/7</h3>
-                        <p class="feature-text">AI trades for you while you earn on everything you hold</p>
+                        <h3 class="feature-title">AI Activates</h3>
+                        <p class="feature-text">Grid strategy begins automatically</p>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Referral Section (Optional) -->
+    <section id="referral" class="features-section">
+        <div class="container">
+            <div class="referral-chain">
+                <h2 style="font-size: 28px; margin-bottom: 20px;">🤝 Referral Program (Optional)</h2>
+                <p>Share your referral code and earn from the platform fee (optional participation)</p>
+                <div class="chain-levels">
+                    <span class="chain-level">Level 6: 50%</span>
+                    <span class="chain-level">Level 5: 25%</span>
+                    <span class="chain-level">Level 4: 12.5%</span>
+                    <span class="chain-level">Level 3: 6.25%</span>
+                    <span class="chain-level">Level 2: 3.125%</span>
+                    <span class="chain-level">Level 1: 1.5625%</span>
+                    <span class="chain-level">Platform: 1.5625%</span>
+                </div>
+                <p class="mt-3 small text-muted">Referral participation is completely optional. You can register without a referral code.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Risk Disclosure Notice -->
+    <section class="features-section">
+        <div class="container">
+            <div class="alert alert-warning text-center small" style="background: rgba(255,193,7,0.1); border-color: #F0B90B; color: #8A8F9E;">
+                <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading carries significant risk. Past performance does not guarantee future results.
+                The automated trading strategy may underperform. Users should only invest what they can afford to lose.
+                <a href="/risk-disclosure/" class="d-block mt-2" style="color: #F0B90B;">Read Full Risk Disclosure →</a>
             </div>
         </div>
     </section>
@@ -739,11 +595,11 @@
     <!-- CTA Section -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Start Earning 24/7?</h2>
-            <p>Join thousands of traders already earning yield on their crypto with AI-powered trading</p>
+            <h2>Ready to Start Trading?</h2>
+            <p>Join NodeVT and experience AI-powered crypto trading</p>
             <a href="/register/" class="btn-cta">Get Started Now</a>
         </div>
-        <p class="small text-muted mt-3">*Cryptocurrency trading carries risk. Past performance does not guarantee future results.</p>
+        <p class="small text-dark mt-3">*Cryptocurrency trading carries risk. Past performance does not guarantee future results.</p>
     </section>
 
     <!-- Footer -->
@@ -762,90 +618,70 @@
                         </svg>
                         <div>
                             <div style="font-weight: 700; font-size: 16px; color: white;">NODE</div>
-                            <div style="font-size: 7px; color: #F0B90B;">autotrader</div>
+                            <div style="font-size: 7px; color: #F0B90B;">AUTOTRADER</div>
                         </div>
                     </div>
-                    <p class="small opacity-75">AI-powered crypto trading platform. Trade, earn yield, and grow your portfolio with Node AI Autotrader.</p>
+                    <p class="small opacity-75">AI-powered crypto trading platform. Automated grid trading with transparent technology.</p>
                 </div>
                 <div class="col-md-2 col-6 mb-3">
-                    <h6 class="mb-3">Product</h6>
+                    <h6 class="mb-3">Platform</h6>
                     <div class="footer-links d-flex flex-column gap-2">
                         <a href="/trading/">Trading</a>
-                        <a href="/coins/">Markets</a>
-                        <a href="/yield/">Yield</a>
+                        <a href="/dashboard/">Dashboard</a>
+                        <a href="/portfolio/">Portfolio</a>
                     </div>
                 </div>
                 <div class="col-md-2 col-6 mb-3">
-                    <h6 class="mb-3">Resources</h6>
+                    <h6 class="mb-3">Company</h6>
                     <div class="footer-links d-flex flex-column gap-2">
-                        <a href="#features">Features</a>
-                        <a href="#ai-bot">AI Bot</a>
-                        <a href="#referral">Referral</a>
+                        <a href="/about/">About</a>
+                        <a href="/how-it-works/">How It Works</a>
+                        <a href="/risk-disclosure/">Risk Disclosure</a>
                         <a href="/chat/">Support</a>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <h6 class="mb-3">Network</h6>
-                    <p class="small opacity-75 mb-2">BSC (BEP20) - USDC Deposits</p>
-                    <p class="small opacity-75">Powered by Binance & Bybit Bots</p>
-                    <p class="small opacity-75">24/7 AI Trading</p>
+                    <p class="small opacity-75 mb-2">BSC (BEP20) - USDC</p>
+                    <p class="small opacity-75">Powered by Binance & Bybit APIs</p>
+                    <p class="small opacity-75">24/7 Automated Trading</p>
                 </div>
             </div>
             <hr class="mt-4 mb-3" style="border-color: rgba(240,185,11,0.2);">
             <div class="text-center small opacity-50">
-                &copy; 2026 NODE Volatility. All rights reserved.
+                &copy; 2026 Node Autotrader. All rights reserved.
             </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-<script>
-    // Live AI Trading Demo Simulation
-    (function() {
-        const tokens = ['BTC/USDC', 'ETH/USDC', 'BNB/USDC', 'SOL/USDC'];
-        let tokenIndex = 0;
-        let gridLevel = 47;
-        let gridDirection = 1;
-        let demoProfit = 127.50;
-        let totalTrades = 12345;
+    <script>
+        // Live Trading Demo Simulation
+        (function() {
+            const tokens = ['BTC/USDC', 'ETH/USDC', 'BNB/USDC', 'SOL/USDC'];
+            let tokenIndex = 0;
+            let gridLevel = 47;
+            let gridDirection = 1;
 
-        function updateDemo() {
-            // Rotate tokens every 10 seconds
-            tokenIndex = (tokenIndex + 1) % tokens.length;
-            document.getElementById('demoToken').innerHTML = tokens[tokenIndex];
+            function updateDemo() {
+                tokenIndex = (tokenIndex + 1) % tokens.length;
+                document.getElementById('demoToken').innerHTML = tokens[tokenIndex];
 
-            // Update grid level (oscillate between 0-100)
-            gridLevel += gridDirection;
-            if (gridLevel >= 100) gridDirection = -1;
-            if (gridLevel <= 0) gridDirection = 1;
-            document.getElementById('demoGridLevel').innerHTML = Math.floor(gridLevel) + '/100';
+                gridLevel += gridDirection;
+                if (gridLevel >= 100) gridDirection = -1;
+                if (gridLevel <= 0) gridDirection = 1;
+                document.getElementById('demoGridLevel').innerHTML = Math.floor(gridLevel) + '/100';
 
-            // Random trade simulation
-            const isBuy = Math.random() > 0.5;
-            const amount = (Math.random() * 100 + 20).toFixed(0);
-            const actions = isBuy ? ['🟢 BUY', '🔴 SELL'] : ['🔴 SELL', '🟢 BUY'];
-            document.getElementById('demoTradeAction').innerHTML = isBuy ? '🟢 BUY' : '🔴 SELL';
-            document.getElementById('demoTradeAmount').innerHTML = `$${amount} USDC`;
+                const isBuy = Math.random() > 0.5;
+                const amount = (Math.random() * 100 + 20).toFixed(0);
+                document.getElementById('demoTradeAction').innerHTML = isBuy ? '🟢 BUY' : '🔴 SELL';
+                document.getElementById('demoTradeAmount').innerHTML = `$${amount} USDC`;
+                document.getElementById('demoTradeTime').innerHTML = 'Simulated grid activity';
+            }
 
-            const minutes = Math.floor(Math.random() * 10) + 1;
-            const priceMove = isBuy ? 'dip' : 'rise';
-            document.getElementById('demoTradeTime').innerHTML = `${minutes} minute${minutes > 1 ? 's' : ''} ago at 1.2% ${priceMove}`;
-
-            // Update profit
-            const profitChange = (Math.random() - 0.5) * 5;
-            demoProfit += profitChange;
-            demoProfit = Math.max(0, Math.min(500, demoProfit));
-            document.getElementById('demoProfit').innerHTML = `+$${demoProfit.toFixed(2)}`;
-
-            // Update trades count
-            totalTrades += Math.floor(Math.random() * 5) + 1;
-            document.getElementById('demoTrades').innerHTML = totalTrades.toLocaleString();
-        }
-
-        // Update every 3 seconds
-        setInterval(updateDemo, 3000);
-        updateDemo();
-    })();
-</script>
+            setInterval(updateDemo, 5000);
+            updateDemo();
+        })();
+    </script>
 </body>
 </html>
