@@ -27,12 +27,7 @@ class RegisterView(APIView):
             except Exception as e:
                 print(f"Error creating wallet: {e}")
 
-            # After user is created, add to push notification list
-            if request.data.get('subscribe_notifications', True):
-                # Client will subscribe automatically via service worker
-                pass
-
-            # CREATE REFERRAL RELATIONSHIP FOR REFERRAL SERVICE
+            # CREATE REFERRAL RELATIONSHIP IF REFERRAL CODE PROVIDED
             if user.referrer:
                 try:
                     from apps.referrals.services.referral_service import ReferralService

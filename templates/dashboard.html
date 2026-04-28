@@ -426,7 +426,7 @@
                 <div class="row g-3 mb-3">
                     <div class="col-4">
                         <div style="background: #FFFFFF; border-radius: 12px; padding: 10px; border: 1px solid #E2E4E8;">
-                            <div style="font-size: 10px; color: #5E6673;">Monthly Yield (10%)</div>
+                            <div style="font-size: 10px; color: #5E6673;">Monthly Yield (Est.)*</div>
                             <div style="font-size: 14px; font-weight: 700; color: #0ECB81;" id="monthlyYield">$0</div>
                         </div>
                     </div>
@@ -467,7 +467,7 @@
                         <h6 class="mb-0" style="font-size: 12px; font-weight: 600; color: #F0B90B;">
                             <i class="fas fa-chart-line me-1"></i>Compound Growth Projector
                         </h6>
-                        <span class="badge" style="background: rgba(240,185,11,0.1); color: #F0B90B; font-size: 9px;">10% monthly</span>
+                        <div class="small text-muted mt-2">*Projections are estimates based on historical performance. Actual returns may vary.</div>
                     </div>
                     <!-- Manual Investment Input -->
                     <div class="row g-2 mb-3">
@@ -876,7 +876,7 @@
                         </div>
                     `;
                 }
-                distContainer.innerHTML = html;
+                distContainer.innerHTML = html + `<div style="margin-top:12px;padding:8px;background:#F8F9FA;border-radius:6px;font-size:10px;color:#707A8A;text-align:center;">💰 Yield distributed hourly based on AI trading performance</div>`;
             }
         } catch (e) { console.error('Error loading yield data:', e); }
     }

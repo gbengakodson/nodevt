@@ -1,0 +1,233 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}About NodeVT - Our Story{% endblock %}
+
+{% block extra_css %}
+<style>
+    .about-hero {
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+        color: white;
+        padding: 60px 0;
+        text-align: center;
+    }
+    .about-section {
+        padding: 50px 0;
+        border-bottom: 1px solid #E2E4E8;
+    }
+    .founder-card {
+        background: #F8F9FA;
+        border-radius: 16px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .founder-image {
+        width: 150px;
+        height: 150px;
+        background: #F0B90B;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 20px;
+        font-size: 64px;
+        color: #0B0E11;
+        overflow: hidden;
+    }
+    .founder-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    .timeline-item {
+        border-left: 3px solid #F0B90B;
+        padding-left: 20px;
+        margin-bottom: 25px;
+    }
+    .timeline-year {
+        font-weight: 700;
+        color: #F0B90B;
+        margin-bottom: 5px;
+    }
+    .problem-card {
+        background: #FEEBEE;
+        border-left: 4px solid #F6465D;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+    .solution-card {
+        background: #E6F9F0;
+        border-left: 4px solid #0ECB81;
+        padding: 20px;
+        margin-bottom: 20px;
+        border-radius: 8px;
+    }
+    .badge-year {
+        background: #F0B90B;
+        color: #0B0E11;
+        padding: 2px 8px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="about-hero">
+    <div class="container">
+        <h1 class="display-4 fw-bold mb-3">About NodeVT</h1>
+        <p class="lead">From Forex Trading Floor to Crypto Innovation</p>
+        <p class="small mt-3">Est. 2024 | Built by Traders, for Traders</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Founder Section -->
+    <div class="about-section">
+        <div class="row">
+            <div class="col-lg-8 mx-auto">
+                <div class="founder-card text-center">
+                    <div class="founder-image">
+                        <img src="{% static 'images/founder.jpg' %}" alt="Gbenga Odeyale Kodson" onerror="this.src='https://ui-avatars.com/api/?name=GB&background=F0B90B&color=0B0E11&size=150'">
+                    </div>
+                    <h3>Gbenga Odeyale Kodson</h3>
+                    <p class="text-muted">Founder & Lead Strategy Provider</p>
+                    <p class="small">20+ years experience | Forex & Crypto Trading Expert | DeFi Advocate</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Journey Timeline -->
+    <div class="about-section">
+        <h2 class="text-center mb-4">The Journey</h2>
+        <div class="row justify-content-center">
+            <div class="col-lg-8">
+                <div class="timeline-item">
+                    <div class="timeline-year">2005 - 2010</div>
+                    <p>Started as a freelance strategy manager at Northfinance (later FXpro), specializing in currency speculation and DCA strategy.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2014 - 2018</div>
+                    <p>Joined Litefinance as Port Harcourt branch representative. Sponsored youth training programs through DIF and other platforms across Nigeria.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2018</div>
+                    <p>Transitioned from Forex to Cryptocurrency with a mission to promote DeFi over Central Banks.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2020</div>
+                    <p>Joined Binance as lead freelance strategy manager for Nigeria, training traders and researching trading strategies to promote DeFi adoption in Africa.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2022</div>
+                    <p>Visited Limassol, Cyprus (home of FXPRO) to establish strategic partnerships for Crypto adoption and DeFi education.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2024</div>
+                    <p>Joined Bybit and Binance Square as lead strategy provider, promoting AI for crypto trading and management to mimic dividend systems in global stock markets.</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">Late 2025</div>
+                    <p><strong>NodeVT was born</strong> - Solving real problems faced by traders and investors.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Problem -->
+    <div class="about-section">
+        <h2 class="text-center mb-4">The Problems We Saw</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="problem-card">
+                    <h5>📈 High Barriers to Entry</h5>
+                    <p class="small mb-0">Setting up grid bots on crypto exchanges requires technical knowledge and significant capital, putting it beyond reach of amateur traders.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="problem-card">
+                    <h5>👥 Account Management Limitations</h5>
+                    <p class="small mb-0">Lead traders cannot manage multiple client accounts effectively on trading bots.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="problem-card">
+                    <h5>⚙️ No Mass Deployment</h5>
+                    <p class="small mb-0">Impossible for lead traders to deploy trading bots on thousands of individual accounts simultaneously.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="problem-card">
+                    <h5>💰 Profit Sharing Trust Issues</h5>
+                    <p class="small mb-0">After profits are made, clients could default on profit-sharing agreements since all funds are under their control.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="problem-card">
+                    <h5>🛑 Client Interference</h5>
+                    <p class="small mb-0">Amateur traders could disrupt active trading, abort positions, or withdraw funds without the expert trader's consent.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- The Solution -->
+    <div class="about-section">
+        <h2 class="text-center mb-4">The NodeVT Solution</h2>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="solution-card">
+                    <h5>🔗 Unified Trading</h5>
+                    <p class="small mb-0">The front end captures users' crypto positions and replicates them exactly on Binance trading bot.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="solution-card">
+                    <h5>💰 Pooled Resources</h5>
+                    <p class="small mb-0">Smaller deposits are combined to activate bots on the central wallet system on Binance.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="solution-card">
+                    <h5>🔄 Position Perming</h5>
+                    <p class="small mb-0">Similar crypto positions are grouped and activated together on the bot for efficiency.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="solution-card">
+                    <h5>📊 Transparent Distribution</h5>
+                    <p class="small mb-0">Real results from central wallets are transmitted back to NodeVT software, displaying individual yield based on holdings and market performance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Mission & Vision -->
+    <div class="about-section">
+        <div class="row">
+            <div class="col-md-6">
+                <div class="p-4" style="background: #F8F9FA; border-radius: 16px; height: 100%;">
+                    <h3 class="mb-3">🎯 Mission</h3>
+                    <p>To democratize algorithmic trading by providing retail investors with transparent, accessible tools that were once only available to institutions, while promoting DeFi adoption across Africa and beyond.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="p-4" style="background: #F8F9FA; border-radius: 16px; height: 100%;">
+                    <h3 class="mb-3">👁️ Vision</h3>
+                    <p>A future where anyone, anywhere, can participate in financial markets with sophisticated trading tools that mimic dividend systems in global stock markets, giving more power to Decentralized Finance.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Risk Disclaimer -->
+    <div class="about-section">
+        <div class="alert alert-warning small">
+            <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading involves substantial risk. Past performance does not guarantee future results. NodeVT provides trading tools and technology, not financial advice. Only invest what you can afford to lose.
+        </div>
+    </div>
+</div>
+{% endblock %}

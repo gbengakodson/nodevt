@@ -228,6 +228,16 @@
             display: none;
         }
     }
+        .footer {
+    background: #F8F9FA;
+    border-top: 1px solid #E2E4E8;
+    padding: 40px 0 20px;
+    margin-top: 40px;
+}
+
+.footer a.text-muted:hover {
+    color: #F0B90B !important;
+}
 </style>
     {% block extra_css %}{% endblock %}
 </head>
@@ -283,34 +293,89 @@
         {% endblock %}
     </main>
 
-    <!-- Rolling Notification Marquee - Above Footer -->
-    <!-- Rolling Notification Marquee -->
-<div class="marquee-footer">
-    <div class="marquee-content">
-        <span id="marqueeText">🚀 Join NodeVT - Start earning 10% monthly yield on your crypto!</span>
+    <!-- Desktop Footer -->
+<footer class="footer d-none d-md-block">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-4 mb-3">
+                <h6 class="mb-3">NodeVT</h6>
+                <p class="small text-muted">AI-powered crypto trading platform built by traders, for traders.</p>
+                <div class="mt-2">
+                    <span class="badge bg-dark me-1">BSC</span>
+                    <span class="badge bg-dark me-1">BEP-20</span>
+                    <span class="badge bg-dark">USDC</span>
+                </div>
+            </div>
+            <div class="col-md-2 mb-3">
+                <h6 class="mb-3">Platform</h6>
+                <ul class="list-unstyled small">
+                    <li><a href="/trading/" class="text-muted text-decoration-none">Trading</a></li>
+                    <li><a href="/dashboard/" class="text-muted text-decoration-none">Dashboard</a></li>
+                    <li><a href="/portfolio/" class="text-muted text-decoration-none">Portfolio</a></li>
+                    <li><a href="/yield/" class="text-muted text-decoration-none">Yield</a></li>
+                </ul>
+            </div>
+            <div class="col-md-2 mb-3">
+                <h6 class="mb-3">Company</h6>
+                <ul class="list-unstyled small">
+                    <li><a href="/about/" class="text-muted text-decoration-none">About Us</a></li>
+                    <li><a href="/how-it-works/" class="text-muted text-decoration-none">How It Works</a></li>
+                    <li><a href="/contact/" class="text-muted text-decoration-none">Contact</a></li>
+                    <li><a href="/chat/" class="text-muted text-decoration-none">Support</a></li>
+                </ul>
+            </div>
+            <div class="col-md-4 mb-3">
+                <h6 class="mb-3">Legal</h6>
+                <ul class="list-unstyled small">
+                    <li><a href="/terms/" class="text-muted text-decoration-none">Terms of Service</a></li>
+                    <li><a href="/privacy/" class="text-muted text-decoration-none">Privacy Policy</a></li>
+                    <li><a href="/risk-disclosure/" class="text-muted text-decoration-none">Risk Disclosure</a></li>
+
+                </ul>
+            </div>
+        </div>
+        <hr class="my-3">
+        <div class="row">
+            <div class="col-12 text-center">
+                <p class="small text-muted mb-0">
+                    <strong>Risk Warning:</strong> Cryptocurrency trading involves substantial risk. Past performance is not indicative of future results.
+                    NodeVT does not guarantee any returns. Only invest what you can afford to lose.
+                </p>
+                <p class="small text-muted mt-2 mb-0">
+                    &copy; 2026 NodeVT. All rights reserved.
+                </p>
+            </div>
+        </div>
+    </div>
+</footer>
+
+<!-- Mobile Footer Bar -->
+<div class="mobile-footer d-md-none">
+    <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
+        <i class="fas fa-bell"></i>
+        <span id="mobileBadge" class="mobile-badge">0</span>
+        <span>Alerts</span>
+    </div>
+    <div class="mobile-footer-item" onclick="toggleSimpleChat()">
+        <i class="fas fa-robot"></i>
+        <span>AI Bot</span>
+    </div>
+    <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
+        <i class="fas fa-chart-line"></i>
+        <span>Portfolio</span>
+    </div>
+    <div class="mobile-footer-item" onclick="window.location.href='/trading/'">
+        <i class="fas fa-exchange-alt"></i>
+        <span>Trade</span>
     </div>
 </div>
 
-    <!-- Mobile Footer Bar -->
-    <div class="mobile-footer">
-        <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
-            <i class="fas fa-bell"></i>
-            <span id="mobileBadge" class="mobile-badge">0</span>
-            <span>Alerts</span>
-        </div>
-        <div class="mobile-footer-item" onclick="toggleSimpleChat()">
-            <i class="fas fa-robot"></i>
-            <span>AI Bot</span>
-        </div>
-        <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
-            <i class="fas fa-chart-line"></i>
-            <span>Portfolio</span>
-        </div>
-        <div class="mobile-footer-item" onclick="window.location.href='/trading/'">
-            <i class="fas fa-exchange-alt"></i>
-            <span>Trade</span>
-        </div>
-    </div>
+<!-- Mobile Footer Disclaimer (visible below mobile nav) -->
+<div class="d-md-none text-center px-3 py-2" style="margin-bottom: 60px;">
+    <p class="small text-muted mb-0">
+        <strong>Risk Warning:</strong> Crypto trading involves risk. Only invest what you can afford to lose.
+    </p>
+</div>
 
     <!-- Notification Panel -->
     <div id="notificationPanel" class="notification-panel" style="display: none;">

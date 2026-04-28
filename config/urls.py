@@ -61,4 +61,8 @@ urlpatterns = [
 
     path('api/portfolio/', include('apps.portfolio.urls')),
 
+    path('about/', TemplateView.as_view(template_name='about.html'), name='about'),
+
+    path('risk-disclosure/', TemplateView.as_view(template_name='risk-disclosure.html'), name='risk_disclosure'),
+
 ]
