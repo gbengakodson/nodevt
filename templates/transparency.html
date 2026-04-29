@@ -1,246 +1,567 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Platform Transparency | NODE{% endblock %}
+{% block title %}Platform Wallet Explorer | NODE{% endblock %}
 
 {% block extra_css %}
 <style>
-    .transparency-hero {
-        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
-        color: white;
-        padding: 40px 0;
-        text-align: center;
+    /* BscScan-like Styling */
+    .explorer-header {
+        background: #1E2329;
+        border-bottom: 1px solid #2B3139;
+        padding: 24px 0;
     }
 
-    .transparency-card {
+    .explorer-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #F0B90B;
+        margin-bottom: 8px;
+    }
+
+    .explorer-subtitle {
+        font-size: 13px;
+        color: #8A8F9E;
+    }
+
+    .explorer-card {
         background: white;
-        border-radius: 16px;
+        border-radius: 12px;
         border: 1px solid #E2E4E8;
+        margin-bottom: 24px;
         overflow: hidden;
-        margin-bottom: 30px;
     }
 
-    .transparency-header {
-        padding: 20px;
-        border-bottom: 1px solid #E2E4E8;
+    .card-header {
         background: #F8F9FA;
+        padding: 16px 20px;
+        border-bottom: 1px solid #E2E4E8;
     }
 
-    .transparency-header h3 {
-        font-size: 18px;
+    .card-header h3 {
+        font-size: 16px;
         font-weight: 600;
         color: #1E2329;
         margin: 0;
     }
 
-    .transparency-header p {
-        font-size: 13px;
-        color: #707A8A;
-        margin: 5px 0 0 0;
+    .card-header i {
+        color: #F0B90B;
+        margin-right: 8px;
     }
 
-    .wallet-info {
+    .address-container {
         background: #F8F9FA;
-        padding: 15px 20px;
+        padding: 16px 20px;
         border-bottom: 1px solid #E2E4E8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 12px;
     }
 
-    .wallet-address {
-        font-family: monospace;
+    .address-label {
+        font-size: 11px;
+        color: #707A8A;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 4px;
+    }
+
+    .address-value {
+        font-family: 'Courier New', monospace;
         font-size: 14px;
-        word-break: break-all;
         background: white;
-        padding: 10px;
+        padding: 8px 12px;
         border-radius: 8px;
         border: 1px solid #E2E4E8;
+        word-break: break-all;
     }
 
-    .copy-btn {
-        background: #F0B90B;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        font-size: 12px;
-        cursor: pointer;
-        margin-left: 10px;
-    }
-
-    .iframe-container {
-        padding: 0;
-        height: 700px;
-    }
-
-    .iframe-container iframe {
-        width: 100%;
-        height: 100%;
-        border: none;
-    }
-
-    .disclaimer-box {
-        background: #FFF4E5;
-        border-left: 4px solid #F0B90B;
-        padding: 15px 20px;
-        border-radius: 8px;
-        margin-top: 20px;
-    }
-
-    .stats-row-transparency {
+    /* Overview Cards */
+    .overview-grid {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
         gap: 20px;
-        margin-bottom: 30px;
+        margin-bottom: 24px;
     }
 
-    .stat-box {
+    .overview-card {
         background: white;
         border-radius: 12px;
         border: 1px solid #E2E4E8;
-        padding: 20px;
-        text-align: center;
+        padding: 16px;
+        transition: all 0.2s;
     }
 
-    .stat-number {
-        font-size: 28px;
+    .overview-card:hover {
+        border-color: #F0B90B;
+    }
+
+    .overview-label {
+        font-size: 11px;
+        color: #8A8F9E;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 8px;
+    }
+
+    .overview-value {
+        font-size: 24px;
         font-weight: 700;
+        color: #1E2329;
+    }
+
+    .overview-value-usdc {
         color: #F0B90B;
     }
 
-    .stat-label {
-        font-size: 12px;
-        color: #707A8A;
-        margin-top: 5px;
+    .overview-value-bnb {
+        color: #0ECB81;
     }
 
+    .overview-value-usd {
+        color: #1E2329;
+    }
+
+    /* Token Holdings Table */
+    .token-table {
+        width: 100%;
+        font-size: 13px;
+        border-collapse: collapse;
+    }
+
+    .token-table th {
+        padding: 14px 16px;
+        text-align: left;
+        background: #F8F9FA;
+        font-weight: 600;
+        color: #5E6673;
+        font-size: 12px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .token-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .token-table tr:hover {
+        background: #F8F9FA;
+    }
+
+    .token-icon {
+        width: 24px;
+        height: 24px;
+        background: #F0B90B;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 10px;
+        font-size: 12px;
+        color: #0B0E11;
+    }
+
+    /* Transactions Table */
+    .tx-table {
+        width: 100%;
+        font-size: 13px;
+        border-collapse: collapse;
+    }
+
+    .tx-table th {
+        padding: 14px 16px;
+        text-align: left;
+        background: #F8F9FA;
+        font-weight: 600;
+        color: #5E6673;
+        font-size: 12px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .tx-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .tx-table tr:hover {
+        background: #F8F9FA;
+    }
+
+    .tx-hash {
+        font-family: monospace;
+        font-size: 12px;
+        color: #F0B90B;
+        text-decoration: none;
+    }
+
+    .tx-hash:hover {
+        text-decoration: underline;
+    }
+
+    .badge-in {
+        background: #E6F9F0;
+        color: #0ECB81;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .badge-out {
+        background: #FEEBEE;
+        color: #F6465D;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 11px;
+        font-weight: 500;
+    }
+
+    .amount-positive {
+        color: #0ECB81;
+        font-weight: 600;
+    }
+
+    .amount-negative {
+        color: #F6465D;
+        font-weight: 600;
+    }
+
+    /* More Info Section */
+    .more-info-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 16px;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 10px 0;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .info-label {
+        font-size: 12px;
+        color: #707A8A;
+    }
+
+    .info-value {
+        font-size: 12px;
+        font-weight: 500;
+        color: #1E2329;
+    }
+
+    /* Chat Section */
     .chat-message {
         transition: background 0.2s;
     }
 
     .chat-message:hover {
-        background: #F0F2F5;
+        background: #F8F9FA;
     }
 
     @media (max-width: 768px) {
-        .stats-row-transparency {
-            grid-template-columns: 1fr;
+        .overview-grid {
+            grid-template-columns: repeat(2, 1fr);
             gap: 12px;
         }
-        .iframe-container {
-            height: 500px;
+        .overview-value {
+            font-size: 18px;
+        }
+        .token-table th, .token-table td,
+        .tx-table th, .tx-table td {
+            padding: 8px 10px;
+            font-size: 11px;
+        }
+        .more-info-grid {
+            grid-template-columns: 1fr;
         }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="transparency-hero">
+<!-- Explorer Header -->
+<div class="explorer-header">
     <div class="container">
-        <h1 class="display-5 fw-bold mb-3">🔍 Platform Transparency</h1>
-        <p class="lead">Real-time view of platform wallet and assets</p>
+        <div class="explorer-title">🔍 Nodevt Wallet Explorer</div>
+        <div class="explorer-subtitle">Real-time view of NODE's custodial wallet on Binance Smart Chain</div>
     </div>
 </div>
 
 <div class="container py-4">
-    <!-- Stats Summary - Simplified (iframe shows real data) -->
-    <div class="stats-row-transparency">
-        <div class="stat-box">
-            <div class="stat-number" id="walletBalance">View on BscScan</div>
-            <div class="stat-label">Platform AUM (USDC)</div>
+    <!-- Address Card -->
+    <div class="explorer-card">
+        <div class="card-header">
+            <h3><i class="fas fa-wallet"></i> Address</h3>
         </div>
-        <div class="stat-box">
-            <div class="stat-number" id="bnbBalance">View on BscScan</div>
-            <div class="stat-label">BNB Balance (Gas)</div>
-        </div>
-        <div class="stat-box">
-            <div class="stat-number" id="usdcPercentage">View on BscScan</div>
-            <div class="stat-label">USDC Allocation</div>
-        </div>
-    </div>
-
-    <!-- Wallet Transparency Card -->
-    <div class="transparency-card">
-        <div class="transparency-header">
-            <h3><i class="fas fa-wallet me-2" style="color: #F0B90B;"></i>Platform Wallet</h3>
-            <p>All user funds are held in this custodial wallet. Trading occurs on Binance & Bybit.</p>
-        </div>
-        <div class="wallet-info">
-            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
-                <div style="flex: 1;">
-                    <div style="font-size: 11px; color: #707A8A; margin-bottom: 4px;">Wallet Address</div>
-                    <div class="wallet-address" id="walletAddress">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
-                </div>
-                <button class="copy-btn" onclick="copyAddress()">
-                    <i class="fas fa-copy"></i> Copy
-                </button>
+        <div class="address-container">
+            <div>
+                <div class="address-label">Wallet Address (BSC - BEP20)</div>
+                <div class="address-value" id="walletAddress">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
             </div>
-        </div>
-        <div class="iframe-container">
-            <iframe
-                src="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35"
-                title="BscScan - Platform Wallet"
-                loading="lazy"
-            ></iframe>
+            <button class="copy-btn" onclick="copyAddress()" style="background: #F0B90B; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer;">
+                <i class="fas fa-copy"></i> Copy
+            </button>
         </div>
     </div>
 
-    <!-- Disclaimer -->
-    <div class="disclaimer-box">
-        <i class="fas fa-info-circle me-2" style="color: #F0B90B;"></i>
-        <strong>About This Wallet:</strong>
-        <ul class="small mt-2 mb-0">
-            <li>This is the Nodevt's custodial wallet on Binance Smart Chain (BSC).</li>
-            <li>All user deposits are sent to this wallet.</li>
-            <li>All Funds are managed here directly under automated grid bot.</li>
-            <li>You can verify all deposits, withdrawals, and the total AUM in real-time on BscScan.</li>
-            <li>The wallet balance shown above is fetched directly from the blockchain.</li>
-        </ul>
+    <!-- Overview Cards -->
+    <div class="overview-grid">
+        <div class="overview-card">
+            <div class="overview-label">USDC Balance</div>
+            <div class="overview-value overview-value-usdc" id="usdcBalance">Loading...</div>
+        </div>
+        <div class="overview-card">
+            <div class="overview-label">BNB Balance</div>
+            <div class="overview-value overview-value-bnb" id="bnbBalance">Loading...</div>
+        </div>
+        <div class="overview-card">
+            <div class="overview-label">Total Value (USD)</div>
+            <div class="overview-value overview-value-usd" id="totalValueUSD">Loading...</div>
+        </div>
+        <div class="overview-card">
+            <div class="overview-label">Last Block Update</div>
+            <div class="overview-value" id="lastUpdate" style="font-size: 14px;">--:--:--</div>
+        </div>
     </div>
 
-    <div class="text-center mt-3">
-        <p class="small text-muted">
-            *Pool funds (AUM) on the central wallet can be viewed by anyone on BscScan.<br>
-        </p>
+    <!-- Token Holdings -->
+    <div class="explorer-card">
+        <div class="card-header">
+            <h3><i class="fas fa-coins"></i> Token Holdings</h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="token-table">
+                <thead>
+                    <tr>
+                        <th>Token</th>
+                        <th>Balance</th>
+                        <th>Value (USD)</th>
+                    </tr>
+                </thead>
+                <tbody id="tokenHoldings">
+                    <tr><td colspan="3" style="text-align: center;">Loading token holdings...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
-    <!-- Community Chat Section -->
-    <div class="transparency-card mt-4">
-        <div class="transparency-header">
-            <h3><i class="fas fa-comments me-2" style="color: #F0B90B;"></i>Community Discussion</h3>
-            <p>Discuss the platform wallet, market movements, and ask questions with other investors.</p>
+    <!-- Transactions -->
+    <div class="explorer-card">
+        <div class="card-header">
+            <h3><i class="fas fa-list"></i> Recent Transactions</h3>
+        </div>
+        <div style="overflow-x: auto;">
+            <table class="tx-table">
+                <thead>
+                    <tr>
+                        <th>Tx Hash</th>
+                        <th>Method</th>
+                        <th>From → To</th>
+                        <th>Amount</th>
+                        <th>Age</th>
+                    </tr>
+                </thead>
+                <tbody id="transactionsTable">
+                    <tr><td colspan="5" style="text-align: center;">Loading transactions...</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <div class="text-center p-3" style="border-top: 1px solid #E2E4E8;">
+            <a href="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" class="btn btn-sm" style="background: #F0B90B; color: #0B0E11;">
+                View All Transactions on BscScan →
+            </a>
+        </div>
+    </div>
+
+    <!-- More Info -->
+    <div class="explorer-card">
+        <div class="card-header">
+            <h3><i class="fas fa-info-circle"></i> More Info</h3>
         </div>
         <div class="p-3">
-            <!-- Chat Messages Container -->
-            <div id="chatMessagesContainer" style="height: 400px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+            <div class="more-info-grid">
+                <div class="info-row">
+                    <span class="info-label">Network</span>
+                    <span class="info-value">Binance Smart Chain (BSC)</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Token Standard</span>
+                    <span class="info-value">BEP-20</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Platform Type</span>
+                    <span class="info-value">Custodial Trading Wallet</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Exchange Integration</span>
+                    <span class="info-value">Binance & Bybit</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Transparency Note -->
+    <div class="alert alert-info small text-center" style="background: #FFF4E5; border: 1px solid #F0B90B; color: #5E6673; border-radius: 12px;">
+        <i class="fas fa-check-circle me-2" style="color: #0ECB81;"></i>
+        This wallet is fully transparent. All deposits are recorded on-chain and can be verified by anyone.
+        <a href="/risk-disclosure/" style="color: #F0B90B; text-decoration: none;">Learn more →</a>
+    </div>
+
+    <!-- Community Chat -->
+    <div class="explorer-card">
+        <div class="card-header">
+            <h3><i class="fas fa-comments"></i> Community Discussion</h3>
+        </div>
+        <div class="p-3">
+            <div id="chatMessagesContainer" style="height: 350px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
                 <div class="text-center text-muted" id="loadingChat">
                     <i class="fas fa-spinner fa-spin"></i> Loading messages...
                 </div>
             </div>
-
-            <!-- Chat Input -->
             <div class="row g-2">
                 <div class="col-10">
-                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message..." style="border-radius: 20px;">
+                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Ask a question or share your thoughts..." style="border-radius: 20px;">
                 </div>
                 <div class="col-2">
-                    <button id="sendChatBtn" class="btn btn-primary w-100" style="background: #F0B90B; border: none; color: #0B0E11; border-radius: 20px;">
+                    <button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; color: #0B0E11; border-radius: 20px;">
                         Send
                     </button>
                 </div>
             </div>
-            <div class="small text-muted mt-2">
-                <i class="fas fa-shield-alt"></i> Be respectful. No spam. All messages are public.
+            <div class="small text-muted mt-2 text-center">
+                <i class="fas fa-shield-alt"></i> Be respectful. No spam. Messages are public.
             </div>
         </div>
     </div>
 </div>
 
 <script>
-    // Simple wallet functions
+    // Wallet Configuration
+    const WALLET_ADDRESS = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
+    const USDC_CONTRACT = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
+
     function copyAddress() {
-        const address = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
-        navigator.clipboard.writeText(address);
+        navigator.clipboard.writeText(WALLET_ADDRESS);
         alert('Wallet address copied to clipboard!');
     }
 
-    // ============ COMMUNITY CHAT FUNCTIONS (Using existing chat system) ============
+    // Update last block time
+    function updateLastUpdate() {
+        const now = new Date();
+        document.getElementById('lastUpdate').innerHTML = now.toLocaleTimeString();
+    }
+
+    // Fetch BNB Balance
+    async function fetchBNBBalance() {
+        try {
+            const response = await fetch(`https://api.bscscan.com/api?module=account&action=balance&address=${WALLET_ADDRESS}&tag=latest`);
+            const data = await response.json();
+            if (data.status === "1") {
+                const bnbBalance = parseFloat(data.result) / 1e18;
+                document.getElementById('bnbBalance').innerHTML = bnbBalance.toFixed(6) + ' BNB';
+                return bnbBalance;
+            }
+        } catch (error) {
+            console.error('Error fetching BNB balance:', error);
+        }
+        document.getElementById('bnbBalance').innerHTML = 'Error loading';
+        return 0;
+    }
+
+    // Fetch USDC Balance
+    async function fetchUSDCBalance() {
+        try {
+            const response = await fetch(`https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${USDC_CONTRACT}&address=${WALLET_ADDRESS}&tag=latest`);
+            const data = await response.json();
+            if (data.status === "1") {
+                const usdcBalance = parseFloat(data.result) / 1e18;
+                document.getElementById('usdcBalance').innerHTML = '$' + usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+                // Update token holdings table
+                document.getElementById('tokenHoldings').innerHTML = `
+                    <tr>
+                        <td><span class="token-icon">₿</span> USDC</td>
+                        <td>${usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC</td>
+                        <td>$${usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
+                    </tr>
+                `;
+                return usdcBalance;
+            }
+        } catch (error) {
+            console.error('Error fetching USDC balance:', error);
+        }
+        document.getElementById('usdcBalance').innerHTML = 'Error loading';
+        return 0;
+    }
+
+    // Fetch recent transactions
+    async function fetchTransactions() {
+        try {
+            const response = await fetch(`https://api.bscscan.com/api?module=account&action=txlist&address=${WALLET_ADDRESS}&sort=desc&page=1&offset=10`);
+            const data = await response.json();
+            const tbody = document.getElementById('transactionsTable');
+
+            if (data.status === "1" && data.result && data.result.length > 0) {
+                tbody.innerHTML = data.result.map(tx => {
+                    const isIncoming = tx.to.toLowerCase() === WALLET_ADDRESS.toLowerCase();
+                    const amount = parseFloat(tx.value) / 1e18;
+                    const date = new Date(tx.timeStamp * 1000);
+                    const timeAgo = getTimeAgo(date);
+                    const truncatedFrom = tx.from.substring(0, 8) + '...' + tx.from.substring(tx.from.length - 6);
+                    const truncatedTo = tx.to.substring(0, 8) + '...' + tx.to.substring(tx.to.length - 6);
+
+                    return `
+                        <tr>
+                            <td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.substring(0, 12)}...</a></td>
+                            <td><span class="${isIncoming ? 'badge-in' : 'badge-out'}">${isIncoming ? 'IN' : 'OUT'}</span></td>
+                            <td style="font-family: monospace; font-size: 11px;">${truncatedFrom} → ${truncatedTo}</td>
+                            <td class="${isIncoming ? 'amount-positive' : 'amount-negative'}">${isIncoming ? '+' : '-'} ${amount.toFixed(6)} BNB</td>
+                            <td>${timeAgo}</td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No transactions found</td></tr>';
+            }
+        } catch (error) {
+            console.error('Error fetching transactions:', error);
+            document.getElementById('transactionsTable').innerHTML = '<tr><td colspan="5" style="text-align: center;">Unable to load transactions</td></tr>';
+        }
+    }
+
+    function getTimeAgo(date) {
+        const seconds = Math.floor((new Date() - date) / 1000);
+        if (seconds < 60) return `${seconds} secs ago`;
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return `${minutes} mins ago`;
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return `${hours} hrs ago`;
+        const days = Math.floor(hours / 24);
+        return `${days} days ago`;
+    }
+
+    // Update total value
+    async function updateTotalValue() {
+        const usdcBalance = await fetchUSDCBalance();
+        const bnbBalance = await fetchBNBBalance();
+
+        try {
+            const priceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
+            const priceData = await priceResponse.json();
+            const bnbPrice = parseFloat(priceData.price);
+            const totalValue = usdcBalance + (bnbBalance * bnbPrice);
+            document.getElementById('totalValueUSD').innerHTML = '$' + totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        } catch (error) {
+            document.getElementById('totalValueUSD').innerHTML = 'View on BscScan';
+        }
+        updateLastUpdate();
+    }
+
+    // ============ COMMUNITY CHAT ============
     let chatLoadInterval = null;
 
     async function loadChatMessages() {
@@ -252,50 +573,43 @@
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
 
-            // Use existing messages endpoint
             const response = await fetch('/api/chat/messages/', { headers });
             const messages = await response.json();
 
             if (!messages || messages.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted">No messages yet. Be the first to comment!</div>';
+                container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the discussion!</div>';
                 return;
             }
 
             container.innerHTML = messages.map(msg => `
                 <div class="chat-message mb-3" style="border-bottom: 1px solid #E2E4E8; padding-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="font-size: 13px; color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">
+                        <strong style="font-size: 12px; color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">
                             ${msg.is_admin ? '🤖 Admin' : '💬 Investor'}
                         </strong>
                         <small style="font-size: 10px; color: #8A8F9E;">${msg.date || msg.time}</small>
                     </div>
-                    <div style="font-size: 13px; color: #1E2329; margin-top: 5px;">${escapeHtml(msg.message)}</div>
+                    <div style="font-size: 12px; color: #1E2329; margin-top: 5px;">${escapeHtml(msg.message)}</div>
                 </div>
             `).join('');
-
-            // Auto-scroll to bottom
             container.scrollTop = container.scrollHeight;
-
         } catch (error) {
             console.error('Error loading chat:', error);
-            container.innerHTML = '<div class="text-center text-muted">Unable to load chat. Please refresh the page.</div>';
         }
     }
 
     async function sendChatMessage() {
         const input = document.getElementById('chatMessageInput');
         const message = input.value.trim();
-
         if (!message) return;
 
         const token = localStorage.getItem('access_token');
         if (!token) {
-            alert('Please login to participate in the community chat.');
+            alert('Please login to join the discussion.');
             return;
         }
 
         try {
-            // Use existing send-message endpoint
             const response = await fetch('/api/chat/send-message/', {
                 method: 'POST',
                 headers: {
@@ -311,11 +625,11 @@
                 input.value = '';
                 loadChatMessages();
             } else {
-                alert(data.error || 'Failed to send message. Please try again.');
+                alert(data.error || 'Failed to send message.');
             }
         } catch (error) {
             console.error('Error sending message:', error);
-            alert('Failed to send message. Please try again.');
+            alert('Failed to send message.');
         }
     }
 
@@ -326,19 +640,24 @@
         return div.innerHTML;
     }
 
-    // Event listeners
-    document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
-    document.getElementById('chatMessageInput')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') {
-            sendChatMessage();
-        }
+    // Initialize
+    document.addEventListener('DOMContentLoaded', () => {
+        updateTotalValue();
+        fetchTransactions();
+
+        setInterval(updateTotalValue, 60000);
+        setInterval(fetchTransactions, 60000);
     });
 
-    // Load chat messages on page load
+    // Chat events
+    document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
+    document.getElementById('chatMessageInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') sendChatMessage();
+    });
+
     if (document.getElementById('chatMessagesContainer')) {
         loadChatMessages();
-        // Refresh every 10 seconds
-        chatLoadInterval = setInterval(loadChatMessages, 10000);
+        setInterval(loadChatMessages, 10000);
     }
 </script>
 {% endblock %}
