@@ -9,35 +9,29 @@
         border-bottom: 1px solid #D9DDE2;
         padding: 24px 0;
     }
-
     .explorer-breadcrumb {
         font-size: 13px;
         color: #697582;
         margin-bottom: 8px;
     }
-
     .explorer-breadcrumb a {
         color: #697582;
         text-decoration: none;
     }
-
     .explorer-breadcrumb a:hover {
         color: #F0B90B;
     }
-
     .explorer-title {
         font-size: 24px;
         font-weight: 600;
         color: #1E2329;
         margin: 0;
     }
-
     .explorer-subtitle {
         font-size: 13px;
         color: #697582;
         margin-top: 4px;
     }
-
     .explorer-card {
         background: white;
         border-radius: 12px;
@@ -45,25 +39,21 @@
         margin-bottom: 24px;
         overflow: hidden;
     }
-
     .card-header {
         background: #F8F9FA;
         padding: 16px 20px;
         border-bottom: 1px solid #D9DDE2;
     }
-
     .card-header h3 {
         font-size: 16px;
         font-weight: 600;
         color: #1E2329;
         margin: 0;
     }
-
     .card-header i {
         color: #F0B90B;
         margin-right: 8px;
     }
-
     .address-container {
         background: #F8F9FA;
         padding: 16px 20px;
@@ -73,7 +63,6 @@
         flex-wrap: wrap;
         gap: 12px;
     }
-
     .address-value {
         font-family: monospace;
         font-size: 14px;
@@ -83,7 +72,6 @@
         border: 1px solid #D9DDE2;
         word-break: break-all;
     }
-
     .copy-btn {
         background: #F0B90B;
         border: none;
@@ -92,14 +80,12 @@
         cursor: pointer;
         font-weight: 500;
     }
-
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
         gap: 20px;
         margin-bottom: 24px;
     }
-
     .stat-card {
         background: white;
         border-radius: 12px;
@@ -107,34 +93,24 @@
         padding: 16px;
         text-align: center;
     }
-
     .stat-label {
         font-size: 11px;
         color: #697582;
         text-transform: uppercase;
         margin-bottom: 8px;
     }
-
     .stat-value {
         font-size: 22px;
         font-weight: 700;
         color: #1E2329;
     }
-
-    .stat-value-usdc {
-        color: #F0B90B;
-    }
-
-    .stat-value-bnb {
-        color: #0ECB81;
-    }
-
+    .stat-value-usdc { color: #F0B90B; }
+    .stat-value-bnb { color: #0ECB81; }
     .data-table {
         width: 100%;
         font-size: 13px;
         border-collapse: collapse;
     }
-
     .data-table th {
         padding: 12px 16px;
         text-align: left;
@@ -144,23 +120,17 @@
         font-size: 12px;
         border-bottom: 1px solid #D9DDE2;
     }
-
     .data-table td {
         padding: 12px 16px;
         border-bottom: 1px solid #D9DDE2;
     }
-
-    .data-table tr:hover {
-        background: #F8F9FA;
-    }
-
+    .data-table tr:hover { background: #F8F9FA; }
     .tx-hash {
         font-family: monospace;
         font-size: 12px;
         color: #F0B90B;
         text-decoration: none;
     }
-
     .badge-in {
         background: #E6F9F0;
         color: #0ECB81;
@@ -168,7 +138,6 @@
         border-radius: 20px;
         font-size: 11px;
     }
-
     .badge-out {
         background: #FEEBEE;
         color: #F6465D;
@@ -176,61 +145,28 @@
         border-radius: 20px;
         font-size: 11px;
     }
-
-    .amount-positive {
-        color: #0ECB81;
-        font-weight: 600;
-    }
-
-    .amount-negative {
-        color: #F6465D;
-        font-weight: 600;
-    }
-
+    .amount-positive { color: #0ECB81; font-weight: 600; }
+    .amount-negative { color: #F6465D; font-weight: 600; }
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
         gap: 16px;
         padding: 20px;
     }
-
     .info-row {
         display: flex;
         justify-content: space-between;
         padding: 8px 0;
         border-bottom: 1px solid #D9DDE2;
     }
-
-    .info-label {
-        font-size: 12px;
-        color: #697582;
-    }
-
-    .info-value {
-        font-size: 12px;
-        font-weight: 500;
-        color: #1E2329;
-    }
-
-    .chat-message {
-        transition: background 0.2s;
-    }
-
-    .chat-message:hover {
-        background: #F8F9FA;
-    }
-
+    .info-label { font-size: 12px; color: #697582; }
+    .info-value { font-size: 12px; font-weight: 500; color: #1E2329; }
+    .chat-message { transition: background 0.2s; }
+    .chat-message:hover { background: #F8F9FA; }
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        .stat-value {
-            font-size: 18px;
-        }
-        .info-grid {
-            grid-template-columns: 1fr;
-        }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+        .stat-value { font-size: 18px; }
+        .info-grid { grid-template-columns: 1fr; }
     }
 </style>
 {% endblock %}
@@ -238,90 +174,41 @@
 {% block content %}
 <div class="explorer-header">
     <div class="container">
-        <div class="explorer-breadcrumb">
-            <a href="/">Home</a> / <span style="color: #F0B90B;">Platform Wallet</span>
-        </div>
+        <div class="explorer-breadcrumb"><a href="/">Home</a> / <span style=" color: #F0B90B;">Platform Wallet</span></div>
         <div class="explorer-title">Platform Wallet Explorer</div>
         <div class="explorer-subtitle">Real-time view of NODE's custodial wallet on Binance Smart Chain</div>
     </div>
 </div>
 
 <div class="container py-4">
-    <!-- Stats Overview -->
     <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">USDC Balance</div>
-            <div class="stat-value stat-value-usdc" id="usdcBalance">—</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">BNB Balance</div>
-            <div class="stat-value stat-value-bnb" id="bnbBalance">—</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Total Value (USD)</div>
-            <div class="stat-value" id="totalValueUSD">—</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Network</div>
-            <div class="stat-value" style="font-size: 16px;">BSC</div>
-        </div>
+        <div class="stat-card"><div class="stat-label">USDC Balance</div><div class="stat-value stat-value-usdc" id="usdcBalance">—</div></div>
+        <div class="stat-card"><div class="stat-label">BNB Balance</div><div class="stat-value stat-value-bnb" id="bnbBalance">—</div></div>
+        <div class="stat-card"><div class="stat-label">Total Value (USD)</div><div class="stat-value" id="totalValueUSD">—</div></div>
+        <div class="stat-card"><div class="stat-label">Network</div><div class="stat-value" style="font-size: 16px;">BSC</div></div>
     </div>
 
-    <!-- Address Card -->
     <div class="explorer-card">
-        <div class="card-header">
-            <h3><i class="fas fa-wallet"></i> Wallet Address</h3>
-        </div>
+        <div class="card-header"><h3><i class="fas fa-wallet"></i> Wallet Address</h3></div>
         <div class="address-container">
-            <div class="address-value" style="flex: 1;">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
+            <div class="address-value" style="flex:1;">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
             <button class="copy-btn" onclick="copyAddress()">📋 Copy</button>
         </div>
     </div>
 
-    <!-- Token Holdings -->
     <div class="explorer-card">
-        <div class="card-header">
-            <h3><i class="fas fa-coins"></i> Token Holdings</h3>
-        </div>
-        <div style="overflow-x: auto;">
-            <table class="data-table">
-                <thead>
-                    <tr><th>Token</th><th>Balance</th><th>Value (USD)</th></tr>
-                </thead>
-                <tbody id="tokenHoldingsBody">
-                    <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
+        <div class="card-header"><h3><i class="fas fa-coins"></i> Token Holdings</h3></div>
+        <div style="overflow-x: auto;"><table class="data-table"><thead><tr><th>Token</th><th>Balance</th><th>Value (USD)</th></tr></thead><tbody id="tokenHoldingsBody"><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody></table></div>
     </div>
 
-    <!-- Transactions -->
     <div class="explorer-card">
-        <div class="card-header">
-            <h3><i class="fas fa-clock"></i> Recent Transactions</h3>
-        </div>
-        <div style="overflow-x: auto;">
-            <table class="data-table">
-                <thead>
-                    <tr><th>Tx Hash</th><th>Type</th><th>Amount</th><th>Age</th></tr>
-                </thead>
-                <tbody id="transactionsBody">
-                    <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
-        <div class="text-center p-3" style="border-top: 1px solid #D9DDE2;">
-            <a href="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" style="color: #F0B90B; text-decoration: none;">
-                View Full History on BscScan →
-            </a>
-        </div>
+        <div class="card-header"><h3><i class="fas fa-clock"></i> Recent Transactions</h3></div>
+        <div style="overflow-x: auto;"><table class="data-table"><thead><tr><th>Tx Hash</th><th>Type</th><th>Amount</th><th>Age</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody></table></div>
+        <div class="text-center p-3" style="border-top:1px solid #D9DDE2;"><a href="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" style="color:#F0B90B;">View Full History on BscScan →</a></div>
     </div>
 
-    <!-- More Info -->
     <div class="explorer-card">
-        <div class="card-header">
-            <h3><i class="fas fa-info-circle"></i> More Info</h3>
-        </div>
+        <div class="card-header"><h3><i class="fas fa-info-circle"></i> More Info</h3></div>
         <div class="info-grid">
             <div class="info-row"><span class="info-label">Network</span><span class="info-value">Binance Smart Chain (BSC)</span></div>
             <div class="info-row"><span class="info-label">Token Standard</span><span class="info-value">BEP-20</span></div>
@@ -330,24 +217,18 @@
         </div>
     </div>
 
-    <!-- Community Chat -->
+    <!-- Community Chat - New Simple Chat System -->
     <div class="explorer-card">
-        <div class="card-header">
-            <h3><i class="fas fa-comments"></i> Community Discussion</h3>
-        </div>
+        <div class="card-header"><h3><i class="fas fa-comments"></i> Community Discussion</h3></div>
         <div class="p-3">
             <div id="chatMessagesContainer" style="height: 350px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
                 <div class="text-center text-muted" id="loadingChat">Loading messages...</div>
             </div>
             <div class="row g-2">
-                <div class="col-10">
-                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message...">
-                </div>
-                <div class="col-2">
-                    <button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Send</button>
-                </div>
+                <div class="col-10"><input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message..."></div>
+                <div class="col-2"><button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Send</button></div>
             </div>
-            <div class="small text-muted mt-2 text-center">Be respectful. No spam. Messages are public.</div>
+            <div class="small text-muted mt-2 text-center"><i class="fas fa-shield-alt"></i> Be respectful. No spam. Messages are public.</div>
         </div>
     </div>
 </div>
@@ -356,10 +237,7 @@
     const WALLET = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
     const USDC_CONTRACT = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 
-    function copyAddress() {
-        navigator.clipboard.writeText(WALLET);
-        alert('Address copied!');
-    }
+    function copyAddress() { navigator.clipboard.writeText(WALLET); alert('Address copied!'); }
 
     async function fetchUSDCBalance() {
         try {
@@ -409,7 +287,7 @@
                     </tr>`;
                 }).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No transactions found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No transactions found</td></tr>';
             }
         } catch(e) { console.error(e); }
     }
@@ -422,51 +300,45 @@
             const priceData = await priceRes.json();
             const total = usdc + (bnb * parseFloat(priceData.price));
             document.getElementById('totalValueUSD').innerText = '$' + total.toLocaleString();
-        } catch(e) {
-            document.getElementById('totalValueUSD').innerText = 'View on BscScan';
-        }
+        } catch(e) { document.getElementById('totalValueUSD').innerText = 'View on BscScan'; }
     }
 
-    // Chat functions
-    let chatInterval;
+    // ============ NEW SIMPLE CHAT SYSTEM ============
+    let chatReloadInterval;
 
-    async function loadChatMessages() {
+    async function loadTransparencyChat() {
         const container = document.getElementById('chatMessagesContainer');
         if (!container) return;
-        const token = localStorage.getItem('access_token');
         try {
-            const headers = { 'Content-Type': 'application/json' };
-            if (token) headers['Authorization'] = `Bearer ${token}`;
-            const res = await fetch('/api/chat/messages/', { headers });
-            if (!res.ok) throw new Error('Auth required');
+            const res = await fetch('/api/chat/transparency/');
             const messages = await res.json();
-            if (!messages?.length) {
+            if (!messages || messages.length === 0) {
                 container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
                 return;
             }
             container.innerHTML = messages.map(m => `
                 <div class="chat-message mb-3" style="border-bottom: 1px solid #E2E4E8; padding-bottom: 10px;">
                     <div style="display: flex; justify-content: space-between;">
-                        <strong style="color: ${m.is_admin ? '#F0B90B' : '#0ECB81'}">${m.is_admin ? 'Admin' : 'Investor'}</strong>
-                        <small style="color: #8A8F9E;">${m.time || m.date}</small>
+                        <strong style="color: ${m.is_admin ? '#F0B90B' : '#0ECB81'}">${m.is_admin ? 'Admin' : m.username}</strong>
+                        <small style="color: #8A8F9E;">${m.created_at}</small>
                     </div>
                     <div style="margin-top: 5px;">${escapeHtml(m.message)}</div>
                 </div>
             `).join('');
             container.scrollTop = container.scrollHeight;
         } catch(e) {
-            container.innerHTML = '<div class="text-center text-muted">Login to join the discussion.</div>';
+            container.innerHTML = '<div class="text-center text-muted">Unable to load chat. Please refresh.</div>';
         }
     }
 
-    async function sendMessage() {
+    async function sendTransparencyMessage() {
         const input = document.getElementById('chatMessageInput');
         const msg = input.value.trim();
         if (!msg) return;
         const token = localStorage.getItem('access_token');
-        if (!token) { alert('Please login first'); return; }
+        if (!token) { alert('Please login to comment'); return; }
         try {
-            const res = await fetch('/api/chat/send-message/', {
+            const res = await fetch('/api/chat/transparency/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
                 body: JSON.stringify({ message: msg })
@@ -474,7 +346,7 @@
             const data = await res.json();
             if (data.success) {
                 input.value = '';
-                loadChatMessages();
+                loadTransparencyChat();
             } else {
                 alert(data.error || 'Failed to send');
             }
@@ -493,12 +365,11 @@
         fetchTransactions();
         setInterval(updateTotalValue, 60000);
         setInterval(fetchTransactions, 60000);
+        loadTransparencyChat();
+        chatReloadInterval = setInterval(loadTransparencyChat, 10000);
     });
 
-    document.getElementById('sendChatBtn')?.addEventListener('click', sendMessage);
-    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
-
-    loadChatMessages();
-    setInterval(loadChatMessages, 10000);
+    document.getElementById('sendChatBtn')?.addEventListener('click', sendTransparencyMessage);
+    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendTransparencyMessage(); });
 </script>
 {% endblock %}
