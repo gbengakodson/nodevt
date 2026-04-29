@@ -161,8 +161,33 @@
     }
     .info-label { font-size: 12px; color: #697582; }
     .info-value { font-size: 12px; font-weight: 500; color: #1E2329; }
-    .chat-message { transition: background 0.2s; }
+    .chat-message {
+        transition: background 0.2s;
+        padding: 12px;
+        border-radius: 8px;
+    }
     .chat-message:hover { background: #F8F9FA; }
+    .reply-btn {
+        background: none;
+        border: none;
+        color: #F0B90B;
+        font-size: 11px;
+        cursor: pointer;
+        margin-top: 8px;
+    }
+    .reply-btn:hover { text-decoration: underline; }
+    .reply-form {
+        margin-top: 8px;
+        margin-left: 40px;
+        display: none;
+    }
+    .reply-input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #D9DDE2;
+        border-radius: 20px;
+        font-size: 12px;
+    }
     @media (max-width: 768px) {
         .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
         .stat-value { font-size: 18px; }
@@ -174,7 +199,7 @@
 {% block content %}
 <div class="explorer-header">
     <div class="container">
-        <div class="explorer-breadcrumb"><a href="/">Home</a> / <span style=" color: #F0B90B;">Platform Wallet</span></div>
+        <div class="explorer-breadcrumb"><a href="/">Home</a> / <span style="color: #F0B90B;">Platform Wallet</span></div>
         <div class="explorer-title">Platform Wallet Explorer</div>
         <div class="explorer-subtitle">Real-time view of NODE's custodial wallet on Binance Smart Chain</div>
     </div>
@@ -217,18 +242,18 @@
         </div>
     </div>
 
-    <!-- Community Chat - New Simple Chat System -->
+    <!-- Community Discussion with Reply Feature -->
     <div class="explorer-card">
         <div class="card-header"><h3><i class="fas fa-comments"></i> Community Discussion</h3></div>
         <div class="p-3">
-            <div id="chatMessagesContainer" style="height: 350px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+            <div id="chatMessagesContainer" style="height: 450px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
                 <div class="text-center text-muted" id="loadingChat">Loading messages...</div>
             </div>
             <div class="row g-2">
-                <div class="col-10"><input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message..."></div>
-                <div class="col-2"><button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Send</button></div>
+                <div class="col-10"><input type="text" id="chatMessageInput" class="form-control" placeholder="Write a comment..."></div>
+                <div class="col-2"><button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Post</button></div>
             </div>
-            <div class="small text-muted mt-2 text-center"><i class="fas fa-shield-alt"></i> Be respectful. No spam. Messages are public.</div>
+            <div class="small text-muted mt-2 text-center"><i class="fas fa-shield-alt"></i> Be respectful. No spam. Click "Reply" under any comment.</div>
         </div>
     </div>
 </div>
@@ -246,11 +271,11 @@
             if (data.status === "1") {
                 const balance = parseFloat(data.result) / 1e18;
                 document.getElementById('usdcBalance').innerText = '$' + balance.toLocaleString();
-                document.getElementById('tokenHoldingsBody').innerHTML = `<tr><td>USDC</td><td>${balance.toLocaleString()} USDC</td><td>$${balance.toLocaleString()}</td></tr>`;
+                document.getElementById('tokenHoldingsBody').innerHTML = `<tr><td><strong>USDC</strong> (Binance-Peg)</td><td>${balance.toLocaleString()} USDC</td><td>$${balance.toLocaleString()}</td></tr>`;
                 return balance;
             }
         } catch(e) { console.error(e); }
-        document.getElementById('usdcBalance').innerText = 'Error';
+        document.getElementById('usdcBalance').innerText = 'View on BscScan';
         return 0;
     }
 
@@ -264,7 +289,7 @@
                 return balance;
             }
         } catch(e) { console.error(e); }
-        document.getElementById('bnbBalance').innerText = 'Error';
+        document.getElementById('bnbBalance').innerText = 'View on BscScan';
         return 0;
     }
 
@@ -279,12 +304,7 @@
                     const amount = parseFloat(tx.value) / 1e18;
                     const date = new Date(tx.timeStamp * 1000);
                     const age = Math.floor((Date.now() - date) / 3600000) + 'h ago';
-                    return `<tr>
-                        <td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.slice(0,14)}...</a></td>
-                        <td><span class="${isIn ? 'badge-in' : 'badge-out'}">${isIn ? 'IN' : 'OUT'}</span></td>
-                        <td class="${isIn ? 'amount-positive' : 'amount-negative'}">${isIn ? '+' : '-'} ${amount.toFixed(6)} BNB</td>
-                        <td>${age}</td>
-                    </tr>`;
+                    return `<tr><td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.slice(0,14)}...</a></td><td><span class="${isIn ? 'badge-in' : 'badge-out'}">${isIn ? 'IN' : 'OUT'}</span></td><td class="${isIn ? 'amount-positive' : 'amount-negative'}">${isIn ? '+' : '-'} ${amount.toFixed(6)} BNB</td><td>${age}</td></tr>`;
                 }).join('');
             } else {
                 tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No transactions found</td></tr>';
@@ -303,45 +323,79 @@
         } catch(e) { document.getElementById('totalValueUSD').innerText = 'View on BscScan'; }
     }
 
-    // ============ NEW SIMPLE CHAT SYSTEM ============
-    let chatReloadInterval;
+    // ============ CHAT SYSTEM WITH REPLIES ============
+    let messages = [];
+    let currentReplyTo = null;
 
-    async function loadTransparencyChat() {
-        const container = document.getElementById('chatMessagesContainer');
-        if (!container) return;
-        try {
-            const res = await fetch('/api/chat/transparency/');
-            const messages = await res.json();
-            if (!messages || messages.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
-                return;
-            }
-            container.innerHTML = messages.map(m => `
-                <div class="chat-message mb-3" style="border-bottom: 1px solid #E2E4E8; padding-bottom: 10px;">
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong style="color: ${m.is_admin ? '#F0B90B' : '#0ECB81'}">${m.is_admin ? 'Admin' : m.username}</strong>
-                        <small style="color: #8A8F9E;">${m.created_at}</small>
-                    </div>
-                    <div style="margin-top: 5px;">${escapeHtml(m.message)}</div>
-                </div>
-            `).join('');
-            container.scrollTop = container.scrollHeight;
-        } catch(e) {
-            container.innerHTML = '<div class="text-center text-muted">Unable to load chat. Please refresh.</div>';
-        }
+    function formatTime(timestamp) {
+        const date = new Date(timestamp);
+        return date.toLocaleString();
     }
 
-    async function sendTransparencyMessage() {
+    function renderMessages() {
+        const container = document.getElementById('chatMessagesContainer');
+        if (!container) return;
+        if (!messages || messages.length === 0) {
+            container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
+            return;
+        }
+
+        // Group replies under parent messages
+        const topLevel = messages.filter(m => !m.parent_id);
+        const replies = messages.filter(m => m.parent_id);
+
+        container.innerHTML = topLevel.map(msg => {
+            const msgReplies = replies.filter(r => r.parent_id === msg.id);
+            return `
+                <div class="chat-message" style="margin-bottom: 16px;" data-message-id="${msg.id}">
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong style="color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">${msg.is_admin ? 'Admin' : escapeHtml(msg.username)}</strong>
+                        <small style="color: #8A8F9E;">${formatTime(msg.created_at)}</small>
+                    </div>
+                    <div style="margin-top: 5px;">${escapeHtml(msg.message)}</div>
+                    <button class="reply-btn" onclick="showReplyForm('${msg.id}', '${escapeHtml(msg.username)}')">↩️ Reply</button>
+                    <div id="reply-form-${msg.id}" class="reply-form">
+                        <input type="text" id="reply-input-${msg.id}" class="reply-input" placeholder="Write a reply...">
+                        <button onclick="submitReply('${msg.id}')" style="margin-top: 5px; background: #F0B90B; border: none; border-radius: 20px; padding: 4px 12px; font-size: 11px;">Post Reply</button>
+                    </div>
+                    ${msgReplies.map(reply => `
+                        <div style="margin-left: 40px; margin-top: 12px; padding: 8px; background: #FFFFFF; border-radius: 8px; border-left: 3px solid #F0B90B;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <strong style="color: #0ECB81; font-size: 12px;">↳ ${escapeHtml(reply.username)}</strong>
+                                <small style="color: #8A8F9E; font-size: 10px;">${formatTime(reply.created_at)}</small>
+                            </div>
+                            <div style="margin-top: 4px; font-size: 12px;">${escapeHtml(reply.message)}</div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function loadTransparencyChat() {
+        try {
+            const res = await fetch('/api/chat/transparency/');
+            const data = await res.json();
+            if (data && Array.isArray(data)) {
+                messages = data;
+                renderMessages();
+            }
+        } catch(e) { console.error('Error loading chat:', e); }
+    }
+
+    async function sendMessage(replyTo = null) {
         const input = document.getElementById('chatMessageInput');
         const msg = input.value.trim();
         if (!msg) return;
         const token = localStorage.getItem('access_token');
         if (!token) { alert('Please login to comment'); return; }
         try {
+            const body = { message: msg };
+            if (replyTo) body.parent_id = replyTo;
             const res = await fetch('/api/chat/transparency/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ message: msg })
+                body: JSON.stringify(body)
             });
             const data = await res.json();
             if (data.success) {
@@ -353,23 +407,56 @@
         } catch(e) { alert('Error sending message'); }
     }
 
+    function showReplyForm(messageId, username) {
+        const form = document.getElementById(`reply-form-${messageId}`);
+        if (form.style.display === 'none' || !form.style.display) {
+            form.style.display = 'block';
+            document.getElementById(`reply-input-${messageId}`).focus();
+            document.getElementById(`reply-input-${messageId}`).placeholder = `Reply to ${username}...`;
+        } else {
+            form.style.display = 'none';
+        }
+    }
+
+    async function submitReply(messageId) {
+        const input = document.getElementById(`reply-input-${messageId}`);
+        const msg = input.value.trim();
+        if (!msg) return;
+        const token = localStorage.getItem('access_token');
+        if (!token) { alert('Please login to reply'); return; }
+        try {
+            const res = await fetch('/api/chat/transparency/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ message: msg, parent_id: messageId })
+            });
+            const data = await res.json();
+            if (data.success) {
+                input.value = '';
+                document.getElementById(`reply-form-${messageId}`).style.display = 'none';
+                loadTransparencyChat();
+            } else {
+                alert(data.error || 'Failed to send reply');
+            }
+        } catch(e) { alert('Error sending reply'); }
+    }
+
     function escapeHtml(text) {
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    // Initialize
     document.addEventListener('DOMContentLoaded', () => {
         updateTotalValue();
         fetchTransactions();
         setInterval(updateTotalValue, 60000);
         setInterval(fetchTransactions, 60000);
         loadTransparencyChat();
-        chatReloadInterval = setInterval(loadTransparencyChat, 10000);
+        setInterval(loadTransparencyChat, 10000);
     });
 
-    document.getElementById('sendChatBtn')?.addEventListener('click', sendTransparencyMessage);
-    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendTransparencyMessage(); });
+    document.getElementById('sendChatBtn')?.addEventListener('click', () => sendMessage());
+    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
 </script>
 {% endblock %}

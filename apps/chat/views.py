@@ -57,29 +57,41 @@ class TransparencyChatView(APIView):
     permission_classes = [AllowAny]
 
     def get(self, request):
-        messages = TransparencyChatMessage.objects.all().order_by('-created_at')[:100]
+        messages = TransparencyChatMessage.objects.all().order_by('created_at')
         data = [{
+            'id': str(msg.id),
             'username': msg.user.username or msg.user.email.split('@')[0],
             'message': msg.message,
-            'created_at': msg.created_at.strftime('%Y-%m-%d %H:%M'),
-            'is_admin': msg.user.is_staff
+            'created_at': msg.created_at.isoformat(),
+            'is_admin': msg.user.is_staff,
+            'parent_id': str(msg.parent_id) if msg.parent_id else None
         } for msg in messages]
-        return Response(data[::-1])
+        return Response(data)
 
     def post(self, request):
         if not request.user.is_authenticated:
             return Response({'error': 'Please login to comment'}, status=401)
 
         message = request.data.get('message', '').strip()
+        parent_id = request.data.get('parent_id')
+
         if not message:
             return Response({'error': 'Message cannot be empty'}, status=400)
 
         if len(message) > 500:
             return Response({'error': 'Message too long'}, status=400)
 
+        parent = None
+        if parent_id:
+            try:
+                parent = TransparencyChatMessage.objects.get(id=parent_id)
+            except TransparencyChatMessage.DoesNotExist:
+                return Response({'error': 'Parent message not found'}, status=400)
+
         chat_msg = TransparencyChatMessage.objects.create(
             user=request.user,
-            message=message
+            message=message,
+            parent=parent
         )
 
-        return Response({'success': True})
+        return Response({'success': True, 'id': str(chat_msg.id)})
