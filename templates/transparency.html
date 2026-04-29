@@ -1,0 +1,344 @@
+{% extends 'base/base.html' %}
+
+{% block title %}Platform Transparency | NODE{% endblock %}
+
+{% block extra_css %}
+<style>
+    .transparency-hero {
+        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
+        color: white;
+        padding: 40px 0;
+        text-align: center;
+    }
+
+    .transparency-card {
+        background: white;
+        border-radius: 16px;
+        border: 1px solid #E2E4E8;
+        overflow: hidden;
+        margin-bottom: 30px;
+    }
+
+    .transparency-header {
+        padding: 20px;
+        border-bottom: 1px solid #E2E4E8;
+        background: #F8F9FA;
+    }
+
+    .transparency-header h3 {
+        font-size: 18px;
+        font-weight: 600;
+        color: #1E2329;
+        margin: 0;
+    }
+
+    .transparency-header p {
+        font-size: 13px;
+        color: #707A8A;
+        margin: 5px 0 0 0;
+    }
+
+    .wallet-info {
+        background: #F8F9FA;
+        padding: 15px 20px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .wallet-address {
+        font-family: monospace;
+        font-size: 14px;
+        word-break: break-all;
+        background: white;
+        padding: 10px;
+        border-radius: 8px;
+        border: 1px solid #E2E4E8;
+    }
+
+    .copy-btn {
+        background: #F0B90B;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        font-size: 12px;
+        cursor: pointer;
+        margin-left: 10px;
+    }
+
+    .iframe-container {
+        padding: 0;
+        height: 700px;
+    }
+
+    .iframe-container iframe {
+        width: 100%;
+        height: 100%;
+        border: none;
+    }
+
+    .disclaimer-box {
+        background: #FFF4E5;
+        border-left: 4px solid #F0B90B;
+        padding: 15px 20px;
+        border-radius: 8px;
+        margin-top: 20px;
+    }
+
+    .stats-row-transparency {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+
+    .stat-box {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 20px;
+        text-align: center;
+    }
+
+    .stat-number {
+        font-size: 28px;
+        font-weight: 700;
+        color: #F0B90B;
+    }
+
+    .stat-label {
+        font-size: 12px;
+        color: #707A8A;
+        margin-top: 5px;
+    }
+
+    .chat-message {
+        transition: background 0.2s;
+    }
+
+    .chat-message:hover {
+        background: #F0F2F5;
+    }
+
+    @media (max-width: 768px) {
+        .stats-row-transparency {
+            grid-template-columns: 1fr;
+            gap: 12px;
+        }
+        .iframe-container {
+            height: 500px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="transparency-hero">
+    <div class="container">
+        <h1 class="display-5 fw-bold mb-3">🔍 Platform Transparency</h1>
+        <p class="lead">Real-time view of platform wallet and assets</p>
+    </div>
+</div>
+
+<div class="container py-4">
+    <!-- Stats Summary - Simplified (iframe shows real data) -->
+    <div class="stats-row-transparency">
+        <div class="stat-box">
+            <div class="stat-number" id="walletBalance">View on BscScan</div>
+            <div class="stat-label">Platform AUM (USDC)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="bnbBalance">View on BscScan</div>
+            <div class="stat-label">BNB Balance (Gas)</div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-number" id="usdcPercentage">View on BscScan</div>
+            <div class="stat-label">USDC Allocation</div>
+        </div>
+    </div>
+
+    <!-- Wallet Transparency Card -->
+    <div class="transparency-card">
+        <div class="transparency-header">
+            <h3><i class="fas fa-wallet me-2" style="color: #F0B90B;"></i>Platform Wallet</h3>
+            <p>All user funds are held in this custodial wallet. Trading occurs on Binance & Bybit.</p>
+        </div>
+        <div class="wallet-info">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+                <div style="flex: 1;">
+                    <div style="font-size: 11px; color: #707A8A; margin-bottom: 4px;">Wallet Address</div>
+                    <div class="wallet-address" id="walletAddress">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
+                </div>
+                <button class="copy-btn" onclick="copyAddress()">
+                    <i class="fas fa-copy"></i> Copy
+                </button>
+            </div>
+        </div>
+        <div class="iframe-container">
+            <iframe
+                src="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35"
+                title="BscScan - Platform Wallet"
+                loading="lazy"
+            ></iframe>
+        </div>
+    </div>
+
+    <!-- Disclaimer -->
+    <div class="disclaimer-box">
+        <i class="fas fa-info-circle me-2" style="color: #F0B90B;"></i>
+        <strong>About This Wallet:</strong>
+        <ul class="small mt-2 mb-0">
+            <li>This is the Nodevt's custodial wallet on Binance Smart Chain (BSC).</li>
+            <li>All user deposits are sent to this wallet.</li>
+            <li>All Funds are managed here directly under automated grid bot.</li>
+            <li>You can verify all deposits, withdrawals, and the total AUM in real-time on BscScan.</li>
+            <li>The wallet balance shown above is fetched directly from the blockchain.</li>
+        </ul>
+    </div>
+
+    <div class="text-center mt-3">
+        <p class="small text-muted">
+            *Pool funds (AUM) on the central wallet can be viewed by anyone on BscScan.<br>
+        </p>
+    </div>
+
+    <!-- Community Chat Section -->
+    <div class="transparency-card mt-4">
+        <div class="transparency-header">
+            <h3><i class="fas fa-comments me-2" style="color: #F0B90B;"></i>Community Discussion</h3>
+            <p>Discuss the platform wallet, market movements, and ask questions with other investors.</p>
+        </div>
+        <div class="p-3">
+            <!-- Chat Messages Container -->
+            <div id="chatMessagesContainer" style="height: 400px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                <div class="text-center text-muted" id="loadingChat">
+                    <i class="fas fa-spinner fa-spin"></i> Loading messages...
+                </div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="row g-2">
+                <div class="col-10">
+                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message..." style="border-radius: 20px;">
+                </div>
+                <div class="col-2">
+                    <button id="sendChatBtn" class="btn btn-primary w-100" style="background: #F0B90B; border: none; color: #0B0E11; border-radius: 20px;">
+                        Send
+                    </button>
+                </div>
+            </div>
+            <div class="small text-muted mt-2">
+                <i class="fas fa-shield-alt"></i> Be respectful. No spam. All messages are public.
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Simple wallet functions
+    function copyAddress() {
+        const address = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
+        navigator.clipboard.writeText(address);
+        alert('Wallet address copied to clipboard!');
+    }
+
+    // ============ COMMUNITY CHAT FUNCTIONS (Using existing chat system) ============
+    let chatLoadInterval = null;
+
+    async function loadChatMessages() {
+        const token = localStorage.getItem('access_token');
+        const container = document.getElementById('chatMessagesContainer');
+        if (!container) return;
+
+        try {
+            const headers = { 'Content-Type': 'application/json' };
+            if (token) headers['Authorization'] = `Bearer ${token}`;
+
+            // Use existing messages endpoint
+            const response = await fetch('/api/chat/messages/', { headers });
+            const messages = await response.json();
+
+            if (!messages || messages.length === 0) {
+                container.innerHTML = '<div class="text-center text-muted">No messages yet. Be the first to comment!</div>';
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => `
+                <div class="chat-message mb-3" style="border-bottom: 1px solid #E2E4E8; padding-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <strong style="font-size: 13px; color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">
+                            ${msg.is_admin ? '🤖 Admin' : '💬 Investor'}
+                        </strong>
+                        <small style="font-size: 10px; color: #8A8F9E;">${msg.date || msg.time}</small>
+                    </div>
+                    <div style="font-size: 13px; color: #1E2329; margin-top: 5px;">${escapeHtml(msg.message)}</div>
+                </div>
+            `).join('');
+
+            // Auto-scroll to bottom
+            container.scrollTop = container.scrollHeight;
+
+        } catch (error) {
+            console.error('Error loading chat:', error);
+            container.innerHTML = '<div class="text-center text-muted">Unable to load chat. Please refresh the page.</div>';
+        }
+    }
+
+    async function sendChatMessage() {
+        const input = document.getElementById('chatMessageInput');
+        const message = input.value.trim();
+
+        if (!message) return;
+
+        const token = localStorage.getItem('access_token');
+        if (!token) {
+            alert('Please login to participate in the community chat.');
+            return;
+        }
+
+        try {
+            // Use existing send-message endpoint
+            const response = await fetch('/api/chat/send-message/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${token}`
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                input.value = '';
+                loadChatMessages();
+            } else {
+                alert(data.error || 'Failed to send message. Please try again.');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+            alert('Failed to send message. Please try again.');
+        }
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    // Event listeners
+    document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
+    document.getElementById('chatMessageInput')?.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            sendChatMessage();
+        }
+    });
+
+    // Load chat messages on page load
+    if (document.getElementById('chatMessagesContainer')) {
+        loadChatMessages();
+        // Refresh every 10 seconds
+        chatLoadInterval = setInterval(loadChatMessages, 10000);
+    }
+</script>
+{% endblock %}
