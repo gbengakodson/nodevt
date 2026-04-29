@@ -4,7 +4,6 @@
 
 {% block extra_css %}
 <style>
-    /* BscScan Official Style (Light Theme) */
     .explorer-header {
         background: #FFFFFF;
         border-bottom: 1px solid #D9DDE2;
@@ -30,15 +29,15 @@
         font-size: 24px;
         font-weight: 600;
         color: #1E2329;
-        margin: 0 0 4px 0;
+        margin: 0;
     }
 
     .explorer-subtitle {
         font-size: 13px;
         color: #697582;
+        margin-top: 4px;
     }
 
-    /* Cards */
     .explorer-card {
         background: white;
         border-radius: 12px;
@@ -65,7 +64,6 @@
         margin-right: 8px;
     }
 
-    /* Address Container */
     .address-container {
         background: #F8F9FA;
         padding: 16px 20px;
@@ -74,18 +72,10 @@
         align-items: center;
         flex-wrap: wrap;
         gap: 12px;
-        border-bottom: 1px solid #D9DDE2;
-    }
-
-    .address-label {
-        font-size: 11px;
-        color: #697582;
-        text-transform: uppercase;
-        margin-bottom: 4px;
     }
 
     .address-value {
-        font-family: 'Courier New', monospace;
+        font-family: monospace;
         font-size: 14px;
         background: white;
         padding: 8px 12px;
@@ -103,7 +93,6 @@
         font-weight: 500;
     }
 
-    /* Stats Grid */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -140,7 +129,6 @@
         color: #0ECB81;
     }
 
-    /* Tables */
     .data-table {
         width: 100%;
         font-size: 13px;
@@ -199,7 +187,6 @@
         font-weight: 600;
     }
 
-    /* Info Grid */
     .info-grid {
         display: grid;
         grid-template-columns: repeat(2, 1fr);
@@ -225,21 +212,12 @@
         color: #1E2329;
     }
 
-    /* Chat */
     .chat-message {
         transition: background 0.2s;
     }
 
     .chat-message:hover {
         background: #F8F9FA;
-    }
-
-    .view-on-bscscan {
-        display: inline-block;
-        margin-top: 16px;
-        color: #F0B90B;
-        text-decoration: none;
-        font-size: 13px;
     }
 
     @media (max-width: 768px) {
@@ -253,23 +231,18 @@
         .info-grid {
             grid-template-columns: 1fr;
         }
-        .data-table th, .data-table td {
-            padding: 8px 10px;
-            font-size: 11px;
-        }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<!-- BscScan-style Header (Light Theme) -->
 <div class="explorer-header">
     <div class="container">
         <div class="explorer-breadcrumb">
-            <a href="/">Home</a> / <a href="/transparency/">Explorer</a> / <span style="color: #F0B90B;">Token Holder</span>
+            <a href="/">Home</a> / <span style="color: #F0B90B;">Platform Wallet</span>
         </div>
-        <div class="explorer-title">Binance-Peg USD Coin (USDC)</div>
-        <div class="explorer-subtitle">BEP-20 Token | Platform Wallet: <span id="walletAddressShort">0x1610a914...b5abea35</span></div>
+        <div class="explorer-title">Platform Wallet Explorer</div>
+        <div class="explorer-subtitle">Real-time view of NODE's custodial wallet on Binance Smart Chain</div>
     </div>
 </div>
 
@@ -278,35 +251,30 @@
     <div class="stats-grid">
         <div class="stat-card">
             <div class="stat-label">USDC Balance</div>
-            <div class="stat-value stat-value-usdc" id="usdcBalance">Loading...</div>
+            <div class="stat-value stat-value-usdc" id="usdcBalance">—</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">BNB Balance (Gas)</div>
-            <div class="stat-value stat-value-bnb" id="bnbBalance">Loading...</div>
+            <div class="stat-label">BNB Balance</div>
+            <div class="stat-value stat-value-bnb" id="bnbBalance">—</div>
         </div>
         <div class="stat-card">
             <div class="stat-label">Total Value (USD)</div>
-            <div class="stat-value" id="totalValueUSD">Loading...</div>
+            <div class="stat-value" id="totalValueUSD">—</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">Token Contract</div>
-            <div class="stat-value" style="font-size: 14px;">0x8AC7...80d</div>
+            <div class="stat-label">Network</div>
+            <div class="stat-value" style="font-size: 16px;">BSC</div>
         </div>
     </div>
 
     <!-- Address Card -->
     <div class="explorer-card">
         <div class="card-header">
-            <h3><i class="fas fa-wallet"></i> Address</h3>
+            <h3><i class="fas fa-wallet"></i> Wallet Address</h3>
         </div>
         <div class="address-container">
-            <div>
-                <div class="address-label">Platform Wallet (BSC - BEP20)</div>
-                <div class="address-value" id="fullAddress">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
-            </div>
-            <button class="copy-btn" onclick="copyAddress()">
-                <i class="fas fa-copy"></i> Copy
-            </button>
+            <div class="address-value" style="flex: 1;">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
+            <button class="copy-btn" onclick="copyAddress()">📋 Copy</button>
         </div>
     </div>
 
@@ -318,11 +286,7 @@
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Token</th>
-                        <th>Balance</th>
-                        <th>Value (USD)</th>
-                    </tr>
+                    <tr><th>Token</th><th>Balance</th><th>Value (USD)</th></tr>
                 </thead>
                 <tbody id="tokenHoldingsBody">
                     <tr><td colspan="3" style="text-align: center;">Loading...</td></tr>
@@ -331,29 +295,23 @@
         </div>
     </div>
 
-    <!-- Recent Transactions -->
+    <!-- Transactions -->
     <div class="explorer-card">
         <div class="card-header">
-            <h3><i class="fas fa-list"></i> Recent Transactions</h3>
+            <h3><i class="fas fa-clock"></i> Recent Transactions</h3>
         </div>
         <div style="overflow-x: auto;">
             <table class="data-table">
                 <thead>
-                    <tr>
-                        <th>Tx Hash</th>
-                        <th>Type</th>
-                        <th>From → To</th>
-                        <th>Amount</th>
-                        <th>Age</th>
-                    </tr>
+                    <tr><th>Tx Hash</th><th>Type</th><th>Amount</th><th>Age</th></tr>
                 </thead>
                 <tbody id="transactionsBody">
-                    <tr><td colspan="5" style="text-align: center;">Loading...</td></tr>
+                    <tr><td colspan="4" style="text-align: center;">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
         <div class="text-center p-3" style="border-top: 1px solid #D9DDE2;">
-            <a href="https://bscscan.com/token/0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d?a=0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" class="view-on-bscscan">
+            <a href="https://bscscan.com/address/0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" style="color: #F0B90B; text-decoration: none;">
                 View Full History on BscScan →
             </a>
         </div>
@@ -365,22 +323,10 @@
             <h3><i class="fas fa-info-circle"></i> More Info</h3>
         </div>
         <div class="info-grid">
-            <div class="info-row">
-                <span class="info-label">Network</span>
-                <span class="info-value">Binance Smart Chain (BSC)</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Token Standard</span>
-                <span class="info-value">BEP-20</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Platform Type</span>
-                <span class="info-value">Custodial Trading Wallet</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Exchange Integration</span>
-                <span class="info-value">Binance & Bybit APIs</span>
-            </div>
+            <div class="info-row"><span class="info-label">Network</span><span class="info-value">Binance Smart Chain (BSC)</span></div>
+            <div class="info-row"><span class="info-label">Token Standard</span><span class="info-value">BEP-20</span></div>
+            <div class="info-row"><span class="info-label">Exchange Integration</span><span class="info-value">Binance & Bybit APIs</span></div>
+            <div class="info-row"><span class="info-label">Platform Type</span><span class="info-value">Custodial Trading Wallet</span></div>
         </div>
     </div>
 
@@ -391,230 +337,151 @@
         </div>
         <div class="p-3">
             <div id="chatMessagesContainer" style="height: 350px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
-                <div class="text-center text-muted" id="loadingChat">
-                    <i class="fas fa-spinner fa-spin"></i> Loading messages...
-                </div>
+                <div class="text-center text-muted" id="loadingChat">Loading messages...</div>
             </div>
             <div class="row g-2">
                 <div class="col-10">
-                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Ask a question or share your thoughts..." style="border-radius: 20px;">
+                    <input type="text" id="chatMessageInput" class="form-control" placeholder="Type your message...">
                 </div>
                 <div class="col-2">
-                    <button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; color: #0B0E11; border-radius: 20px;">
-                        Send
-                    </button>
+                    <button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Send</button>
                 </div>
             </div>
-            <div class="small text-muted mt-2 text-center">
-                <i class="fas fa-shield-alt"></i> Be respectful. No spam. Messages are public.
-            </div>
+            <div class="small text-muted mt-2 text-center">Be respectful. No spam. Messages are public.</div>
         </div>
     </div>
 </div>
 
 <script>
-    // Wallet Configuration
-    const WALLET_ADDRESS = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
+    const WALLET = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
     const USDC_CONTRACT = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 
     function copyAddress() {
-        navigator.clipboard.writeText(WALLET_ADDRESS);
-        alert('Wallet address copied to clipboard!');
+        navigator.clipboard.writeText(WALLET);
+        alert('Address copied!');
     }
 
-    // Fetch BNB Balance
-    async function fetchBNBBalance() {
-        try {
-            const response = await fetch(`https://api.bscscan.com/api?module=account&action=balance&address=${WALLET_ADDRESS}&tag=latest`);
-            const data = await response.json();
-            if (data.status === "1") {
-                const bnbBalance = parseFloat(data.result) / 1e18;
-                document.getElementById('bnbBalance').innerHTML = bnbBalance.toFixed(6) + ' BNB';
-                return bnbBalance;
-            }
-        } catch (error) {
-            console.error('Error fetching BNB balance:', error);
-            document.getElementById('bnbBalance').innerHTML = 'Error';
-        }
-        return 0;
-    }
-
-    // Fetch USDC Balance
     async function fetchUSDCBalance() {
         try {
-            const response = await fetch(`https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${USDC_CONTRACT}&address=${WALLET_ADDRESS}&tag=latest`);
-            const data = await response.json();
+            const res = await fetch(`https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${USDC_CONTRACT}&address=${WALLET}&tag=latest`);
+            const data = await res.json();
             if (data.status === "1") {
-                const usdcBalance = parseFloat(data.result) / 1e18;
-                document.getElementById('usdcBalance').innerHTML = '$' + usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-
-                // Update token holdings table
-                document.getElementById('tokenHoldingsBody').innerHTML = `
-                    <tr>
-                        <td><strong>USDC</strong> (Binance-Peg)</td>
-                        <td>${usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDC</td>
-                        <td>$${usdcBalance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-                    </tr>
-                `;
-                return usdcBalance;
+                const balance = parseFloat(data.result) / 1e18;
+                document.getElementById('usdcBalance').innerText = '$' + balance.toLocaleString();
+                document.getElementById('tokenHoldingsBody').innerHTML = `<tr><td>USDC</td><td>${balance.toLocaleString()} USDC</td><td>$${balance.toLocaleString()}</td></tr>`;
+                return balance;
             }
-        } catch (error) {
-            console.error('Error fetching USDC balance:', error);
-            document.getElementById('usdcBalance').innerHTML = 'Error';
-        }
+        } catch(e) { console.error(e); }
+        document.getElementById('usdcBalance').innerText = 'Error';
         return 0;
     }
 
-    // Fetch recent transactions
+    async function fetchBNBBalance() {
+        try {
+            const res = await fetch(`https://api.bscscan.com/api?module=account&action=balance&address=${WALLET}&tag=latest`);
+            const data = await res.json();
+            if (data.status === "1") {
+                const balance = parseFloat(data.result) / 1e18;
+                document.getElementById('bnbBalance').innerText = balance.toFixed(6) + ' BNB';
+                return balance;
+            }
+        } catch(e) { console.error(e); }
+        document.getElementById('bnbBalance').innerText = 'Error';
+        return 0;
+    }
+
     async function fetchTransactions() {
         try {
-            const response = await fetch(`https://api.bscscan.com/api?module=account&action=txlist&address=${WALLET_ADDRESS}&sort=desc&page=1&offset=10`);
-            const data = await response.json();
+            const res = await fetch(`https://api.bscscan.com/api?module=account&action=txlist&address=${WALLET}&sort=desc&page=1&offset=10`);
+            const data = await res.json();
             const tbody = document.getElementById('transactionsBody');
-
-            if (data.status === "1" && data.result && data.result.length > 0) {
-                const filteredTxs = data.result.filter(tx => parseFloat(tx.value) > 0);
-
-                if (filteredTxs.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No BNB transactions found</td></tr>';
-                    return;
-                }
-
-                tbody.innerHTML = filteredTxs.map(tx => {
-                    const isIncoming = tx.to.toLowerCase() === WALLET_ADDRESS.toLowerCase();
+            if (data.status === "1" && data.result?.length) {
+                tbody.innerHTML = data.result.map(tx => {
+                    const isIn = tx.to.toLowerCase() === WALLET.toLowerCase();
                     const amount = parseFloat(tx.value) / 1e18;
                     const date = new Date(tx.timeStamp * 1000);
-                    const timeAgo = getTimeAgo(date);
-                    const truncatedFrom = tx.from.substring(0, 8) + '...' + tx.from.substring(tx.from.length - 6);
-                    const truncatedTo = tx.to.substring(0, 8) + '...' + tx.to.substring(tx.to.length - 6);
-
-                    return `
-                        <tr>
-                            <td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.substring(0, 14)}...</a></td>
-                            <td><span class="${isIncoming ? 'badge-in' : 'badge-out'}">${isIncoming ? 'IN' : 'OUT'}</span></td>
-                            <td style="font-family: monospace; font-size: 11px;">${truncatedFrom} → ${truncatedTo}</td>
-                            <td class="${isIncoming ? 'amount-positive' : 'amount-negative'}">${isIncoming ? '+' : '-'} ${amount.toFixed(6)} BNB</td>
-                            <td>${timeAgo}</td>
-                        </tr>
-                    `;
+                    const age = Math.floor((Date.now() - date) / 3600000) + 'h ago';
+                    return `<tr>
+                        <td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.slice(0,14)}...</a></td>
+                        <td><span class="${isIn ? 'badge-in' : 'badge-out'}">${isIn ? 'IN' : 'OUT'}</span></td>
+                        <td class="${isIn ? 'amount-positive' : 'amount-negative'}">${isIn ? '+' : '-'} ${amount.toFixed(6)} BNB</td>
+                        <td>${age}</td>
+                    </tr>`;
                 }).join('');
             } else {
-                tbody.innerHTML = '<tr><td colspan="5" style="text-align: center;">No transactions found</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" style="text-align: center;">No transactions found</td></tr>';
             }
-        } catch (error) {
-            console.error('Error fetching transactions:', error);
-            document.getElementById('transactionsBody').innerHTML = '<tr><td colspan="5" style="text-align: center;">Unable to load transactions</td></tr>';
-        }
+        } catch(e) { console.error(e); }
     }
 
-    function getTimeAgo(date) {
-        const seconds = Math.floor((new Date() - date) / 1000);
-        if (seconds < 60) return `${seconds} secs ago`;
-        const minutes = Math.floor(seconds / 60);
-        if (minutes < 60) return `${minutes} mins ago`;
-        const hours = Math.floor(minutes / 60);
-        if (hours < 24) return `${hours} hrs ago`;
-        const days = Math.floor(hours / 24);
-        return `${days} days ago`;
-    }
-
-    // Update total value
     async function updateTotalValue() {
-        const usdcBalance = await fetchUSDCBalance();
-        const bnbBalance = await fetchBNBBalance();
-
+        const usdc = await fetchUSDCBalance();
+        const bnb = await fetchBNBBalance();
         try {
-            const priceResponse = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
-            const priceData = await priceResponse.json();
-            const bnbPrice = parseFloat(priceData.price);
-            const totalValue = usdcBalance + (bnbBalance * bnbPrice);
-            document.getElementById('totalValueUSD').innerHTML = '$' + totalValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-        } catch (error) {
-            document.getElementById('totalValueUSD').innerHTML = 'View on BscScan';
+            const priceRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
+            const priceData = await priceRes.json();
+            const total = usdc + (bnb * parseFloat(priceData.price));
+            document.getElementById('totalValueUSD').innerText = '$' + total.toLocaleString();
+        } catch(e) {
+            document.getElementById('totalValueUSD').innerText = 'View on BscScan';
         }
     }
 
-    // ============ COMMUNITY CHAT ============
-    let chatLoadInterval = null;
+    // Chat functions
+    let chatInterval;
 
     async function loadChatMessages() {
-        const token = localStorage.getItem('access_token');
         const container = document.getElementById('chatMessagesContainer');
         if (!container) return;
-
+        const token = localStorage.getItem('access_token');
         try {
             const headers = { 'Content-Type': 'application/json' };
             if (token) headers['Authorization'] = `Bearer ${token}`;
-
-            const response = await fetch('/api/chat/messages/', { headers });
-
-            if (!response.ok) {
-                container.innerHTML = '<div class="text-center text-muted">Please login to view messages.</div>';
+            const res = await fetch('/api/chat/messages/', { headers });
+            if (!res.ok) throw new Error('Auth required');
+            const messages = await res.json();
+            if (!messages?.length) {
+                container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
                 return;
             }
-
-            const messages = await response.json();
-
-            if (!messages || messages.length === 0) {
-                container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the discussion!</div>';
-                return;
-            }
-
-            container.innerHTML = messages.map(msg => `
+            container.innerHTML = messages.map(m => `
                 <div class="chat-message mb-3" style="border-bottom: 1px solid #E2E4E8; padding-bottom: 10px;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                        <strong style="font-size: 12px; color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">
-                            ${msg.is_admin ? '🤖 Admin' : '💬 Investor'}
-                        </strong>
-                        <small style="font-size: 10px; color: #8A8F9E;">${msg.date || msg.time}</small>
+                    <div style="display: flex; justify-content: space-between;">
+                        <strong style="color: ${m.is_admin ? '#F0B90B' : '#0ECB81'}">${m.is_admin ? 'Admin' : 'Investor'}</strong>
+                        <small style="color: #8A8F9E;">${m.time || m.date}</small>
                     </div>
-                    <div style="font-size: 12px; color: #1E2329; margin-top: 5px;">${escapeHtml(msg.message)}</div>
+                    <div style="margin-top: 5px;">${escapeHtml(m.message)}</div>
                 </div>
             `).join('');
             container.scrollTop = container.scrollHeight;
-        } catch (error) {
-            console.error('Error loading chat:', error);
-            container.innerHTML = '<div class="text-center text-muted">Unable to load chat. Please refresh.</div>';
+        } catch(e) {
+            container.innerHTML = '<div class="text-center text-muted">Login to join the discussion.</div>';
         }
     }
 
-    async function sendChatMessage() {
+    async function sendMessage() {
         const input = document.getElementById('chatMessageInput');
-        const message = input.value.trim();
-        if (!message) return;
-
+        const msg = input.value.trim();
+        if (!msg) return;
         const token = localStorage.getItem('access_token');
-        if (!token) {
-            alert('Please login to join the discussion.');
-            return;
-        }
-
+        if (!token) { alert('Please login first'); return; }
         try {
-            const response = await fetch('/api/chat/send-message/', {
+            const res = await fetch('/api/chat/send-message/', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                },
-                body: JSON.stringify({ message: message })
+                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+                body: JSON.stringify({ message: msg })
             });
-
-            const data = await response.json();
-
-            if (response.ok && data.success) {
+            const data = await res.json();
+            if (data.success) {
                 input.value = '';
                 loadChatMessages();
             } else {
-                alert(data.error || 'Failed to send message.');
+                alert(data.error || 'Failed to send');
             }
-        } catch (error) {
-            console.error('Error sending message:', error);
-            alert('Failed to send message.');
-        }
+        } catch(e) { alert('Error sending message'); }
     }
 
     function escapeHtml(text) {
-        if (!text) return '';
         const div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
@@ -624,20 +491,14 @@
     document.addEventListener('DOMContentLoaded', () => {
         updateTotalValue();
         fetchTransactions();
-
         setInterval(updateTotalValue, 60000);
         setInterval(fetchTransactions, 60000);
     });
 
-    // Chat events
-    document.getElementById('sendChatBtn')?.addEventListener('click', sendChatMessage);
-    document.getElementById('chatMessageInput')?.addEventListener('keypress', function(e) {
-        if (e.key === 'Enter') sendChatMessage();
-    });
+    document.getElementById('sendChatBtn')?.addEventListener('click', sendMessage);
+    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
 
-    if (document.getElementById('chatMessagesContainer')) {
-        loadChatMessages();
-        setInterval(loadChatMessages, 10000);
-    }
+    loadChatMessages();
+    setInterval(loadChatMessages, 10000);
 </script>
 {% endblock %}
