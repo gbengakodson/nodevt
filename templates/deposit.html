@@ -384,7 +384,7 @@
                     <i class="fas fa-qrcode me-1"></i> Deposit Address
                 </div>
                 <div class="address-value" id="platformWallet">
-                    0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572
+                    0x1610a914fc0df204c70f727e5e576cdbb5abea35
                 </div>
                 <button class="btn-copy" onclick="copyPlatformAddress()">
                     <i class="fas fa-copy"></i> Copy Address
@@ -495,14 +495,14 @@
     }
 
     function generateQRCode() {
-        const address = '0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572';
+        const address = '0x1610a914fc0df204c70f727e5e576cdbb5abea35';
         const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(address)}`;
         const qrImg = document.getElementById('qrCode');
         if (qrImg) qrImg.src = qrUrl;
     }
 
     function copyPlatformAddress() {
-        const address = '0xD34d4DFceAeF1bB2BeEd3B8937bAB2bFb40d0572';
+        const address = '0x1610a914fc0df204c70f727e5e576cdbb5abea35';
         navigator.clipboard.writeText(address);
         alert('Platform address copied to clipboard!');
     }
