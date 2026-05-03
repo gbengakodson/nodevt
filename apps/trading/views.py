@@ -15,6 +15,7 @@ from decimal import Decimal
 from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
+from apps.trading.models import GridBot
 
 
 
@@ -57,18 +58,17 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def buy(self, request):
-        """Buy crypto tokens"""
+        """Buy crypto tokens - Market Order (1% fee) or Grid Bot (10% fee)"""
         serializer = PurchaseSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         token_id = serializer.validated_data['token_id']
         amount_usdc = serializer.validated_data['amount_usdc']
+        order_type = request.data.get('order_type', 'market')
 
-        # Get token
         token = get_object_or_404(CryptoToken, id=token_id, is_active=True)
 
-        # Get or create grand wallet
         grand_wallet, created = Wallet.objects.get_or_create(
             user=request.user,
             wallet_type='GRAND',
@@ -82,29 +82,51 @@ class TradingViewSet(viewsets.ViewSet):
                 'required': str(amount_usdc)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate node fee (10%)
-        node_fee = amount_usdc * Decimal('0.1')
-        amount_after_fee = amount_usdc - node_fee
+        # Fee calculation
+        if order_type == 'market':
+            fee_percent = Decimal('0.01')
+        else:
+            fee_percent = Decimal('0.10')
 
-        # Calculate token quantity after fee
+        node_fee = amount_usdc * fee_percent
+        amount_after_fee = amount_usdc - node_fee
         token_quantity = amount_after_fee / token.current_price
 
-        # Deduct from grand wallet
         grand_wallet.balance -= amount_usdc
         grand_wallet.save()
 
-        # Update user's token balance
-        user_balance, created = request.user.token_balances.get_or_create(
-            token=token,
-            defaults={'quantity': 0, 'average_buy_price': 0}
-        )
+        if order_type == 'market':
+            # Market order: add to spot wallet (UserTokenBalance)
+            user_balance, created = request.user.token_balances.get_or_create(
+                token=token,
+                defaults={'quantity': 0, 'average_buy_price': 0}
+            )
 
-        # Add tokens with average price calculation
-        total_quantity = user_balance.quantity + token_quantity
-        total_cost = (user_balance.quantity * user_balance.average_buy_price) + (token_quantity * token.current_price)
-        user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
-        user_balance.quantity = total_quantity
-        user_balance.save()
+            total_quantity = user_balance.quantity + token_quantity
+            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
+                        token_quantity * token.current_price)
+            user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
+            user_balance.quantity = total_quantity
+            user_balance.save()
+
+        else:
+            # GRID BOT: Create GridBot record with 80% range
+
+
+            # Upper price = current price + 80% (× 1.8)
+            # Lower price = current price - 80% (× 0.2)
+            upper_price = token.current_price * Decimal('1.8')
+            lower_price = token.current_price * Decimal('0.2')
+
+            GridBot.objects.create(
+                user=request.user,
+                token=token,
+                amount=amount_after_fee,
+                lower_price=lower_price,
+                upper_price=upper_price,
+                grids=100,
+                status='ACTIVE'
+            )
 
         # Create purchase record
         purchase = Purchase.objects.create(
@@ -116,17 +138,17 @@ class TradingViewSet(viewsets.ViewSet):
             node_fee=node_fee
         )
 
-        # DISTRIBUTE NODE FEE TO REFERRALS
-        from apps.referrals.services.referral_service import ReferralService
+        # Distribute node fee to referrals (only for grid bot orders)
+        referral_count = 0
+        if order_type == 'grid':
+            from apps.referrals.services.referral_service import ReferralService
+            try:
+                distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
+                referral_count = len(distributions)
+            except Exception as e:
+                print(f"Error distributing referral fees: {e}")
+                referral_count = 0
 
-        try:
-            distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
-            referral_count = len(distributions)
-        except Exception as e:
-            print(f"Error distributing referral fees: {e}")
-            referral_count = 0
-
-        # Create transaction record for buyer
         Transaction.objects.create(
             user=request.user,
             transaction_type='PURCHASE',
@@ -139,6 +161,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'quantity': str(token_quantity),
                 'price': str(token.current_price),
                 'node_fee': str(node_fee),
+                'order_type': order_type,
                 'referrals_credited': referral_count
             },
             completed_at=timezone.now()
@@ -146,19 +169,20 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response({
             'success': True,
-            'message': f'Successfully purchased {token_quantity:.8f} {token.symbol}',
+            'message': f'Successfully {"purchased" if order_type == "market" else "activated grid bot for"} {token.symbol}',
             'purchase': {
                 'token': token.symbol,
                 'quantity': str(token_quantity),
                 'price_per_token': str(token.current_price),
                 'total_amount': str(amount_after_fee),
-                'node_fee': str(node_fee)
+                'node_fee': str(node_fee),
+                'order_type': order_type
             },
             'referral_commission': {
                 'total_fee': str(node_fee),
                 'referrers_count': referral_count,
                 'distributed': referral_count > 0
-            },
+            } if order_type == 'grid' else None,
             'grand_balance': str(grand_wallet.balance)
         })
 
@@ -251,6 +275,34 @@ class TradingViewSet(viewsets.ViewSet):
             'grand_balance': str(grand_wallet.balance),
             'remaining_quantity': str(user_balance.quantity)
         })
+
+    @action(detail=False, methods=['get'])
+    def my_grids(self, request):
+        """Get user's active grid bots"""
+        from .models import GridBot
+
+        grid_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+
+        data = []
+        for bot in grid_bots:
+            data.append({
+                'id': str(bot.id),
+                'token_symbol': bot.token.symbol,
+                'token_name': bot.token.name,
+                'amount': float(bot.amount),
+                'lower_price': float(bot.lower_price),
+                'upper_price': float(bot.upper_price),
+                'grids': bot.grids,
+                'current_grid_level': bot.current_grid_level,
+                'grid_profit': float(bot.grid_profit),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
+                'status': bot.status,
+                'created_at': bot.created_at.isoformat()
+            })
+
+        return Response(data)
+
 
     @action(detail=False, methods=['get'])
     def my_balance(self, request):
@@ -764,6 +816,22 @@ def credit_yield_only(request):
             print(f"Error crediting {user.email}: {e}")
 
     return JsonResponse({'status': 'success', 'users_credited': credited_count})
+
+
+from django.conf import settings
+from rest_framework.decorators import api_view, permission_classes
+from rest_framework.permissions import AllowAny
+from rest_framework.response import Response
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def yield_rate_view(request):
+    monthly_rate = getattr(settings, 'YIELD_MONTHLY_RATE', 10.0)
+    return Response({
+        'monthly': monthly_rate,
+        'hourly': monthly_rate / 720,
+        'daily': monthly_rate / 30
+    })
 
 
 

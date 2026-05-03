@@ -1,4 +1,3 @@
-
 {% extends 'base/base.html' %}
 
 {% block title %}Trading - BTC/USDC{% endblock %}
@@ -244,6 +243,36 @@
         cursor: not-allowed;
     }
 
+    /* Grid Bot Preview Styles */
+    .grid-params-preview {
+        background: #F8F9FA;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+
+    .param-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 6px 0;
+        font-size: 12px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .param-row:last-child {
+        border-bottom: none;
+    }
+
+    .fee-info {
+        font-size: 11px;
+        color: #707A8A;
+        text-align: center;
+        margin-top: 10px;
+        padding: 8px;
+        background: #FFF4E5;
+        border-radius: 8px;
+    }
+
     .orderbook-title {
         font-weight: 600;
         margin-bottom: 16px;
@@ -411,144 +440,143 @@
     }
 
     /* Trading Bot Styles */
-.trading-bot-icon {
-    width: 28px;
-    height: 28px;
-    background: #0ECB81;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s;
-    animation: pulse 2s infinite;
-}
-
-.trading-bot-icon.bot-active {
-    background: #0ECB81;
-    box-shadow: 0 0 10px rgba(14, 203, 129, 0.5);
-}
-
-.trading-bot-icon.bot-inactive {
-    background: #707A8A;
-}
-
-.trading-bot-icon:hover {
-    transform: scale(1.1);
-}
-
-@keyframes pulse {
-    0% {
-        box-shadow: 0 0 0 0 rgba(14, 203, 129, 0.4);
+    .trading-bot-icon {
+        width: 28px;
+        height: 28px;
+        background: #0ECB81;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s;
+        animation: pulse 2s infinite;
     }
-    70% {
-        box-shadow: 0 0 0 10px rgba(14, 203, 129, 0);
+
+    .trading-bot-icon.bot-active {
+        background: #0ECB81;
+        box-shadow: 0 0 10px rgba(14, 203, 129, 0.5);
     }
-    100% {
-        box-shadow: 0 0 0 0 rgba(14, 203, 129, 0);
+
+    .trading-bot-icon.bot-inactive {
+        background: #707A8A;
     }
-}
 
-.bot-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background: rgba(0,0,0,0.7);
-    z-index: 2000;
-    display: none;
-    align-items: center;
-    justify-content: center;
-}
+    .trading-bot-icon:hover {
+        transform: scale(1.1);
+    }
 
-.bot-modal-content {
-    background: white;
-    border-radius: 16px;
-    max-width: 500px;
-    width: 90%;
-    max-height: 80vh;
-    overflow-y: auto;
-    padding: 20px;
-}
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(14, 203, 129, 0.4); }
+        70% { box-shadow: 0 0 0 10px rgba(14, 203, 129, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(14, 203, 129, 0); }
+    }
 
-.bot-status {
-    display: inline-block;
-    width: 10px;
-    height: 10px;
-    border-radius: 50%;
-    margin-right: 8px;
-}
+    .bot-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0,0,0,0.7);
+        z-index: 2000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
 
-.bot-status.active {
-    background: #0ECB81;
-    animation: pulse 1.5s infinite;
-}
+    .bot-modal-content {
+        background: white;
+        border-radius: 16px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 20px;
+    }
 
-.bot-status.inactive {
-    background: #F6465D;
-}
+    .bot-status {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        margin-right: 8px;
+    }
 
-.bot-analysis-item {
-    padding: 12px;
-    border-bottom: 1px solid #E2E4E8;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
+    .bot-status.active {
+        background: #0ECB81;
+        animation: pulse 1.5s infinite;
+    }
 
-.bot-analysis-label {
-    font-size: 12px;
-    color: #707A8A;
-}
+    .bot-status.inactive {
+        background: #F6465D;
+    }
 
-.bot-analysis-value {
-    font-weight: 600;
-    font-size: 13px;
-}
+    .bot-analysis-item {
+        padding: 12px;
+        border-bottom: 1px solid #E2E4E8;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
 
-.bot-signal-buy {
-    color: #0ECB81;
-}
+    .bot-analysis-label {
+        font-size: 12px;
+        color: #707A8A;
+    }
 
-.bot-signal-sell {
-    color: #F6465D;
-}
+    .bot-analysis-value {
+        font-weight: 600;
+        font-size: 13px;
+    }
 
-.bot-signal-neutral {
-    color: #F0B90B;
-}
+    .bot-signal-buy {
+        color: #0ECB81;
+    }
+
+    .bot-signal-sell {
+        color: #F6465D;
+    }
+
+    .bot-signal-neutral {
+        color: #F0B90B;
+    }
+
     @keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
+        from { transform: translateX(-100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
     }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
-    @keyframes slideIn {
-    from {
-        transform: translateX(-100%);
-        opacity: 0;
-    }
-    to {
-        transform: translateX(0);
-        opacity: 1;
-    }
-}
 
-@keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); }
-    70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); }
-    100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); }
-}
-.trading-bot-icon:hover, .chart-bot-icon:hover { transform: scale(1.1); }
-.price-up { color: #0ECB81; }
-.price-down { color: #F6465D; }
-.btn-buy-disabled, .btn-sell-disabled { opacity: 0.5; cursor: not-allowed; }
+    .price-up { color: #0ECB81; }
+    .price-down { color: #F6465D; }
+    .btn-buy-disabled, .btn-sell-disabled { opacity: 0.5; cursor: not-allowed; }
 
+    /* Grid Bot Form Styles */
+    .grid-params-preview {
+        background: #F8F9FA;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 16px;
+    }
+    .param-row {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        font-size: 12px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+    .param-row:last-child {
+        border-bottom: none;
+    }
+    .fee-info {
+        font-size: 11px;
+        color: #707A8A;
+        text-align: center;
+        margin-top: 10px;
+        padding: 8px;
+        background: #FFF4E5;
+        border-radius: 8px;
+    }
 </style>
 {% endblock %}
 
@@ -582,37 +610,15 @@
 
         <div class="order-card">
             <div class="order-tabs">
-                <button class="order-tab active" data-tab="limit">Limit Order</button>
-                <button class="order-tab" data-tab="market">Market Order</button>
+                <button class="order-tab active" data-tab="market">Market Order</button>
+                <button class="order-tab" data-tab="grid">Spot Grid Bot</button>
             </div>
 
-            <div id="limitPanel" class="order-form">
-                <div class="form-group">
-                    <label class="form-label">Price (USDC)</label>
-                    <input type="number" id="limitPrice" class="form-input" step="0.01" placeholder="0.00">
-                </div>
+            <!-- Market Order Panel (Simple Spot Buy/Sell) -->
+            <div id="marketPanel" class="order-form">
                 <div class="form-group">
                     <label class="form-label">Amount (USDC)</label>
-                    <input type="number" id="limitAmount" class="form-input" step="0.01" placeholder="0.00">
-                    <div class="perc-group">
-                        <button class="perc-btn" data-perc="25">25%</button>
-                        <button class="perc-btn" data-perc="50">50%</button>
-                        <button class="perc-btn" data-perc="75">75%</button>
-                        <button class="perc-btn" data-perc="100">100%</button>
-                    </div>
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Total</label>
-                    <div class="total-amount" id="limitTotal">$0.00</div>
-                </div>
-                <button class="btn-buy" id="buyBtn">Buy BTC</button>
-                <button class="btn-sell" id="sellBtn">Sell BTC</button>
-            </div>
-
-            <div id="marketPanel" class="order-form" style="display: none;">
-                <div class="form-group">
-                    <label class="form-label">Amount (USDC)</label>
-                    <input type="number" id="marketAmount" class="form-input" placeholder="0.00">
+                    <input type="number" id="marketAmount" class="form-input" step="0.01" placeholder="0.00">
                     <div class="perc-group">
                         <button class="perc-btn" data-market-perc="25">25%</button>
                         <button class="perc-btn" data-market-perc="50">50%</button>
@@ -620,8 +626,46 @@
                         <button class="perc-btn" data-market-perc="100">100%</button>
                     </div>
                 </div>
-                <button class="btn-buy" id="buyBtnMarket">Buy BTC</button>
-                <button class="btn-sell" id="sellBtnMarket">Sell BTC</button>
+                <div class="fee-info">
+                    <i class="fas fa-info-circle"></i> Fee: 1% for market orders
+                </div>
+                <button class="btn-buy" id="buyBtnMarket">Buy Market</button>
+                <button class="btn-sell" id="sellBtnMarket">Sell Market</button>
+            </div>
+
+            <!-- Spot Grid Bot Panel -->
+            <div id="gridPanel" class="order-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">Investment Amount (USDC)</label>
+                    <input type="number" id="gridAmount" class="form-input" step="10" placeholder="Minimum 10 USDC">
+                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be allocated to the grid strategy</div>
+                </div>
+
+                <!-- Predefined Grid Parameters (readonly, shown for transparency) -->
+                <div class="grid-params-preview">
+                    <div class="param-row">
+                        <span>Price Range:</span>
+                        <span><span id="gridLowerPrice">$0.00</span> – <span id="gridUpperPrice">$0.00</span></span>
+                    </div>
+                    <div class="param-row">
+                        <span>Number of Grids:</span>
+                        <span>100 (geometric)</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Grid Mode:</span>
+                        <span>Arithmetic</span>
+                    </div>
+                    <div class="param-row">
+                        <span>Working Mode:</span>
+                        <span>Neutral (Buy first)</span>
+                    </div>
+                </div>
+
+                <div class="fee-info">
+                    <i class="fas fa-info-circle"></i> Fee: 10% for grid bot activation (includes yield distribution & referrals)
+                </div>
+
+                <button class="btn-buy" id="activateGridBtn">Activate Grid Bot</button>
             </div>
         </div>
     </div>
@@ -654,6 +698,7 @@
         </div>
     </div>
 </div>
+
 <!-- Bot Analysis Modal -->
 <div id="botModal" class="bot-modal" style="display: none;">
     <div class="bot-modal-content">
@@ -661,7 +706,6 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API_BASE = '/api';
@@ -682,7 +726,6 @@
 
     // Dynamic bot configuration - works for ANY coin
     function getBotConfigForSymbol(symbol, currentPrice) {
-        // Specific configs for popular coins
         const specificConfigs = {
             'BTC': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 100 },
             'ETH': { strategy: 'Spot Grid', risk: 'High', minAmount: 10, maxAmount: 80 },
@@ -694,7 +737,6 @@
             return specificConfigs[symbol];
         }
 
-        // Dynamic config for any other coin
         let risk = 'Medium';
         if (currentPrice > 1000) risk = 'High';
         if (currentPrice < 10) risk = 'Low';
@@ -870,7 +912,6 @@
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    // Dynamic CoinGecko ID mapping with fallback
     async function getCoinGeckoId(symbol) {
         const mapping = {
             'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
@@ -879,12 +920,9 @@
             'NEAR': 'near', 'ATOM': 'cosmos', 'ALGO': 'algorand', 'VET': 'vechain',
             'UNI': 'uniswap', 'AAVE': 'aave', 'CRV': 'curve-dao-token', 'SUSHI': 'sushi'
         };
-
         if (mapping[symbol]) return mapping[symbol];
-
         const token = tokens.find(t => t.symbol === symbol);
         if (token && token.coingecko_id) return token.coingecko_id;
-
         return symbol.toLowerCase();
     }
 
@@ -923,87 +961,49 @@
 
     async function updateChart() {
         if (!currentSymbol) return;
-
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
-
         const coinId = await getCoinGeckoId(currentSymbol);
         if (!coinId) {
             chartContainer.innerHTML = `<div class="loading-chart">Coin ${currentSymbol} not found</div>`;
             return;
         }
-
         chartContainer.innerHTML = `<div class="loading-chart">Loading ${currentSymbol} chart...</div><canvas id="priceChart" style="display:none;"></canvas>`;
-
         try {
             const url = `${COINGECKO_API}/coins/${coinId}/market_chart?vs_currency=usd&days=${currentDays}`;
             const response = await fetch(url);
             const data = await response.json();
-
             if (!data?.prices?.length) {
                 chartContainer.innerHTML = `<div class="loading-chart">No data for ${currentSymbol}</div>`;
                 return;
             }
-
             const prices = data.prices;
-            const labels = [];
-            const priceValues = [];
-
+            const labels = [], priceValues = [];
             for (let i = 0; i < prices.length; i++) {
                 const date = new Date(prices[i][0]);
-                let label;
-                if (currentDays <= 2) {
-                    label = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-                } else {
-                    label = date.toLocaleDateString([], { month: 'short', day: 'numeric' });
-                }
+                let label = currentDays <= 2 ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : date.toLocaleDateString([], { month: 'short', day: 'numeric' });
                 labels.push(label);
                 priceValues.push(prices[i][1]);
             }
-
             chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
             const ctx = document.getElementById('priceChart').getContext('2d');
-
             if (priceChart) priceChart.destroy();
-
             const lastPrice = priceValues[priceValues.length - 1];
             const firstPrice = priceValues[0];
             const changePercent = ((lastPrice - firstPrice) / firstPrice) * 100;
             const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
-
             document.getElementById('currentPrice').innerHTML = formatCurrency(lastPrice);
             document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
             document.getElementById('priceChange').className = `price-change ${changeClass}`;
             document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
             document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
             currentPrice = lastPrice;
-
             priceChart = new Chart(ctx, {
                 type: 'line',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: `${currentSymbol} Price (USD)`,
-                        data: priceValues,
-                        borderColor: '#F0B90B',
-                        backgroundColor: 'rgba(240, 185, 11, 0.1)',
-                        borderWidth: 2,
-                        fill: true,
-                        tension: 0.2,
-                        pointRadius: 0,
-                        pointHoverRadius: 5
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: true,
-                    plugins: { legend: { display: false } },
-                    scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } }
-                }
+                data: { labels: labels, datasets: [{ label: `${currentSymbol} Price (USD)`, data: priceValues, borderColor: '#F0B90B', backgroundColor: 'rgba(240,185,11,0.1)', borderWidth: 2, fill: true, tension: 0.2, pointRadius: 0, pointHoverRadius: 5 }] },
+                options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false } }, y: { ticks: { callback: v => '$' + v.toLocaleString() } } } }
             });
-
             addChartBotIcon();
-
         } catch (error) {
             console.error('Chart error:', error);
             chartContainer.innerHTML = `<div class="loading-chart">Error loading ${currentSymbol} chart</div>`;
@@ -1031,8 +1031,8 @@
         try {
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
-            const buyBtn = document.getElementById('buyBtn');
-            const sellBtn = document.getElementById('sellBtn');
+            const buyBtn = document.getElementById('buyBtnMarket');
+            const sellBtn = document.getElementById('sellBtnMarket');
             if (userGrandBalance <= 0) buyBtn?.classList.add('btn-buy-disabled');
             else buyBtn?.classList.remove('btn-buy-disabled');
             const holdings = await apiCall('/trading/my_tokens/');
@@ -1040,6 +1040,16 @@
             if (!hasToken) sellBtn?.classList.add('btn-sell-disabled');
             else sellBtn?.classList.remove('btn-sell-disabled');
         } catch (e) { console.error(e); }
+    }
+
+    // Update grid price range based on current token price
+    function updateGridRange() {
+        const price = currentPrice;
+        if (!price) return;
+        const lower = price * 0.85;
+        const upper = price * 1.15;
+        document.getElementById('gridLowerPrice').innerHTML = formatCurrency(lower);
+        document.getElementById('gridUpperPrice').innerHTML = formatCurrency(upper);
     }
 
     async function loadCoins() {
@@ -1065,7 +1075,6 @@
                     </div>`;
                 }).join('');
             }
-
             const selectedCoin = localStorage.getItem('selectedCoin');
             if (selectedCoin) {
                 currentSymbol = selectedCoin;
@@ -1074,15 +1083,14 @@
                 const currentToken = tokens.find(t => t.symbol === currentSymbol);
                 if (!currentToken && tokens.length > 0) currentSymbol = tokens[0].symbol;
             }
-
             const currentToken = tokens.find(t => t.symbol === currentSymbol);
             if (currentToken) {
                 currentPrice = parseFloat(currentToken.current_price);
                 document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
                 document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
                 document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
+                updateGridRange();
             }
-
             await updateButtonState();
             startAllBots();
             setTimeout(() => { addBotIconsToTradingCoins(); addChartBotIcon(); }, 500);
@@ -1101,12 +1109,12 @@
             updateChart();
             renderOrderBook();
             updateButtonState();
+            updateGridRange();
             setTimeout(() => addChartBotIcon(), 500);
         }
-        document.getElementById('buyBtn').innerHTML = `Buy ${symbol}`;
-        document.getElementById('sellBtn').innerHTML = `Sell ${symbol}`;
         document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
+        document.getElementById('activateGridBtn').innerHTML = `Activate Grid Bot for ${symbol}`;
     }
     window.selectCoin = selectCoin;
 
@@ -1123,60 +1131,79 @@
     }
 
     function setPrice(price) {
-        document.getElementById('limitPrice').value = price.toFixed(2);
-        const amount = document.getElementById('limitAmount').value;
+        // For market order, we don't need limit price
+        const amount = document.getElementById('marketAmount').value;
         if (amount) document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(amount));
     }
     window.setPrice = setPrice;
 
-    async function executeBuy() {
+    // Market Order Buy/Sell
+    async function executeMarketBuy() {
         if (userGrandBalance <= 0) { alert('Insufficient balance. Please deposit USDC first.'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
-        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
-        const amount = activeTab === 'limit' ? parseFloat(document.getElementById('limitAmount').value) : parseFloat(document.getElementById('marketAmount').value);
+        const amount = parseFloat(document.getElementById('marketAmount').value);
         if (!amount || amount <= 0) { alert('Enter amount'); return; }
         if (amount > userGrandBalance) { alert(`Insufficient balance: ${formatCurrency(userGrandBalance)}`); return; }
         try {
-            const result = await apiCall('/trading/buy/', 'POST', { token_id: token.id, amount_usdc: amount });
-            if (result.success) { alert(`Bought ${result.purchase.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
-            else alert('Purchase failed');
+            const result = await apiCall('/trading/buy/', 'POST', {
+                token_id: token.id,
+                amount_usdc: amount,
+                order_type: 'market'
+            });
+            if (result.success) {
+                alert(`Bought ${result.purchase.quantity} ${currentSymbol} (1% fee applied)`);
+                await loadUserData();
+                await updateButtonState();
+                document.getElementById('marketAmount').value = '';
+            } else {
+                alert('Purchase failed');
+            }
         } catch (e) { alert('Error: ' + e.message); }
     }
 
-    async function executeSell() {
+    async function executeMarketSell() {
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
         const userQty = userHoldings[currentSymbol] || 0;
         if (userQty === 0) { alert(`No ${currentSymbol} to sell`); return; }
-        const activeTab = document.querySelector('.order-tab.active').getAttribute('data-tab');
-        let quantity;
-        if (activeTab === 'limit') {
-            const amount = parseFloat(document.getElementById('limitAmount').value);
-            if (!amount || amount <= 0) { alert('Enter amount'); return; }
-            quantity = amount / parseFloat(token.current_price);
-        } else {
-            const amount = parseFloat(document.getElementById('marketAmount').value);
-            if (!amount || amount <= 0) { alert('Enter amount'); return; }
-            quantity = amount / parseFloat(token.current_price);
-        }
+        const amount = parseFloat(document.getElementById('marketAmount').value);
+        if (!amount || amount <= 0) { alert('Enter amount'); return; }
+        const quantity = amount / parseFloat(token.current_price);
         if (quantity > userQty) { alert(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`); return; }
         try {
             const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
-            if (result.success) { alert(`Sold ${result.sale.quantity} ${currentSymbol}`); await loadUserData(); await updateButtonState(); document.getElementById('limitAmount').value = ''; document.getElementById('marketAmount').value = ''; document.getElementById('limitTotal').innerHTML = '$0.00'; }
-            else alert('Sale failed');
+            if (result.success) {
+                alert(`Sold ${result.sale.quantity} ${currentSymbol}`);
+                await loadUserData();
+                await updateButtonState();
+                document.getElementById('marketAmount').value = '';
+            } else {
+                alert('Sale failed');
+            }
         } catch (e) { alert('Error: ' + e.message); }
     }
 
-    // Event Listeners
-    document.querySelectorAll('[data-perc]').forEach(btn => {
-        btn.addEventListener('click', function() {
-            const percent = parseInt(this.getAttribute('data-perc'));
-            const amount = (userBalance * percent) / 100;
-            document.getElementById('limitAmount').value = amount.toFixed(2);
-            document.getElementById('limitTotal').innerHTML = formatCurrency(amount);
-        });
-    });
+    // Grid Bot Activation
+    async function activateGridBot() {
+        const amount = parseFloat(document.getElementById('gridAmount').value);
+        if (!amount || amount < 10) { alert('Please enter a valid investment amount (minimum $10 USDC)'); return; }
+        const token = tokens.find(t => t.symbol === currentSymbol);
+        if (!token) return;
+        try {
+            const result = await apiCall('/trading/buy/', 'POST', {
+                token_id: token.id,
+                amount_usdc: amount,
+                order_type: 'grid'
+            });
+            if (result.success) {
+                alert(`Grid bot activated for ${currentSymbol} with $${amount} (10% fee applied). Your grid bot will appear in dashboard.`);
+                document.getElementById('gridAmount').value = '';
+            } else {
+                alert('Failed to activate grid bot');
+            }
+        } catch (e) { alert('Error: ' + e.message); }
+    }
 
     document.querySelectorAll('[data-market-perc]').forEach(btn => {
         btn.addEventListener('click', function() {
@@ -1185,17 +1212,14 @@
         });
     });
 
-    document.getElementById('limitAmount')?.addEventListener('input', function() {
-        document.getElementById('limitTotal').innerHTML = formatCurrency(parseFloat(this.value) || 0);
-    });
-
     document.querySelectorAll('.order-tab').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tab = this.getAttribute('data-tab');
-            document.getElementById('limitPanel').style.display = tab === 'limit' ? 'block' : 'none';
             document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none';
+            document.getElementById('gridPanel').style.display = tab === 'grid' ? 'block' : 'none';
+            if (tab === 'grid') updateGridRange();
         });
     });
 
@@ -1208,10 +1232,9 @@
         });
     });
 
-    document.getElementById('buyBtn')?.addEventListener('click', executeBuy);
-    document.getElementById('sellBtn')?.addEventListener('click', executeSell);
-    document.getElementById('buyBtnMarket')?.addEventListener('click', executeBuy);
-    document.getElementById('sellBtnMarket')?.addEventListener('click', executeSell);
+    document.getElementById('buyBtnMarket')?.addEventListener('click', executeMarketBuy);
+    document.getElementById('sellBtnMarket')?.addEventListener('click', executeMarketSell);
+    document.getElementById('activateGridBtn')?.addEventListener('click', activateGridBot);
 
     window.addEventListener('resize', function() { if (priceChart) priceChart.resize(); });
 

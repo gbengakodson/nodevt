@@ -348,6 +348,70 @@
             height: 120px;
         }
     }
+
+    .card-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+.bot-status-badge {
+    background: rgba(14,203,129,0.1);
+    color: #0ECB81;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+}
+.grid-params {
+    background: #F8F9FA;
+    border-radius: 12px;
+    padding: 10px;
+    margin-bottom: 12px;
+}
+.param-row {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    margin-bottom: 6px;
+}
+.holding-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+.stat-item {
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 6px;
+    text-align: center;
+}
+.stat-item label {
+    font-size: 10px;
+    color: #707A8A;
+    display: block;
+}
+.stat-item span {
+    font-size: 12px;
+    font-weight: 600;
+}
+.end-grid-tag {
+    background: #FFF4E5;
+    border-left: 3px solid #F0B90B;
+    padding: 6px 10px;
+    font-size: 11px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+}
+.btn-stop-bot {
+    background: #F6465D;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+}
 </style>
 {% endblock %}
 
@@ -759,7 +823,6 @@
 
         if (!slider) return;
 
-        // Sync slider and manual input
         if (manualInput) {
             manualInput.addEventListener('input', function() {
                 let value = parseFloat(this.value);
@@ -851,7 +914,40 @@
         });
     }
 
-    // ============ LOAD DASHBOARD DATA ============
+    // ============ GRID BOT FUNCTIONS ============
+    async function stopGridBot(botId) {
+        if (confirm('Stop this grid bot? You can restart it later.')) {
+            try {
+                const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
+                if (result.success) {
+                    alert('Grid bot stopped');
+                    loadDashboard();
+                } else {
+                    alert('Failed to stop bot');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    }
+
+    async function closeGridBot(botId) {
+        if (confirm('Close this grid bot and withdraw funds to your Grand Wallet?')) {
+            try {
+                const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
+                if (result.success) {
+                    alert(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`);
+                    loadDashboard();
+                } else {
+                    alert('Failed to close bot');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    }
+
+    // ============ LOAD DASHBOARD DATA (GRID BOTS) ============
     async function loadYieldData(totalPortfolioValue) {
         try {
             const hourlyRate = (totalPortfolioValue * 0.10) / 720;
@@ -899,54 +995,74 @@
             if (availableYieldEl) availableYieldEl.innerHTML = formatCurrency(userYieldBalance);
             if (availableYieldDisplay) availableYieldDisplay.innerHTML = formatCurrency(userYieldBalance);
 
-            const holdings = await apiCall('/trading/my_tokens/');
+            // Fetch GRID BOTS instead of regular holdings
+            const gridBots = await apiCall('/trading/my_grids/');
             tokens = await apiCall('/trading/');
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
 
-            userHoldings = {};
-            holdings.forEach(h => { userHoldings[h.token_symbol] = parseFloat(h.quantity); });
-
-            if (!holdings || holdings.length === 0) {
+            if (!gridBots || gridBots.length === 0) {
                 if (holdingsCardsContainer) {
-                    holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No tokens in your portfolio. <a href="/trading/" style="color:#F0B90B">Start trading</a> to build your portfolio.</div>';
+                    holdingsCardsContainer.innerHTML = '<div class="empty-holdings">📭 No active grid bots. <a href="/trading/" style="color:#F0B90B">Activate a grid bot</a> to start earning.</div>';
                 }
             } else {
                 if (holdingsCardsContainer) {
-                    holdingsCardsContainer.innerHTML = holdings.map(holding => {
-                        const currentPriceVal = parseFloat(holding.current_price);
-                        const quantity = parseFloat(holding.quantity);
-                        const avgPrice = parseFloat(holding.average_buy_price);
-                        const value = quantity * currentPriceVal;
-                        const invested = quantity * avgPrice;
-                        const pnl = value - invested;
-                        const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
-                        const pnlClass = pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
-                        const pnlSymbol = pnl >= 0 ? '+' : '';
-                        const canSell = currentPriceVal >= avgPrice;
-                        const sellButtonClass = canSell ? 'btn-sell-small' : 'btn-sell-disabled-small';
-                        totalPortfolioValue += value;
+                    holdingsCardsContainer.innerHTML = gridBots.map(bot => {
+                        const pnlClass = bot.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
+                        const pnlSymbol = bot.pnl >= 0 ? '+' : '';
+                        totalPortfolioValue += bot.amount + bot.grid_profit;
+
                         return `
-                            <div class="holding-card" data-symbol="${holding.token_symbol}">
-                                <div class="holding-card-header">
-                                    <div style="display: flex; align-items: center; gap: 10px;">
-                                        <img src="${getTokenIcon(holding.token_symbol)}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
-                                        <span class="holding-symbol">${holding.token_symbol}</span>
+                            <div class="holding-card" data-symbol="${bot.token_symbol}">
+                                <div class="card-header-row">
+                                    <div class="coin-info">
+                                        <img src="${getTokenIcon(bot.token_symbol)}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
+                                        <div>
+                                            <div class="coin-symbol">${bot.token_symbol}</div>
+                                            <div class="coin-name">${bot.token_name || bot.token_symbol}</div>
+                                        </div>
+                                    </div>
+                                    <div class="bot-status-badge">🤖 Working</div>
+                                </div>
+
+                                <!-- Grid Parameters -->
+                                <div class="grid-params">
+                                    <div class="param-row">
+                                        <span>Range:</span>
+                                        <span>${formatCurrency(bot.lower_price)} – ${formatCurrency(bot.upper_price)}</span>
+                                    </div>
+                                    <div class="param-row">
+                                        <span>Grids:</span>
+                                        <span>${bot.grids} (geometric)</span>
+                                    </div>
+                                    <div class="param-row">
+                                        <span>Current Grid:</span>
+                                        <span>${bot.current_grid_level}/${bot.grids}</span>
                                     </div>
                                 </div>
-                                <div class="holding-details">
-                                    <div class="holding-row"><span class="holding-label">Quantity</span><span class="holding-value">${formatNumber(quantity, 4)}</span></div>
-                                    <div class="holding-row"><span class="holding-label">Avg Price</span><span class="holding-value">${formatCurrency(avgPrice)}</span></div>
-                                    <div class="holding-row"><span class="holding-label">Current Price</span><span class="holding-price">${formatCurrency(currentPriceVal)}</span></div>
-                                    <div class="holding-row"><span class="holding-label">Total Value</span><span class="holding-value">${formatCurrency(value)}</span></div>
+
+                                <!-- Stats -->
+                                <div class="holding-stats">
+                                    <div class="stat-item">
+                                        <label>Investment</label>
+                                        <span>${formatCurrency(bot.amount)}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <label>Grid Profit</label>
+                                        <span class="positive">${formatCurrency(bot.grid_profit)}</span>
+                                    </div>
+                                    <div class="stat-item">
+                                        <label>PNL</label>
+                                        <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(bot.pnl))} (${pnlSymbol}${bot.pnl_percent.toFixed(2)}%)</span>
+                                    </div>
                                 </div>
-                                <div class="holding-pnl">
-                                    <span class="holding-label">P&L</span>
-                                    <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(pnl))} (${pnlSymbol}${pnlPercent.toFixed(2)}%)</span>
+
+                                ${bot.current_grid_level >= bot.grids ? '<div class="end-grid-tag">🏁 End Grid (Upper bound reached)</div>' : ''}
+
+                                <div style="display: flex; gap: 8px; margin-top: 8px;">
+                                    <button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">Stop Bot</button>
+                                    <button class="btn-sell-small" onclick="closeGridBot('${bot.id}')">Close & Withdraw</button>
                                 </div>
-                                <button class="${sellButtonClass}" onclick="event.stopPropagation(); sellTokenFromDashboard('${holding.token_symbol}', ${quantity}, ${currentPriceVal})" ${!canSell ? 'disabled' : ''}>
-                                    Sell ${holding.token_symbol}
-                                </button>
                             </div>
                         `;
                     }).join('');
@@ -973,25 +1089,7 @@
         } catch (e) {
             console.error('Error loading dashboard:', e);
             const container = document.getElementById('holdingsCards');
-            if (container) container.innerHTML = '<div class="empty-holdings">Unable to load holdings. Please refresh the page.</div>';
-        }
-    }
-
-    // ============ SELL FUNCTION ============
-    async function sellTokenFromDashboard(symbol, quantity, currentPriceVal) {
-        const token = tokens.find(t => t.symbol === symbol);
-        if (!token) { alert('Token not found'); return; }
-        const userQty = userHoldings[symbol] || 0;
-        if (userQty === 0) { alert(`No ${symbol} to sell`); return; }
-        if (quantity > userQty) { alert(`You have ${formatNumber(userQty)} ${symbol}`); return; }
-        const avgPrice = parseFloat(token.average_buy_price);
-        if (currentPriceVal < avgPrice) { alert(`Cannot sell ${symbol}. Current price below purchase price.`); return; }
-        if (confirm(`Sell ${formatNumber(quantity)} ${symbol} at ${formatCurrency(currentPriceVal)}?`)) {
-            try {
-                const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
-                if (result.success) { alert(`Sold ${result.sale.quantity} ${symbol}`); loadDashboard(); }
-                else { alert('Sale failed'); }
-            } catch (e) { alert('Error: ' + e.message); }
+            if (container) container.innerHTML = '<div class="empty-holdings">Unable to load grid bots. Please refresh the page.</div>';
         }
     }
 

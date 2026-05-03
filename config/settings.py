@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'apps.chat',
     'apps.chatbot',
     'apps.portfolio',
+    'apps.core',
 
     # Local apps
     'apps.accounts.apps.AccountsConfig',
@@ -110,6 +111,9 @@ CELERY_TASK_SERIALIZER = 'json'
 CELERY_RESULT_SERIALIZER = 'json'
 CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_ALWAYS_EAGER = True  # Run tasks synchronously for testing
+
+
+YIELD_MONTHLY_RATE = 10.0
 
 
 # REST Framework
