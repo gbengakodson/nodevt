@@ -661,7 +661,8 @@
     let tokens = [];
     let userHoldings = {};
     let growthChart = null;
-    const MONTHLY_RATE = 0.10;
+    let globalMonthlyRate = 10; // Default, will be updated from API
+    let currentYieldRate = 10;
 
     // ============ UTILITY FUNCTIONS ============
     function getToken() { return localStorage.getItem('access_token'); }
@@ -701,6 +702,20 @@
         return `/static/coins/${symbol}.png`;
     }
 
+    // ============ YIELD RATE API ============
+    async function fetchYieldRate() {
+        try {
+            const response = await apiCall('/yield-rate/');
+            currentYieldRate = response.monthly;
+            globalMonthlyRate = response.monthly;
+            console.log(`Yield rate loaded: ${currentYieldRate}% monthly`);
+            return currentYieldRate;
+        } catch (error) {
+            console.log('Using default yield rate: 10%');
+            return 10;
+        }
+    }
+
     // ============ YIELD HISTOGRAM ============
     function renderYieldHistogram(yieldValues) {
         const container = document.getElementById('yieldHistogram');
@@ -721,8 +736,9 @@
     function calculateCompoundGrowth(initial, years) {
         let balance = initial;
         let months = years * 12;
+        const monthlyRate = currentYieldRate / 100;
         for (let month = 1; month <= months; month++) {
-            balance += balance * MONTHLY_RATE;
+            balance += balance * monthlyRate;
         }
         return {
             finalBalance: balance,
@@ -735,8 +751,9 @@
     function findYearsToTarget(initial, target) {
         let balance = initial;
         let months = 0;
+        const monthlyRate = currentYieldRate / 100;
         while (balance < target && months < 600) {
-            balance += balance * MONTHLY_RATE;
+            balance += balance * monthlyRate;
             months++;
         }
         return months / 12;
@@ -950,9 +967,15 @@
     // ============ LOAD DASHBOARD DATA (GRID BOTS) ============
     async function loadYieldData(totalPortfolioValue) {
         try {
-            const hourlyRate = (totalPortfolioValue * 0.10) / 720;
+            // Get current yield rate
+            await fetchYieldRate();
+
+            const monthlyRate = currentYieldRate;
+            const hourlyRate = (totalPortfolioValue * monthlyRate / 100) / 720;
+
+            // Generate histogram data (last 24 hours)
             const histogramData = [];
-            for (let i = 8; i >= 0; i--) {
+            for (let i = 23; i >= 0; i--) {
                 const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
                 histogramData.push(Math.max(0.0001, hourlyRate + variation));
             }
@@ -972,13 +995,18 @@
                         </div>
                     `;
                 }
-                distContainer.innerHTML = html + `<div style="margin-top:12px;padding:8px;background:#F8F9FA;border-radius:6px;font-size:10px;color:#707A8A;text-align:center;">💰 Yield distributed hourly based on AI trading performance</div>`;
+                distContainer.innerHTML = html + `<div style="margin-top:12px;padding:8px;background:#F8F9FA;border-radius:6px;font-size:10px;color:#707A8A;text-align:center;">💰 Yield distributed hourly based on AI trading performance (${monthlyRate}% monthly)</div>`;
             }
-        } catch (e) { console.error('Error loading yield data:', e); }
+        } catch (e) {
+            console.error('Error loading yield data:', e);
+        }
     }
 
     async function loadDashboard() {
         try {
+            // Fetch yield rate first
+            await fetchYieldRate();
+
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
             userYieldBalance = parseFloat(balance.yield_balance) || 0;
@@ -1025,7 +1053,6 @@
                                     <div class="bot-status-badge">🤖 Working</div>
                                 </div>
 
-                                <!-- Grid Parameters -->
                                 <div class="grid-params">
                                     <div class="param-row">
                                         <span>Range:</span>
@@ -1041,7 +1068,6 @@
                                     </div>
                                 </div>
 
-                                <!-- Stats -->
                                 <div class="holding-stats">
                                     <div class="stat-item">
                                         <label>Investment</label>
@@ -1074,7 +1100,7 @@
             if (portfolioValueEl) portfolioValueEl.innerHTML = formatCurrency(totalPortfolioValue);
             if (totalValueEl) totalValueEl.innerHTML = formatCurrency(userGrandBalance + totalPortfolioValue);
 
-            const monthlyYield = totalPortfolioValue * 0.10;
+            const monthlyYield = totalPortfolioValue * (currentYieldRate / 100);
             const hourlyYield = monthlyYield / 720;
             const monthlyYieldEl = document.getElementById('monthlyYield');
             const hourlyYieldEl = document.getElementById('hourlyYield');
