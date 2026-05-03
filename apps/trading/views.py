@@ -829,8 +829,7 @@ def yield_rate_view(request):
     monthly_rate = getattr(settings, 'YIELD_MONTHLY_RATE', 10.0)
     return Response({
         'monthly': monthly_rate,
-        'hourly': monthly_rate / 720,
-        'daily': monthly_rate / 30
+        'hourly': monthly_rate / 720
     })
 
 

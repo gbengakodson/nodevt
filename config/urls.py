@@ -6,7 +6,6 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.wallets.views import AdminSendEmailView
 from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
-from apps.core.views import YieldRateView, AdminYieldRateView
 from apps.trading.views import yield_rate_view
 # Add this import at the top of your config/urls.py
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
@@ -68,8 +67,6 @@ urlpatterns = [
     path('risk-disclosure/', TemplateView.as_view(template_name='risk-disclosure.html'), name='risk_disclosure'),
     path('transparency/', TemplateView.as_view(template_name='transparency.html'), name='transparency'),
 
-    path('api/core/yield-rate/', YieldRateView.as_view(), name='yield_rate'),
-    path('api/admin/yield-rate/', AdminYieldRateView.as_view(), name='admin_yield_rate'),
     path('api/yield-rate/', yield_rate_view, name='yield_rate'),
 
 ]
