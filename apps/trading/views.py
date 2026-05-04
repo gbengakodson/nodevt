@@ -47,7 +47,6 @@ class TradingViewSet(viewsets.ViewSet):
         from apps.tokens.models import CryptoToken
         tokens = CryptoToken.objects.filter(is_active=True)
 
-        # Debug print
         print(f"LIST METHOD CALLED - Found {tokens.count()} active tokens")
 
         serializer = CryptoTokenSerializer(tokens, many=True)
@@ -90,9 +89,9 @@ class TradingViewSet(viewsets.ViewSet):
 
         # Fee calculation
         if order_type == 'market':
-            fee_percent = Decimal('0.01')
+            fee_percent = Decimal('0.01')  # 1%
         else:
-            fee_percent = Decimal('0.10')
+            fee_percent = Decimal('0.10')  # 10%
 
         node_fee = amount_usdc * fee_percent
         amount_after_fee = amount_usdc - node_fee
@@ -109,20 +108,15 @@ class TradingViewSet(viewsets.ViewSet):
             )
 
             total_quantity = user_balance.quantity + token_quantity
-            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
-                        token_quantity * token.current_price)
+            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (token_quantity * token.current_price)
             user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
             user_balance.quantity = total_quantity
             user_balance.save()
 
         else:
             # GRID BOT: Create GridBot record with 80% range
-
-
-            # Upper price = current price + 80% (× 1.8)
-            # Lower price = current price - 80% (× 0.2)
-            upper_price = token.current_price * Decimal('1.8')
-            lower_price = token.current_price * Decimal('0.2')
+            upper_price = token.current_price * Decimal('1.8')   # +80%
+            lower_price = token.current_price * Decimal('0.2')   # -80%
 
             GridBot.objects.create(
                 user=request.user,
@@ -131,7 +125,9 @@ class TradingViewSet(viewsets.ViewSet):
                 lower_price=lower_price,
                 upper_price=upper_price,
                 grids=100,
-                status='ACTIVE'
+                status='ACTIVE',
+                grid_profit=Decimal('0'),
+                price_at_creation=token.current_price,
             )
 
         # Create purchase record
@@ -192,7 +188,61 @@ class TradingViewSet(viewsets.ViewSet):
             'grand_balance': str(grand_wallet.balance)
         })
 
+    @action(detail=False, methods=['get'])
+    def my_grids(self, request):
+        """Get user's active grid bots"""
+        from .models import GridBot
 
+        grid_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+
+        data = []
+        for bot in grid_bots:
+            data.append({
+                'id': str(bot.id),
+                'token_symbol': bot.token.symbol,
+                'token_name': bot.token.name,
+                'amount': float(bot.amount),
+                'lower_price': float(bot.lower_price),
+                'upper_price': float(bot.upper_price),
+                'grids': bot.grids,
+                'current_grid_level': bot.current_grid_level,
+                'grid_profit': float(bot.grid_profit),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
+                'price_at_creation': float(bot.price_at_creation),
+                'created_at': bot.created_at.isoformat(),
+                'status': bot.status,
+            })
+
+        return Response(data)
+
+    @action(detail=False, methods=['get'])
+    def my_grids_all(self, request):
+        """Get ALL user's grid bots (active and stopped)"""
+        from .models import GridBot
+
+        grid_bots = GridBot.objects.filter(user=request.user).exclude(status='COMPLETED')
+
+        data = []
+        for bot in grid_bots:
+            data.append({
+                'id': str(bot.id),
+                'token_symbol': bot.token.symbol,
+                'token_name': bot.token.name,
+                'amount': float(bot.amount),
+                'lower_price': float(bot.lower_price),
+                'upper_price': float(bot.upper_price),
+                'grids': bot.grids,
+                'current_grid_level': bot.current_grid_level,
+                'grid_profit': float(bot.grid_profit),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
+                'price_at_creation': float(bot.price_at_creation),
+                'created_at': bot.created_at.isoformat(),
+                'status': bot.status,
+            })
+
+        return Response(data)
 
     @action(detail=False, methods=['post'])
     def sell(self, request):
@@ -204,10 +254,8 @@ class TradingViewSet(viewsets.ViewSet):
         token_id = serializer.validated_data['token_id']
         quantity = serializer.validated_data['quantity']
 
-        # Get token
         token = get_object_or_404(CryptoToken, id=token_id, is_active=True)
 
-        # Get user's token balance
         try:
             user_balance = request.user.token_balances.get(token=token)
         except:
@@ -215,7 +263,6 @@ class TradingViewSet(viewsets.ViewSet):
                 'error': 'You don\'t own any of this token'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check if user has enough tokens
         if user_balance.quantity < quantity:
             return Response({
                 'error': 'Insufficient token balance',
@@ -223,7 +270,6 @@ class TradingViewSet(viewsets.ViewSet):
                 'requested': str(quantity)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Check selling condition: current price >= average buy price
         if token.current_price < user_balance.average_buy_price:
             return Response({
                 'error': 'Cannot sell at this time',
@@ -232,27 +278,22 @@ class TradingViewSet(viewsets.ViewSet):
                 'average_buy_price': str(user_balance.average_buy_price)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Calculate sale amount
         sale_amount = quantity * token.current_price
 
-        # Get or create grand wallet
         grand_wallet, created = Wallet.objects.get_or_create(
             user=request.user,
             wallet_type='GRAND',
             defaults={'balance': 0}
         )
 
-        # Add to grand wallet
         grand_wallet.balance += sale_amount
         grand_wallet.save()
 
-        # Remove tokens from user's balance
         user_balance.quantity -= quantity
         if user_balance.quantity == 0:
             user_balance.average_buy_price = 0
         user_balance.save()
 
-        # Create transaction record
         Transaction.objects.create(
             user=request.user,
             transaction_type='SALE',
@@ -282,33 +323,64 @@ class TradingViewSet(viewsets.ViewSet):
             'remaining_quantity': str(user_balance.quantity)
         })
 
-    @action(detail=False, methods=['get'])
-    def my_grids(self, request):
-        """Get user's active grid bots"""
-        from .models import GridBot
+    @action(detail=False, methods=['post'])
+    def stop_grid(self, request):
+        """Stop grid bot - pauses yield accumulation"""
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+        bot.status = 'STOPPED'
+        bot.save()
+        return Response({'success': True})
 
-        grid_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+    @action(detail=False, methods=['post'])
+    def start_grid(self, request):
+        """Start grid bot - resumes yield accumulation"""
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+        bot.status = 'ACTIVE'
+        bot.save()
+        return Response({'success': True})
 
-        data = []
-        for bot in grid_bots:
-            data.append({
-                'id': str(bot.id),
-                'token_symbol': bot.token.symbol,
-                'token_name': bot.token.name,
-                'amount': float(bot.amount),
-                'lower_price': float(bot.lower_price),
-                'upper_price': float(bot.upper_price),
-                'grids': bot.grids,
-                'current_grid_level': bot.current_grid_level,
-                'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl),
-                'pnl_percent': float(bot.pnl_percent),
-                'status': bot.status,
-                'price_at_creation': float(bot.price_at_creation),
-                'created_at': bot.created_at.isoformat()
-            })
+    @action(detail=False, methods=['post'])
+    def close_grid(self, request):
+        """Close grid bot and withdraw funds to Grand Wallet"""
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
 
-        return Response(data)
+        if bot.pnl <= 0:
+            return Response({'error': 'PNL must be positive to close'}, status=400)
+
+        grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
+        total_return = Decimal(str(bot.amount)) + Decimal(str(bot.grid_profit)) + Decimal(str(bot.pnl))
+        grand_wallet.balance += total_return
+        grand_wallet.save()
+
+        bot.status = 'COMPLETED'
+        bot.save()
+
+        return Response({'success': True, 'amount': float(total_return)})
+
+    @action(detail=False, methods=['post'])
+    def auto_close_grid(self, request):
+        """Auto close grid bot when PNL reaches 20%"""
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+
+        if bot.pnl_percent >= 20:
+            grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
+            total_return = Decimal(str(bot.amount)) + Decimal(str(bot.grid_profit)) + Decimal(str(bot.pnl))
+            grand_wallet.balance += total_return
+            grand_wallet.save()
+
+            bot.status = 'COMPLETED'
+            bot.save()
+
+            return Response({'success': True, 'amount': float(total_return)})
+
+        return Response({'error': 'PNL not reached 20%'}, status=400)
+
+    # ... (rest of your existing methods: my_balance, withdraw_yield, etc.)
+
 
 
     @action(detail=False, methods=['get'])
@@ -775,60 +847,6 @@ class TradingViewSet(viewsets.ViewSet):
             'message': f'Withdrawal of ${amount} USDC to {address} initiated'
         })
 
-    @action(detail=False, methods=['post'])
-    def stop_grid(self, request):
-        bot_id = request.data.get('bot_id')
-        bot = GridBot.objects.get(id=bot_id, user=request.user)
-        bot.status = 'STOPPED'
-        bot.stopped_at = timezone.now()
-        bot.save()
-        return Response({'success': True})
-
-    @action(detail=False, methods=['post'])
-    def start_grid(self, request):
-        bot_id = request.data.get('bot_id')
-        bot = GridBot.objects.get(id=bot_id, user=request.user)
-        bot.status = 'ACTIVE'
-        bot.save()
-        return Response({'success': True})
-
-    @action(detail=False, methods=['post'])
-    def close_grid(self, request):
-        bot_id = request.data.get('bot_id')
-        bot = GridBot.objects.get(id=bot_id, user=request.user)
-
-        if bot.pnl <= 0:
-            return Response({'error': 'PNL must be positive to close'}, status=400)
-
-        # Add funds to grand wallet
-        grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
-        total_return = bot.amount + bot.grid_profit + bot.pnl
-        grand_wallet.balance += Decimal(str(total_return))
-        grand_wallet.save()
-
-        bot.status = 'COMPLETED'
-        bot.save()
-
-        return Response({'success': True, 'amount': float(total_return)})
-
-    @action(detail=False, methods=['post'])
-    def auto_close_grid(self, request):
-        bot_id = request.data.get('bot_id')
-        bot = GridBot.objects.get(id=bot_id, user=request.user)
-
-        if bot.pnl_percent >= 20:
-            grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
-            total_return = bot.amount + bot.grid_profit + bot.pnl
-            grand_wallet.balance += Decimal(str(total_return))
-            grand_wallet.save()
-
-            bot.status = 'COMPLETED'
-            bot.auto_closed_at = timezone.now()
-            bot.save()
-
-            return Response({'success': True, 'amount': float(total_return)})
-
-        return Response({'error': 'PNL not reached 20%'}, status=400)
 
 
 
