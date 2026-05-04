@@ -5,7 +5,7 @@ from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook
 
 
 router = DefaultRouter()
-router.register('trading', TradingViewSet, basename='trading')
+router.register('', TradingViewSet, basename='trading')
 
 urlpatterns = [
     path('token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
