@@ -518,6 +518,16 @@
     gap: 8px;
     margin-top: 8px;
 }
+
+    @media (max-width: 768px) {
+        #yieldDotPlot {
+            gap: 1px !important;
+        }
+        .yield-dot div:first-child {
+            width: 6px !important;
+            height: 6px !important;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -578,19 +588,17 @@
 
                 <!-- Histogram for Yield Distribution -->
                 <div class="mb-4">
-                    <div class="d-flex justify-content-between align-items-baseline mb-2">
-                        <span style="font-size: 11px; color: #5E6673; font-weight: 500;">Hourly Yield Distribution (Last 24 Hours)</span>
-                        <span style="font-size: 10px; color: #8A8F9E;">Amount (USDC)</span>
-                    </div>
-                    <div id="yieldHistogram" class="yield-histogram"></div>
-                    <div class="d-flex justify-content-between mt-2">
-                        <span style="font-size: 9px; color: #8A8F9E;">24h ago</span>
-                        <span style="font-size: 9px; color: #8A8F9E;">18h ago</span>
-                        <span style="font-size: 9px; color: #8A8F9E;">12h ago</span>
-                        <span style="font-size: 9px; color: #8A8F9E;">6h ago</span>
-                        <span style="font-size: 9px; color: #8A8F9E;">Now</span>
-                    </div>
-                </div>
+    <div class="d-flex justify-content-between align-items-baseline mb-2">
+        <span style="font-size: 11px; color: #5E6673; font-weight: 500;">Hourly Yield</span>
+        <span style="font-size: 10px; color: #8A8F9E;">(last 24h)</span>
+    </div>
+    <div id="yieldSparkline" style="display: flex; align-items: flex-end; gap: 2px; height: 50px;"></div>
+    <div class="d-flex justify-content-between mt-1 px-1">
+        <span style="font-size: 8px; color: #8A8F9E;">24h</span>
+        <span style="font-size: 8px; color: #8A8F9E;">12h</span>
+        <span style="font-size: 8px; color: #8A8F9E;">Now</span>
+    </div>
+</div>
 
                 <!-- Key Stats Row -->
                 <div class="row g-3 mb-3">
@@ -838,17 +846,28 @@
         }
     }
 
-    // ============ YIELD HISTOGRAM ============
     function renderYieldHistogram(yieldValues) {
-        const container = document.getElementById('yieldHistogram');
+        const container = document.getElementById('yieldDotPlot');
         if (!container) return;
+
+        const isMobile = window.innerWidth <= 768;
+        const step = isMobile ? 2 : 1;
+        const filteredValues = yieldValues.filter((_, i) => i % step === 0);
         const maxYield = Math.max(...yieldValues, 0.01);
-        container.innerHTML = yieldValues.map(value => {
-            const height = (value / maxYield) * 130;
+
+        container.innerHTML = filteredValues.map((value, index) => {
+            const actualHour = 23 - (index * step);
+            const actualValue = yieldValues[actualHour];
+            const prevValue = yieldValues[actualHour + 1];
+            const isHigher = prevValue ? actualValue >= prevValue : true;
+            const color = isHigher ? '#0ECB81' : '#F6465D';
+            const size = Math.max(6, Math.min(14, (actualValue / maxYield) * 12 + 4));
+
             return `
-                <div class="histogram-bar">
-                    <div class="histogram-bar-fill" style="background: #0ECB81; height: ${height}px;"></div>
-                    <div class="histogram-bar-value">$${value.toFixed(4)}</div>
+                <div class="yield-dot" style="display: flex; flex-direction: column; align-items: center; flex: 1; cursor: pointer;"
+                     title="${actualHour}h ago: $${actualValue.toFixed(4)} (${isHigher ? '↑' : '↓'})">
+                    <div style="width: ${size}px; height: ${size}px; background: ${color}; border-radius: 50%; margin-bottom: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.1);"></div>
+                    <div style="font-size: ${isMobile ? '7px' : '9px'}; color: #5E6673;">${actualHour === 0 ? 'Now' : `${actualHour}h`}</div>
                 </div>
             `;
         }).join('');
