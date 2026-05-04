@@ -7,16 +7,16 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from rest_framework.views import APIView  # <-- ADD THIS LINE
+from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from decimal import Decimal
+from django.conf import settings
 
 from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
-from apps.tokens.models import CryptoToken
-from .models import Purchase, GridBot
+from .models import GridBot
 
 
 
