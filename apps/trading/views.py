@@ -15,7 +15,8 @@ from decimal import Decimal
 from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
-from .models import CryptoToken, Purchase, GridBot
+from apps.tokens.models import CryptoToken
+from .models import Purchase, GridBot
 
 
 
