@@ -516,7 +516,23 @@
     let monthlyAddition = 0;
 
     function getTokenIcon(symbol) {
-        return `/static/coins/${symbol}.png`;
+        const icons = {
+            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
+            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
+            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png'
+        };
+        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
     function getToken() { return localStorage.getItem('access_token'); }

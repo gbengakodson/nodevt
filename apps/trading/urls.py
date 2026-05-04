@@ -1,8 +1,9 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook, credit_yield_only
+from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook, credit_yield_only, AdminYieldRateView
 from .grid_views import StopGridView, StartGridView, CloseGridView, MyAllGridsView
+
 
 
 router = DefaultRouter()
@@ -15,6 +16,7 @@ urlpatterns = [
     path('check-deposits/', check_deposits_webhook, name='check_deposits'),
     path('update-prices/', update_prices_webhook, name='update_prices'),
     path('credit-yield/', credit_yield_only, name='credit_yield'),
+    path('admin/yield-rate/', AdminYieldRateView.as_view(), name='admin_yield_rate'),
 
 # Grid bot actions
     path('stop-grid/', StopGridView.as_view(), name='stop_grid'),

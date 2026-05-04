@@ -13,6 +13,7 @@ from django.utils import timezone
 from decimal import Decimal
 from django.conf import settings
 
+
 from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
@@ -826,6 +827,21 @@ class TradingViewSet(viewsets.ViewSet):
         return Response({'error': 'PNL not reached 20%'}, status=400)
 
 
+
+
+class AdminYieldRateView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        return Response({'current_rate': getattr(settings, 'YIELD_MONTHLY_RATE', 10.0)})
+
+    def post(self, request):
+        new_rate = request.data.get('rate')
+        if new_rate:
+            # Update settings (temporary - will reset on restart)
+            settings.YIELD_MONTHLY_RATE = float(new_rate)
+            return Response({'success': True, 'new_rate': new_rate})
+        return Response({'error': 'Rate required'}, status=400)
 
 
 @csrf_exempt
