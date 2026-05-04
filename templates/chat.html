@@ -272,7 +272,7 @@
         const message = input.value.trim();
 
         if (!message) {
-            alert('Please enter a message');
+            showModal('Please enter a message', 'warning');
             return;
         }
 
@@ -285,10 +285,10 @@
                 input.value = '';
                 await loadMessages();
             } else {
-                alert('Failed to send message: ' + (result.error || 'Unknown error'));
+                showModal('Failed to send message: ' + (result.error || 'Unknown error'), 'error');
             }
         } catch (e) {
-            alert('Error sending message: ' + e.message);
+            showModal('Error sending message: ' + e.message, 'error');
         }
 
         hideLoading();

@@ -504,7 +504,7 @@
     function copyPlatformAddress() {
         const address = '0x1610a914fc0df204c70f727e5e576cdbb5abea35';
         navigator.clipboard.writeText(address);
-        alert('Platform address copied to clipboard!');
+        showModal('Copied to clipboard!', 'success');
     }
 
     async function submitDepositRequest() {
@@ -513,27 +513,27 @@
         const walletAddress = document.getElementById('userWalletAddress').value.trim();
 
         if (!txHash) {
-            alert('Please enter the transaction hash');
+            showModal('Please enter the transaction hash', 'warning');
             return;
         }
 
         if (!amount || amount <= 0) {
-            alert('Please enter a valid amount');
+            showModal('Please enter a valid amount', 'warning');
             return;
         }
 
         if (amount < 10) {
-            alert('Minimum deposit is $10 USDC');
+            showModal('Minimum deposit is $10 USDC', 'warning');
             return;
         }
 
         if (!walletAddress) {
-            alert('Please enter your wallet address');
+            showModal('Please enter your wallet address', 'warning');
             return;
         }
 
         if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
-            alert('Please enter a valid BSC wallet address (0x...).');
+            showModal('Please enter a valid BSC wallet address (0x...).', 'warning');
             return;
         }
 
@@ -545,16 +545,16 @@
             });
 
             if (result.success) {
-                alert('Deposit request submitted successfully! Our team will review it within 24 hours.');
+                showModal('Deposit request submitted successfully!.', 'success');
                 document.getElementById('txHash').value = '';
                 document.getElementById('depositAmount').value = '';
                 document.getElementById('userWalletAddress').value = '';
             } else {
-                alert('Error: ' + (result.error || 'Failed to submit request'));
+                showModal('Error: ' + (result.error || 'Failed to submit request'), 'error');
             }
         } catch (e) {
             console.error('Error:', e);
-            alert('Error: ' + e.message);
+            showModal('Error: ' + e.message, 'error');
         }
     }
 

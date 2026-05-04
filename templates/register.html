@@ -74,12 +74,12 @@
         const termsCheck = document.getElementById('termsCheck').checked;
 
         if (!termsCheck) {
-            alert('Please agree to the Terms of Service');
+            showModal('Please agree to the Terms of Service', 'warning');
             return;
         }
 
         if (password !== password2) {
-            alert('Passwords do not match');
+            showModal('Passwords do not match', 'warning');
             return;
         }
 
@@ -103,10 +103,10 @@
                 window.location.href = '/dashboard/';
             } else {
                 const errors = Object.values(result).flat().join('\n');
-                alert('Registration failed:\n' + errors);
+                showModal('Registration failed: ' + errors, 'error');
             }
         } catch (error) {
-            alert('Registration failed. Please try again.');
+            showModal('Registration failed. Please try again.', 'error');
         }
     });
 </script>

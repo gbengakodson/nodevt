@@ -128,6 +128,7 @@ class TradingViewSet(viewsets.ViewSet):
                 status='ACTIVE',
                 grid_profit=Decimal('0'),
                 price_at_creation=token.current_price,
+                created_at=timezone.now(),
             )
 
         # Create purchase record

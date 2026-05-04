@@ -527,27 +527,27 @@
         const amount = parseFloat(document.getElementById('withdrawAmount').value);
 
         if (!address) {
-            alert('Please enter a withdrawal address');
+            showModal('Please enter a withdrawal address', 'warning');
             return;
         }
 
         if (!address.startsWith('0x') || address.length !== 42) {
-            alert('Please enter a valid BSC wallet address (0x...).');
+            showModal('Please enter a valid BSC wallet address (0x...).', 'warning');
             return;
         }
 
         if (!amount || amount <= 0) {
-            alert('Please enter a valid amount');
+            showModal('Please enter a valid amount', 'warning');
             return;
         }
 
         if (amount < 10) {
-            alert('Minimum withdrawal is $10 USDC');
+            showModal('Minimum withdrawal is $10 USDC', 'warning');
             return;
         }
 
         if (amount > userBalance) {
-            alert(`Insufficient balance. You have ${formatCurrency(userBalance)}`);
+            showModal(`Insufficient balance. You have ${formatCurrency(userBalance)}`, 'error');
             return;
         }
 
@@ -558,15 +558,15 @@
             });
 
             if (result.success) {
-                alert('Withdrawal request submitted successfully! Our team will process it within 24 hours.');
+                showModal('Withdrawal request submitted successfully! Our team will process it within 24 hours.', 'success');
                 document.getElementById('withdrawAddress').value = '';
                 document.getElementById('withdrawAmount').value = '';
                 await loadBalance();
             } else {
-                alert('Error: ' + (result.error || 'Failed to submit request'));
+                showModal('Error: ' + (result.error || 'Failed to submit request'), 'error');
             }
         } catch (e) {
-            alert('Error: ' + e.message);
+            showModal('Error: ' + e.message, 'error');
         }
     }
 

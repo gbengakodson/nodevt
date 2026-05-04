@@ -1139,12 +1139,12 @@
 
     // Market Order Buy/Sell
     async function executeMarketBuy() {
-        if (userGrandBalance <= 0) { alert('Insufficient balance. Please deposit USDC first.'); return; }
+        if (userGrandBalance <= 0) { showModal('Insufficient balance', 'error'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
         const amount = parseFloat(document.getElementById('marketAmount').value);
-        if (!amount || amount <= 0) { alert('Enter amount'); return; }
-        if (amount > userGrandBalance) { alert(`Insufficient balance: ${formatCurrency(userGrandBalance)}`); return; }
+        if (!amount || amount <= 0) { showModal('Enter amount', 'warning'); return; }
+        if (amount > userGrandBalance) { showModal(`Insufficient balance: ${formatCurrency(userGrandBalance)}`, 'error'); return; }
         try {
             const result = await apiCall('/trading/buy/', 'POST', {
                 token_id: token.id,
@@ -1152,42 +1152,42 @@
                 order_type: 'market'
             });
             if (result.success) {
-                alert(`Bought ${result.purchase.quantity} ${currentSymbol} (1% fee applied)`);
+                showModal(`Bought ${result.purchase.quantity} ${currentSymbol} (1% fee applied)`, 'success');
                 await loadUserData();
                 await updateButtonState();
                 document.getElementById('marketAmount').value = '';
             } else {
-                alert('Purchase failed');
+                showModal('Purchase failed', 'error');
             }
-        } catch (e) { alert('Error: ' + e.message); }
+        } catch (e) { showModal('Error: ' + e.message, 'error'); }
     }
 
     async function executeMarketSell() {
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
         const userQty = userHoldings[currentSymbol] || 0;
-        if (userQty === 0) { alert(`No ${currentSymbol} to sell`); return; }
+        if (userQty === 0) { showModal(`No ${currentSymbol} to sell`, 'warning'); return; }
         const amount = parseFloat(document.getElementById('marketAmount').value);
-        if (!amount || amount <= 0) { alert('Enter amount'); return; }
+        if (!amount || amount <= 0) { showModal('Enter amount', 'warning'); return; }
         const quantity = amount / parseFloat(token.current_price);
-        if (quantity > userQty) { alert(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`); return; }
+        if (quantity > userQty) { showModal(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`, 'error'); return; }
         try {
             const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
             if (result.success) {
-                alert(`Sold ${result.sale.quantity} ${currentSymbol}`);
+                showModal(`Sold ${result.sale.quantity} ${currentSymbol}`, 'success');
                 await loadUserData();
                 await updateButtonState();
                 document.getElementById('marketAmount').value = '';
             } else {
-                alert('Sale failed');
+                showModal('Sale failed', 'error');
             }
-        } catch (e) { alert('Error: ' + e.message); }
+        } catch (e) { showModal('Error: ' + e.message, 'error'); }
     }
 
     // Grid Bot Activation
     async function activateGridBot() {
         const amount = parseFloat(document.getElementById('gridAmount').value);
-        if (!amount || amount < 10) { alert('Please enter a valid investment amount (minimum $10 USDC)'); return; }
+        if (!amount || amount < 10) { showModal('Please enter a valid investment amount (minimum $10 USDC)', 'warning'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
         try {
@@ -1197,12 +1197,12 @@
                 order_type: 'grid'
             });
             if (result.success) {
-                alert(`Grid bot activated for ${currentSymbol} with $${amount} (10% fee applied). Your grid bot will appear in dashboard.`);
+                showModal(`Grid bot activated for ${currentSymbol} with $${amount} (10% fee applied). Your grid bot will appear in dashboard.`, 'success');
                 document.getElementById('gridAmount').value = '';
             } else {
-                alert('Failed to activate grid bot');
+                showModal('Failed to activate grid bot', 'error');
             }
-        } catch (e) { alert('Error: ' + e.message); }
+        } catch (e) showModal('Error: ' + e.message, 'error');
     }
 
     document.querySelectorAll('[data-market-perc]').forEach(btn => {

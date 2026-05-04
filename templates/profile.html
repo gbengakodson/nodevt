@@ -412,13 +412,13 @@
     }
 
     function editProfile() {
-        alert('Profile editing feature coming soon');
+        showModal('Profile editing feature coming soon', 'info');
     }
 
     function copyAddress() {
         const address = document.getElementById('depositAddress').innerText;
         navigator.clipboard.writeText(address);
-        alert('Address copied to clipboard!');
+        showModal('Address copied to clipboard!', 'success');
     }
 
     loadProfile();

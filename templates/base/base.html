@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Node volatility tokens market - {% block title %}Dashboard{% endblock %}</title>
+    <title>Node Crypto Grid Bot - {% block title %}Dashboard{% endblock %}</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -57,10 +57,10 @@
     .live-clock {
         font-family: 'Courier New', monospace;
         font-size: 14px;
-        background: #F0B90B;  /* Gold background */
+        background: #F0B90B;
         padding: 6px 12px;
         border-radius: 20px;
-        color: #0B0E11;  /* Dark text for contrast */
+        color: #0B0E11;
         margin-right: 10px;
         font-weight: 700;
         border: none;
@@ -228,17 +228,154 @@
             display: none;
         }
     }
-        .footer {
-    background: #F8F9FA;
-    border-top: 1px solid #E2E4E8;
-    padding: 40px 0 20px;
-    margin-top: 40px;
-}
+    .footer {
+        background: #F8F9FA;
+        border-top: 1px solid #E2E4E8;
+        padding: 40px 0 20px;
+        margin-top: 40px;
+    }
 
-.footer a.text-muted:hover {
-    color: #F0B90B !important;
-}
-</style>
+    .footer a.text-muted:hover {
+        color: #F0B90B !important;
+    }
+
+    /* Custom Modal Styles */
+    .custom-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .custom-modal-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+    }
+
+    .custom-modal-container {
+        position: relative;
+        background: white;
+        border-radius: 16px;
+        width: 90%;
+        max-width: 400px;
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        animation: modalFadeIn 0.3s ease;
+    }
+
+    @keyframes modalFadeIn {
+        from {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        to {
+            opacity: 1;
+            transform: scale(1);
+        }
+    }
+
+    .custom-modal-header {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 20px 20px 0 20px;
+        border-bottom: 1px solid #E2E4E8;
+    }
+
+    .custom-modal-icon {
+        width: 40px;
+        height: 40px;
+        background: #F0B90B;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+    }
+
+    .custom-modal-header h3 {
+        flex: 1;
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+        color: #1E2329;
+    }
+
+    .custom-modal-close {
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: #8A8F9E;
+        transition: color 0.2s;
+    }
+
+    .custom-modal-close:hover {
+        color: #F6465D;
+    }
+
+    .custom-modal-body {
+        padding: 20px;
+    }
+
+    .custom-modal-body p {
+        margin: 0;
+        font-size: 14px;
+        color: #5E6673;
+        line-height: 1.5;
+    }
+
+    .custom-modal-footer {
+        padding: 16px 20px 20px 20px;
+        text-align: center;
+    }
+
+    .custom-modal-btn {
+        background: #F0B90B;
+        color: #0B0E11;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 8px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+
+    .custom-modal-btn:hover {
+        background: #E0A800;
+        transform: translateY(-1px);
+    }
+
+    /* Success Modal */
+    .custom-modal.success .custom-modal-icon {
+        background: #0ECB81;
+    }
+
+    /* Error Modal */
+    .custom-modal.error .custom-modal-icon {
+        background: #F6465D;
+    }
+
+    /* Warning Modal */
+    .custom-modal.warning .custom-modal-icon {
+        background: #F0B90B;
+    }
+
+    /* Info Modal */
+    .custom-modal.info .custom-modal-icon {
+        background: #F0B90B;
+    }
+    </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
@@ -264,7 +401,7 @@
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-1"></i>Earn</a>
                         <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/yield/">Yield Earnings</a></li>
+                            <li><a class="dropdown-item" href="/yield/">Grid profits</a></li>
                             <li><a class="dropdown-item" href="/referral/">Referral Program</a></li>
                         </ul>
                     </li>
@@ -294,89 +431,95 @@
     </main>
 
     <!-- Desktop Footer -->
-<footer class="footer d-none d-md-block">
-    <div class="container">
-        <div class="row">
-            <div class="col-md-4 mb-3">
-                <h6 class="mb-3">NodeVT</h6>
-                <p class="small text-muted">A subsediary of THRIVALBASE LTD(RC No.1394827).</p>
-                <div class="mt-2">
-                    <span class="badge bg-dark me-1">BSC</span>
-                    <span class="badge bg-dark me-1">BEP-20</span>
-                    <span class="badge bg-dark">USDC</span>
+    <footer class="footer d-none d-md-block">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <h6 class="mb-3">NodeVT</h6>
+                    <p class="small text-muted">A subsidiary of THRIVALBASE LTD (RC No.1394827).</p>
+                    <div class="mt-2">
+                        <span class="badge bg-dark me-1">BSC</span>
+                        <span class="badge bg-dark me-1">BEP-20</span>
+                        <span class="badge bg-dark">USDC</span>
+                    </div>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h6 class="mb-3">Platform</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="/trading/" class="text-muted text-decoration-none">Trading</a></li>
+                        <li><a href="/dashboard/" class="text-muted text-decoration-none">Dashboard</a></li>
+                        <li><a href="/portfolio/" class="text-muted text-decoration-none">Portfolio</a></li>
+                        <li><a href="/yield/" class="text-muted text-decoration-none">Output</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-2 mb-3">
+                    <h6 class="mb-3">Company</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="/about/" class="text-muted text-decoration-none">About Us</a></li>
+                        <li><a href="/how-it-works/" class="text-muted text-decoration-none">How It Works</a></li>
+                        <li><a href="/transparency/" class="text-muted text-decoration-none">AUM</a></li>
+                        <li><a href="/contact/" class="text-muted text-decoration-none">Contact</a></li>
+                        <li><a href="/chat/" class="text-muted text-decoration-none">Support</a></li>
+                    </ul>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <h6 class="mb-3">Legal</h6>
+                    <ul class="list-unstyled small">
+                        <li><a href="/terms/" class="text-muted text-decoration-none">Terms of Service</a></li>
+                        <li><a href="/privacy/" class="text-muted text-decoration-none">Privacy Policy</a></li>
+                        <li><a href="/risk-disclosure/" class="text-muted text-decoration-none">Risk Disclosure</a></li>
+                    </ul>
                 </div>
             </div>
-            <div class="col-md-2 mb-3">
-                <h6 class="mb-3">Platform</h6>
-                <ul class="list-unstyled small">
-                    <li><a href="/trading/" class="text-muted text-decoration-none">Trading</a></li>
-                    <li><a href="/dashboard/" class="text-muted text-decoration-none">Dashboard</a></li>
-                    <li><a href="/portfolio/" class="text-muted text-decoration-none">Portfolio</a></li>
-                    <li><a href="/yield/" class="text-muted text-decoration-none">Yield</a></li>
-                </ul>
-            </div>
-            <div class="col-md-2 mb-3">
-                <h6 class="mb-3">Company</h6>
-                <ul class="list-unstyled small">
-                    <li><a href="/about/" class="text-muted text-decoration-none">About Us</a></li>
-                    <li><a href="/how-it-works/" class="text-muted text-decoration-none">How It Works</a></li>
-                    <li><a href="/transparency/" class="text-muted text-decoration-none">AUM</a></li>
-                    <li><a href="/contact/" class="text-muted text-decoration-none">Contact</a></li>
-                    <li><a href="/chat/" class="text-muted text-decoration-none">Support</a></li>
-                </ul>
-            </div>
-            <div class="col-md-4 mb-3">
-                <h6 class="mb-3">Legal</h6>
-                <ul class="list-unstyled small">
-                    <li><a href="/terms/" class="text-muted text-decoration-none">Terms of Service</a></li>
-                    <li><a href="/privacy/" class="text-muted text-decoration-none">Privacy Policy</a></li>
-                    <li><a href="/risk-disclosure/" class="text-muted text-decoration-none">Risk Disclosure</a></li>
-
-                </ul>
+            <hr class="my-3">
+            <div class="row">
+                <div class="col-12 text-center">
+                    <p class="small text-muted mb-0">
+                        <strong>Risk Warning:</strong> Cryptocurrency trading involves substantial risk. Past performance is not indicative of future results.
+                        NodeVT does not guarantee any returns. Only invest what you can afford to lose.
+                    </p>
+                    <p class="small text-muted mt-2 mb-0">
+                        &copy; 2026 NodeVT. All rights reserved.
+                    </p>
+                </div>
             </div>
         </div>
-        <hr class="my-3">
-        <div class="row">
-            <div class="col-12 text-center">
-                <p class="small text-muted mb-0">
-                    <strong>Risk Warning:</strong> Cryptocurrency trading involves substantial risk. Past performance is not indicative of future results.
-                    NodeVT does not guarantee any returns. Only invest what you can afford to lose.
-                </p>
-                <p class="small text-muted mt-2 mb-0">
-                    &copy; 2026 NodeVT. All rights reserved.
-                </p>
-            </div>
+    </footer>
+
+    <!-- Mobile Footer Bar -->
+    <div class="mobile-footer d-md-none">
+        <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
+            <i class="fas fa-bell"></i>
+            <span id="mobileBadge" class="mobile-badge">0</span>
+            <span>Alerts</span>
+        </div>
+        <div class="mobile-footer-item" onclick="toggleSimpleChat()">
+            <i class="fas fa-robot"></i>
+            <span>Support</span>
+        </div>
+        <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
+            <i class="fas fa-chart-line"></i>
+            <span>Portfolio</span>
+        </div>
+        <div class="mobile-footer-item" onclick="window.location.href='/transparency/'">
+            <i class="fas fa-eye"></i>
+            <span>Chat</span>
         </div>
     </div>
-</footer>
 
-<!-- Mobile Footer Bar -->
-<div class="mobile-footer d-md-none">
-    <div class="mobile-footer-item" onclick="toggleNotificationPanel()">
-        <i class="fas fa-bell"></i>
-        <span id="mobileBadge" class="mobile-badge">0</span>
-        <span>Alerts</span>
+    <!-- Mobile Footer Disclaimer (visible below mobile nav) -->
+    <div class="d-md-none text-center px-3 py-2" style="margin-bottom: 60px;">
+        <p class="small text-muted mb-0">
+            <strong>Risk Warning:</strong> Crypto trading involves risk. Only invest what you can afford to lose.
+        </p>
     </div>
-    <div class="mobile-footer-item" onclick="toggleSimpleChat()">
-        <i class="fas fa-robot"></i>
-        <span>AI Bot</span>
-    </div>
-    <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
-        <i class="fas fa-chart-line"></i>
-        <span>Portfolio</span>
-    </div>
-    <div class="mobile-footer-item" onclick="window.location.href='/transparency/'">
-    <i class="fas fa-eye"></i>
-    <span>Chat</span>
-</div>
-</div>
 
-<!-- Mobile Footer Disclaimer (visible below mobile nav) -->
-<div class="d-md-none text-center px-3 py-2" style="margin-bottom: 60px;">
-    <p class="small text-muted mb-0">
-        <strong>Risk Warning:</strong> Crypto trading involves risk. Only invest what you can afford to lose.
-    </p>
-</div>
+    <!-- Rolling Notification Marquee -->
+    <div class="marquee-footer">
+        <div class="marquee-content">
+            <span id="marqueeText">🚀 Join NodeVT - Start earning yield on your crypto!</span>
+        </div>
+    </div>
 
     <!-- Notification Panel -->
     <div id="notificationPanel" class="notification-panel" style="display: none;">
@@ -408,6 +551,24 @@
         <div style="padding: 12px; border-top: 1px solid #E2E4E8; display: flex; gap: 8px; background: white;">
             <input type="text" id="simpleChatInput" placeholder="Type your question..." style="flex: 1; padding: 10px 14px; border: 1px solid #E2E4E8; border-radius: 25px; outline: none; font-size: 14px;">
             <button onclick="sendSimpleMessage()" style="background: #F0B90B; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Send</button>
+        </div>
+    </div>
+
+    <!-- Professional Modal -->
+    <div id="customModal" class="custom-modal" style="display: none;">
+        <div class="custom-modal-overlay"></div>
+        <div class="custom-modal-container">
+            <div class="custom-modal-header">
+                <div class="custom-modal-icon" id="modalIcon">ℹ️</div>
+                <h3 id="modalTitle">Notification</h3>
+                <button class="custom-modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="custom-modal-body">
+                <p id="modalMessage">This is a message</p>
+            </div>
+            <div class="custom-modal-footer">
+                <button class="custom-modal-btn" onclick="closeModal()">OK</button>
+            </div>
         </div>
     </div>
 
@@ -450,36 +611,34 @@
     updateLiveClock();
     // ============ END LIVE CLOCK ============
 
-    // ============ STATIC MARQUEE - COMPLETE JOURNEY ============
+    // ============ STATIC MARQUEE ============
     const allMarqueeMessages = [
-        "🚀 Join NodeVT - Start earning 10% monthly yield on your crypto!",
+        "🚀 Join NodeVT - Start earning yield on your crypto!",
         "💰 Minimum deposit just $10 USDC to start your journey!",
         "🤖 AI Grid Trading works 24/7 - Buying dips and selling pumps automatically!",
         "📈 Refer friends and earn node fees from 7 generations deep!",
-        "💎 $10 grows to $3,048 in 5 years with 10% monthly compounding!",
+        "💎 $10 grows over time with compounding!",
         "⚡ Your crypto never sleeps - Neither does our AI trading bot!",
         "🎯 Set your financial goals and watch them grow with NodeVT!",
-        "💵 Earn hourly yield - Paid directly to your wallet every hour!",
+        "💵 Earnings are distributed based on AI trading performance!",
         "🔒 Secure BSC (BEP-20) deposits and withdrawals!",
-        "🌟 Join thousands of traders already earning passive income!",
+        "🌟 Join thousands of traders already earning!",
         "📊 Track your portfolio growth with our interactive journey map!",
         "💪 Start small, think big - Every dollar works for you 24/7!",
-        "🔄 Reinvest your yield to compound returns faster!",
-        "🏆 Top referrers earn unlimited commissions!",
-        "⚡ 1.2% grid strategy - Profit from every market movement!",
-        "💵 $10 becomes $3,048 in 5 years - Start today!",
-        "🎯 10% monthly yield = 213% APY - Unbeatable returns!",
+        "🔄 Reinvest your earnings to compound returns!",
+        "⚡ Grid strategy - Designed to profit from market movements!",
+        "💵 Consistent performance over time - Start today!",
         "🤝 Invite friends - Earn from 7 levels of referrals!",
         "📈 Your money works 24/7 with AI Grid Trading!",
         "💰 No lock-up periods - Withdraw anytime!",
         "🔐 Bank-grade security for your crypto assets!",
         "🌍 Join a global community of smart investors!",
         "⚡ Fast BSC transactions - Low fees!",
-        "💎 Compound your wealth - Reinvest your yield!"
+        "💎 Compound your wealth over time!"
     ];
 
     let marqueeMsgIndex = 0;
-    let animationDuration = 60000; // 60 seconds in milliseconds
+    let animationDuration = 60000;
 
     function setNextMarqueeMessage() {
         const marqueeText = document.getElementById('marqueeText');
@@ -489,10 +648,7 @@
         }
     }
 
-    // Set first message immediately
     setNextMarqueeMessage();
-
-    // Change message after full animation completes (60 seconds)
     setInterval(setNextMarqueeMessage, animationDuration);
     // ============ END STATIC MARQUEE ============
 
@@ -600,6 +756,50 @@
         return div.innerHTML;
     }
     // ============ END NOTIFICATION FUNCTIONS ============
+
+    // ============ PROFESSIONAL MODAL FUNCTIONS ============
+    function showModal(message, type = 'info', title = null) {
+        const modal = document.getElementById('customModal');
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+
+        if (!title) {
+            switch(type) {
+                case 'success':
+                    title = 'Success';
+                    modalIcon.innerHTML = '✓';
+                    break;
+                case 'error':
+                    title = 'Error';
+                    modalIcon.innerHTML = '✗';
+                    break;
+                case 'warning':
+                    title = 'Warning';
+                    modalIcon.innerHTML = '⚠️';
+                    break;
+                default:
+                    title = 'Notification';
+                    modalIcon.innerHTML = 'ℹ️';
+            }
+        }
+
+        modalTitle.innerText = title;
+        modalMessage.innerText = message;
+
+        modal.className = 'custom-modal ' + type;
+        modal.style.display = 'flex';
+
+        if (type !== 'error') {
+            setTimeout(closeModal, 5000);
+        }
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('customModal');
+        modal.style.display = 'none';
+    }
+    // ============ END PROFESSIONAL MODAL FUNCTIONS ============
 
     // ============ CHATBOT FUNCTIONS ============
     function toggleSimpleChat() {
@@ -735,7 +935,7 @@
         }
     });
     // ============ END AUTH FUNCTIONS ============
-</script>
+    </script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

@@ -335,9 +335,9 @@
         const link = document.getElementById('referralLink').innerText;
         if (link && link !== 'Loading your referral link...' && link !== 'Unable to load referral link') {
             navigator.clipboard.writeText(link);
-            alert('Referral link copied to clipboard!');
+            showModal('Referral link copied to clipboard!', 'success');
         } else {
-            alert('No valid referral link available');
+            showModal('No valid referral link available', 'warning');
         }
     }
 

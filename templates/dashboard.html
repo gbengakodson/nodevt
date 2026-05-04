@@ -996,13 +996,13 @@
             try {
                 const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
-                    alert('Grid bot stopped. Profit accumulation paused.');
+                    showModal('Grid bot stopped. Profit accumulation paused.', 'warning');
                     loadDashboard();
                 } else {
-                    alert('Failed to stop bot');
+                    showModal('Failed to stop bot', 'error');
                 }
             } catch (e) {
-                alert('Error: ' + e.message);
+                showModal('Error: ' + e.message, 'error');
             }
         }
     }
@@ -1012,13 +1012,13 @@
             try {
                 const result = await apiCall('/trading/start-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
-                    alert('Grid bot restarted. Profit accumulation resumed.');
+                    showModal('Grid bot restarted. Profit accumulation resumed.', 'success');
                     loadDashboard();
                 } else {
-                    alert('Failed to start bot');
+                    showModal('Failed to start bot', 'error');
                 }
             } catch (e) {
-                alert('Error: ' + e.message);
+                showModal('Error: ' + e.message, 'error');
             }
         }
     }
@@ -1028,13 +1028,13 @@
             try {
                 const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
-                    alert(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`);
+                    showModal(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`, 'success');
                     loadDashboard();
                 } else {
-                    alert('Failed to close bot. PNL must be positive to close.');
+                    showModal('You cant close the Bot at a loss. PNL must be positive.', 'error');
                 }
             } catch (e) {
-                alert('Error: ' + e.message);
+                showModal('Error: ' + e.message, 'error');
             }
         }
     }
@@ -1252,7 +1252,7 @@
 
     function copyDepositAddress() {
         const address = document.getElementById('depositAddress')?.innerText;
-        if (address) { navigator.clipboard.writeText(address); alert('Address copied!'); }
+        if (address) { navigator.clipboard.writeText(address); showModal('Address copied!', 'success'); }
     }
 
     function openWithdrawYieldModal() {
@@ -1276,13 +1276,13 @@
     async function confirmWithdrawYield() {
         const amountInput = document.getElementById('withdrawAmount');
         const amount = parseFloat(amountInput?.value || 0);
-        if (!amount || amount <= 0) { alert('Enter a valid amount'); return; }
-        if (amount > userYieldBalance) { alert(`Insufficient yield balance. You have ${formatCurrency(userYieldBalance)}`); return; }
+        if (!amount || amount <= 0) { showModal('Enter a valid amount', 'warning'); return; }
+        if (amount > userYieldBalance) { showModal(`Insufficient yield balance. You have ${formatCurrency(userYieldBalance)}`, 'error'); return; }
         try {
             const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-            if (result.success) { alert(`Withdrew ${formatCurrency(amount)} to Grand Balance`); closeWithdrawYieldModal(); loadDashboard(); }
-            else { alert('Withdrawal failed'); }
-        } catch (e) { alert('Error: ' + e.message); }
+            if (result.success) { showModal(`Withdrew ${formatCurrency(amount)} to Grand Balance`, 'success'); closeWithdrawYieldModal(); loadDashboard(); }
+            else { showModal('Withdrawal failed', 'error'); }
+        } catch (e) { showModal('Error: ' + e.message, 'error'); }
     }
 
     // Initialize

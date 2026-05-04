@@ -426,18 +426,18 @@
             const balance = await apiCall('/trading/my_balance/');
             const amount = parseFloat(balance.yield_balance);
             if (!amount || amount <= 0) {
-                alert('No yield available to withdraw');
+                showModal('No yield available to withdraw', 'warning');
                 return;
             }
             const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
             if (result.success) {
-                alert(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`);
+                showModal(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`, 'success');
                 loadYieldData();
             } else {
-                alert('Withdrawal failed: ' + (result.error || 'Unknown error'));
+                showModal('Withdrawal failed: ' + (result.error || 'Unknown error'), 'error');
             }
         } catch (e) {
-            alert('Error: ' + e.message);
+            showModal('Error: ' + e.message, 'error');
         }
     }
 
