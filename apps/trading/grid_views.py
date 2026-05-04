@@ -47,3 +47,29 @@ class CloseGridView(APIView):
         bot.save()
 
         return Response({'success': True, 'amount': float(total_return)})
+
+
+class MyAllGridsView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        grid_bots = GridBot.objects.filter(user=request.user).exclude(status='COMPLETED')
+        data = []
+        for bot in grid_bots:
+            data.append({
+                'id': str(bot.id),
+                'token_symbol': bot.token.symbol,
+                'token_name': bot.token.name,
+                'amount': float(bot.amount),
+                'lower_price': float(bot.lower_price),
+                'upper_price': float(bot.upper_price),
+                'grids': bot.grids,
+                'current_grid_level': bot.current_grid_level,
+                'grid_profit': float(bot.grid_profit),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
+                'price_at_creation': float(bot.price_at_creation),
+                'created_at': bot.created_at.isoformat(),
+                'status': bot.status,  # 'ACTIVE' or 'STOPPED'
+            })
+        return Response(data)

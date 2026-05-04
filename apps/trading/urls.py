@@ -2,7 +2,7 @@ from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook, credit_yield_only
-from .grid_views import StopGridView, StartGridView, CloseGridView
+from .grid_views import StopGridView, StartGridView, CloseGridView, MyAllGridsView
 
 
 router = DefaultRouter()
@@ -20,5 +20,6 @@ urlpatterns = [
     path('stop-grid/', StopGridView.as_view(), name='stop_grid'),
     path('start-grid/', StartGridView.as_view(), name='start_grid'),
     path('close-grid/', CloseGridView.as_view(), name='close_grid'),
+    path('my_grids_all/', MyAllGridsView.as_view(), name='my_grids_all'),
 
 ]

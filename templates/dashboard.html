@@ -1096,7 +1096,7 @@
             if (availableYieldDisplay) availableYieldDisplay.innerHTML = formatCurrency(userYieldBalance);
 
             // Fetch GRID BOTS
-            const gridBots = await apiCall('/trading/my_grids/');
+            const gridBots = await apiCall('/trading/my_grids_all/');
             tokens = await apiCall('/trading/');
             const holdingsCardsContainer = document.getElementById('holdingsCards');
             let totalPortfolioValue = 0;
@@ -1130,7 +1130,7 @@
                                         </div>
                                     </div>
                                     <div class="bot-status-badge ${bot.status === 'ACTIVE' ? 'active' : 'stopped'}">
-                                        ${bot.status === 'ACTIVE' ? '🤖 Working' : '⏸️ Stopped'}
+                                       ${bot.status === 'ACTIVE' ? '🤖 Working' : '⏸️ Inactive'}
                                     </div>
                                 </div>
 
