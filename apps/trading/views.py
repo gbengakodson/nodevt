@@ -299,6 +299,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'pnl': float(bot.pnl),
                 'pnl_percent': float(bot.pnl_percent),
                 'status': bot.status,
+                'price_at_creation': float(bot.price_at_creation),
                 'created_at': bot.created_at.isoformat()
             })
 
