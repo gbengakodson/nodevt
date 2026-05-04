@@ -18,7 +18,7 @@ from apps.wallets.views import (
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('api/', include('apps.trading.urls')),
+    path('api/trading/', include('apps.trading.urls')),
     path('api/auth/', include('apps.accounts.urls')),
     path('api/chat/', include('apps.chat.urls')),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
