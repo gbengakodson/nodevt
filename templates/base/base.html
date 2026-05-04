@@ -507,6 +507,24 @@
         </div>
     </div>
 
+    <!-- Professional Modal -->
+    <div id="customModal" class="custom-modal" style="display: none;">
+        <div class="custom-modal-overlay"></div>
+        <div class="custom-modal-container">
+            <div class="custom-modal-header">
+                <div class="custom-modal-icon" id="modalIcon">ℹ️</div>
+                <h3 id="modalTitle">Notification</h3>
+                <button class="custom-modal-close" onclick="closeModal()">&times;</button>
+            </div>
+            <div class="custom-modal-body">
+                <p id="modalMessage">This is a message</p>
+            </div>
+            <div class="custom-modal-footer">
+                <button class="custom-modal-btn" onclick="closeModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
     <!-- Mobile Footer Disclaimer (visible below mobile nav) -->
     <div class="d-md-none text-center px-3 py-2" style="margin-bottom: 60px;">
         <p class="small text-muted mb-0">
@@ -554,27 +572,9 @@
         </div>
     </div>
 
-    <!-- Professional Modal -->
-    <div id="customModal" class="custom-modal" style="display: none;">
-        <div class="custom-modal-overlay"></div>
-        <div class="custom-modal-container">
-            <div class="custom-modal-header">
-                <div class="custom-modal-icon" id="modalIcon">ℹ️</div>
-                <h3 id="modalTitle">Notification</h3>
-                <button class="custom-modal-close" onclick="closeModal()">&times;</button>
-            </div>
-            <div class="custom-modal-body">
-                <p id="modalMessage">This is a message</p>
-            </div>
-            <div class="custom-modal-footer">
-                <button class="custom-modal-btn" onclick="closeModal()">OK</button>
-            </div>
-        </div>
-    </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-
     <script>
     // ============ LOADING FUNCTIONS ============
     function showLoading() {
