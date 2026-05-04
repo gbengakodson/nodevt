@@ -365,7 +365,13 @@
             'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
             'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
             'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png'
+            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/fantom.png',
+            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/elrond-egld.png',
+            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png'
         };
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
@@ -415,20 +421,14 @@
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
-
     function formatNumber(num, decimals = 6) {
         if (!num) return '0';
-
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
-
         if (value === 0) return '0';
-
-        // Handle very small numbers
         if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
             return value.toFixed(8);
         }
-
         return value.toFixed(decimals);
     }
 
@@ -485,7 +485,6 @@
         const btc = coins.find(c => c.symbol === 'BTC');
         const btcDominance = btc && totalMarketCap > 0 ? (btc.market_cap / totalMarketCap) * 100 : 0;
 
-        // Apply formatting here
         document.getElementById('totalMarketCap').innerHTML = formatCurrencyShort(totalMarketCap);
         document.getElementById('totalVolume').innerHTML = formatCurrencyShort(totalVolume);
         document.getElementById('activeCoins').innerHTML = coins.length;
@@ -527,10 +526,10 @@
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-info">
-                            <img src="/static/coins/${coin.symbol}.png"
+                            <img src="${getTokenIcon(coin.symbol)}"
                                  alt="${coin.symbol}"
                                  class="coin-icon"
-                                 onerror="this.src='/static/coins/BTC.png'">
+                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
                             <div class="coin-details">
                                 <h3>${coin.symbol}</h3>
                                 <p>${coin.name}</p>
