@@ -1202,7 +1202,9 @@
             } else {
                 showModal('Failed to activate grid bot', 'error');
             }
-        } catch (e) { showModal('Error: ' + e.message, 'error');
+        } catch (e) {
+             showModal('Error: ' + e.message, 'error');
+        }
 
 
     }
