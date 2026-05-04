@@ -1,6 +1,7 @@
 from django.db import models
 from django.conf import settings
 import uuid
+from decimal import Decimal
 
 
 class GridBot(models.Model):
@@ -31,26 +32,22 @@ class GridBot(models.Model):
         if not self.token.current_price:
             return 0
         price_range = self.upper_price - self.lower_price
-        if price_range == 0:
-            return 0
+        if price_range <= 0:
+            return self.grids // 2
         grid_step = price_range / self.grids
         level = (self.token.current_price - self.lower_price) / grid_step
         return max(0, min(self.grids, int(level)))
 
     @property
     def pnl(self):
-        entry_level = self.grids // 2
-        current_level = self.current_grid_level
-        if entry_level == 0:
-            return 0
-        price_diff_percent = ((current_level - entry_level) / entry_level) * 100
-        return (price_diff_percent / 100) * float(self.amount)
+        if self.price_at_creation == 0:
+            return Decimal('0')
+        price_diff = self.token.current_price - self.price_at_creation
+        price_diff_percent = price_diff / self.price_at_creation
+        return price_diff_percent * self.amount
 
     @property
     def pnl_percent(self):
-        if self.amount == 0:
-            return 0
-        return (self.pnl / float(self.amount)) * 100
-
-    def __str__(self):
-        return f"{self.user.email} - {self.token.symbol} - ${self.amount}"
+        if self.price_at_creation == 0:
+            return Decimal('0')
+        return ((self.token.current_price - self.price_at_creation) / self.price_at_creation) * 100
