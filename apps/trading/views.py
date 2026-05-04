@@ -18,6 +18,8 @@ from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
 from .models import GridBot
+from apps.core.models import PlatformSetting
+
 
 
 
@@ -833,13 +835,18 @@ class AdminYieldRateView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        return Response({'current_rate': getattr(settings, 'YIELD_MONTHLY_RATE', 10.0)})
+        setting, _ = PlatformSetting.objects.get_or_create(
+            key='monthly_yield_rate',
+            defaults={'value': 10, 'description': 'Monthly yield rate for grid bots'}
+        )
+        return Response({'current_rate': float(setting.value)})
 
     def post(self, request):
         new_rate = request.data.get('rate')
         if new_rate:
-            # Update settings (temporary - will reset on restart)
-            settings.YIELD_MONTHLY_RATE = float(new_rate)
+            setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate')
+            setting.value = Decimal(str(new_rate))
+            setting.save()
             return Response({'success': True, 'new_rate': new_rate})
         return Response({'error': 'Rate required'}, status=400)
 
@@ -891,15 +898,16 @@ def credit_yield_only(request):
     return JsonResponse({'status': 'success', 'users_credited': credited_count})
 
 
-from django.conf import settings
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
-from rest_framework.response import Response
+from apps.core.models import PlatformSetting
 
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def yield_rate_view(request):
-    monthly_rate = getattr(settings, 'YIELD_MONTHLY_RATE', 10.0)
+    setting, _ = PlatformSetting.objects.get_or_create(
+        key='monthly_yield_rate',
+        defaults={'value': 10}
+    )
+    monthly_rate = float(setting.value)
     return Response({
         'monthly': monthly_rate,
         'hourly': monthly_rate / 720
