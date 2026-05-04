@@ -15,7 +15,7 @@ from decimal import Decimal
 from apps.tokens.models import CryptoToken, Purchase
 from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSerializer, PurchaseSerializer, SellSerializer
 from apps.wallets.models import Wallet, Transaction
-from apps.trading.models import GridBot
+from .models import CryptoToken, Purchase, GridBot
 
 
 
@@ -767,6 +767,61 @@ class TradingViewSet(viewsets.ViewSet):
             'new_balance': str(grand_wallet.balance),
             'message': f'Withdrawal of ${amount} USDC to {address} initiated'
         })
+
+    @action(detail=False, methods=['post'])
+    def stop_grid(self, request):
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+        bot.status = 'STOPPED'
+        bot.stopped_at = timezone.now()
+        bot.save()
+        return Response({'success': True})
+
+    @action(detail=False, methods=['post'])
+    def start_grid(self, request):
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+        bot.status = 'ACTIVE'
+        bot.save()
+        return Response({'success': True})
+
+    @action(detail=False, methods=['post'])
+    def close_grid(self, request):
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+
+        if bot.pnl <= 0:
+            return Response({'error': 'PNL must be positive to close'}, status=400)
+
+        # Add funds to grand wallet
+        grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
+        total_return = bot.amount + bot.grid_profit + bot.pnl
+        grand_wallet.balance += Decimal(str(total_return))
+        grand_wallet.save()
+
+        bot.status = 'COMPLETED'
+        bot.save()
+
+        return Response({'success': True, 'amount': float(total_return)})
+
+    @action(detail=False, methods=['post'])
+    def auto_close_grid(self, request):
+        bot_id = request.data.get('bot_id')
+        bot = GridBot.objects.get(id=bot_id, user=request.user)
+
+        if bot.pnl_percent >= 20:
+            grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
+            total_return = bot.amount + bot.grid_profit + bot.pnl
+            grand_wallet.balance += Decimal(str(total_return))
+            grand_wallet.save()
+
+            bot.status = 'COMPLETED'
+            bot.auto_closed_at = timezone.now()
+            bot.save()
+
+            return Response({'success': True, 'amount': float(total_return)})
+
+        return Response({'error': 'PNL not reached 20%'}, status=400)
 
 
 

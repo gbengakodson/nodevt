@@ -412,6 +412,112 @@
     font-size: 11px;
     cursor: pointer;
 }
+
+    /* Additional Grid Bot Styles - Add these at the end */
+
+/* Price info section */
+.price-info {
+    background: #F8F9FA;
+    border-radius: 8px;
+    padding: 8px;
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+
+.price-info .param-row {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+/* Bot status badges */
+.bot-status-badge.active {
+    background: rgba(14, 203, 129, 0.1);
+    color: #0ECB81;
+}
+
+.bot-status-badge.stopped {
+    background: rgba(246, 70, 93, 0.1);
+    color: #F6465D;
+}
+
+/* Warning and auto-close tags */
+.warning-tag {
+    background: #FFF4E5;
+    border-left: 3px solid #F0B90B;
+    padding: 6px 10px;
+    font-size: 11px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    color: #B8860B;
+}
+
+.auto-close-tag {
+    background: #F0B90B;
+    color: #0B0E11;
+    padding: 6px 10px;
+    font-size: 11px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+    font-weight: 600;
+    text-align: center;
+}
+
+/* Start bot button */
+.btn-start-bot {
+    background: #0ECB81;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.btn-start-bot:hover {
+    background: #0BB873;
+}
+
+/* Close bot button */
+.btn-close-bot {
+    background: #F0B90B;
+    color: #0B0E11;
+    border: none;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+}
+
+.btn-close-bot:hover:not(:disabled) {
+    background: #E0A800;
+}
+
+.btn-close-bot:disabled {
+    background: #E2E4E8;
+    color: #8A8F9E;
+    cursor: not-allowed;
+}
+
+/* Stop bot button hover */
+.btn-stop-bot:hover {
+    background: #E0354D;
+}
+
+/* Button container spacing */
+.holding-card button {
+    margin-top: 4px;
+}
+
+/* Action buttons container */
+.bot-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 8px;
+}
 </style>
 {% endblock %}
 
@@ -661,7 +767,7 @@
     let tokens = [];
     let userHoldings = {};
     let growthChart = null;
-    let globalMonthlyRate = 10; // Default, will be updated from API
+    let globalMonthlyRate = 10;
     let currentYieldRate = 10;
 
     // ============ UTILITY FUNCTIONS ============
@@ -868,76 +974,13 @@
         updateGrowthProjection();
     }
 
-    // ============ TRADING BOT SYSTEM ============
-    let allBotConfigs = {};
-    let botIntervals = {};
-    let tradingBotActive = {};
-
-    function getBotConfig(symbol, currentPrice) {
-        const lowerPrice = currentPrice * 0.85;
-        const upperPrice = currentPrice * 1.15;
-        const grids = 100;
-        let risk = 'Medium';
-        if (currentPrice > 1000) risk = 'High';
-        if (currentPrice < 10) risk = 'Low';
-        return {
-            strategy: 'Spot Grid',
-            lowerPrice: lowerPrice,
-            upperPrice: upperPrice,
-            grids: grids,
-            risk: risk,
-            priceRange: upperPrice - lowerPrice,
-            gridStep: (upperPrice - lowerPrice) / grids
-        };
-    }
-
-    function initBotForToken(symbol, currentPrice) {
-        if (!allBotConfigs[symbol]) {
-            allBotConfigs[symbol] = getBotConfig(symbol, currentPrice);
-        }
-    }
-
-    function startBotForSymbol(symbol) {
-        if (botIntervals[symbol]) clearInterval(botIntervals[symbol]);
-        botIntervals[symbol] = setInterval(() => {
-            const isBuy = Math.random() > 0.7;
-            const amount = (Math.random() * 90 + 10).toFixed(2);
-            console.log(`🤖 ${symbol} BOT: ${isBuy ? 'BUY' : 'SELL'} ${amount} USDC`);
-        }, 60000);
-    }
-
-    function startAllBots() {
-        if (tokens && tokens.length > 0) {
-            tokens.forEach(token => {
-                initBotForToken(token.symbol, token.current_price);
-                startBotForSymbol(token.symbol);
-                tradingBotActive[token.symbol] = true;
-            });
-        }
-    }
-
-    function addBotIconsToCards() {
-        document.querySelectorAll('.holding-card').forEach(card => {
-            const symbolElem = card.querySelector('.holding-symbol');
-            if (!symbolElem) return;
-            const symbol = symbolElem.innerText;
-            if (card.querySelector('.bot-icon-on-card')) return;
-
-            const icon = document.createElement('div');
-            icon.className = 'bot-icon-on-card';
-            icon.innerHTML = '🤖';
-            icon.onclick = (e) => { e.stopPropagation(); alert(`Bot analysis for ${symbol} - Active`); };
-            card.appendChild(icon);
-        });
-    }
-
     // ============ GRID BOT FUNCTIONS ============
     async function stopGridBot(botId) {
-        if (confirm('Stop this grid bot? You can restart it later.')) {
+        if (confirm('Stop this grid bot? Grid profit accumulation will pause. You can restart anytime.')) {
             try {
                 const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
-                    alert('Grid bot stopped');
+                    alert('Grid bot stopped. Profit accumulation paused.');
                     loadDashboard();
                 } else {
                     alert('Failed to stop bot');
@@ -948,15 +991,15 @@
         }
     }
 
-    async function closeGridBot(botId) {
-        if (confirm('Close this grid bot and withdraw funds to your Grand Wallet?')) {
+    async function startGridBot(botId) {
+        if (confirm('Restart this grid bot? Profit accumulation will resume.')) {
             try {
-                const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
+                const result = await apiCall('/trading/start-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
-                    alert(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`);
+                    alert('Grid bot restarted. Profit accumulation resumed.');
                     loadDashboard();
                 } else {
-                    alert('Failed to close bot');
+                    alert('Failed to start bot');
                 }
             } catch (e) {
                 alert('Error: ' + e.message);
@@ -964,16 +1007,30 @@
         }
     }
 
-    // ============ LOAD DASHBOARD DATA (GRID BOTS) ============
+    async function closeGridBot(botId) {
+        if (confirm('Close this grid bot and withdraw funds to your Grand Wallet? This action cannot be undone.')) {
+            try {
+                const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
+                if (result.success) {
+                    alert(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`);
+                    loadDashboard();
+                } else {
+                    alert('Failed to close bot. PNL must be positive to close.');
+                }
+            } catch (e) {
+                alert('Error: ' + e.message);
+            }
+        }
+    }
+
+    // ============ LOAD DASHBOARD DATA ============
     async function loadYieldData(totalPortfolioValue) {
         try {
-            // Get current yield rate
             await fetchYieldRate();
 
             const monthlyRate = currentYieldRate;
             const hourlyRate = (totalPortfolioValue * monthlyRate / 100) / 720;
 
-            // Generate histogram data (last 24 hours)
             const histogramData = [];
             for (let i = 23; i >= 0; i--) {
                 const variation = (Math.random() - 0.5) * hourlyRate * 0.3;
@@ -1004,7 +1061,6 @@
 
     async function loadDashboard() {
         try {
-            // Fetch yield rate first
             await fetchYieldRate();
 
             const balance = await apiCall('/trading/my_balance/');
@@ -1023,7 +1079,7 @@
             if (availableYieldEl) availableYieldEl.innerHTML = formatCurrency(userYieldBalance);
             if (availableYieldDisplay) availableYieldDisplay.innerHTML = formatCurrency(userYieldBalance);
 
-            // Fetch GRID BOTS instead of regular holdings
+            // Fetch GRID BOTS
             const gridBots = await apiCall('/trading/my_grids/');
             tokens = await apiCall('/trading/');
             const holdingsCardsContainer = document.getElementById('holdingsCards');
@@ -1038,10 +1094,17 @@
                     holdingsCardsContainer.innerHTML = gridBots.map(bot => {
                         const pnlClass = bot.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
                         const pnlSymbol = bot.pnl >= 0 ? '+' : '';
+                        const canClose = bot.pnl > 0;
+                        const autoCloseSoon = bot.pnl_percent >= 15 && bot.pnl_percent < 20;
+                        const shouldAutoClose = bot.pnl_percent >= 20;
                         totalPortfolioValue += bot.amount + bot.grid_profit;
 
+                        // Get current price from tokens array
+                        const currentToken = tokens.find(t => t.symbol === bot.token_symbol);
+                        const currentPrice = currentToken ? currentToken.current_price : 0;
+
                         return `
-                            <div class="holding-card" data-symbol="${bot.token_symbol}">
+                            <div class="holding-card" data-symbol="${bot.token_symbol}" data-bot-id="${bot.id}">
                                 <div class="card-header-row">
                                     <div class="coin-info">
                                         <img src="${getTokenIcon(bot.token_symbol)}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
@@ -1050,7 +1113,9 @@
                                             <div class="coin-name">${bot.token_name || bot.token_symbol}</div>
                                         </div>
                                     </div>
-                                    <div class="bot-status-badge">🤖 Working</div>
+                                    <div class="bot-status-badge ${bot.status === 'ACTIVE' ? 'active' : 'stopped'}">
+                                        ${bot.status === 'ACTIVE' ? '🤖 Working' : '⏸️ Stopped'}
+                                    </div>
                                 </div>
 
                                 <div class="grid-params">
@@ -1065,6 +1130,21 @@
                                     <div class="param-row">
                                         <span>Current Grid:</span>
                                         <span>${bot.current_grid_level}/${bot.grids}</span>
+                                    </div>
+                                </div>
+
+                                <div class="price-info">
+                                    <div class="param-row">
+                                        <span>Price at Creation:</span>
+                                        <span>${formatCurrency(bot.price_at_creation)}</span>
+                                    </div>
+                                    <div class="param-row">
+                                        <span>Current Price:</span>
+                                        <span>${formatCurrency(currentPrice)}</span>
+                                    </div>
+                                    <div class="param-row">
+                                        <span>Created:</span>
+                                        <span>${new Date(bot.created_at).toLocaleDateString()}</span>
                                     </div>
                                 </div>
 
@@ -1083,11 +1163,17 @@
                                     </div>
                                 </div>
 
-                                ${bot.current_grid_level >= bot.grids ? '<div class="end-grid-tag">🏁 End Grid (Upper bound reached)</div>' : ''}
+                                ${autoCloseSoon ? '<div class="warning-tag">⚠️ Near 20% PNL - Auto-close soon</div>' : ''}
+                                ${shouldAutoClose ? '<div class="auto-close-tag">🏁 AUTO CLOSING (20% PNL reached)</div>' : ''}
 
                                 <div style="display: flex; gap: 8px; margin-top: 8px;">
-                                    <button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">Stop Bot</button>
-                                    <button class="btn-sell-small" onclick="closeGridBot('${bot.id}')">Close & Withdraw</button>
+                                    ${bot.status === 'ACTIVE'
+                                        ? `<button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">⏸️ Stop Bot</button>`
+                                        : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start Bot</button>`
+                                    }
+                                    <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''} title="${!canClose ? 'PNL must be positive to close' : ''}">
+                                        💰 Close & Withdraw
+                                    </button>
                                 </div>
                             </div>
                         `;
@@ -1108,9 +1194,15 @@
             if (hourlyYieldEl) hourlyYieldEl.innerHTML = formatCurrency(hourlyYield);
 
             await loadYieldData(totalPortfolioValue);
-            startAllBots();
-            setTimeout(() => addBotIconsToCards(), 500);
             setTimeout(() => initGrowthProjector(), 500);
+
+            // Auto-close check for bots at 20% PNL
+            for (const bot of gridBots) {
+                if (bot.pnl_percent >= 20 && bot.status === 'ACTIVE') {
+                    await apiCall('/trading/auto-close-grid/', 'POST', { bot_id: bot.id });
+                    console.log(`Auto-closed ${bot.token_symbol} at ${bot.pnl_percent}% profit`);
+                }
+            }
 
         } catch (e) {
             console.error('Error loading dashboard:', e);
