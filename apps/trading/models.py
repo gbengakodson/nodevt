@@ -20,11 +20,11 @@ class GridBot(models.Model):
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ACTIVE')
     grid_profit = models.DecimalField(max_digits=20, decimal_places=8, default=0)
 
-    # New fields
+    # ADD THESE FIELDS
     price_at_creation = models.DecimalField(max_digits=20, decimal_places=8, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
     stopped_at = models.DateTimeField(null=True, blank=True)
-    auto_closed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
 
     @property
     def current_grid_level(self):
@@ -39,7 +39,6 @@ class GridBot(models.Model):
 
     @property
     def pnl(self):
-        """Calculate PNL based on current grid level vs entry"""
         entry_level = self.grids // 2
         current_level = self.current_grid_level
         if entry_level == 0:
@@ -52,11 +51,6 @@ class GridBot(models.Model):
         if self.amount == 0:
             return 0
         return (self.pnl / float(self.amount)) * 100
-
-    @property
-    def should_auto_close(self):
-        """Auto close when PNL reaches 20%"""
-        return self.pnl_percent >= 20 and self.status == 'ACTIVE'
 
     def __str__(self):
         return f"{self.user.email} - {self.token.symbol} - ${self.amount}"
