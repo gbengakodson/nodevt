@@ -586,17 +586,27 @@
             </div>
             <div class="card-body p-4">
 
-                <!-- Histogram for Yield Distribution -->
-                <div class="mb-4">
-    <div class="d-flex justify-content-between align-items-baseline mb-2">
-        <span style="font-size: 11px; color: #5E6673; font-weight: 500;">Hourly Yield</span>
-        <span style="font-size: 10px; color: #8A8F9E;">(last 24h)</span>
+                <!-- Yield Trend Dot Plot -->
+<div class="card mb-4" style="background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 16px;">
+    <div class="card-header" style="background: transparent; border-bottom: 1px solid #E2E4E8; padding: 15px 20px;">
+        <h5 class="mb-0" style="font-size: 13px; font-weight: 600; color: #1E2329;">
+            <i class="fas fa-chart-line me-2" style="color: #F0B90B;"></i>Hourly Yield Trend
+        </h5>
     </div>
-    <div id="yieldSparkline" style="display: flex; align-items: flex-end; gap: 2px; height: 50px;"></div>
-    <div class="d-flex justify-content-between mt-1 px-1">
-        <span style="font-size: 8px; color: #8A8F9E;">24h</span>
-        <span style="font-size: 8px; color: #8A8F9E;">12h</span>
-        <span style="font-size: 8px; color: #8A8F9E;">Now</span>
+    <div class="card-body">
+        <div id="yieldDotPlot" style="display: flex; justify-content: space-between; align-items: flex-end; gap: 4px; overflow-x: auto; padding: 10px 0; min-height: 80px;"></div>
+        <div class="d-flex justify-content-between mt-3 px-1">
+            <span style="font-size: 9px; color: #8A8F9E;">24h ago</span>
+            <span style="font-size: 9px; color: #8A8F9E;">18h ago</span>
+            <span style="font-size: 9px; color: #8A8F9E;">12h ago</span>
+            <span style="font-size: 9px; color: #8A8F9E;">6h ago</span>
+            <span style="font-size: 9px; color: #8A8F9E;">Now</span>
+        </div>
+        <div class="text-center mt-3">
+            <span class="badge" style="background: rgba(14,203,129,0.1); color: #0ECB81; font-size: 10px;">
+                🟢 Higher than previous hour | 🔴 Lower than previous hour
+            </span>
+        </div>
     </div>
 </div>
 
