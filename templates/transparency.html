@@ -262,7 +262,7 @@
     const WALLET = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
     const USDC_CONTRACT = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
 
-    function copyAddress() { navigator.clipboard.writeText(WALLET); alert('Address copied!'); }
+    function copyAddress() { navigator.clipboard.writeText(WALLET); showModal('Address copied!', 'success'); }
 
     async function fetchUSDCBalance() {
         try {

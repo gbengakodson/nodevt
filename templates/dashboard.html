@@ -1021,23 +1021,19 @@
 
     // ============ GRID BOT FUNCTIONS ============
     async function stopGridBot(botId) {
-        if (confirm('Stop this grid bot? Grid profit accumulation will pause. You can restart anytime.')) {
-            try {
-                const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
-                if (result.success) {
-                    showModal('Grid bot stopped. Profit accumulation paused.', 'warning');
-                    loadDashboard();
-                } else {
-                    showModal('Failed to stop bot', 'error');
-                }
-            } catch (e) {
-                showModal('Error: ' + e.message, 'error');
+        showConfirm('Stop this grid bot? Profit accumulation will pause. You can restart anytime.', async () => {
+            const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
+            if (result.success) {
+                showModal('Grid bot stopped. Profit accumulation paused.', 'warning');
+                loadDashboard();
+            } else {
+                showModal('Failed to stop bot', 'error');
             }
-        }
+        });
     }
 
     async function startGridBot(botId) {
-        if (confirm('Restart this grid bot? Profit accumulation will resume.')) {
+        showConfirm('Restart this grid bot? Profit accumulation will resume.', async () => {
             try {
                 const result = await apiCall('/trading/start-grid/', 'POST', { bot_id: botId });
                 if (result.success) {
@@ -1049,23 +1045,19 @@
             } catch (e) {
                 showModal('Error: ' + e.message, 'error');
             }
-        }
+        });
     }
 
     async function closeGridBot(botId) {
-        if (confirm('Close this grid bot and withdraw funds to your Grand Wallet? This action cannot be undone.')) {
-            try {
-                const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
-                if (result.success) {
-                    showModal(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet`, 'success');
-                    loadDashboard();
-                } else {
-                    showModal('You cant close the Bot at a loss. PNL must be positive.', 'error');
-                }
-            } catch (e) {
-                showModal('Error: ' + e.message, 'error');
+        showConfirm('Close this grid bot and withdraw funds to your Grand Wallet? This action cannot be undone.', async () => {
+            const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
+            if (result.success) {
+                showModal(`Grid bot closed. ${formatCurrency(result.amount)} returned to Grand Wallet.`, 'success');
+                loadDashboard();
+            } else {
+                showModal('Failed to close bot. PNL must be positive to close.', 'error');
             }
-        }
+        });
     }
 
     // ============ LOAD DASHBOARD DATA ============
@@ -1312,6 +1304,40 @@
             if (result.success) { showModal(`Withdrew ${formatCurrency(amount)} to Grand Balance`, 'success'); closeWithdrawYieldModal(); loadDashboard(); }
             else { showModal('Withdrawal failed', 'error'); }
         } catch (e) { showModal('Error: ' + e.message, 'error'); }
+    }
+
+    function showConfirm(message, onConfirm) {
+        // Create a temporary confirm modal
+        const modal = document.getElementById('customModal');
+        if (!modal) {
+            if (confirm(message)) onConfirm();
+            return;
+        }
+
+        const modalTitle = document.getElementById('modalTitle');
+        const modalMessage = document.getElementById('modalMessage');
+        const modalIcon = document.getElementById('modalIcon');
+        const modalFooter = document.querySelector('.custom-modal-footer');
+
+        modalIcon.innerHTML = '❓';
+        modalTitle.innerText = 'Confirm';
+        modalMessage.innerText = message;
+        modal.className = 'custom-modal warning';
+
+        // Change footer buttons
+        modalFooter.innerHTML = `
+            <button class="custom-modal-btn" onclick="window._confirmCallback(false)" style="background: #E2E4E8; color: #1E2329;">Cancel</button>
+            <button class="custom-modal-btn" onclick="window._confirmCallback(true)" style="background: #F0B90B; color: #0B0E11;">OK</button>
+        `;
+
+        modal.style.display = 'flex';
+
+        // Store callback
+        window._confirmCallback = function(result) {
+            closeModal();
+            if (result) onConfirm();
+            delete window._confirmCallback;
+        };
     }
 
     // Initialize
