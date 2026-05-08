@@ -82,6 +82,11 @@ class UserTokenBalance(models.Model):
 
 
 class Purchase(models.Model):
+    ORDER_TYPES = [
+        ('MARKET', 'Market Order'),
+        ('GRID', 'Grid Bot'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     token = models.ForeignKey(CryptoToken, on_delete=models.CASCADE)
@@ -89,9 +94,10 @@ class Purchase(models.Model):
     price_per_token = models.DecimalField(max_digits=20, decimal_places=8)
     total_amount = models.DecimalField(max_digits=20, decimal_places=8)
     node_fee = models.DecimalField(max_digits=20, decimal_places=8)
+    order_type = models.CharField(max_length=10, choices=ORDER_TYPES, default='MARKET')  # NEW
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        return f"{self.user.email} - {self.token.symbol} - {self.quantity}"
+        return f"{self.user.email} - {self.token.symbol} - {self.quantity} ({self.order_type})"
 
 

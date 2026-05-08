@@ -138,7 +138,8 @@ class TradingViewSet(viewsets.ViewSet):
             quantity=token_quantity,
             price_per_token=token.current_price,
             total_amount=amount_after_fee,
-            node_fee=node_fee
+            node_fee=node_fee,
+            order_type = order_type.upper()  # NEW: 'MARKET' or 'GRID'
         )
 
         # Distribute node fee to referrals (only for grid bot orders)
@@ -148,6 +149,23 @@ class TradingViewSet(viewsets.ViewSet):
             try:
                 distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
                 referral_count = len(distributions)
+
+                # Create Transaction records for each referral earning
+                for dist in distributions:
+                    Transaction.objects.create(
+                        user=dist['user'],
+                        transaction_type='REFERRAL',
+                        amount=dist['amount'],
+                        fee=0,
+                        status='COMPLETED',
+                        metadata={
+                            'from_user': request.user.email,
+                            'level': dist['level'],
+                            'purchase_id': str(purchase.id),
+                            'token': token.symbol
+                        },
+                        completed_at=timezone.now()
+                    )
             except Exception as e:
                 print(f"Error distributing referral fees: {e}")
                 referral_count = 0
@@ -244,6 +262,205 @@ class TradingViewSet(viewsets.ViewSet):
             })
 
         return Response(data)
+
+    @action(detail=False, methods=['post'])
+    def collect_grid_profit(self, request):
+        """Move grid profit from a specific bot to yield wallet"""
+        bot_id = request.data.get('bot_id')
+
+        if not bot_id:
+            return Response({'error': 'Bot ID required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            bot = GridBot.objects.get(id=bot_id, user=request.user, status='ACTIVE')
+        except GridBot.DoesNotExist:
+            return Response({'error': 'Active grid bot not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if bot.grid_profit <= 0:
+            return Response({'error': 'No grid profit to collect'}, status=status.HTTP_400_BAD_REQUEST)
+
+        profit_amount = bot.grid_profit
+
+        # Get or create yield wallet
+        yield_wallet, _ = Wallet.objects.get_or_create(
+            user=request.user,
+            wallet_type='YIELD',
+            defaults={'balance': 0}
+        )
+
+        # Move profit to yield wallet
+        yield_wallet.balance += profit_amount
+        yield_wallet.save()
+
+        # Track how much was collected from this bot
+        bot.total_yield_earned += profit_amount
+        bot.grid_profit = Decimal('0')  # Reset grid profit
+        bot.save()
+
+        # Create transaction record
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='YIELD',
+            amount=profit_amount,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'grid_bot_id': str(bot.id),
+                'token': bot.token.symbol,
+                'source': 'grid_profit_collection'
+            },
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True,
+            'amount_collected': float(profit_amount),
+            'yield_wallet_balance': float(yield_wallet.balance),
+            'bot_grid_profit_remaining': float(bot.grid_profit),
+            'bot_total_yield_earned': float(bot.total_yield_earned)
+        })
+
+    @action(detail=False, methods=['post'])
+    def move_yield_to_grand(self, request):
+        """Move funds from yield wallet to grand wallet (only if amount is at least 10% of portfolio)"""
+        amount = Decimal(str(request.data.get('amount', 0)))
+
+        if amount <= 0:
+            return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get wallets
+        try:
+            yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
+            grand_wallet, _ = Wallet.objects.get_or_create(
+                user=request.user,
+                wallet_type='GRAND',
+                defaults={'balance': 0}
+            )
+        except Wallet.DoesNotExist:
+            return Response({'error': 'Yield wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if yield_wallet.balance < amount:
+            return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Calculate total portfolio value
+        from apps.tokens.models import UserTokenBalance
+        from django.db.models import Sum, F
+
+        token_value = UserTokenBalance.objects.filter(
+            user=request.user,
+            quantity__gt=0
+        ).annotate(
+            total_value=F('quantity') * F('token__current_price')
+        ).aggregate(
+            total=Sum('total_value')
+        )['total'] or Decimal('0')
+
+        active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+        grid_value = sum(
+            bot.amount + bot.grid_profit + bot.pnl + bot.total_yield_earned
+            for bot in active_bots
+        )
+
+        total_portfolio = token_value + grid_value + grand_wallet.balance + yield_wallet.balance
+
+        # Calculate 10% of total portfolio (minimum required to transfer)
+        min_required = total_portfolio * Decimal('0.10')
+
+        # Check if yield balance meets the minimum 10% threshold
+        if yield_wallet.balance < min_required:
+            return Response({
+                'error': 'Yield balance must be at least 10% of portfolio value to transfer',
+                'min_required': float(min_required),
+                'current_yield_balance': float(yield_wallet.balance),
+                'portfolio_value': float(total_portfolio),
+                'percentage': float((yield_wallet.balance / total_portfolio) * 100) if total_portfolio > 0 else 0
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # The amount being transferred must also meet the minimum
+        if amount < min_required:
+            return Response({
+                'error': f'Minimum transfer amount is {float(min_required):.2f} (10% of portfolio)',
+                'min_required': float(min_required),
+                'requested': float(amount)
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Move funds
+        yield_wallet.balance -= amount
+        yield_wallet.save()
+
+        grand_wallet.balance += amount
+        grand_wallet.save()
+
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='YIELD',
+            amount=amount,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'from_wallet': 'YIELD',
+                'to_wallet': 'GRAND',
+                'portfolio_value': str(total_portfolio),
+                'percentage': str((amount / total_portfolio) * 100) if total_portfolio > 0 else '0'
+            },
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True,
+            'amount_moved': float(amount),
+            'yield_balance': float(yield_wallet.balance),
+            'grand_balance': float(grand_wallet.balance),
+            'portfolio_value': float(total_portfolio),
+            'min_required': float(min_required)
+        })
+
+    @action(detail=False, methods=['get'])
+    def portfolio_summary(self, request):
+        """Get portfolio summary with yield wallet info"""
+        from apps.tokens.models import UserTokenBalance
+        from django.db.models import Sum, F
+
+        token_value = UserTokenBalance.objects.filter(
+            user=request.user,
+            quantity__gt=0
+        ).annotate(
+            total_value=F('quantity') * F('token__current_price')
+        ).aggregate(
+            total=Sum('total_value')
+        )['total'] or Decimal('0')
+
+        active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+        grid_value = sum(
+            bot.amount + bot.grid_profit + bot.pnl + bot.total_yield_earned
+            for bot in active_bots
+        )
+
+        grand_wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+        yield_wallet = Wallet.objects.filter(user=request.user, wallet_type='YIELD').first()
+
+        grand_balance = grand_wallet.balance if grand_wallet else Decimal('0')
+        yield_balance = yield_wallet.balance if yield_wallet else Decimal('0')
+
+        total_portfolio = token_value + grid_value + grand_balance + yield_balance
+
+        # Minimum 10% of portfolio required to transfer
+        min_required = total_portfolio * Decimal('0.10')
+
+        # Can only transfer if yield balance >= 10% of portfolio
+        can_withdraw = yield_balance >= min_required and yield_balance > 0
+
+        return Response({
+            'token_value': float(token_value),
+            'grid_value': float(grid_value),
+            'grand_balance': float(grand_balance),
+            'yield_balance': float(yield_balance),
+            'total_portfolio': float(total_portfolio),
+            'min_required_to_transfer': float(min_required),
+            'current_percentage': float((yield_balance / total_portfolio) * 100) if total_portfolio > 0 else 0,
+            'can_transfer': can_withdraw
+        })
+
 
     @action(detail=False, methods=['post'])
     def sell(self, request):
@@ -348,18 +565,47 @@ class TradingViewSet(viewsets.ViewSet):
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
 
-        if bot.pnl <= 0:
-            return Response({'error': 'PNL must be positive to close'}, status=400)
+        total_return = bot.amount + bot.grid_profit + bot.pnl + bot.total_yield_earned
 
-        grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND')
-        total_return = Decimal(str(bot.amount)) + Decimal(str(bot.grid_profit)) + Decimal(str(bot.pnl))
+        grand_wallet, _ = Wallet.objects.get_or_create(
+            user=request.user,
+            wallet_type='GRAND',
+            defaults={'balance': 0}
+        )
         grand_wallet.balance += total_return
         grand_wallet.save()
+
+        # Create Transaction record
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='YIELD',  # or create a new type 'GRID_CLOSE'
+            amount=total_return,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'grid_bot_id': str(bot.id),
+                'token': bot.token.symbol,
+                'original_amount': str(bot.amount),
+                'grid_profit': str(bot.grid_profit),
+                'pnl': str(bot.pnl),
+                'yield_earned': str(bot.total_yield_earned)
+            },
+            completed_at=timezone.now()
+        )
 
         bot.status = 'COMPLETED'
         bot.save()
 
-        return Response({'success': True, 'amount': float(total_return)})
+        return Response({
+            'success': True,
+            'total_return': float(total_return),
+            'breakdown': {
+                'investment': float(bot.amount),
+                'grid_profit': float(bot.grid_profit),
+                'pnl': float(bot.pnl),
+                'yield_earned': float(bot.total_yield_earned)
+            }
+        })
 
     @action(detail=False, methods=['post'])
     def auto_close_grid(self, request):
@@ -553,54 +799,47 @@ class TradingViewSet(viewsets.ViewSet):
             }, status=500)
 
     @action(detail=False, methods=['get'])
-    def referral_stats(self, request):
-        """Get referral statistics for user"""
+    def referrals_list(self, request):
+        """Get all referrals with accurate status"""
         from apps.referrals.models import ReferralRelationship, ReferralEarning
-        from apps.tokens.models import UserTokenBalance, Purchase
+        from apps.tokens.models import Purchase
         from django.db.models import Sum
 
-        # Count ALL referrals (people this user directly referred)
-        total_referrals = ReferralRelationship.objects.filter(referrer=request.user).count()
+        referrals = ReferralRelationship.objects.filter(
+            referrer=request.user,
+            level=1
+        ).select_related('referred')
 
-        # Count active referrals - users who have either:
-        # 1. Made a purchase (market order or grid bot)
-        # 2. Have token balances
-        # 3. Have an active grid bot
-        active_referrals = 0
-        for rel in ReferralRelationship.objects.filter(referrer=request.user):
+        data = []
+        for rel in referrals:
             referred_user = rel.referred
 
-            # Check if user has made any purchase
-            has_purchases = Purchase.objects.filter(user=referred_user).exists()
+            # Get all purchases by this referred user
+            purchases = Purchase.objects.filter(user=referred_user)
+            total_purchases = purchases.count()
+            total_spent = purchases.aggregate(total=Sum('total_amount'))['total'] or 0
 
-            # Check if user has token balances
-            has_tokens = UserTokenBalance.objects.filter(user=referred_user, quantity__gt=0).exists()
+            # Active = made at least one purchase
+            is_active = total_purchases > 0
 
-            # Check if has active grid bot
-            has_grid_bot = False
-            try:
-                from apps.trading.models import GridBot
-                has_grid_bot = GridBot.objects.filter(user=referred_user).exclude(status='COMPLETED').exists()
-            except:
-                pass
+            # Commission earned from this referral
+            earnings = ReferralEarning.objects.filter(
+                user=request.user,
+                from_user=referred_user
+            ).aggregate(total=Sum('amount'))['total'] or 0
 
-            if has_purchases or has_tokens or has_grid_bot:
-                active_referrals += 1
+            data.append({
+                'username': referred_user.username or referred_user.email.split('@')[0],
+                'email': referred_user.email,
+                'joined_at': referred_user.date_joined.isoformat(),
+                'is_active': is_active,
+                'total_purchases': total_purchases,
+                'total_spent': float(total_spent),
+                'total_commission': float(earnings),
+                'level': 1
+            })
 
-        # Calculate total commissions from referral earnings
-        earnings = ReferralEarning.objects.filter(user=request.user)
-        total_commissions = earnings.aggregate(total=Sum('amount'))['total'] or 0
-
-        # Calculate pending commissions (if you have a pending status)
-        pending_commissions = earnings.filter(status='PENDING').aggregate(total=Sum('amount'))['total'] or 0 if hasattr(
-            ReferralEarning, 'status') else 0
-
-        return Response({
-            'total_referrals': total_referrals,
-            'active_referrals': active_referrals,
-            'total_commissions': float(total_commissions),
-            'pending_commissions': float(pending_commissions)
-        })
+        return Response(data)
 
     @action(detail=False, methods=['get'])
     def referral_tree(self, request):

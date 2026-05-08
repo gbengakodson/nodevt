@@ -20,6 +20,7 @@ class GridBot(models.Model):
     grids = models.IntegerField(default=100)
     status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='ACTIVE')
     grid_profit = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    total_yield_earned = models.DecimalField(max_digits=20, decimal_places=8, default=0)  # NEW
 
     # ADD THESE FIELDS
     price_at_creation = models.DecimalField(max_digits=20, decimal_places=8, default=0)

@@ -6,16 +6,11 @@
 <style>
     :root {
         --primary: #F0B90B;
-        --primary-dark: #D4A30A;
-        --bg-primary: #0B0E11;
-        --bg-secondary: #1E2329;
         --bg-card: #181A20;
         --text-primary: #EAECEF;
         --text-secondary: #848E9C;
         --border: #2B3139;
         --success: #0ECB81;
-        --warning: #F0B90B;
-        --danger: #F6465D;
     }
 
     .referral-container {
@@ -24,12 +19,12 @@
         padding: 12px;
     }
 
-    /* Header - Compact */
+    /* Header */
     .referral-header {
         background: linear-gradient(135deg, #1E2329, #2B3139);
         border-radius: 10px;
         border: 1px solid var(--border);
-        padding: 20px 20px 16px;
+        padding: 20px;
         margin-bottom: 12px;
         text-align: center;
     }
@@ -47,7 +42,7 @@
     .referral-header p {
         font-size: 12px;
         color: var(--text-secondary);
-        margin-bottom: 0;
+        margin: 0;
     }
 
     .referral-link-box {
@@ -63,7 +58,7 @@
 
     .referral-link {
         flex: 1;
-        font-family: 'SF Mono', 'Courier New', monospace;
+        font-family: monospace;
         font-size: 11px;
         color: var(--text-primary);
         word-break: break-all;
@@ -72,7 +67,6 @@
         border-radius: 6px;
         border: 1px solid var(--border);
         user-select: all;
-        line-height: 1.4;
     }
 
     .copy-btn {
@@ -84,22 +78,14 @@
         font-weight: 700;
         font-size: 12px;
         cursor: pointer;
-        transition: all 0.2s;
         white-space: nowrap;
-        display: flex;
-        align-items: center;
-        gap: 4px;
     }
 
     .copy-btn:hover {
         filter: brightness(1.1);
     }
 
-    .copy-btn.copied {
-        background: var(--success);
-    }
-
-    /* Stats Grid - Compact 4 columns */
+    /* Stats */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -112,11 +98,6 @@
         border-radius: 8px;
         border: 1px solid var(--border);
         padding: 12px 14px;
-        transition: all 0.2s;
-    }
-
-    .stat-card:hover {
-        border-color: var(--primary);
     }
 
     .stat-label {
@@ -141,7 +122,7 @@
         margin-top: 2px;
     }
 
-    /* Info Cards - Compact */
+    /* Cards */
     .info-card {
         background: var(--bg-card);
         border-radius: 8px;
@@ -154,13 +135,10 @@
         font-size: 13px;
         font-weight: 700;
         margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
         color: var(--text-primary);
     }
 
-    /* Distribution Table - Compact */
+    /* Tables */
     .table-wrapper {
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
@@ -169,23 +147,26 @@
     .compact-table {
         width: 100%;
         border-collapse: collapse;
-        min-width: 500px;
+        min-width: 450px;
     }
 
     .compact-table th {
         padding: 8px 10px;
         text-align: left;
-        background: rgba(240, 185, 11, 0.04);
+        background: rgba(240, 185, 11, 0.05);
         font-size: 10px;
         font-weight: 700;
         color: var(--primary);
         border-bottom: 1px solid var(--border);
+        white-space: nowrap;
     }
 
     .compact-table td {
         padding: 8px 10px;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         font-size: 11px;
+        color: var(--text-primary);
+        white-space: nowrap;
     }
 
     .compact-table tbody tr:hover {
@@ -214,12 +195,36 @@
         font-weight: 600;
     }
 
+    .price-up {
+        color: var(--success);
+        font-weight: 600;
+    }
+
+    /* Status badges */
+    .status-badge {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 8px;
+        font-size: 10px;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: rgba(14, 203, 129, 0.15);
+        color: var(--success);
+    }
+
+    .status-inactive {
+        background: rgba(132, 142, 156, 0.15);
+        color: var(--text-secondary);
+    }
+
     /* Tabs */
     .tabs {
         display: flex;
         gap: 2px;
         margin-bottom: 12px;
-        background: rgba(0,0,0,0.2);
+        background: rgba(0, 0, 0, 0.2);
         border-radius: 6px;
         padding: 3px;
         width: fit-content;
@@ -229,12 +234,11 @@
         background: transparent;
         border: none;
         color: var(--text-secondary);
-        padding: 5px 14px;
+        padding: 6px 16px;
         cursor: pointer;
         font-size: 11px;
         font-weight: 600;
         border-radius: 5px;
-        transition: all 0.2s;
         white-space: nowrap;
     }
 
@@ -249,35 +253,9 @@
         margin-left: 3px;
     }
 
-    /* Status badges */
-    .status-badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 8px;
-        font-size: 10px;
-        font-weight: 600;
-    }
-
-    .status-active {
-        background: rgba(14, 203, 129, 0.1);
-        color: var(--success);
-        border: 1px solid rgba(14, 203, 129, 0.2);
-    }
-
-    .status-inactive {
-        background: rgba(132, 142, 156, 0.1);
-        color: var(--text-secondary);
-        border: 1px solid rgba(132, 142, 156, 0.15);
-    }
-
-    .price-up {
-        color: var(--success);
-        font-weight: 600;
-    }
-
     /* Scrollable sections */
     .scrollable-section {
-        max-height: 320px;
+        max-height: 300px;
         overflow-y: auto;
         scrollbar-width: thin;
         scrollbar-color: var(--border) transparent;
@@ -296,7 +274,7 @@
         border-radius: 4px;
     }
 
-    /* Referral Tree - Compact chips */
+    /* Tree */
     .tree-container {
         max-height: 300px;
         overflow-y: auto;
@@ -320,25 +298,16 @@
     .tree-level {
         margin-bottom: 8px;
         padding: 10px 12px;
-        background: rgba(0,0,0,0.15);
+        background: rgba(0, 0, 0, 0.15);
         border-radius: 6px;
-        border: 1px solid rgba(255,255,255,0.03);
+        border: 1px solid rgba(255, 255, 255, 0.03);
     }
 
     .tree-level-header {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        margin-bottom: 6px;
         font-size: 11px;
         font-weight: 600;
         color: var(--primary);
-    }
-
-    .tree-level-count {
-        font-size: 10px;
-        color: var(--text-secondary);
-        font-weight: 400;
+        margin-bottom: 6px;
     }
 
     .tree-referrals {
@@ -355,12 +324,8 @@
         background: var(--bg-card);
         border-radius: 12px;
         font-size: 10px;
+        color: var(--text-primary);
         border: 1px solid var(--border);
-        white-space: nowrap;
-    }
-
-    .tree-chip.active-chip {
-        border-color: rgba(14, 203, 129, 0.3);
     }
 
     .tree-chip-amount {
@@ -368,22 +333,24 @@
         color: var(--success);
     }
 
+    /* Two column layout */
+    .two-col {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+    }
+
     /* Empty state */
     .empty-state {
         text-align: center;
-        padding: 24px 16px;
+        padding: 24px;
         color: var(--text-secondary);
-    }
-
-    .empty-state-icon {
-        font-size: 32px;
-        margin-bottom: 8px;
-        opacity: 0.5;
     }
 
     .empty-state p {
         font-size: 12px;
-        margin: 0;
+        margin: 4px 0 0;
+        color: var(--text-secondary);
     }
 
     /* Refresh button */
@@ -391,14 +358,10 @@
         background: transparent;
         border: 1px solid var(--border);
         color: var(--text-secondary);
-        padding: 4px 10px;
+        padding: 5px 12px;
         border-radius: 5px;
         cursor: pointer;
         font-size: 10px;
-        transition: all 0.2s;
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
         margin-bottom: 10px;
     }
 
@@ -420,27 +383,9 @@
         font-size: 12px;
         font-weight: 600;
         z-index: 1000;
-        animation: slideIn 0.3s ease;
-        box-shadow: 0 8px 24px rgba(0,0,0,0.5);
     }
 
-    @keyframes slideIn {
-        from { transform: translateX(100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-
-    /* Two column layout */
-    .two-col {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 10px;
-    }
-
-    .full-width {
-        grid-column: 1 / -1;
-    }
-
-    /* Mobile */
+    /* ==================== MOBILE ==================== */
     @media (max-width: 768px) {
         .referral-container {
             padding: 8px;
@@ -463,43 +408,36 @@
             grid-template-columns: 1fr;
         }
 
-        .referral-header {
-            padding: 16px;
-        }
-
         .referral-link-box {
             flex-direction: column;
-            align-items: stretch;
         }
 
         .copy-btn {
+            width: 100%;
             justify-content: center;
         }
 
         .tabs {
             width: 100%;
-            justify-content: center;
         }
 
         .tab-btn {
             flex: 1;
             text-align: center;
+            padding: 6px 10px;
             font-size: 10px;
-            padding: 5px 10px;
         }
 
-        .compact-table {
-            min-width: 400px;
+        .info-card {
+            padding: 12px;
         }
 
-        .compact-table th,
-        .compact-table td {
-            padding: 6px 8px;
-            font-size: 10px;
+        .referral-header {
+            padding: 16px;
         }
 
         .tree-container {
-            max-height: 250px;
+            max-height: 220px;
         }
 
         .scrollable-section {
@@ -509,8 +447,11 @@
 
     @media (max-width: 400px) {
         .stats-grid {
-            grid-template-columns: 1fr 1fr;
             gap: 4px;
+        }
+
+        .stat-card {
+            padding: 8px 10px;
         }
 
         .stat-value {
@@ -519,6 +460,11 @@
 
         .stat-label {
             font-size: 9px;
+        }
+
+        .tab-btn {
+            font-size: 10px;
+            padding: 5px 8px;
         }
     }
 </style>
@@ -533,7 +479,7 @@
         <p>Earn up to 50% commission from 7 generations</p>
         <div class="referral-link-box">
             <div class="referral-link" id="referralLink" onclick="this.select()">Loading...</div>
-            <button class="copy-btn" onclick="copyReferralLink()">📋 Copy</button>
+            <button class="copy-btn">📋 Copy</button>
         </div>
     </div>
 
@@ -601,9 +547,9 @@
     <div class="info-card">
         <div class="info-title">👥 Your Referrals</div>
         <div class="tabs">
-            <button class="tab-btn active" onclick="switchTab('all')">All<span class="tab-count" id="countAll">0</span></button>
-            <button class="tab-btn" onclick="switchTab('active')">Active<span class="tab-count" id="countActive">0</span></button>
-            <button class="tab-btn" onclick="switchTab('inactive')">Inactive<span class="tab-count" id="countInactive">0</span></button>
+            <button class="tab-btn active" data-tab="all">All<span class="tab-count" id="countAll">0</span></button>
+            <button class="tab-btn" data-tab="active">Active<span class="tab-count" id="countActive">0</span></button>
+            <button class="tab-btn" data-tab="inactive">Inactive<span class="tab-count" id="countInactive">0</span></button>
         </div>
         <div class="scrollable-section" id="referralsContainer">
             <div class="empty-state">
@@ -616,7 +562,7 @@
     <!-- Earnings History - Scrollable -->
     <div class="info-card">
         <div class="info-title">💎 Earnings History</div>
-        <button class="refresh-btn" onclick="loadReferralData()">🔄 Refresh</button>
+        <button class="refresh-btn">🔄 Refresh</button>
         <div class="scrollable-section" id="earningsContainer">
             <div class="empty-state">
                 <div class="empty-state-icon">📊</div>
@@ -638,152 +584,160 @@
         return localStorage.getItem('access_token');
     }
 
-    async function apiCall(endpoint, method = 'GET', data = null) {
+    async function apiCall(endpoint) {
         const token = getToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-
-        const options = { method, headers };
-        if (data) options.body = JSON.stringify(data);
-
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-        if (response.status === 401) {
+        const res = await fetch(`${API_BASE}${endpoint}`, {
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + token
+            }
+        });
+        if (res.status === 401) {
             window.location.href = '/login/';
             throw new Error('Session expired');
         }
-        if (!response.ok) {
-            const err = await response.json().catch(() => ({}));
-            throw new Error(err.error || `Error ${response.status}`);
-        }
-        return response.json();
+        if (!res.ok) throw new Error('Error ' + res.status);
+        return res.json();
     }
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
-        const value = parseFloat(num);
+        var value = parseFloat(num);
         if (isNaN(value) || value === 0) return '$0.00';
-        if (value >= 1e12) return `$${(value/1e12).toFixed(1)}T`;
-        if (value >= 1e9) return `$${(value/1e9).toFixed(1)}B`;
-        if (value >= 1e6) return `$${(value/1e6).toFixed(1)}M`;
-        if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}`;
+        if (value >= 1e12) return '$' + (value/1e12).toFixed(1) + 'T';
+        if (value >= 1e9) return '$' + (value/1e9).toFixed(1) + 'B';
+        if (value >= 1e6) return '$' + (value/1e6).toFixed(1) + 'M';
+        if (value < 0.01 && value > 0) return '$' + value.toFixed(6);
+        return '$' + value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
     }
 
-    function formatDate(dateString) {
-        if (!dateString) return 'N/A';
+    function formatDate(d) {
+        if (!d) return 'N/A';
         try {
-            const date = new Date(dateString);
-            if (isNaN(date.getTime())) return dateString;
+            var date = new Date(d);
+            if (isNaN(date.getTime())) return d;
             return date.toLocaleDateString('en-US', { month:'short', day:'numeric', hour:'2-digit', minute:'2-digit' });
-        } catch(e) { return dateString; }
+        } catch(e) { return d; }
     }
 
-    function showToast(msg, type='success') {
-        const toast = document.getElementById('toast');
-        toast.textContent = msg;
-        toast.style.display = 'block';
-        toast.style.borderColor = type === 'success' ? 'var(--success)' : 'var(--warning)';
-        toast.style.color = type === 'success' ? 'var(--success)' : 'var(--warning)';
-        clearTimeout(toast._t);
-        toast._t = setTimeout(() => toast.style.display = 'none', 3000);
+    function esc(text) {
+        if (!text) return '';
+        var div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function showToast(msg) {
+        var t = document.getElementById('toast');
+        t.textContent = msg;
+        t.style.display = 'block';
+        clearTimeout(t._to);
+        t._to = setTimeout(function() { t.style.display = 'none'; }, 2500);
     }
 
     function switchTab(tab) {
         currentTab = tab;
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`)?.classList.add('active');
+        var buttons = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < buttons.length; i++) {
+            buttons[i].classList.remove('active');
+        }
+        var activeBtn = document.querySelector('.tab-btn[data-tab="' + tab + '"]');
+        if (activeBtn) activeBtn.classList.add('active');
         displayReferrals();
     }
 
+    function updateCounts() {
+        document.getElementById('countAll').textContent = allReferralsData.length;
+        document.getElementById('countActive').textContent = allReferralsData.filter(function(r) { return r.is_active; }).length;
+        document.getElementById('countInactive').textContent = allReferralsData.filter(function(r) { return !r.is_active; }).length;
+    }
+
     function displayReferrals() {
-        const container = document.getElementById('referralsContainer');
+        var container = document.getElementById('referralsContainer');
 
         if (!allReferralsData.length) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🤝</div><p>No referrals yet. Share your link!</p></div>`;
+            container.innerHTML = '<div class="empty-state"><p>No referrals yet. Share your link!</p></div>';
+            updateCounts();
             return;
         }
 
-        let filtered = allReferralsData;
-        if (currentTab === 'active') filtered = allReferralsData.filter(r => r.is_active);
-        else if (currentTab === 'inactive') filtered = allReferralsData.filter(r => !r.is_active);
+        var filtered = allReferralsData;
+        if (currentTab === 'active') {
+            filtered = allReferralsData.filter(function(r) { return r.is_active; });
+        } else if (currentTab === 'inactive') {
+            filtered = allReferralsData.filter(function(r) { return !r.is_active; });
+        }
 
-        document.getElementById('countAll').textContent = allReferralsData.length;
-        document.getElementById('countActive').textContent = allReferralsData.filter(r => r.is_active).length;
-        document.getElementById('countInactive').textContent = allReferralsData.filter(r => !r.is_active).length;
+        updateCounts();
 
         if (!filtered.length) {
-            const msgs = { all:'No referrals yet.', active:'No active referrals yet.', inactive:'All referrals are active! 🎉' };
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">📭</div><p>${msgs[currentTab]}</p></div>`;
+            container.innerHTML = '<div class="empty-state"><p>No ' + currentTab + ' referrals</p></div>';
             return;
         }
 
-        let html = `<div class="table-wrapper"><table class="compact-table"><thead><tr>
-            <th>User</th><th>Joined</th><th>Status</th><th>Orders</th><th>Spent</th><th>Earned</th>
-        </tr></thead><tbody>`;
+        var html = '<div class="table-wrapper"><table class="compact-table"><thead><tr>' +
+            '<th>User</th><th>Joined</th><th>Status</th><th>Orders</th><th>Spent</th><th>Earned</th>' +
+        '</tr></thead><tbody>';
 
-        filtered.forEach(r => {
-            const status = r.is_active ? 'Active' : 'Inactive';
-            const cls = status === 'Active' ? 'status-active' : 'status-inactive';
-            html += `<tr>
-                <td><strong>${esc(r.username || r.email || 'User')}</strong></td>
-                <td>${formatDate(r.joined_at)}</td>
-                <td><span class="status-badge ${cls}">${status}</span></td>
-                <td>${r.total_purchases || 0}</td>
-                <td>${formatCurrency(r.total_spent)}</td>
-                <td class="price-up">+${formatCurrency(r.total_commission)}</td>
-            </tr>`;
-        });
+        for (var i = 0; i < filtered.length; i++) {
+            var r = filtered[i];
+            var status = r.is_active ? 'Active' : 'Inactive';
+            var cls = status === 'Active' ? 'status-active' : 'status-inactive';
+            html += '<tr>' +
+                '<td>' + esc(r.username || r.email || 'User') + '</td>' +
+                '<td>' + formatDate(r.joined_at) + '</td>' +
+                '<td><span class="status-badge ' + cls + '">' + status + '</span></td>' +
+                '<td>' + (r.total_purchases || 0) + '</td>' +
+                '<td>' + formatCurrency(r.total_spent) + '</td>' +
+                '<td class="price-up">+' + formatCurrency(r.total_commission) + '</td>' +
+            '</tr>';
+        }
 
         html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
-    function displayReferralTree(treeData) {
-        const container = document.getElementById('referralTreeContainer');
+    function displayTree(treeData) {
+        var container = document.getElementById('referralTreeContainer');
 
-        if (!treeData?.levels?.length) {
-            container.innerHTML = `<div class="empty-state"><div class="empty-state-icon">🌱</div><p>No referral tree yet</p></div>`;
+        if (!treeData || !treeData.levels || !treeData.levels.length) {
+            container.innerHTML = '<div class="empty-state"><p>No referral tree yet</p></div>';
             return;
         }
 
-        let html = '';
-        treeData.levels.forEach(level => {
-            html += `<div class="tree-level">
-                <div class="tree-level-header">📊 Level ${level.level} <span class="tree-level-count">(${level.referrals.length})</span></div>
-                <div class="tree-referrals">`;
+        var html = '';
+        for (var i = 0; i < treeData.levels.length; i++) {
+            var level = treeData.levels[i];
+            html += '<div class="tree-level">' +
+                '<div class="tree-level-header">📊 Level ' + level.level + ' (' + level.referrals.length + ')</div>' +
+                '<div class="tree-referrals">';
 
-            level.referrals.forEach(ref => {
-                const chipClass = (ref.has_purchased || ref.has_grid_bot) ? ' active-chip' : '';
-                html += `<div class="tree-chip${chipClass}" title="${esc(ref.email)}">
-                    ${ref.status_icon || '👤'} ${esc(ref.name)}
-                    <span class="tree-chip-amount">${formatCurrency(ref.earnings)}</span>
-                </div>`;
-            });
+            for (var j = 0; j < level.referrals.length; j++) {
+                var ref = level.referrals[j];
+                html += '<div class="tree-chip" title="' + esc(ref.email) + '">' +
+                    (ref.status_icon || '👤') + ' ' + esc(ref.name) +
+                    ' <span class="tree-chip-amount">' + formatCurrency(ref.earnings) + '</span>' +
+                '</div>';
+            }
 
             html += '</div></div>';
-        });
+        }
 
         container.innerHTML = html;
-    }
-
-    function esc(text) {
-        if (!text) return '';
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
     }
 
     async function loadReferralData() {
         try {
             // Profile
-            const profile = await apiCall('/auth/profile/');
-            const code = profile.referral_code;
+            var profile = await apiCall('/auth/profile/');
+            var code = profile.referral_code;
             document.getElementById('referralLink').textContent = code
-                ? `${window.location.origin}/register?ref=${code}`
-                : `${window.location.origin}/register`;
+                ? window.location.origin + '/register?ref=' + code
+                : window.location.origin + '/register';
 
             // Stats
-            const stats = await apiCall('/trading/referral_stats/');
+            var stats = await apiCall('/trading/referral_stats/');
+            console.log('Stats:', stats);
             document.getElementById('totalReferrals').textContent = stats.total_referrals || 0;
             document.getElementById('activeReferrals').textContent = stats.active_referrals || 0;
             document.getElementById('totalCommissions').textContent = formatCurrency(stats.total_commissions);
@@ -791,24 +745,32 @@
 
             // Referrals list
             try {
-                const refs = await apiCall('/trading/referrals_list/');
+                var refs = await apiCall('/trading/referrals_list/');
+                console.log('Referrals list:', refs);
                 allReferralsData = Array.isArray(refs) ? refs : [];
                 displayReferrals();
             } catch(e) {
-                console.log('referrals_list fallback:', e);
-                // Fallback: extract from tree
+                console.log('Fallback to tree for referrals list');
                 try {
-                    const tree = await apiCall('/trading/referral_tree/');
-                    const l1 = tree?.levels?.find(l => l.level === 1);
-                    if (l1?.referrals) {
-                        allReferralsData = l1.referrals.map(r => ({
-                            username: r.name, email: r.email, joined_at: r.joined_at,
-                            has_purchased: r.has_purchased, is_active: r.has_purchased || r.has_grid_bot,
-                            total_purchases: r.has_purchased ? 1 : 0, total_spent: 0, total_commission: r.earnings || 0
-                        }));
+                    var tree = await apiCall('/trading/referral_tree/');
+                    var l1 = tree && tree.levels ? tree.levels.find(function(l) { return l.level === 1; }) : null;
+                    if (l1 && l1.referrals) {
+                        allReferralsData = l1.referrals.map(function(r) {
+                            return {
+                                username: r.name,
+                                email: r.email,
+                                joined_at: r.joined_at,
+                                has_purchased: r.has_purchased,
+                                is_active: r.has_purchased || r.has_grid_bot,
+                                total_purchases: r.has_purchased ? 1 : 0,
+                                total_spent: 0,
+                                total_commission: r.earnings || 0
+                            };
+                        });
                         displayReferrals();
                     }
                 } catch(e2) {
+                    console.log('Tree fallback also failed');
                     allReferralsData = [];
                     displayReferrals();
                 }
@@ -816,33 +778,36 @@
 
             // Tree
             try {
-                const tree = await apiCall('/trading/referral_tree/');
-                displayReferralTree(tree);
+                var treeData = await apiCall('/trading/referral_tree/');
+                console.log('Tree:', treeData);
+                displayTree(treeData);
             } catch(e) {
                 document.getElementById('referralTreeContainer').innerHTML =
-                    `<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Tree unavailable</p></div>`;
+                    '<div class="empty-state"><p>Tree unavailable</p></div>';
             }
 
             // Earnings
-            const earnings = await apiCall('/trading/referral_earnings/');
-            const earnContainer = document.getElementById('earningsContainer');
+            var earnings = await apiCall('/trading/referral_earnings/');
+            console.log('Earnings:', earnings);
+            var earnContainer = document.getElementById('earningsContainer');
 
-            if (!earnings?.length) {
-                earnContainer.innerHTML = `<div class="empty-state"><div class="empty-state-icon">💎</div><p>No earnings yet</p></div>`;
+            if (!earnings || !earnings.length) {
+                earnContainer.innerHTML = '<div class="empty-state"><p>No earnings yet</p></div>';
             } else {
-                let html = `<div class="table-wrapper"><table class="compact-table"><thead><tr>
-                    <th>Date</th><th>From</th><th>Lvl</th><th>Amount</th><th>Commission</th>
-                </tr></thead><tbody>`;
+                var html = '<div class="table-wrapper"><table class="compact-table"><thead><tr>' +
+                    '<th>Date</th><th>From</th><th>Lvl</th><th>Amount</th><th>Commission</th>' +
+                '</tr></thead><tbody>';
 
-                earnings.forEach(e => {
-                    html += `<tr>
-                        <td>${formatDate(e.date)}</td>
-                        <td>${esc(e.from_user || 'User')}</td>
-                        <td>L${e.level || 1}</td>
-                        <td>${formatCurrency(e.purchase_amount)}</td>
-                        <td class="price-up">+${formatCurrency(e.commission)}</td>
-                    </tr>`;
-                });
+                for (var i = 0; i < earnings.length; i++) {
+                    var e = earnings[i];
+                    html += '<tr>' +
+                        '<td>' + formatDate(e.date) + '</td>' +
+                        '<td>' + esc(e.from_user || 'User') + '</td>' +
+                        '<td>L' + (e.level || 1) + '</td>' +
+                        '<td>' + formatCurrency(e.purchase_amount) + '</td>' +
+                        '<td class="price-up">+' + formatCurrency(e.commission) + '</td>' +
+                    '</tr>';
+                }
 
                 html += '</tbody></table></div>';
                 earnContainer.innerHTML = html;
@@ -850,32 +815,52 @@
 
         } catch(e) {
             console.error('Load error:', e);
-            document.getElementById('referralLink').textContent = 'Error loading';
         }
     }
 
     function copyReferralLink() {
-        const link = document.getElementById('referralLink').textContent.trim();
-        if (!link || link === 'Loading...' || link === 'Error loading') {
-            showToast('No link available', 'warning');
-            return;
-        }
+        var link = document.getElementById('referralLink').textContent.trim();
+        if (!link || link === 'Loading...') return;
 
-        navigator.clipboard.writeText(link).then(() => {
-            showToast('✅ Copied!', 'success');
-            const btn = document.querySelector('.copy-btn');
-            btn.innerHTML = '✓ Copied';
-            btn.classList.add('copied');
-            setTimeout(() => { btn.innerHTML = '📋 Copy'; btn.classList.remove('copied'); }, 2000);
-        }).catch(() => {
+        navigator.clipboard.writeText(link).then(function() {
+            showToast('✅ Link copied!');
+            var btn = document.querySelector('.copy-btn');
+            btn.textContent = '✓ Copied';
+            setTimeout(function() { btn.textContent = '📋 Copy'; }, 2000);
+        }).catch(function() {
             document.getElementById('referralLink').select();
             document.execCommand('copy');
-            showToast('✅ Copied!', 'success');
+            showToast('✅ Link copied!');
         });
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
+    // Initialize when DOM is ready
+    document.addEventListener('DOMContentLoaded', function() {
+        // Attach tab click handlers
+        var tabButtons = document.querySelectorAll('.tab-btn');
+        for (var i = 0; i < tabButtons.length; i++) {
+            tabButtons[i].addEventListener('click', function() {
+                var tab = this.getAttribute('data-tab');
+                switchTab(tab);
+            });
+        }
+
+        // Attach copy button handler
+        var copyBtn = document.querySelector('.copy-btn');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', copyReferralLink);
+        }
+
+        // Attach refresh button handler
+        var refreshBtn = document.querySelector('.refresh-btn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadReferralData);
+        }
+
+        // Load data
         loadReferralData();
+
+        // Auto-refresh every 60 seconds
         setInterval(loadReferralData, 60000);
     });
 </script>
