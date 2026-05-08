@@ -392,7 +392,7 @@
 
     <!-- Goal Planner -->
     <div class="info-card">
-        <div class="info-title">🎯 Goal Planner</div>
+        <div class="info-title">🎯 Financial Planning</div>
         <div class="goal-row">
             <span style="font-size:10px;color:var(--text-secondary);">Target:</span>
             <input type="number" id="goalTarget" class="goal-input" value="10000" step="1000">
@@ -408,11 +408,11 @@
             <button class="btn-goal" id="updateGoalBtn">Update</button>
         </div>
         <div class="milestone-row" id="milestoneRow">
-            <div class="milestone-chip"><div class="m-value" id="mStart">$0</div><div class="m-label">Now</div></div>
-            <div class="milestone-chip"><div class="m-value" id="m25">$0</div><div class="m-label">25%</div></div>
-            <div class="milestone-chip"><div class="m-value" id="m50">$0</div><div class="m-label">50%</div></div>
-            <div class="milestone-chip"><div class="m-value" id="m75">$0</div><div class="m-label">75%</div></div>
-            <div class="milestone-chip goal"><div class="m-value" id="mTarget">$0</div><div class="m-label">Goal 🎯</div></div>
+            <div class="milestone-chip"><div class="m-value" id="mNow">$0</div><div class="m-label">Now</div></div>
+            <div class="milestone-chip"><div class="m-value" id="mY1">$0</div><div class="m-label" id="mY1Label">2027</div></div>
+            <div class="milestone-chip"><div class="m-value" id="mY2">$0</div><div class="m-label" id="mY2Label">2028</div></div>
+            <div class="milestone-chip"><div class="m-value" id="mY3">$0</div><div class="m-label" id="mY3Label">2029</div></div>
+            <div class="milestone-chip goal"><div class="m-value" id="mTarget">$0</div><div class="m-label" id="mTargetLabel">Goal 🎯</div></div>
         </div>
         <div class="journey-canvas-wrap">
             <canvas id="journeyCanvas"></canvas>
@@ -421,7 +421,7 @@
 
     <!-- Holdings - Binance-style -->
     <div class="info-card">
-        <div class="info-title">📦 Your Assets</div>
+        <div class="info-title">📦 Spot Assets</div>
         <div id="holdingsContainer">
             <div class="empty-state">
                 <div class="icon">📦</div>
@@ -572,12 +572,34 @@
         document.getElementById('progressPercent').textContent = progressPercent.toFixed(1);
         document.getElementById('requiredMonthly').textContent = formatCurrency(Math.max(0, (target - portfolioValue) / (targetYears * 12)));
 
+        // Calculate projected years
+        var currentYear = new Date().getFullYear();
         var totalMonths = targetYears * 12;
-        document.getElementById('mStart').textContent = formatCurrency(portfolioValue);
-        document.getElementById('m25').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.25, monthlyAddition));
-        document.getElementById('m50').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.5, monthlyAddition));
-        document.getElementById('m75').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.75, monthlyAddition));
+
+        // Milestone values at different time points
+        var nowValue = portfolioValue;
+        var y1Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.25), monthlyAddition);
+        var y2Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.5), monthlyAddition);
+        var y3Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.75), monthlyAddition);
+
+        // Calculate actual years
+        var y1Year = currentYear + Math.round(targetYears * 0.25);
+        var y2Year = currentYear + Math.round(targetYears * 0.5);
+        var y3Year = currentYear + Math.round(targetYears * 0.75);
+        var targetYear = currentYear + targetYears;
+
+        // Update values
+        document.getElementById('mNow').textContent = formatCurrency(nowValue);
+        document.getElementById('mY1').textContent = formatCurrency(y1Value);
+        document.getElementById('mY2').textContent = formatCurrency(y2Value);
+        document.getElementById('mY3').textContent = formatCurrency(y3Value);
         document.getElementById('mTarget').textContent = formatCurrency(target);
+
+        // Update year labels
+        document.getElementById('mY1Label').textContent = y1Year;
+        document.getElementById('mY2Label').textContent = y2Year;
+        document.getElementById('mY3Label').textContent = y3Year;
+        document.getElementById('mTargetLabel').textContent = targetYear + ' 🎯';
 
         drawJourneyMap(progressPercent);
     }
@@ -588,7 +610,7 @@
 
         try {
             // Get all tokens for prices AND holdings
-            var holdings = await apiCall('/trading/my_tokens/');
+            var holdings = await apiCall('/trading/my_spot_tokens/');
             allTokens = await apiCall('/trading/');
 
             var totalValue = 0;
@@ -626,8 +648,8 @@
                     '<td>' + formatCurrency(value) + '</td>' +
                     '<td class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(pnl)) + '<br><small style="font-size:9px;">' + pnlSymbol + pnlPercent.toFixed(2) + '%</small></td>' +
                     '<td><div class="action-btns" onclick="event.stopPropagation();">' +
-                        '<button class="btn-action buy" onclick="window.location.href=\'/trading/\'">Buy</button>' +
-                        '<button class="btn-action sell" onclick="window.location.href=\'/trading/\'">Sell</button>' +
+                        '<button class="btn-action buy" onclick="window.location.href=\'/trading/?coin=' + holding.token_symbol + '\'">Buy</button>' +
+                        '<button class="btn-action sell" onclick="window.location.href=\'/trading/?coin=' + holding.token_symbol + '&sell=' + formatNumber(quantity, 4) + '\'">Sell</button>' +
                     '</div></td>' +
                 '</tr>';
             }

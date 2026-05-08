@@ -1276,6 +1276,19 @@
         await loadUserData();
         renderOrderBook();
         updateButtonState();
+
+        // Check URL for coin parameter
+        var params = new URLSearchParams(window.location.search);
+        var coinParam = params.get('coin');
+        var sellParam = params.get('sell');
+
+        if (coinParam) {
+            selectCoin(coinParam);
+            if (sellParam) {
+                document.getElementById('marketAmount').value = sellParam;
+            }
+        }
+
         setInterval(() => renderOrderBook(), 3000);
         setInterval(async () => { await loadCoins(); await loadUserData(); }, 120000);
     }

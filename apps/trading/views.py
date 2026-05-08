@@ -790,6 +790,24 @@ class TradingViewSet(viewsets.ViewSet):
         )
         return Response({'success': True, 'amount': str(amount), 'address': address, 'new_balance': str(grand_wallet.balance)})
 
+    @action(detail=False, methods=['get'])
+    def my_spot_tokens(self, request):
+        """Get only market order token balances (not grid bot tokens)"""
+        # Get all token balances
+        balances = request.user.token_balances.filter(quantity__gt=0)
+
+        # Get tokens that were bought via market orders
+        market_purchases = Purchase.objects.filter(
+            user=request.user,
+            order_type='MARKET'
+        ).values_list('token_id', flat=True).distinct()
+
+        # Filter balances to only include market-bought tokens
+        spot_balances = balances.filter(token_id__in=market_purchases)
+
+        serializer = UserTokenBalanceSerializer(spot_balances, many=True)
+        return Response(serializer.data)
+
 
 class AdminYieldRateView(APIView):
     permission_classes = [IsAdminUser]
