@@ -1189,16 +1189,22 @@
 
         // Convert USDC amount to token quantity
         var tokenPrice = parseFloat(token.current_price);
+        var maxUSDC = userQty * tokenPrice;
         var quantity = amount / tokenPrice;
 
         if (quantity > userQty) {
-            showModal('Insufficient balance. Max: ' + formatNumber(userQty, 2) + ' ' + currentSymbol, 'error');
-            return;
+            // Handle tiny floating point rounding
+            if (quantity <= userQty * 1.001) {
+                quantity = userQty;
+            } else {
+                showModal('Insufficient balance. Max: ' + formatCurrency(maxUSDC) + ' (' + formatNumber(userQty, 4) + ' ' + currentSymbol + ')', 'error');
+                return;
+            }
         }
 
         try {
             var result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
-            if (result.success) {
+            if (result && result.success) {
                 showModal('✅ Sold ' + formatCurrency(amount) + ' of ' + currentSymbol, 'success');
                 await loadUserData();
                 await updateButtonState();
