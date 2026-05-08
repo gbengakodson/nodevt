@@ -18,10 +18,4 @@ urlpatterns = [
     path('credit-yield/', credit_yield_only, name='credit_yield'),
     path('admin/yield-rate/', AdminYieldRateView.as_view(), name='admin_yield_rate'),
 
-# Grid bot actions
-    #path('stop-grid/', StopGridView.as_view(), name='stop_grid'),
-    #path('start-grid/', StartGridView.as_view(), name='start_grid'),
-    #path('close-grid/', CloseGridView.as_view(), name='close_grid'),
-    #path('my_grids_all/', MyAllGridsView.as_view(), name='my_grids_all'),
-
 ]

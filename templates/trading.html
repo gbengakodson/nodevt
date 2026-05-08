@@ -931,28 +931,27 @@
     async function apiCall(endpoint, method = 'GET', data = null) {
         const token = getToken();
         const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) headers['Authorization'] = 'Bearer ' + token;
         const options = { method, headers };
         if (data) options.body = JSON.stringify(data);
 
         const response = await fetch(`${API_BASE}${endpoint}`, options);
-        if (response.status === 401) {
-            window.location.href = '/login/';
-            throw new Error('Session expired');
-        }
+        if (response.status === 401) { window.location.href = '/login/'; throw new Error('Session expired'); }
 
-        // Handle non-JSON responses
         const contentType = response.headers.get('content-type');
         if (!contentType || !contentType.includes('application/json')) {
             const text = await response.text();
-            console.error('Non-JSON response:', text.substring(0, 200));
-            throw new Error('Server error. Please try again.');
+            console.error('Non-JSON:', text.substring(0, 200));
+            throw new Error('Server error');
         }
 
         const result = await response.json();
+
         if (!response.ok) {
-            throw new Error(result.error || result.detail || 'Request failed');
+            // Return the result so caller can check result.error
+            return result;
         }
+
         return result;
     }
 
@@ -1187,17 +1186,15 @@
         var amount = parseFloat(document.getElementById('marketAmount').value);
         if (!amount || amount <= 0) { showModal('Enter amount in USDC', 'warning'); return; }
 
-        // Convert USDC amount to token quantity
         var tokenPrice = parseFloat(token.current_price);
         var maxUSDC = userQty * tokenPrice;
         var quantity = amount / tokenPrice;
 
         if (quantity > userQty) {
-            // Handle tiny floating point rounding
             if (quantity <= userQty * 1.001) {
                 quantity = userQty;
             } else {
-                showModal('Insufficient balance. Max: ' + formatCurrency(maxUSDC) + ' (' + formatNumber(userQty, 4) + ' ' + currentSymbol + ')', 'error');
+                showModal('Insufficient balance. Max: ' + formatCurrency(maxUSDC), 'error');
                 return;
             }
         }
@@ -1209,6 +1206,8 @@
                 await loadUserData();
                 await updateButtonState();
                 document.getElementById('marketAmount').value = '';
+            } else if (result && result.error) {
+                showModal(result.error, 'error');
             }
         } catch (e) {
             showModal(e.message || 'Sale failed', 'error');
