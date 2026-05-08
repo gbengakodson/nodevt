@@ -556,100 +556,124 @@ class TradingViewSet(viewsets.ViewSet):
     def referral_stats(self, request):
         """Get referral statistics for user"""
         from apps.referrals.models import ReferralRelationship, ReferralEarning
-        from apps.tokens.models import UserTokenBalance
-        from decimal import Decimal
+        from apps.tokens.models import UserTokenBalance, Purchase
+        from django.db.models import Sum
 
         # Count ALL referrals (people this user directly referred)
         total_referrals = ReferralRelationship.objects.filter(referrer=request.user).count()
 
-        # Count active referrals (users who have purchased tokens OR activated a grid bot)
+        # Count active referrals - users who have either:
+        # 1. Made a purchase (market order or grid bot)
+        # 2. Have token balances
+        # 3. Have an active grid bot
         active_referrals = 0
         for rel in ReferralRelationship.objects.filter(referrer=request.user):
             referred_user = rel.referred
-            # Check if user has any token balance OR any grid bot
+
+            # Check if user has made any purchase
+            has_purchases = Purchase.objects.filter(user=referred_user).exists()
+
+            # Check if user has token balances
             has_tokens = UserTokenBalance.objects.filter(user=referred_user, quantity__gt=0).exists()
+
+            # Check if has active grid bot
             has_grid_bot = False
             try:
                 from apps.trading.models import GridBot
-                has_grid_bot = GridBot.objects.filter(user=referred_user, status='ACTIVE').exists()
+                has_grid_bot = GridBot.objects.filter(user=referred_user).exclude(status='COMPLETED').exists()
             except:
                 pass
 
-            if has_tokens or has_grid_bot:
+            if has_purchases or has_tokens or has_grid_bot:
                 active_referrals += 1
 
         # Calculate total commissions from referral earnings
         earnings = ReferralEarning.objects.filter(user=request.user)
-        total_commissions = sum(e.amount for e in earnings)
+        total_commissions = earnings.aggregate(total=Sum('amount'))['total'] or 0
+
+        # Calculate pending commissions (if you have a pending status)
+        pending_commissions = earnings.filter(status='PENDING').aggregate(total=Sum('amount'))['total'] or 0 if hasattr(
+            ReferralEarning, 'status') else 0
 
         return Response({
             'total_referrals': total_referrals,
             'active_referrals': active_referrals,
             'total_commissions': float(total_commissions),
-            'pending_commissions': 0.0
+            'pending_commissions': float(pending_commissions)
         })
 
     @action(detail=False, methods=['get'])
     def referral_tree(self, request):
         """Get referral tree for user (up to 7 generations) - shows ALL referred users"""
-        from apps.referrals.models import ReferralRelationship
-        from apps.tokens.models import UserTokenBalance
+        from apps.referrals.models import ReferralRelationship, ReferralEarning
+        from apps.tokens.models import UserTokenBalance, Purchase
         from django.db.models import Sum
 
-        levels = []
-        current_users = [request.user]
+        try:
+            levels = []
+            current_users = [request.user]
 
-        for level_num in range(1, 8):
-            next_users = []
-            level_data = []
+            for level_num in range(1, 8):
+                next_users = []
+                level_data = []
 
-            for user in current_users:
-                referrals = ReferralRelationship.objects.filter(referrer=user).select_related('referred')
-                for ref in referrals:
-                    next_users.append(ref.referred)
+                for user in current_users:
+                    referrals = ReferralRelationship.objects.filter(referrer=user).select_related('referred')
+                    for ref in referrals:
+                        next_users.append(ref.referred)
+                        referred = ref.referred
 
-                    # Check if referred user has purchased anything
-                    has_purchased = UserTokenBalance.objects.filter(
-                        user=ref.referred,
-                        quantity__gt=0
-                    ).exists()
+                        # Check if referred user has purchased anything
+                        has_purchased = Purchase.objects.filter(
+                            user=referred
+                        ).exists() or UserTokenBalance.objects.filter(
+                            user=referred,
+                            quantity__gt=0
+                        ).exists()
 
-                    # Check if has grid bot
-                    has_grid_bot = False
-                    try:
-                        from apps.trading.models import GridBot
-                        has_grid_bot = GridBot.objects.filter(user=ref.referred, status='ACTIVE').exists()
-                    except:
-                        pass
+                        # Check if has grid bot
+                        has_grid_bot = False
+                        try:
+                            from apps.trading.models import GridBot
+                            has_grid_bot = GridBot.objects.filter(user=referred).exclude(status='COMPLETED').exists()
+                        except:
+                            pass
 
-                    # Calculate earnings from this referred user
-                    earnings = ReferralEarning.objects.filter(
-                        user=request.user,
-                        from_user=ref.referred
-                    ).aggregate(total=Sum('amount'))['total'] or 0
+                        # Calculate earnings from this referred user
+                        earnings = ReferralEarning.objects.filter(
+                            user=request.user,
+                            from_user=referred
+                        ).aggregate(total=Sum('amount'))['total'] or 0
 
-                    status = "Active" if (has_purchased or has_grid_bot) else "Registered"
-                    status_icon = "🟢" if (has_purchased or has_grid_bot) else "⚪"
+                        is_active = has_purchased or has_grid_bot
+                        status = "Active" if is_active else "Registered"
+                        status_icon = "🟢" if is_active else "⚪"
 
-                    level_data.append({
-                        'name': ref.referred.username or ref.referred.email.split('@')[0],
-                        'email': ref.referred.email,
-                        'status': status,
-                        'status_icon': status_icon,
-                        'has_purchased': has_purchased,
-                        'has_grid_bot': has_grid_bot,
-                        'earnings': float(earnings),
-                        'joined_at': ref.referred.date_joined.strftime('%Y-%m-%d')
-                    })
+                        level_data.append({
+                            'name': referred.username or (referred.email.split('@')[0] if referred.email else 'User'),
+                            'email': referred.email or '',
+                            'status': status,
+                            'status_icon': status_icon,
+                            'has_purchased': has_purchased,
+                            'has_grid_bot': has_grid_bot,
+                            'earnings': float(earnings),
+                            'joined_at': referred.date_joined.strftime('%Y-%m-%d') if hasattr(referred,
+                                                                                              'date_joined') else 'N/A'
+                        })
 
-            if level_data:
-                levels.append({'level': level_num, 'referrals': level_data})
-            current_users = next_users
+                if level_data:
+                    levels.append({'level': level_num, 'referrals': level_data})
+                current_users = next_users
 
-            if not current_users:
-                break
+                if not current_users:
+                    break
 
-        return Response({'levels': levels})
+            return Response({'levels': levels})
+
+        except Exception as e:
+            print(f"Error in referral_tree: {e}")
+            return Response({'levels': [], 'error': str(e)})
+
 
     @action(detail=False, methods=['get'])
     def referral_earnings(self, request):
