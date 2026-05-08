@@ -4,166 +4,607 @@
 
 {% block extra_css %}
 <style>
-    .referral-container {
-        max-width: 1200px;
-        margin: 0 auto;
+    :root {
+        --primary: #F0B90B;
+        --primary-dark: #D4A30A;
+        --bg-primary: #0B0E11;
+        --bg-secondary: #1E2329;
+        --bg-card: #181A20;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --warning: #F0B90B;
+        --danger: #F6465D;
     }
 
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        background: var(--bg-primary);
+        color: var(--text-primary);
+        line-height: 1.5;
+    }
+
+    .referral-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 16px;
+    }
+
+    /* Header */
     .referral-header {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 24px;
-        margin-bottom: 24px;
+        background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        padding: 32px 24px;
+        margin-bottom: 20px;
         text-align: center;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .referral-header::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(240, 185, 11, 0.05) 0%, transparent 70%);
+        animation: rotate 20s linear infinite;
+    }
+
+    @keyframes rotate {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
     }
 
     .referral-header h1 {
-        font-size: 28px;
-        font-weight: 700;
-        margin-bottom: 12px;
-        color: #1E2329;
+        font-size: clamp(24px, 4vw, 32px);
+        font-weight: 800;
+        margin-bottom: 8px;
+        background: linear-gradient(135deg, #F0B90B, #FCD535);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+        position: relative;
     }
 
     .referral-header p {
         font-size: 14px;
-        color: #707A8A;
+        color: var(--text-secondary);
+        max-width: 600px;
+        margin: 0 auto;
+        position: relative;
     }
 
     .referral-link-box {
-        background: #F8F9FA;
+        background: rgba(0, 0, 0, 0.3);
         border-radius: 12px;
-        padding: 20px;
+        padding: 16px;
         margin-top: 24px;
         display: flex;
         align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 16px;
+        gap: 12px;
+        border: 1px solid var(--border);
+        position: relative;
+        backdrop-filter: blur(10px);
     }
 
     .referral-link {
         flex: 1;
-        font-family: monospace;
-        font-size: 14px;
-        color: #1E2329;
+        font-family: 'Courier New', monospace;
+        font-size: 13px;
+        color: var(--text-primary);
         word-break: break-all;
-        background: white;
+        background: rgba(0, 0, 0, 0.2);
         padding: 12px 16px;
         border-radius: 8px;
-        border: 1px solid #E2E4E8;
+        border: 1px solid var(--border);
+        min-width: 0;
+        user-select: all;
     }
 
     .copy-btn {
-        background: #F0B90B;
-        color: white;
+        background: linear-gradient(135deg, #F0B90B, #FCD535);
+        color: #1E2329;
         border: none;
         border-radius: 8px;
-        padding: 10px 24px;
-        font-weight: 600;
+        padding: 12px 24px;
+        font-weight: 700;
+        font-size: 14px;
         cursor: pointer;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
+    .copy-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 16px rgba(240, 185, 11, 0.3);
+    }
+
+    .copy-btn:active {
+        transform: translateY(0);
+    }
+
+    .copy-btn.copied {
+        background: var(--success);
+    }
+
+    /* Stats Grid */
     .stats-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 20px;
     }
 
     .stat-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 12px;
-        border: 1px solid #E2E4E8;
+        border: 1px solid var(--border);
         padding: 20px;
-        text-align: center;
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+
+    .stat-card:hover {
+        border-color: var(--primary);
+        transform: translateY(-2px);
+        box-shadow: 0 8px 24px rgba(240, 185, 11, 0.1);
+    }
+
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 80px;
+        height: 80px;
+        background: var(--primary);
+        opacity: 0.05;
+        border-radius: 0 0 0 80px;
+    }
+
+    .stat-icon {
+        font-size: 24px;
+        margin-bottom: 12px;
+        display: block;
     }
 
     .stat-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: #F0B90B;
-        margin-bottom: 8px;
+        font-size: clamp(24px, 3vw, 32px);
+        font-weight: 800;
+        color: var(--primary);
+        margin-bottom: 4px;
     }
 
     .stat-label {
         font-size: 12px;
-        color: #707A8A;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        font-weight: 600;
     }
 
+    .stat-subtitle {
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-top: 4px;
+    }
+
+    /* Info Cards */
     .info-card {
-        background: white;
+        background: var(--bg-card);
         border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 24px;
+        border: 1px solid var(--border);
+        padding: 24px;
+        margin-bottom: 20px;
     }
 
     .info-title {
         font-size: 18px;
-        font-weight: 600;
-        margin-bottom: 16px;
+        font-weight: 700;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    /* Distribution Table */
+    .distribution-table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        margin: 0 -24px;
+        padding: 0 24px;
     }
 
     .distribution-table {
         width: 100%;
-        border-collapse: collapse;
-    }
-
-    .distribution-table th, .distribution-table td {
-        padding: 12px;
-        text-align: center;
-        border-bottom: 1px solid #E2E4E8;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 600px;
     }
 
     .distribution-table th {
-        background: #F8F9FA;
+        padding: 12px 16px;
+        text-align: left;
+        background: rgba(240, 185, 11, 0.05);
         font-size: 12px;
-        font-weight: 600;
-        color: #707A8A;
+        font-weight: 700;
+        color: var(--primary);
+        border-bottom: 2px solid var(--border);
+    }
+
+    .distribution-table td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        transition: all 0.3s ease;
+    }
+
+    .distribution-table tbody tr:hover {
+        background: rgba(240, 185, 11, 0.02);
+    }
+
+    .distribution-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
     .level-badge {
-        display: inline-block;
-        width: 32px;
-        height: 32px;
-        background: #F8F9FA;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        background: linear-gradient(135deg, #F0B90B, #FCD535);
         border-radius: 50%;
-        line-height: 32px;
-        text-align: center;
+        font-weight: 700;
+        color: #1E2329;
+        font-size: 14px;
+    }
+
+    .commission-highlight {
+        color: var(--primary);
         font-weight: 600;
-        color: #F0B90B;
+    }
+
+    /* Earnings Table */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
     }
 
     .earnings-table {
         width: 100%;
-        border-collapse: collapse;
+        border-collapse: separate;
+        border-spacing: 0;
+        min-width: 600px;
     }
 
-    .earnings-table th {
+    .earnings-table thead th {
+        padding: 12px 16px;
         text-align: left;
-        padding: 12px 16px;
-        background: #F8F9FA;
+        background: rgba(240, 185, 11, 0.05);
         font-size: 11px;
-        color: #707A8A;
-        border-bottom: 1px solid #E2E4E8;
+        color: var(--primary);
+        border-bottom: 2px solid var(--border);
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
     }
 
-    .earnings-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid #E2E4E8;
+    .earnings-table tbody td {
+        padding: 14px 16px;
+        border-bottom: 1px solid var(--border);
         font-size: 13px;
+        white-space: nowrap;
+    }
+
+    .earnings-table tbody tr:hover {
+        background: rgba(240, 185, 11, 0.02);
+    }
+
+    .earnings-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+
+    .status-active {
+        background: rgba(14, 203, 129, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(14, 203, 129, 0.2);
+    }
+
+    .status-inactive {
+        background: rgba(132, 142, 156, 0.1);
+        color: var(--text-secondary);
+        border: 1px solid rgba(132, 142, 156, 0.2);
+    }
+
+    .price-up {
+        color: var(--success);
+        font-weight: 600;
     }
 
     .empty-state {
         text-align: center;
-        padding: 40px;
-        color: #707A8A;
+        padding: 48px 24px;
+        color: var(--text-secondary);
     }
 
+    .empty-state-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+        opacity: 0.5;
+    }
+
+    /* Refresh Button */
+    .refresh-btn {
+        background: transparent;
+        border: 1px solid var(--border);
+        color: var(--text-primary);
+        padding: 8px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 16px;
+    }
+
+    .refresh-btn:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .refresh-btn.spinning .refresh-icon {
+        animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+
+    /* Tabs */
+    .tabs {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 20px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        padding: 4px;
+        width: fit-content;
+    }
+
+    .tab-btn {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 8px 20px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        white-space: nowrap;
+    }
+
+    .tab-btn.active {
+        background: var(--primary);
+        color: #1E2329;
+    }
+
+    .tab-btn:hover:not(.active) {
+        color: var(--text-primary);
+        background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-count {
+        font-size: 10px;
+        margin-left: 4px;
+        opacity: 0.7;
+    }
+
+    /* Toast */
+    .toast {
+        position: fixed;
+        bottom: 24px;
+        right: 24px;
+        background: var(--bg-card);
+        border: 1px solid var(--primary);
+        color: var(--primary);
+        padding: 16px 24px;
+        border-radius: 12px;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+        max-width: 90vw;
+    }
+
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+
+    /* Referral Tree */
+    .tree-container {
+        margin-top: 16px;
+    }
+
+    .tree-level {
+        margin-bottom: 16px;
+        padding: 16px;
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+        border: 1px solid var(--border);
+    }
+
+    .tree-level-title {
+        font-weight: 700;
+        color: var(--primary);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+
+    .tree-referrals {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+
+    .tree-referral-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 6px 12px;
+        background: var(--bg-card);
+        border-radius: 20px;
+        font-size: 12px;
+        border: 1px solid var(--border);
+    }
+
+    /* Mobile Responsive */
     @media (max-width: 768px) {
+        .referral-container {
+            padding: 8px;
+        }
+
+        .referral-header {
+            padding: 20px 16px;
+            border-radius: 12px;
+        }
+
+        .referral-link-box {
+            flex-direction: column;
+            align-items: stretch;
+            gap: 8px;
+        }
+
+        .copy-btn {
+            justify-content: center;
+        }
+
         .stats-grid {
             grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+        }
+
+        .stat-card {
+            padding: 14px;
+            border-radius: 10px;
+        }
+
+        .info-card {
+            padding: 16px;
+            border-radius: 10px;
+        }
+
+        .tabs {
+            width: 100%;
+            justify-content: center;
+        }
+
+        .tab-btn {
+            flex: 1;
+            text-align: center;
+            padding: 8px 12px;
+            font-size: 12px;
+        }
+
+        .earnings-table thead {
+            display: none;
+        }
+
+        .earnings-table,
+        .earnings-table tbody,
+        .earnings-table tr,
+        .earnings-table td {
+            display: block;
+        }
+
+        .earnings-table tbody tr {
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        .earnings-table tbody td {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            text-align: right;
+            font-size: 13px;
+        }
+
+        .earnings-table tbody td::before {
+            content: attr(data-label);
+            font-weight: 600;
+            color: var(--text-secondary);
+            font-size: 11px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+
+        .earnings-table tbody td:last-child {
+            border-bottom: none;
+        }
+
+        .distribution-table-wrapper {
+            margin: 0 -16px;
+            padding: 0 16px;
+        }
+    }
+
+    @media (max-width: 480px) {
+        .stats-grid {
+            grid-template-columns: 1fr;
+        }
+
+        .referral-header h1 {
+            font-size: 20px;
+        }
+
+        .tabs {
+            flex-direction: row;
+            width: 100%;
+        }
+
+        .tab-btn {
+            font-size: 11px;
+            padding: 8px 8px;
         }
     }
 </style>
@@ -171,61 +612,162 @@
 
 {% block content %}
 <div class="referral-container">
+    <!-- Header Section -->
     <div class="referral-header">
-        <h1>🤝 Referral Program</h1>
-        <p>Earn up to 50% of node fees from your referrals! Share your link and earn commissions from 7 generations.</p>
+        <h1>🚀 Referral Program</h1>
+        <p>Earn up to 50% commission on node fees! Share your unique link and earn from 7 generations of referrals.</p>
         <div class="referral-link-box">
-            <div class="referral-link" id="referralLink">Loading your referral link...</div>
-            <button class="copy-btn" onclick="copyReferralLink()">📋 Copy Link</button>
+            <div class="referral-link" id="referralLink" onclick="this.select()">Loading your referral link...</div>
+            <button class="copy-btn" onclick="copyReferralLink()">
+                <span>📋</span> Copy Link
+            </button>
         </div>
     </div>
 
+    <!-- Stats Cards -->
     <div class="stats-grid">
         <div class="stat-card">
+            <span class="stat-icon">👥</span>
             <div class="stat-value" id="totalReferrals">0</div>
             <div class="stat-label">Total Referrals</div>
+            <div class="stat-subtitle">All registered referrals</div>
         </div>
         <div class="stat-card">
+            <span class="stat-icon">✅</span>
             <div class="stat-value" id="activeReferrals">0</div>
             <div class="stat-label">Active Referrals</div>
+            <div class="stat-subtitle">Purchased or activated bot</div>
         </div>
         <div class="stat-card">
+            <span class="stat-icon">💰</span>
             <div class="stat-value" id="totalCommissions">$0</div>
-            <div class="stat-label">Total Commissions</div>
+            <div class="stat-label">Total Earned</div>
+            <div class="stat-subtitle">Lifetime commissions</div>
         </div>
         <div class="stat-card">
+            <span class="stat-icon">⏳</span>
             <div class="stat-value" id="pendingCommissions">$0</div>
-            <div class="stat-label">Pending Commissions</div>
+            <div class="stat-label">Pending</div>
+            <div class="stat-subtitle">Awaiting confirmation</div>
         </div>
     </div>
 
+    <!-- Commission Distribution -->
     <div class="info-card">
-        <div class="info-title">📊 Commission Distribution (10% Node Fee)</div>
-        <table class="distribution-table">
-            <thead>
-                <tr><th>Generation</th><th>Referral Level</th><th>Commission</th><th>Example ($100 Purchase)</th></thead>
-            <tbody>
-                <tr><td><span class="level-badge">1</span></td><td>Level 1 (Direct)</td><td class="price-up">50% of fee</td><td>$10 fee → $5 to you</td></tr>
-                <tr><td><span class="level-badge">2</span></td><td>Level 2</td><td class="price-up">25% of fee</td><td>$10 fee → $2.50 to you</td></tr>
-                <tr><td><span class="level-badge">3</span></td><td>Level 3</td><td class="price-up">12.5% of fee</td><td>$10 fee → $1.25 to you</td></tr>
-                <tr><td><span class="level-badge">4</span></td><td>Level 4</td><td class="price-up">6.25% of fee</td><td>$10 fee → $0.625 to you</td></tr>
-                <tr><td><span class="level-badge">5</span></td><td>Level 5</td><td class="price-up">3.125% of fee</td><td>$10 fee → $0.3125 to you</td></tr>
-                <tr><td><span class="level-badge">6</span></td><td>Level 6</td><td class="price-up">1.5625% of fee</td><td>$10 fee → $0.15625 to you</td></tr>
-                <tr><td><span class="level-badge">7</span></td><td>Level 7</td><td class="price-up">0.78125% of fee</td><td>$10 fee → $0.078125 to you</td></tr>
-            </tbody>
-        </table>
+        <div class="info-title">📊 Commission Structure</div>
+        <div class="distribution-table-wrapper">
+            <table class="distribution-table">
+                <thead>
+                    <tr>
+                        <th>Level</th>
+                        <th>Relationship</th>
+                        <th>Commission</th>
+                        <th>Example ($10 Fee)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><span class="level-badge">1</span></td>
+                        <td>Direct Referral</td>
+                        <td class="commission-highlight">50%</td>
+                        <td>$5.00</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">2</span></td>
+                        <td>2nd Generation</td>
+                        <td class="commission-highlight">25%</td>
+                        <td>$2.50</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">3</span></td>
+                        <td>3rd Generation</td>
+                        <td class="commission-highlight">12.5%</td>
+                        <td>$1.25</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">4</span></td>
+                        <td>4th Generation</td>
+                        <td class="commission-highlight">6.25%</td>
+                        <td>$0.625</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">5</span></td>
+                        <td>5th Generation</td>
+                        <td class="commission-highlight">3.125%</td>
+                        <td>$0.3125</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">6</span></td>
+                        <td>6th Generation</td>
+                        <td class="commission-highlight">1.5625%</td>
+                        <td>$0.15625</td>
+                    </tr>
+                    <tr>
+                        <td><span class="level-badge">7</span></td>
+                        <td>7th Generation</td>
+                        <td class="commission-highlight">0.78125%</td>
+                        <td>$0.078125</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 
+    <!-- Your Referrals -->
     <div class="info-card">
-        <div class="info-title">💰 Your Referral Earnings</div>
+        <div class="info-title">👥 Your Referrals</div>
+        <div class="tabs">
+            <button class="tab-btn active" onclick="switchTab('all')">
+                All<span class="tab-count" id="countAll">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('active')">
+                Active<span class="tab-count" id="countActive">0</span>
+            </button>
+            <button class="tab-btn" onclick="switchTab('inactive')">
+                Inactive<span class="tab-count" id="countInactive">0</span>
+            </button>
+        </div>
+        <div id="referralsContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">🤝</div>
+                <p>Loading referrals...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Referral Tree -->
+    <div class="info-card">
+        <div class="info-title">🌳 Referral Tree</div>
+        <button class="refresh-btn" onclick="loadReferralData()">
+            <span class="refresh-icon">🔄</span> Refresh Data
+        </button>
+        <div id="referralTreeContainer">
+            <div class="empty-state">
+                <div class="empty-state-icon">🌱</div>
+                <p>Loading referral tree...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Earnings History -->
+    <div class="info-card">
+        <div class="info-title">💎 Earnings History</div>
         <div id="earningsContainer">
-            <div class="empty-state">Loading earnings...</div>
+            <div class="empty-state">
+                <div class="empty-state-icon">📊</div>
+                <p>Loading earnings...</p>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- Toast Notification -->
+<div id="toast" class="toast" style="display: none;"></div>
+
 <script>
     const API_BASE = '/api';
+    let currentTab = 'all';
+    let allReferralsData = [];
 
     function getToken() {
         return localStorage.getItem('access_token');
@@ -257,95 +799,370 @@
             throw new Error('Session expired');
         }
 
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || `API call failed: ${response.status}`);
+        }
+
         return response.json();
     }
 
-        function formatCurrency(num) {
-            if (!num) return '$0.00';
-            const value = parseFloat(num);
-            if (isNaN(value)) return '$0.00';
-            if (value === 0) return '$0.00';
-            if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-            if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-            if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-            if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-            return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    function formatCurrency(num) {
+        if (!num) return '$0.00';
+        const value = parseFloat(num);
+        if (isNaN(value)) return '$0.00';
+        if (value === 0) return '$0.00';
+        if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
+        if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
+        if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
+        if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
+        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    }
+
+    function formatDate(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            if (isNaN(date.getTime())) return dateString;
+            return date.toLocaleDateString('en-US', {
+                year: 'numeric',
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        } catch (e) {
+            return dateString;
+        }
+    }
+
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        toast.textContent = message;
+        toast.style.display = 'block';
+        toast.style.borderColor = type === 'success' ? 'var(--success)' : 'var(--warning)';
+        toast.style.color = type === 'success' ? 'var(--success)' : 'var(--warning)';
+
+        clearTimeout(toast._timeout);
+        toast._timeout = setTimeout(() => {
+            toast.style.display = 'none';
+        }, 3000);
+    }
+
+    function switchTab(tab) {
+        currentTab = tab;
+
+        // Update active button
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.classList.remove('active');
+        });
+
+        const activeBtn = document.querySelector(`.tab-btn[onclick="switchTab('${tab}')"]`);
+        if (activeBtn) activeBtn.classList.add('active');
+
+        // Filter and display referrals
+        displayReferrals();
+    }
+
+    function displayReferrals() {
+        const container = document.getElementById('referralsContainer');
+
+        if (!allReferralsData || allReferralsData.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🤝</div>
+                    <p>No referrals yet. Share your link to start earning!</p>
+                </div>
+            `;
+            return;
         }
 
-    async function loadReferralData() {
-        try {
-            // Get user info from API to get referral code
-            const userData = await apiCall('/auth/profile/');
-            console.log('User data:', userData);
+        let filteredReferrals = allReferralsData;
 
+        if (currentTab === 'active') {
+            filteredReferrals = allReferralsData.filter(r => r.is_active || r.has_purchased);
+        } else if (currentTab === 'inactive') {
+            filteredReferrals = allReferralsData.filter(r => !r.is_active && !r.has_purchased);
+        }
+
+        // Update tab counts
+        document.getElementById('countAll').textContent = allReferralsData.length;
+        document.getElementById('countActive').textContent = allReferralsData.filter(r => r.is_active || r.has_purchased).length;
+        document.getElementById('countInactive').textContent = allReferralsData.filter(r => !r.is_active && !r.has_purchased).length;
+
+        if (filteredReferrals.length === 0) {
+            const messages = {
+                'all': 'No referrals yet. Share your link to start!',
+                'active': 'No active referrals yet. Active referrals have purchased tokens or activated a grid bot.',
+                'inactive': 'All your referrals are active! Great job! 🎉'
+            };
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">${currentTab === 'active' ? '🎯' : currentTab === 'inactive' ? '🎉' : '🤝'}</div>
+                    <p>${messages[currentTab] || messages['all']}</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = `
+            <div class="table-responsive">
+                <table class="earnings-table">
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Joined</th>
+                            <th>Status</th>
+                            <th>Purchases</th>
+                            <th>Total Spent</th>
+                            <th>Commission Earned</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+        `;
+
+        filteredReferrals.forEach(ref => {
+            const status = ref.is_active || ref.has_purchased ? 'Active' : 'Inactive';
+            const statusClass = status === 'Active' ? 'status-active' : 'status-inactive';
+
+            html += `
+                <tr>
+                    <td data-label="User">
+                        <strong>${escapeHtml(ref.username || ref.email || 'Anonymous')}</strong>
+                    </td>
+                    <td data-label="Joined">${formatDate(ref.joined_at)}</td>
+                    <td data-label="Status">
+                        <span class="status-badge ${statusClass}">${status}</span>
+                    </td>
+                    <td data-label="Purchases">${ref.total_purchases || 0}</td>
+                    <td data-label="Total Spent">${formatCurrency(ref.total_spent || 0)}</td>
+                    <td data-label="Commission" class="price-up">+${formatCurrency(ref.total_commission || 0)}</td>
+                </tr>
+            `;
+        });
+
+        html += '</tbody></table></div>';
+        container.innerHTML = html;
+    }
+
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+
+    function displayReferralTree(treeData) {
+        const container = document.getElementById('referralTreeContainer');
+
+        if (!treeData || !treeData.levels || treeData.levels.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">🌱</div>
+                    <p>No referral tree yet. Start referring to build your network!</p>
+                </div>
+            `;
+            return;
+        }
+
+        let html = '<div class="tree-container">';
+
+        treeData.levels.forEach(level => {
+            html += `
+                <div class="tree-level">
+                    <div class="tree-level-title">📊 Level ${level.level} (${level.referrals.length} referrals)</div>
+                    <div class="tree-referrals">
+            `;
+
+            level.referrals.forEach(ref => {
+                html += `
+                    <div class="tree-referral-chip" title="${escapeHtml(ref.email)}">
+                        ${ref.status_icon || '👤'} ${escapeHtml(ref.name)}
+                        <span style="font-size:10px; color: var(--text-secondary);">
+                            ${formatCurrency(ref.earnings)}
+                        </span>
+                    </div>
+                `;
+            });
+
+            html += '</div></div>';
+        });
+
+        html += '</div>';
+        container.innerHTML = html;
+    }
+
+    async function loadReferralData() {
+        const refreshBtn = document.querySelector('.refresh-btn');
+        if (refreshBtn) refreshBtn.classList.add('spinning');
+
+        try {
+            // Get user profile for referral code
+            const userData = await apiCall('/auth/profile/');
             const referralCode = userData.referral_code;
 
-            // Set referral link with 5-digit code
+            // Set referral link
             if (referralCode) {
-                document.getElementById('referralLink').innerHTML = `${window.location.origin}/register?ref=${referralCode}`;
+                document.getElementById('referralLink').textContent = `${window.location.origin}/register?ref=${referralCode}`;
             } else {
-                document.getElementById('referralLink').innerHTML = `${window.location.origin}/register`;
+                document.getElementById('referralLink').textContent = `${window.location.origin}/register`;
             }
 
-            // Get referral stats
+            // Get referral stats - uses your existing referral_stats endpoint
             const stats = await apiCall('/trading/referral_stats/');
-            document.getElementById('totalReferrals').innerHTML = stats.total_referrals || 0;
-            document.getElementById('activeReferrals').innerHTML = stats.active_referrals || 0;
-            document.getElementById('totalCommissions').innerHTML = formatCurrency(stats.total_commissions || 0);
-            document.getElementById('pendingCommissions').innerHTML = formatCurrency(stats.pending_commissions || 0);
+            document.getElementById('totalReferrals').textContent = stats.total_referrals || 0;
+            document.getElementById('activeReferrals').textContent = stats.active_referrals || 0;
+            document.getElementById('totalCommissions').textContent = formatCurrency(stats.total_commissions || 0);
+            document.getElementById('pendingCommissions').textContent = formatCurrency(stats.pending_commissions || 0);
 
-            // Get earnings history
+            // Get referrals list - uses the new referrals_list endpoint
+            try {
+                const referralsData = await apiCall('/trading/referrals_list/');
+                allReferralsData = referralsData || [];
+                displayReferrals();
+            } catch (e) {
+                console.log('Referrals list not available, using referral tree as fallback');
+                // Fallback: try to extract from referral tree
+                try {
+                    const treeData = await apiCall('/trading/referral_tree/');
+                    if (treeData && treeData.levels && treeData.levels.length > 0) {
+                        // Extract direct referrals from level 1
+                        const level1 = treeData.levels.find(l => l.level === 1);
+                        if (level1 && level1.referrals) {
+                            allReferralsData = level1.referrals.map(ref => ({
+                                username: ref.name,
+                                email: ref.email,
+                                joined_at: ref.joined_at,
+                                has_purchased: ref.has_purchased,
+                                is_active: ref.has_purchased || ref.has_grid_bot,
+                                status: ref.status,
+                                total_purchases: ref.has_purchased ? 1 : 0,
+                                total_spent: 0,
+                                total_commission: ref.earnings || 0,
+                                level: 1
+                            }));
+                            displayReferrals();
+                        }
+                    }
+                } catch (e2) {
+                    console.log('Referral tree also not available');
+                    allReferralsData = [];
+                    displayReferrals();
+                }
+            }
+
+            // Get referral tree - uses your existing referral_tree endpoint
+            try {
+                const treeData = await apiCall('/trading/referral_tree/');
+                displayReferralTree(treeData);
+            } catch (e) {
+                console.log('Could not load referral tree');
+                document.getElementById('referralTreeContainer').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🌱</div>
+                        <p>Referral tree data not available</p>
+                    </div>
+                `;
+            }
+
+            // Get earnings history - uses your existing referral_earnings endpoint
             const earnings = await apiCall('/trading/referral_earnings/');
-            const container = document.getElementById('earningsContainer');
+            const earningsContainer = document.getElementById('earningsContainer');
 
             if (!earnings || earnings.length === 0) {
-                container.innerHTML = '<div class="empty-state">No referral earnings yet. Share your link to start earning!</div>';
+                earningsContainer.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">💎</div>
+                        <p>No earnings yet. Share your link to start earning commissions!</p>
+                    </div>
+                `;
             } else {
                 let html = `
-                    <table class="earnings-table">
-                        <thead>
-                            <tr><th>Date</th><th>From</th><th>Level</th><th>Purchase Amount</th><th>Commission</th></thead>
-                        <tbody>
+                    <div class="table-responsive">
+                        <table class="earnings-table">
+                            <thead>
+                                <tr>
+                                    <th>Date</th>
+                                    <th>From</th>
+                                    <th>Level</th>
+                                    <th>Purchase Amount</th>
+                                    <th>Commission</th>
+                                </tr>
+                            </thead>
+                            <tbody>
                 `;
 
-                for (const e of earnings) {
+                earnings.forEach(e => {
                     html += `
                         <tr>
-                            <td>${e.date || 'N/A'}</td>
-                            <td>${e.from_user || 'User'}</td>
-                            <td>Level ${e.level || 1}</td>
-                            <td>${formatCurrency(e.purchase_amount || 0)}</td>
-                            <td class="price-up">+${formatCurrency(e.commission || 0)}</td>
+                            <td data-label="Date">${formatDate(e.date)}</td>
+                            <td data-label="From">${escapeHtml(e.from_user || 'User')}</td>
+                            <td data-label="Level">Level ${e.level || 1}</td>
+                            <td data-label="Purchase Amount">${formatCurrency(e.purchase_amount || 0)}</td>
+                            <td data-label="Commission" class="price-up">+${formatCurrency(e.commission || 0)}</td>
                         </tr>
                     `;
-                }
+                });
 
-                html += `</tbody></table>`;
-                container.innerHTML = html;
+                html += '</tbody></table></div>';
+                earningsContainer.innerHTML = html;
             }
 
         } catch (e) {
             console.error('Error loading referral data:', e);
-            document.getElementById('referralLink').innerHTML = 'Unable to load referral link';
-            document.getElementById('earningsContainer').innerHTML = '<div class="empty-state">Unable to load referral data</div>';
+            document.getElementById('referralLink').textContent = 'Unable to load referral link';
+            document.getElementById('earningsContainer').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-state-icon">⚠️</div>
+                    <p>Unable to load data. Please try again later.</p>
+                </div>
+            `;
+        } finally {
+            if (refreshBtn) refreshBtn.classList.remove('spinning');
         }
     }
 
     function copyReferralLink() {
-        const link = document.getElementById('referralLink').innerText;
+        const linkElement = document.getElementById('referralLink');
+        const link = linkElement.textContent.trim();
+
         if (link && link !== 'Loading your referral link...' && link !== 'Unable to load referral link') {
-            navigator.clipboard.writeText(link);
-            showModal('Referral link copied to clipboard!', 'success');
+            navigator.clipboard.writeText(link).then(() => {
+                showToast('✅ Referral link copied!', 'success');
+
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalHTML = copyBtn.innerHTML;
+                copyBtn.innerHTML = '<span>✓</span> Copied!';
+                copyBtn.classList.add('copied');
+
+                setTimeout(() => {
+                    copyBtn.innerHTML = originalHTML;
+                    copyBtn.classList.remove('copied');
+                }, 2000);
+            }).catch(() => {
+                // Fallback for older browsers
+                linkElement.select();
+                document.execCommand('copy');
+                showToast('✅ Referral link copied!', 'success');
+            });
         } else {
-            showModal('No valid referral link available', 'warning');
+            showToast('No valid referral link available', 'warning');
         }
     }
 
-    // Load referral data when page loads
+    // Initialize
     document.addEventListener('DOMContentLoaded', function() {
         loadReferralData();
-        // Refresh every 30 seconds
-        setInterval(loadReferralData, 30000);
+
+        // Auto-refresh every 60 seconds
+        setInterval(loadReferralData, 60000);
+
+        // Keyboard shortcut: Ctrl/Cmd + C when referral link is focused
+        document.getElementById('referralLink').addEventListener('keydown', function(e) {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'c') {
+                copyReferralLink();
+            }
+        });
     });
 </script>
 {% endblock %}

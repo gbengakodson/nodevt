@@ -556,33 +556,44 @@ class TradingViewSet(viewsets.ViewSet):
     def referral_stats(self, request):
         """Get referral statistics for user"""
         from apps.referrals.models import ReferralRelationship, ReferralEarning
+        from apps.tokens.models import UserTokenBalance
         from decimal import Decimal
 
-        # Count referrals (people this user directly referred)
+        # Count ALL referrals (people this user directly referred)
         total_referrals = ReferralRelationship.objects.filter(referrer=request.user).count()
-        active_referrals = ReferralRelationship.objects.filter(
-            referrer=request.user,
-            referred__is_active=True
-        ).count()
+
+        # Count active referrals (users who have purchased tokens OR activated a grid bot)
+        active_referrals = 0
+        for rel in ReferralRelationship.objects.filter(referrer=request.user):
+            referred_user = rel.referred
+            # Check if user has any token balance OR any grid bot
+            has_tokens = UserTokenBalance.objects.filter(user=referred_user, quantity__gt=0).exists()
+            has_grid_bot = False
+            try:
+                from apps.trading.models import GridBot
+                has_grid_bot = GridBot.objects.filter(user=referred_user, status='ACTIVE').exists()
+            except:
+                pass
+
+            if has_tokens or has_grid_bot:
+                active_referrals += 1
 
         # Calculate total commissions from referral earnings
         earnings = ReferralEarning.objects.filter(user=request.user)
         total_commissions = sum(e.amount for e in earnings)
 
-        # Pending commissions (all are credited immediately, so 0)
-        pending_commissions = Decimal('0')
-
         return Response({
             'total_referrals': total_referrals,
             'active_referrals': active_referrals,
             'total_commissions': float(total_commissions),
-            'pending_commissions': float(pending_commissions)
+            'pending_commissions': 0.0
         })
 
     @action(detail=False, methods=['get'])
     def referral_tree(self, request):
-        """Get referral tree for user (up to 7 generations)"""
-        from apps.referrals.models import ReferralRelationship, ReferralEarning
+        """Get referral tree for user (up to 7 generations) - shows ALL referred users"""
+        from apps.referrals.models import ReferralRelationship
+        from apps.tokens.models import UserTokenBalance
         from django.db.models import Sum
 
         levels = []
@@ -597,16 +608,38 @@ class TradingViewSet(viewsets.ViewSet):
                 for ref in referrals:
                     next_users.append(ref.referred)
 
-                    # Calculate actual earnings from this referred user
+                    # Check if referred user has purchased anything
+                    has_purchased = UserTokenBalance.objects.filter(
+                        user=ref.referred,
+                        quantity__gt=0
+                    ).exists()
+
+                    # Check if has grid bot
+                    has_grid_bot = False
+                    try:
+                        from apps.trading.models import GridBot
+                        has_grid_bot = GridBot.objects.filter(user=ref.referred, status='ACTIVE').exists()
+                    except:
+                        pass
+
+                    # Calculate earnings from this referred user
                     earnings = ReferralEarning.objects.filter(
                         user=request.user,
                         from_user=ref.referred
                     ).aggregate(total=Sum('amount'))['total'] or 0
 
+                    status = "Active" if (has_purchased or has_grid_bot) else "Registered"
+                    status_icon = "🟢" if (has_purchased or has_grid_bot) else "⚪"
+
                     level_data.append({
                         'name': ref.referred.username or ref.referred.email.split('@')[0],
                         'email': ref.referred.email,
-                        'earnings': float(earnings)
+                        'status': status,
+                        'status_icon': status_icon,
+                        'has_purchased': has_purchased,
+                        'has_grid_bot': has_grid_bot,
+                        'earnings': float(earnings),
+                        'joined_at': ref.referred.date_joined.strftime('%Y-%m-%d')
                     })
 
             if level_data:
@@ -633,6 +666,68 @@ class TradingViewSet(viewsets.ViewSet):
                 'level': e.level,
                 'purchase_amount': str(e.purchase.total_amount),
                 'commission': str(e.amount)
+            })
+
+        return Response(data)
+
+    # Add this method to your TradingViewSet class in apps/trading/views.py
+
+    @action(detail=False, methods=['get'])
+    def referrals_list(self, request):
+        """Get all referrals with their status (active/inactive)"""
+        from apps.referrals.models import ReferralRelationship, ReferralEarning
+        from apps.tokens.models import UserTokenBalance
+        from django.db.models import Sum
+
+        referrals = ReferralRelationship.objects.filter(
+            referrer=request.user
+        ).select_related('referred')
+
+        data = []
+        for rel in referrals:
+            referred_user = rel.referred
+
+            # Check if user has purchased anything
+            has_purchased = UserTokenBalance.objects.filter(
+                user=referred_user,
+                quantity__gt=0
+            ).exists()
+
+            # Check if has grid bot
+            has_grid_bot = False
+            try:
+                from apps.trading.models import GridBot
+                has_grid_bot = GridBot.objects.filter(user=referred_user, status='ACTIVE').exists()
+            except:
+                pass
+
+            # Calculate total purchases and spent
+            from apps.tokens.models import Purchase
+            purchases = Purchase.objects.filter(user=referred_user)
+            total_purchases = purchases.count()
+            total_spent = purchases.aggregate(total=Sum('total_amount'))['total'] or 0
+
+            # Calculate commission earned from this referral
+            earnings = ReferralEarning.objects.filter(
+                user=request.user,
+                from_user=referred_user
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            is_active = has_purchased or has_grid_bot
+
+            data.append({
+                'username': referred_user.username or referred_user.email.split('@')[0],
+                'email': referred_user.email,
+                'joined_at': referred_user.date_joined.isoformat() if hasattr(referred_user,
+                                                                              'date_joined') else rel.created_at.isoformat(),
+                'has_purchased': has_purchased,
+                'has_grid_bot': has_grid_bot,
+                'is_active': is_active,
+                'status': 'Active' if is_active else 'Inactive',
+                'total_purchases': total_purchases,
+                'total_spent': float(total_spent),
+                'total_commission': float(earnings),
+                'level': 1  # Direct referral level
             })
 
         return Response(data)
