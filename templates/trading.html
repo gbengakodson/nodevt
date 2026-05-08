@@ -1272,25 +1272,33 @@
     document.head.appendChild(style);
 
     async function init() {
+        var params = new URLSearchParams(window.location.search);
+        var coinParam = params.get('coin');
+        var sellParam = params.get('sell');
+
+        // If coin specified, set it BEFORE loading
+        if (coinParam) {
+            currentSymbol = coinParam;
+        }
+
         await loadCoins();
         await loadUserData();
         renderOrderBook();
         updateButtonState();
 
-        // Check URL for coin parameter
-        var params = new URLSearchParams(window.location.search);
-        var coinParam = params.get('coin');
-        var sellParam = params.get('sell');
-
+        // Now select the coin and pre-fill amount
         if (coinParam) {
             selectCoin(coinParam);
             if (sellParam) {
-                document.getElementById('marketAmount').value = sellParam;
+                // Small delay to ensure selectCoin finishes
+                setTimeout(function() {
+                    document.getElementById('marketAmount').value = sellParam;
+                }, 500);
             }
         }
 
-        setInterval(() => renderOrderBook(), 3000);
-        setInterval(async () => { await loadCoins(); await loadUserData(); }, 120000);
+        setInterval(function() { renderOrderBook(); }, 3000);
+        setInterval(async function() { await loadCoins(); await loadUserData(); }, 120000);
     }
     init();
 </script>

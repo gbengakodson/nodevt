@@ -381,19 +381,22 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def sell(self, request):
-        """Sell crypto tokens - only if current price >= average buy price"""
+        """Sell crypto tokens - spot market order"""
         serializer = SellSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         token_id = serializer.validated_data['token_id']
         quantity = serializer.validated_data['quantity']
+
         token = get_object_or_404(CryptoToken, id=token_id, is_active=True)
 
         try:
             user_balance = request.user.token_balances.get(token=token)
         except:
-            return Response({'error': 'You don\'t own any of this token'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({
+                'error': 'You don\'t own any of this token'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         if user_balance.quantity < quantity:
             return Response({
@@ -402,13 +405,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'requested': str(quantity)
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        if token.current_price < user_balance.average_buy_price:
-            return Response({
-                'error': 'Cannot sell at this time',
-                'reason': 'Current price is below your purchase price',
-                'current_price': str(token.current_price),
-                'average_buy_price': str(user_balance.average_buy_price)
-            }, status=status.HTTP_400_BAD_REQUEST)
+        # REMOVED: Price check - spot tokens can be sold anytime
 
         sale_amount = quantity * token.current_price
 
