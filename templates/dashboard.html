@@ -734,19 +734,19 @@
     // ============ GRID BOT ACTIONS ============
     async function stopGridBot(botId) {
         if (!confirm('Stop this grid bot?')) return;
-        const result = await apiCall('/trading/stop-grid/', 'POST', { bot_id: botId });
+        const result = await apiCall('/trading/stop_grid/', 'POST', { bot_id: botId });
         if (result.success) { showModal('Grid bot stopped.', 'warning'); loadDashboard(); }
     }
 
     async function startGridBot(botId) {
         if (!confirm('Restart this grid bot?')) return;
-        const result = await apiCall('/trading/start-grid/', 'POST', { bot_id: botId });
+        const result = await apiCall('/trading/start_grid/', 'POST', { bot_id: botId });
         if (result.success) { showModal('Grid bot restarted.', 'success'); loadDashboard(); }
     }
 
     async function closeGridBot(botId) {
         if (!confirm('Close this grid bot and withdraw funds?')) return;
-        const result = await apiCall('/trading/close-grid/', 'POST', { bot_id: botId });
+        const result = await apiCall('/trading/close_grid/', 'POST', { bot_id: botId });
         if (result.success) { showModal(`Closed! ${formatCurrency(result.total_return || result.amount)} returned.`, 'success'); loadDashboard(); }
         else { showModal('Failed. PNL must be positive.', 'error'); }
     }
