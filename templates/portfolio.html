@@ -1,878 +1,668 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Portfolio | Goal Journey Tracker{% endblock %}
+{% block title %}Portfolio | NODE AI{% endblock %}
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary: #F0B90B;
+        --bg-card: #181A20;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; }
+
+    body { max-width: 100vw; overflow-x: hidden; background: #0B0E11; }
+
     .portfolio-container {
-        max-width: 1400px;
+        max-width: 960px;
         margin: 0 auto;
+        padding: 12px;
+        width: 100%;
+        overflow: hidden;
     }
 
-    .portfolio-header {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 20px;
-    }
-
-    .portfolio-title {
-        font-size: 20px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #1E2329;
-    }
-
-    .portfolio-subtitle {
-        font-size: 13px;
-        color: #707A8A;
-    }
-
-    /* Stats Row */
+    /* Stats Row - Compact */
     .stats-row {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+        margin-bottom: 10px;
+        width: 100%;
     }
 
     .stat-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        transition: transform 0.2s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        padding: 14px 16px;
+        min-width: 0;
     }
 
     .stat-label {
-        font-size: 11px;
-        color: #707A8A;
+        font-size: 10px;
+        color: var(--text-secondary);
         text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 8px;
+        letter-spacing: 0.3px;
+        font-weight: 600;
+        margin-bottom: 4px;
     }
 
     .stat-value {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1E2329;
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--primary);
+        line-height: 1.2;
     }
 
-    .stat-value.gold {
-        color: #F0B90B;
+    .stat-subtitle {
+        font-size: 9px;
+        color: var(--text-secondary);
+        margin-top: 2px;
     }
 
-    .stat-value.green {
-        color: #0ECB81;
-    }
+    .stat-value.green { color: var(--success); }
 
-    .stat-change {
-        font-size: 11px;
-        margin-top: 4px;
-        color: #707A8A;
-    }
-
-    .positive {
-        color: #0ECB81;
-    }
-
-    .negative {
-        color: #F6465D;
-    }
-
-    /* Goal Journey Card */
-    .journey-card {
-        background: white;
-        border-radius: 16px;
-        border: 1px solid #E2E4E8;
-        overflow: hidden;
-        margin-bottom: 24px;
-    }
-
-    .journey-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 16px 20px;
-        border-bottom: 1px solid #E2E4E8;
-        background: #F8F9FA;
-    }
-
-    .journey-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #1E2329;
-    }
-
-    .journey-body {
-        padding: 20px;
-    }
-
-    /* Journey Map Container */
-    .journey-map-container {
-        position: relative;
-        height: 320px;
-        background: linear-gradient(180deg, #F8F9FA 0%, #FFFFFF 100%);
-        border-radius: 12px;
-        overflow: hidden;
-        margin-bottom: 20px;
-    }
-
-    .journey-canvas {
-        width: 100%;
-        height: 100%;
-        display: block;
-    }
-
-    /* Animated Marker */
-    .animated-marker {
-        position: absolute;
-        z-index: 20;
-        transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
-        cursor: pointer;
-    }
-
-    .marker-pin {
-        width: 32px;
-        height: 32px;
-        background: #F0B90B;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 0 0 4px rgba(240, 185, 11, 0.3), 0 4px 12px rgba(0,0,0,0.15);
-        animation: markerPulse 1.5s infinite;
-    }
-
-    .marker-label {
-        position: absolute;
-        bottom: -24px;
-        left: 50%;
-        transform: translateX(-50%);
-        white-space: nowrap;
-        background: #1E2329;
-        color: white;
-        padding: 4px 8px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 500;
-    }
-
-    @keyframes markerPulse {
-        0% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0.4); }
-        70% { box-shadow: 0 0 0 12px rgba(240, 185, 11, 0); }
-        100% { box-shadow: 0 0 0 0 rgba(240, 185, 11, 0); }
-    }
-
-    /* Milestone Markers */
-    .milestone-row {
-        display: flex;
-        justify-content: space-between;
-        margin-top: 20px;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-
-    .milestone-point {
-        flex: 1;
-        text-align: center;
-        padding: 10px;
-        background: #F8F9FA;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .milestone-point.active {
-        background: #FFF4E5;
-        border: 1px solid #F0B90B;
-    }
-
-    .milestone-point:hover {
-        background: #EFF2F5;
-    }
-
-    .milestone-value {
-        font-size: 13px;
-        font-weight: 600;
-        color: #F0B90B;
-    }
-
-    .milestone-label {
-        font-size: 10px;
-        color: #707A8A;
-        margin-top: 4px;
-    }
-
-    /* Goal Calculator */
-    .goal-calculator {
-        background: #F5F7FA;
-        border-radius: 12px;
-        padding: 16px;
-        margin-top: 16px;
-    }
-
-    .goal-calculator label {
-        font-size: 11px;
-        color: #5E6673;
-        margin-bottom: 4px;
-        display: block;
-    }
-
-    .goal-calculator input, .goal-calculator select {
-        width: 100%;
-        padding: 8px 12px;
-        background: white;
-        border: 1px solid #E2E4E8;
-        border-radius: 8px;
-        font-size: 13px;
-    }
-
+    /* Progress bar */
     .progress-bar {
-        height: 6px;
-        background: #E2E4E8;
-        border-radius: 3px;
+        height: 4px;
+        background: rgba(255,255,255,0.08);
+        border-radius: 2px;
         overflow: hidden;
+        margin-top: 8px;
     }
-
     .progress-fill {
         height: 100%;
-        background: #F0B90B;
-        border-radius: 3px;
+        background: var(--primary);
+        border-radius: 2px;
         transition: width 0.5s ease;
     }
 
-    /* Holdings Section */
-    .holdings-section {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
+    /* Cards */
+    .info-card {
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        padding: 16px;
+        margin-bottom: 10px;
+        width: 100%;
+        min-width: 0;
         overflow: hidden;
     }
 
-    .section-header {
+    .info-title {
+        font-size: 13px;
+        font-weight: 700;
+        margin-bottom: 12px;
+        color: var(--text-primary);
         display: flex;
-        justify-content: space-between;
         align-items: center;
-        padding: 16px 20px;
-        border-bottom: 1px solid #E2E4E8;
-        background: #F8F9FA;
+        gap: 6px;
     }
 
-    .section-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1E2329;
+    /* Holdings Table - Binance-style */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
     }
 
     .holdings-table {
         width: 100%;
         border-collapse: collapse;
+        min-width: 600px;
     }
 
     .holdings-table th {
+        padding: 10px 14px;
         text-align: left;
-        padding: 12px 16px;
-        background: #F8F9FA;
-        font-size: 11px;
-        font-weight: 500;
-        color: #707A8A;
+        background: rgba(240, 185, 11, 0.04);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-secondary);
         text-transform: uppercase;
-        border-bottom: 1px solid #E2E4E8;
+        letter-spacing: 0.3px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
     }
 
     .holdings-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid #E2E4E8;
-        font-size: 13px;
-        color: #1E2329;
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 12px;
+        color: var(--text-primary);
+        white-space: nowrap;
     }
 
-    .holdings-table tr:hover td {
-        background: #F8F9FA;
+    .holdings-table tbody tr {
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+
+    .holdings-table tbody tr:hover {
+        background: rgba(240, 185, 11, 0.03);
+    }
+
+    .holdings-table tbody tr:last-child td {
+        border-bottom: none;
     }
 
     .token-cell {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
     }
 
     .token-icon {
-        width: 36px;
-        height: 36px;
+        width: 32px;
+        height: 32px;
         border-radius: 50%;
-        object-fit: contain;
+        flex-shrink: 0;
     }
 
-    .token-info h4 {
-        font-size: 14px;
+    .token-info .t-symbol {
+        font-size: 13px;
         font-weight: 600;
-        margin: 0 0 2px 0;
+        color: var(--text-primary);
     }
 
-    .token-info p {
+    .token-info .t-name {
+        font-size: 10px;
+        color: var(--text-secondary);
+    }
+
+    .positive { color: var(--success); font-weight: 500; }
+    .negative { color: var(--danger); font-weight: 500; }
+
+    /* Action buttons */
+    .action-btns {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-action {
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-primary);
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+
+    .btn-action:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-action.sell {
+        color: var(--danger);
+        border-color: rgba(246, 70, 93, 0.3);
+    }
+    .btn-action.sell:hover {
+        background: rgba(246, 70, 93, 0.1);
+    }
+
+    .btn-action.buy {
+        color: var(--success);
+        border-color: rgba(14, 203, 129, 0.3);
+    }
+    .btn-action.buy:hover {
+        background: rgba(14, 203, 129, 0.1);
+    }
+
+    /* Goal section - compact */
+    .goal-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+    }
+
+    .goal-input {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: var(--text-primary);
+        font-size: 12px;
+        width: 120px;
+    }
+
+    .goal-select {
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: var(--text-primary);
+        font-size: 12px;
+    }
+
+    .btn-goal {
+        background: var(--primary);
+        color: #1E2329;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        font-weight: 700;
         font-size: 11px;
-        color: #707A8A;
-        margin: 0;
+        cursor: pointer;
+        white-space: nowrap;
     }
 
-    .profit-cell {
-        font-weight: 500;
+    .btn-goal:hover { filter: brightness(1.1); }
+
+    /* Milestones */
+    .milestone-row {
+        display: flex;
+        gap: 6px;
+        margin-top: 10px;
+        flex-wrap: wrap;
     }
 
+    .milestone-chip {
+        flex: 1;
+        min-width: 70px;
+        text-align: center;
+        padding: 8px 10px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 6px;
+        border: 1px solid var(--border);
+        font-size: 10px;
+    }
+
+    .milestone-chip .m-value {
+        font-weight: 700;
+        color: var(--primary);
+        font-size: 12px;
+    }
+
+    .milestone-chip .m-label {
+        color: var(--text-secondary);
+        font-size: 9px;
+        margin-top: 2px;
+    }
+
+    .milestone-chip.goal {
+        border-color: rgba(14, 203, 129, 0.3);
+    }
+
+    .milestone-chip.goal .m-value { color: var(--success); }
+
+    /* Empty state */
     .empty-state {
         text-align: center;
-        padding: 60px;
-        color: #707A8A;
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
+        padding: 40px;
+        color: var(--text-secondary);
     }
 
-    .trade-btn {
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 11px;
-        font-weight: 500;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #1E2329;
+    .empty-state .icon {
+        font-size: 40px;
+        margin-bottom: 10px;
+        opacity: 0.5;
     }
 
-    .trade-btn:hover {
-        background: #EFF2F5;
-        border-color: #D9DDE2;
+    .empty-state p {
+        font-size: 12px;
+        margin: 4px 0;
     }
 
+    /* Journey canvas */
+    .journey-canvas-wrap {
+        position: relative;
+        height: 100px;
+        background: rgba(0,0,0,0.2);
+        border-radius: 8px;
+        overflow: hidden;
+        margin-top: 8px;
+    }
+
+    .journey-canvas-wrap canvas {
+        width: 100%;
+        height: 100%;
+    }
+
+    /* Mobile */
     @media (max-width: 768px) {
+        .portfolio-container { padding: 8px; }
+
         .stats-row {
-            grid-template-columns: repeat(2, 1fr);
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4px;
         }
-        .journey-map-container {
-            height: 250px;
+
+        .stat-card { padding: 10px 12px; }
+        .stat-value { font-size: 16px; }
+        .stat-label { font-size: 9px; }
+
+        .holdings-table th,
+        .holdings-table td {
+            padding: 8px 10px;
+            font-size: 10px;
         }
-        .milestone-row {
-            flex-wrap: wrap;
-        }
-        .milestone-point {
-            min-width: 80px;
-        }
-        .holdings-table th, .holdings-table td {
-            padding: 8px 12px;
-            font-size: 11px;
-        }
-        .token-icon {
-            width: 28px;
-            height: 28px;
-        }
-        .token-info h4 {
-            font-size: 12px;
-        }
-        .stat-value {
-            font-size: 20px;
-        }
+
+        .token-icon { width: 24px; height: 24px; }
+        .token-info .t-symbol { font-size: 11px; }
+
+        .goal-row { gap: 6px; }
+        .goal-input { width: 100px; font-size: 11px; }
+
+        .milestone-chip { min-width: 55px; padding: 6px; }
+        .milestone-chip .m-value { font-size: 10px; }
+    }
+
+    @media (max-width: 400px) {
+        .stats-row { gap: 3px; }
+        .stat-card { padding: 8px 10px; }
+        .stat-value { font-size: 14px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="portfolio-container">
-    <div class="portfolio-header">
-        <div class="portfolio-title">🎯 Goal Journey Tracker</div>
-        <div class="portfolio-subtitle">Track your progress from current position to your financial destination</div>
-    </div>
 
     <!-- Stats Row -->
     <div class="stats-row">
         <div class="stat-card">
-            <div class="stat-label">🎯 Your Destination</div>
-            <div class="stat-value gold" id="userTarget">$10,000</div>
-            <div class="stat-change">Target: <span id="targetDate">2 Years</span></div>
+            <div class="stat-label">Portfolio Value</div>
+            <div class="stat-value" id="portfolioValue">$0</div>
+            <div class="stat-subtitle">Total holdings</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">📍 Current Position</div>
-            <div class="stat-value green" id="currentProgress">$0</div>
-            <div class="progress-bar mt-2">
-                <div class="progress-fill" id="progressFill" style="width: 0%;"></div>
-            </div>
-            <div class="stat-change mt-1"><span id="progressPercent">0</span>% Complete</div>
+            <div class="stat-label">Goal Target</div>
+            <div class="stat-value green" id="goalTargetDisplay">$10,000</div>
+            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
+            <div class="stat-subtitle"><span id="progressPercent">0</span>% complete</div>
         </div>
         <div class="stat-card">
-            <div class="stat-label">⏰ Distance to Goal</div>
-            <div class="stat-value" id="remainingAmount">$0</div>
-            <div class="stat-change">Need to reach target</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">⚡ Required Monthly</div>
+            <div class="stat-label">Required/Month</div>
             <div class="stat-value" id="requiredMonthly">$0</div>
-            <div class="stat-change">To hit your goal</div>
+            <div class="stat-subtitle">To reach goal</div>
         </div>
     </div>
-    <!-- Hidden elements for JavaScript -->
-<input type="hidden" id="totalValue" value="0">
-<input type="hidden" id="totalInvested" value="0">
-<input type="hidden" id="dailyYield" value="0">
 
-    <!-- Goal Journey Map -->
-    <div class="journey-card">
-        <div class="journey-header">
-            <span class="journey-title"><i class="fas fa-map-marked-alt me-2" style="color: #F0B90B;"></i>Your Financial Journey</span>
+    <!-- Goal Planner -->
+    <div class="info-card">
+        <div class="info-title">🎯 Goal Planner</div>
+        <div class="goal-row">
+            <span style="font-size:10px;color:var(--text-secondary);">Target:</span>
+            <input type="number" id="goalTarget" class="goal-input" value="10000" step="1000">
+            <span style="font-size:10px;color:var(--text-secondary);">in</span>
+            <select id="goalYears" class="goal-select">
+                <option value="1">1 Year</option>
+                <option value="2" selected>2 Years</option>
+                <option value="3">3 Years</option>
+                <option value="5">5 Years</option>
+            </select>
+            <span style="font-size:10px;color:var(--text-secondary);">adding</span>
+            <input type="number" id="monthlyAddition" class="goal-input" value="0" step="50" placeholder="Monthly add">
+            <button class="btn-goal" id="updateGoalBtn">Update</button>
         </div>
-        <div class="journey-body">
-            <div class="journey-map-container" id="journeyMapContainer">
-                <canvas id="journeyCanvas" class="journey-canvas"></canvas>
-                <div id="animatedMarker" class="animated-marker" style="display: none;">
-                    <div class="marker-pin"></div>
-                    <div class="marker-label" id="markerLabel">Starting Point</div>
-                </div>
-            </div>
+        <div class="milestone-row" id="milestoneRow">
+            <div class="milestone-chip"><div class="m-value" id="mStart">$0</div><div class="m-label">Now</div></div>
+            <div class="milestone-chip"><div class="m-value" id="m25">$0</div><div class="m-label">25%</div></div>
+            <div class="milestone-chip"><div class="m-value" id="m50">$0</div><div class="m-label">50%</div></div>
+            <div class="milestone-chip"><div class="m-value" id="m75">$0</div><div class="m-label">75%</div></div>
+            <div class="milestone-chip goal"><div class="m-value" id="mTarget">$0</div><div class="m-label">Goal 🎯</div></div>
+        </div>
+        <div class="journey-canvas-wrap">
+            <canvas id="journeyCanvas"></canvas>
+        </div>
+    </div>
 
-            <!-- Milestone Points -->
-            <div class="milestone-row" id="milestoneRow">
-                <div class="milestone-point" data-position="0">
-                    <div class="milestone-value" id="startMilestone">$0</div>
-                    <div class="milestone-label">Start</div>
-                </div>
-                <div class="milestone-point" data-position="25">
-                    <div class="milestone-value" id="milestone25">$0</div>
-                    <div class="milestone-label">25%</div>
-                </div>
-                <div class="milestone-point" data-position="50">
-                    <div class="milestone-value" id="milestone50">$0</div>
-                    <div class="milestone-label">50%</div>
-                </div>
-                <div class="milestone-point" data-position="75">
-                    <div class="milestone-value" id="milestone75">$0</div>
-                    <div class="milestone-label">75%</div>
-                </div>
-                <div class="milestone-point" data-position="100">
-                    <div class="milestone-value" id="targetMilestone">$0</div>
-                    <div class="milestone-label">Goal 🎯</div>
-                </div>
+    <!-- Holdings - Binance-style -->
+    <div class="info-card">
+        <div class="info-title">📦 Your Assets</div>
+        <div id="holdingsContainer">
+            <div class="empty-state">
+                <div class="icon">📦</div>
+                <p>Loading assets...</p>
             </div>
         </div>
     </div>
 
-    <!-- Goal Calculator -->
-    <div class="journey-card">
-        <div class="journey-header">
-            <span class="journey-title"><i class="fas fa-calculator me-2" style="color: #F0B90B;"></i>Plan Your Journey</span>
-        </div>
-        <div class="journey-body">
-            <div class="goal-calculator">
-                <div class="row g-3">
-                    <div class="col-md-3">
-                        <label>🎯 Target Amount</label>
-                        <input type="number" id="goalTarget" class="form-control" value="10000" step="1000">
-                    </div>
-                    <div class="col-md-3">
-                        <label>⏱️ Time Period (Years)</label>
-                        <select id="goalYears" class="form-control">
-                            <option value="1">1 Year</option>
-                            <option value="2" selected>2 Years</option>
-                            <option value="3">3 Years</option>
-                            <option value="4">4 Years</option>
-                            <option value="5">5 Years</option>
-                        </select>
-                    </div>
-                    <div class="col-md-3">
-                        <label>➕ Monthly Addition</label>
-                        <input type="number" id="monthlyAddition" class="form-control" value="0" step="50">
-                    </div>
-                    <div class="col-md-3">
-                        <label>&nbsp;</label>
-                        <button id="updateGoalBtn" class="btn btn-sm" style="background: #F0B90B; color: #0B0E11; width: 100%; padding: 8px;">Update Journey →</button>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Holdings Section -->
-    <div class="holdings-section">
-        <div class="section-header">
-            <span class="section-title">📦 Your Holdings</span>
-            <span class="section-link" onclick="location.href='/trading/'">+ Add More</span>
-        </div>
-        <div id="holdingsContainer"></div>
-    </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API_BASE = '/api';
     let portfolioValue = 0;
-    let targetYears = 5;
+    let targetYears = 2;
     let monthlyAddition = 0;
-
-    function getTokenIcon(symbol) {
-        const icons = {
-            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'AVAX': 'https://assets.coingecko.com/coins/images/12559/small/avalanche.png',
-            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'PEPE': 'https://assets.coingecko.com/coins/images/29850/small/pepe-token.jpeg',
-            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png'
-        };
-        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
-    }
+    let allTokens = [];
 
     function getToken() { return localStorage.getItem('access_token'); }
 
     async function apiCall(endpoint, method = 'GET', data = null) {
         const token = getToken();
         const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
+        if (token) headers['Authorization'] = 'Bearer ' + token;
         const options = { method, headers };
         if (data) options.body = JSON.stringify(data);
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-        if (response.status === 401) window.location.href = '/login/';
-        return response.json();
+        const res = await fetch(`${API_BASE}${endpoint}`, options);
+        if (res.status === 401) window.location.href = '/login/';
+        if (!res.ok) throw new Error('API error ' + res.status);
+        return res.json();
     }
 
     function formatCurrency(num) {
         if (!num) return '$0.00';
         const value = parseFloat(num);
-        if (isNaN(value)) return '$0.00';
-        if (value === 0) return '$0.00';
-        if (Math.abs(value) < 0.01) return `$${value.toFixed(6)}`;
-        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+        if (isNaN(value) || value === 0) return '$0.00';
+        if (Math.abs(value) < 0.01) return '$' + value.toFixed(6);
+        if (value >= 1e9) return '$' + (value/1e9).toFixed(2) + 'B';
+        if (value >= 1e6) return '$' + (value/1e6).toFixed(2) + 'M';
+        return '$' + value.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
     }
 
-    function formatNumber(num, decimals = 6) {
+    function formatNumber(num, decimals) {
         if (!num) return '0';
         const value = parseFloat(num);
         if (isNaN(value)) return '0';
         if (value === 0) return '0';
         if (Math.abs(value) < 0.01) return value.toFixed(8);
-        return value.toFixed(decimals);
+        return value.toFixed(decimals || 4);
     }
 
-    // Calculate compound growth with 10% monthly yield
-    function calculateCompoundGrowth(initial, months, monthlyAdd = 0) {
-        let balance = initial;
-        const monthlyRate = 0.10;
+    function getTokenIcon(symbol) {
+        const icons = {
+            'BTC':'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH':'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB':'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+            'SOL':'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP':'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA':'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE':'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'DOT':'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+            'LINK':'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+            'UNI':'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+            'LTC':'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+            'NEAR':'https://assets.coingecko.com/coins/images/10365/small/near.png'
+        };
+        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+    }
 
-        for (let month = 1; month <= months; month++) {
+    function calculateCompoundGrowth(initial, months, monthlyAdd) {
+        var balance = initial;
+        var monthlyRate = 0.10;
+        for (var m = 0; m < months; m++) {
             balance += balance * monthlyRate;
-            if (monthlyAdd > 0) {
-                balance += monthlyAdd;
-            }
+            if (monthlyAdd > 0) balance += monthlyAdd;
         }
         return balance;
     }
 
-    function calculateProjectedValue(currentBalance, years, monthlyAdd = 0) {
-        const months = years * 12;
-        return calculateCompoundGrowth(currentBalance, months, monthlyAdd);
+    function calculateProjectedValue(currentBalance, years, monthlyAdd) {
+        return calculateCompoundGrowth(currentBalance, years * 12, monthlyAdd);
     }
 
     function drawJourneyMap(progressPercent) {
-        const canvas = document.getElementById('journeyCanvas');
+        var canvas = document.getElementById('journeyCanvas');
         if (!canvas) return;
-
-        const container = document.getElementById('journeyMapContainer');
-        if (!container) return;
-
-        const width = container.clientWidth;
-        const height = 280;
-
+        var width = canvas.parentElement.clientWidth;
+        var height = 100;
         canvas.width = width;
         canvas.height = height;
-        const ctx = canvas.getContext('2d');
-
+        var ctx = canvas.getContext('2d');
         ctx.clearRect(0, 0, width, height);
 
-        const startX = 60;
-        const endX = width - 60;
-        const y = height / 2;
+        var startX = 50;
+        var endX = width - 30;
+        var y = height / 2;
 
         // Background path
         ctx.beginPath();
         ctx.moveTo(startX, y);
         ctx.lineTo(endX, y);
-        ctx.strokeStyle = '#E2E4E8';
-        ctx.lineWidth = 6;
+        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+        ctx.lineWidth = 4;
         ctx.stroke();
 
-        // Progress path
-        const progressX = startX + (progressPercent / 100) * (endX - startX);
+        // Progress
+        var progressX = startX + (progressPercent / 100) * (endX - startX);
+        var gradient = ctx.createLinearGradient(startX, 0, progressX, 0);
+        gradient.addColorStop(0, '#F0B90B');
+        gradient.addColorStop(1, '#FCD535');
         ctx.beginPath();
         ctx.moveTo(startX, y);
         ctx.lineTo(progressX, y);
-        ctx.strokeStyle = '#F0B90B';
-        ctx.lineWidth = 6;
+        ctx.strokeStyle = gradient;
+        ctx.lineWidth = 4;
         ctx.stroke();
 
-        // Dashed remaining path
+        // Start dot
         ctx.beginPath();
-        ctx.setLineDash([8, 8]);
-        ctx.moveTo(progressX, y);
-        ctx.lineTo(endX, y);
-        ctx.strokeStyle = '#F0B90B';
-        ctx.lineWidth = 3;
-        ctx.stroke();
-        ctx.setLineDash([]);
-
-        // Start marker
-        ctx.beginPath();
-        ctx.arc(startX, y, 8, 0, 2 * Math.PI);
+        ctx.arc(startX, y, 5, 0, 2 * Math.PI);
         ctx.fillStyle = '#0ECB81';
         ctx.fill();
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 12px Arial';
-        ctx.fillText('🚩', startX - 8, y - 5);
 
-        // Target marker
+        // Current position dot
         ctx.beginPath();
-        ctx.arc(endX, y, 10, 0, 2 * Math.PI);
+        ctx.arc(progressX, y, 7, 0, 2 * Math.PI);
         ctx.fillStyle = '#F0B90B';
         ctx.fill();
-        ctx.fillStyle = 'white';
-        ctx.font = 'bold 14px Arial';
-        ctx.fillText('🏁', endX - 5, y - 5);
+        ctx.shadowColor = 'rgba(240,185,11,0.5)';
+        ctx.shadowBlur = 8;
+        ctx.fill();
+        ctx.shadowBlur = 0;
 
-        // Animated marker
-        const marker = document.getElementById('animatedMarker');
-        if (marker) {
-            const markerX = progressX - 16;
-            marker.style.left = markerX + 'px';
-            marker.style.top = (y - 16) + 'px';
-            marker.style.display = 'block';
-            const markerLabel = document.getElementById('markerLabel');
-            if (markerLabel) markerLabel.innerHTML = formatCurrency(portfolioValue);
-        }
+        // Target dot
+        ctx.beginPath();
+        ctx.arc(endX, y, 5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#0ECB81';
+        ctx.fill();
     }
 
     function updateGoalTracker() {
-        // Calculate target based on 5-year plan
-        const target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-        const progressPercent = portfolioValue > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0;
+        var target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
+        var progressPercent = target > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0;
 
-        // Update stats cards
-        const userTarget = document.getElementById('userTarget');
-        const currentProgress = document.getElementById('currentProgress');
-        const progressFill = document.getElementById('progressFill');
-        const progressPercentSpan = document.getElementById('progressPercent');
-        const remainingAmount = document.getElementById('remainingAmount');
-        const targetDateSpan = document.getElementById('targetDate');
+        document.getElementById('portfolioValue').textContent = formatCurrency(portfolioValue);
+        document.getElementById('goalTargetDisplay').textContent = formatCurrency(target);
+        document.getElementById('progressFill').style.width = progressPercent + '%';
+        document.getElementById('progressPercent').textContent = progressPercent.toFixed(1);
+        document.getElementById('requiredMonthly').textContent = formatCurrency(Math.max(0, (target - portfolioValue) / (targetYears * 12)));
 
-        if (userTarget) userTarget.innerHTML = formatCurrency(target);
-        if (currentProgress) currentProgress.innerHTML = formatCurrency(portfolioValue);
-        if (progressFill) progressFill.style.width = progressPercent + '%';
-        if (progressPercentSpan) progressPercentSpan.innerHTML = progressPercent.toFixed(1);
-        if (remainingAmount) remainingAmount.innerHTML = formatCurrency(Math.max(0, target - portfolioValue));
-        if (targetDateSpan) targetDateSpan.innerHTML = targetYears + ' Year' + (targetYears > 1 ? 's' : '');
-
-        // Update milestone points
-        const totalMonths = targetYears * 12;
-        const startMilestone = document.getElementById('startMilestone');
-        const milestone25 = document.getElementById('milestone25');
-        const milestone50 = document.getElementById('milestone50');
-        const milestone75 = document.getElementById('milestone75');
-        const targetMilestone = document.getElementById('targetMilestone');
-
-        if (startMilestone) startMilestone.innerHTML = formatCurrency(portfolioValue);
-        if (milestone25) milestone25.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.25, monthlyAddition));
-        if (milestone50) milestone50.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.5, monthlyAddition));
-        if (milestone75) milestone75.innerHTML = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.75, monthlyAddition));
-        if (targetMilestone) targetMilestone.innerHTML = formatCurrency(target);
-
-        // Update calculator inputs
-        const goalTargetInput = document.getElementById('goalTarget');
-        const goalYearsSelect = document.getElementById('goalYears');
-        const monthlyAdditionInput = document.getElementById('monthlyAddition');
-
-        if (goalTargetInput && !goalTargetInput.disabled) goalTargetInput.value = target.toFixed(0);
-        if (goalYearsSelect) goalYearsSelect.value = targetYears;
-        if (monthlyAdditionInput) monthlyAdditionInput.value = monthlyAddition;
+        var totalMonths = targetYears * 12;
+        document.getElementById('mStart').textContent = formatCurrency(portfolioValue);
+        document.getElementById('m25').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.25, monthlyAddition));
+        document.getElementById('m50').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.5, monthlyAddition));
+        document.getElementById('m75').textContent = formatCurrency(calculateCompoundGrowth(portfolioValue, totalMonths * 0.75, monthlyAddition));
+        document.getElementById('mTarget').textContent = formatCurrency(target);
 
         drawJourneyMap(progressPercent);
     }
 
-    async function getCurrentPrice(symbol) {
-        const symbolToId = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2'
-        };
-        const id = symbolToId[symbol];
-        if (!id) return 0;
-        try {
-            const response = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${id}&vs_currencies=usd`);
-            const data = await response.json();
-            return data[id]?.usd || 0;
-        } catch (e) {
-            return 0;
-        }
-    }
-
     async function loadPortfolio() {
-        const container = document.getElementById('holdingsContainer');
-        if (!container) {
-            console.error('holdingsContainer not found');
-            return;
-        }
+        var container = document.getElementById('holdingsContainer');
+        if (!container) return;
 
         try {
-            const holdings = await apiCall('/trading/my_tokens/');
+            // Get all tokens for prices AND holdings
+            var holdings = await apiCall('/trading/my_tokens/');
+            allTokens = await apiCall('/trading/');
 
-            let totalValue = 0;
+            var totalValue = 0;
 
             if (!holdings || holdings.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="fas fa-folder-open"></i>
-                        <div>No tokens in your portfolio</div>
-                        <div style="font-size: 12px; margin-top: 8px;">Start trading to build your portfolio</div>
-                        <button class="trade-btn" onclick="location.href='/trading/'" style="margin-top: 16px;">Start Trading</button>
-                    </div>
-                `;
+                container.innerHTML = '<div class="empty-state"><div class="icon">📦</div><p>No assets yet</p><p style="font-size:10px;">Buy tokens on the <a href="/trading/" style="color:#F0B90B;">Trading page</a></p></div>';
                 portfolioValue = 0;
                 updateGoalTracker();
                 return;
             }
 
-            const holdingsWithPrices = await Promise.all(holdings.map(async (holding) => {
-                const currentPrice = await getCurrentPrice(holding.token_symbol);
-                return { ...holding, current_price: currentPrice };
-            }));
+            var html = '<div class="table-wrapper"><table class="holdings-table"><thead><tr>' +
+                '<th>Asset</th><th>Amount</th><th>Avg Buy</th><th>Price</th><th>Value</th><th>P/L</th><th>Actions</th>' +
+                '</tr></thead><tbody>';
 
-            let tableHtml = `
-                <table class="holdings-table">
-                    <thead>
-                        <tr><th>Token</th><th>Quantity</th><th>Avg. Buy Price</th><th>Current Price</th><th>Value</th><th>Profit/Loss</th><th>Action</th></tr>
-                    </thead>
-                    <tbody>
-            `;
-
-            for (const holding of holdingsWithPrices) {
-                const currentPrice = holding.current_price;
-                const quantity = parseFloat(holding.quantity);
-                const avgPrice = parseFloat(holding.average_buy_price);
-                const value = quantity * currentPrice;
-                const invested = quantity * avgPrice;
-                const pnl = value - invested;
-                const pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
-                const pnlClass = pnl >= 0 ? 'positive' : 'negative';
-                const pnlSymbol = pnl >= 0 ? '+' : '';
-
+            for (var i = 0; i < holdings.length; i++) {
+                var holding = holdings[i];
+                var tokenData = allTokens.find(function(t) { return t.symbol === holding.token_symbol; });
+                var currentPrice = tokenData ? parseFloat(tokenData.current_price) : parseFloat(holding.current_price) || 0;
+                var quantity = parseFloat(holding.quantity);
+                var avgPrice = parseFloat(holding.average_buy_price);
+                var value = quantity * currentPrice;
+                var invested = quantity * avgPrice;
+                var pnl = value - invested;
+                var pnlPercent = invested > 0 ? (pnl / invested) * 100 : 0;
+                var pnlClass = pnl >= 0 ? 'positive' : 'negative';
+                var pnlSymbol = pnl >= 0 ? '+' : '';
                 totalValue += value;
 
-                tableHtml += `
-                    <tr style="cursor: pointer;" onclick="location.href='/trading/'">
-                        <td>
-                            <div class="token-cell">
-                                <img src="${getTokenIcon(holding.token_symbol)}" style="width:36px;height:36px;border-radius:50%;" onerror="this.src='https://cryptologos.cc/logos/bitcoin-btc-logo.png'">
-                                <div class="token-info">
-                                    <h4>${holding.token_symbol}</h4>
-                                    <p>${holding.token_name || holding.token_symbol}</p>
-                                </div>
-                            </div>
-                          </td>
-                          <td>${formatNumber(quantity, 6)}</td>
-                          <td>${formatCurrency(avgPrice)}</td>
-                          <td>${formatCurrency(currentPrice)}</td>
-                          <td>${formatCurrency(value)}</td>
-                        <td class="${pnlClass} profit-cell">${pnlSymbol}${formatCurrency(Math.abs(pnl))}<br><small>${pnlSymbol}${pnlPercent.toFixed(2)}%</small></td>
-                        <td><button class="trade-btn" onclick="event.stopPropagation(); location.href='/trading/'">Trade</button></td>
-                    </tr>
-                `;
+                html += '<tr onclick="window.location.href=\'/trading/\'">' +
+                    '<td><div class="token-cell"><img src="' + getTokenIcon(holding.token_symbol) + '" class="token-icon" onerror="this.src=\'https://cryptologos.cc/logos/bitcoin-btc-logo.png\'"><div class="token-info"><div class="t-symbol">' + holding.token_symbol + '</div><div class="t-name">' + (holding.token_name || '') + '</div></div></div></td>' +
+                    '<td>' + formatNumber(quantity, 4) + '</td>' +
+                    '<td>' + formatCurrency(avgPrice) + '</td>' +
+                    '<td>' + formatCurrency(currentPrice) + '</td>' +
+                    '<td>' + formatCurrency(value) + '</td>' +
+                    '<td class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(pnl)) + '<br><small style="font-size:9px;">' + pnlSymbol + pnlPercent.toFixed(2) + '%</small></td>' +
+                    '<td><div class="action-btns" onclick="event.stopPropagation();">' +
+                        '<button class="btn-action buy" onclick="window.location.href=\'/trading/\'">Buy</button>' +
+                        '<button class="btn-action sell" onclick="window.location.href=\'/trading/\'">Sell</button>' +
+                    '</div></td>' +
+                '</tr>';
             }
 
-            tableHtml += `</tbody></table>`;
-            container.innerHTML = tableHtml;
-
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
             portfolioValue = totalValue;
-
-            // Update stats
-            const totalValueSpan = document.getElementById('totalValue');
-            const totalInvestedSpan = document.getElementById('totalInvested');
-            const dailyYieldSpan = document.getElementById('dailyYield');
-
-            if (totalValueSpan) totalValueSpan.innerHTML = formatCurrency(totalValue);
-            if (totalInvestedSpan) totalInvestedSpan.innerHTML = formatCurrency(totalValue);
-            if (dailyYieldSpan) dailyYieldSpan.innerHTML = formatCurrency(totalValue * 0.20 / 365);
-
-            // Auto-update journey
             updateGoalTracker();
 
         } catch (e) {
             console.error('Error loading portfolio:', e);
-            container.innerHTML = '<div class="empty-state">Unable to load portfolio. Please refresh the page.</div>';
+            container.innerHTML = '<div class="empty-state"><div class="icon">⚠️</div><p>Error loading assets</p></div>';
         }
     }
 
-    // Event listeners
-    const updateBtn = document.getElementById('updateGoalBtn');
-    const goalYears = document.getElementById('goalYears');
-    const monthlyAdditionInput = document.getElementById('monthlyAddition');
+    // Goal update
+    document.getElementById('updateGoalBtn').addEventListener('click', function() {
+        targetYears = parseInt(document.getElementById('goalYears').value) || 2;
+        monthlyAddition = parseFloat(document.getElementById('monthlyAddition').value) || 0;
+        updateGoalTracker();
+    });
 
-    if (updateBtn) {
-        updateBtn.addEventListener('click', function() {
-            if (goalYears) targetYears = parseInt(goalYears.value);
-            if (monthlyAdditionInput) monthlyAddition = parseFloat(monthlyAdditionInput.value) || 0;
-            updateGoalTracker();
-        });
-    }
+    document.getElementById('goalYears').addEventListener('change', function() {
+        targetYears = parseInt(this.value);
+        updateGoalTracker();
+    });
 
-    if (goalYears) {
-        goalYears.addEventListener('change', function() {
-            targetYears = parseInt(this.value);
-            updateGoalTracker();
-        });
-    }
-
-    if (monthlyAdditionInput) {
-        monthlyAdditionInput.addEventListener('input', function() {
-            monthlyAddition = parseFloat(this.value) || 0;
-            updateGoalTracker();
-        });
-    }
-
-    window.addEventListener('resize', () => {
-        if (portfolioValue > 0) {
-            const target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            const progressPercent = Math.min(100, (portfolioValue / target) * 100);
-            drawJourneyMap(progressPercent);
+    window.addEventListener('resize', function() {
+        if (portfolioValue >= 0) {
+            var target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
+            drawJourneyMap(target > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0);
         }
     });
 
-    // ============ LIVE CLOCK MINI ============
-    function updateLiveClockMini() {
-        const now = new Date();
-        const hours = String(now.getHours()).padStart(2, '0');
-        const minutes = String(now.getMinutes()).padStart(2, '0');
-        const seconds = String(now.getSeconds()).padStart(2, '0');
-        const clockElement = document.getElementById('liveClockMini');
-        if (clockElement) {
-            clockElement.innerHTML = `${hours}:${minutes}:${seconds}`;
-        }
-    }
-    setInterval(updateLiveClockMini, 1000);
-    updateLiveClockMini();
-    // ============ END LIVE CLOCK MINI ============
-
-    // Start loading
+    // Init
     document.addEventListener('DOMContentLoaded', function() {
         loadPortfolio();
         setInterval(loadPortfolio, 120000);
