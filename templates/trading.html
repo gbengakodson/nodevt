@@ -1180,25 +1180,33 @@
     }
 
     async function executeMarketSell() {
-        const token = tokens.find(t => t.symbol === currentSymbol);
+        var token = tokens.find(function(t) { return t.symbol === currentSymbol; });
         if (!token) return;
-        const userQty = userHoldings[currentSymbol] || 0;
-        if (userQty === 0) { showModal(`No ${currentSymbol} to sell`, 'warning'); return; }
-        const amount = parseFloat(document.getElementById('marketAmount').value);
-        if (!amount || amount <= 0) { showModal('Enter amount', 'warning'); return; }
-        const quantity = amount / parseFloat(token.current_price);
-        if (quantity > userQty) { showModal(`Insufficient: ${formatNumber(userQty)} ${currentSymbol}`, 'error'); return; }
+        var userQty = userHoldings[currentSymbol] || 0;
+        if (userQty <= 0) { showModal('No ' + currentSymbol + ' to sell', 'warning'); return; }
+        var amount = parseFloat(document.getElementById('marketAmount').value);
+        if (!amount || amount <= 0) { showModal('Enter amount in USDC', 'warning'); return; }
+
+        // Convert USDC amount to token quantity
+        var tokenPrice = parseFloat(token.current_price);
+        var quantity = amount / tokenPrice;
+
+        if (quantity > userQty) {
+            showModal('Insufficient balance. Max: ' + formatNumber(userQty, 2) + ' ' + currentSymbol, 'error');
+            return;
+        }
+
         try {
-            const result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
+            var result = await apiCall('/trading/sell/', 'POST', { token_id: token.id, quantity: quantity });
             if (result.success) {
-                showModal(`Sold ${result.sale.quantity} ${currentSymbol}`, 'success');
+                showModal('✅ Sold ' + formatCurrency(amount) + ' of ' + currentSymbol, 'success');
                 await loadUserData();
                 await updateButtonState();
                 document.getElementById('marketAmount').value = '';
-            } else {
-                showModal('Sale failed', 'error');
             }
-        } catch (e) { showModal('Error: ' + e.message, 'error'); }
+        } catch (e) {
+            showModal(e.message || 'Sale failed', 'error');
+        }
     }
 
     // Grid Bot Activation
@@ -1276,7 +1284,6 @@
         var coinParam = params.get('coin');
         var sellParam = params.get('sell');
 
-        // If coin specified, set it BEFORE loading
         if (coinParam) {
             currentSymbol = coinParam;
         }
@@ -1286,13 +1293,12 @@
         renderOrderBook();
         updateButtonState();
 
-        // Now select the coin and pre-fill amount
         if (coinParam) {
             selectCoin(coinParam);
             if (sellParam) {
-                // Small delay to ensure selectCoin finishes
                 setTimeout(function() {
-                    document.getElementById('marketAmount').value = sellParam;
+                    // sellParam is USDC value, set it as the amount
+                    document.getElementById('marketAmount').value = parseFloat(sellParam).toFixed(2);
                 }, 500);
             }
         }

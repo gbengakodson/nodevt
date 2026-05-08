@@ -623,7 +623,7 @@
             }
 
             var html = '<div class="table-wrapper"><table class="holdings-table"><thead><tr>' +
-                '<th>Asset</th><th>Amount</th><th>Avg Buy</th><th>Price</th><th>Value</th><th>P/L</th><th>Actions</th>' +
+                '<th>Quantity</th><th>Buy Price</th><th>Price</th><th>Value</th><th>PNL</th><th>Actions</th>' +
                 '</tr></thead><tbody>';
 
             for (var i = 0; i < holdings.length; i++) {
@@ -646,12 +646,18 @@
                     '<td>' + formatCurrency(avgPrice) + '</td>' +
                     '<td>' + formatCurrency(currentPrice) + '</td>' +
                     '<td>' + formatCurrency(value) + '</td>' +
-                    '<td class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(pnl)) + '<br><small style="font-size:9px;">' + pnlSymbol + pnlPercent.toFixed(2) + '%</small></td>' +
+                    '<td class="' + pnlClass + '" style="font-weight:600;">' +
+                        '<span style="color:' + (pnl >= 0 ? '#0ECB81' : '#F6465D') + ';">' +
+                            pnlSymbol + formatCurrency(Math.abs(pnl)) +
+                        '</span>' +
+                        '<br><small style="font-size:9px;color:' + (pnl >= 0 ? '#0ECB81' : '#F6465D') + ';">' +
+                            pnlSymbol + pnlPercent.toFixed(2) + '%' +
+                        '</small>' +
+                    '</td>' +
                     '<td><div class="action-btns" onclick="event.stopPropagation();">' +
                         '<button class="btn-action buy" onclick="window.location.href=\'/trading/?coin=' + holding.token_symbol + '\'">Buy</button>' +
-                        '<button class="btn-action sell" onclick="window.location.href=\'/trading/?coin=' + holding.token_symbol + '&sell=' + formatNumber(quantity, 4) + '\'">Sell</button>' +
-                    '</div></td>' +
-                '</tr>';
+                        '<button class="btn-action sell" onclick="window.location.href=\'/trading/?coin=' + holding.token_symbol + '&sell=' + (quantity * currentPrice).toFixed(2) + '\'">Sell</button>' +
+                    '</tr>';
             }
 
             html += '</tbody></table></div>';
