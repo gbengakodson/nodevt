@@ -179,7 +179,7 @@ EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
 EMAIL_HOST_USER = 'nodevt.notify@gmail.com'
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'ucwa clbu eduk nsde')
+EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'guio ybcn kkxy lnpp')
 DEFAULT_FROM_EMAIL = 'nodevt.notify@gmail.com'
 
 
