@@ -21,6 +21,7 @@ from apps.trading.models import GridBot
 from apps.core.models import PlatformSetting
 
 
+
 def update_prices_webhook(request):
     """Webhook endpoint to trigger price updates"""
     from django.core.management import call_command
@@ -864,3 +865,12 @@ def yield_rate_view(request):
     setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate', defaults={'value': 10})
     monthly_rate = float(setting.value)
     return Response({'monthly': monthly_rate, 'hourly': monthly_rate / 720})
+
+
+@csrf_exempt
+@require_http_methods(["GET", "POST"])
+def send_daily_email_webhook(request):
+    """Webhook to trigger daily email sending"""
+    from apps.tasks.email_tasks import send_daily_email_to_all_users
+    result = send_daily_email_to_all_users()
+    return JsonResponse({'status': 'success', 'message': result})

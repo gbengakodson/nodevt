@@ -6,8 +6,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.wallets.views import AdminSendEmailView
 from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
-from apps.trading.views import yield_rate_view
-from apps.trading.views import send_daily_email_webhook
+from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
 
 from apps.wallets.views import (
