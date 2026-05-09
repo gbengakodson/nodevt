@@ -1189,6 +1189,7 @@
         var tokenPrice = parseFloat(token.current_price);
         var maxUSDC = userQty * tokenPrice;
         var quantity = amount / tokenPrice;
+        quantity = parseFloat(quantity.toFixed(8));
 
         if (quantity > userQty) {
             if (quantity <= userQty * 1.001) {
