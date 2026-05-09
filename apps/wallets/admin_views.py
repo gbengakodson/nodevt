@@ -8,6 +8,10 @@ from apps.wallets.models import Wallet
 from django.contrib.auth import get_user_model
 from apps.referrals.models import ReferralRelationship
 
+from django.http import JsonResponse
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_http_methods
+
 User = get_user_model()
 
 
@@ -85,18 +89,41 @@ class AdminUsersView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
+        from apps.tokens.models import UserTokenBalance, Purchase
+        from apps.trading.models import GridBot
+        from decimal import Decimal
+
         users = User.objects.all()
         data = []
         for user in users:
-            grand_wallet = Wallet.objects.get(user=user, wallet_type='GRAND')
-            yield_wallet = Wallet.objects.get(user=user, wallet_type='YIELD')
+            grand_wallet = Wallet.objects.filter(user=user, wallet_type='GRAND').first()
+            yield_wallet = Wallet.objects.filter(user=user, wallet_type='YIELD').first()
             referral_count = ReferralRelationship.objects.filter(referrer=user).count()
+
+            # Spot value
+            spot_value = Decimal('0')
+            for b in UserTokenBalance.objects.filter(user=user, quantity__gt=0):
+                spot_value += b.quantity * b.token.current_price
+
+            # Grid value
+            grid_value = Decimal('0')
+            for bot in GridBot.objects.filter(user=user, status='ACTIVE'):
+                grid_value += bot.amount + bot.grid_profit + bot.pnl
+
+            # Is sample? Users with no purchases and no referrals = sample
+            has_purchases = Purchase.objects.filter(user=user).exists()
+            is_sample = not has_purchases and referral_count == 0
 
             data.append({
                 'email': user.email,
-                'grand_balance': str(grand_wallet.balance),
-                'yield_balance': str(yield_wallet.balance),
+                'grand_balance': str(grand_wallet.balance if grand_wallet else 0),
+                'yield_balance': str(yield_wallet.balance if yield_wallet else 0),
+                'spot_value': str(spot_value),
+                'grid_value': str(grid_value),
                 'referral_count': referral_count,
+                'is_sample': is_sample,
                 'date_joined': user.date_joined.strftime('%Y-%m-%d')
             })
         return Response(data)
+
+
