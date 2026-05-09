@@ -868,9 +868,8 @@ def yield_rate_view(request):
 
 
 @csrf_exempt
-@require_http_methods(["GET", "POST"])
 def send_daily_email_webhook(request):
-    """Webhook to trigger daily email sending"""
+    """Webhook to trigger daily email sending - no auth required"""
     from apps.tasks.email_tasks import send_daily_email_to_all_users
     result = send_daily_email_to_all_users()
     return JsonResponse({'status': 'success', 'message': result})
