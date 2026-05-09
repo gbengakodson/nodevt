@@ -36,7 +36,7 @@ class YieldService:
     @classmethod
     @transaction.atomic
     def credit_hourly_yield(cls, user):
-        """Credit hourly yield based on ACTIVE GRID BOTS only (not spot holdings)"""
+        """Credit hourly yield based on ACTIVE GRID BOTS - current value (variable)"""
         from decimal import Decimal
         from apps.wallets.models import Wallet, Transaction
         from apps.trading.models import GridBot
@@ -62,8 +62,9 @@ class YieldService:
         total_hourly_yield = Decimal('0')
 
         for bot in active_bots:
-            # Hourly profit: bot.amount * HOURLY_RATE
-            bot_hourly_profit = bot.amount * cls.HOURLY_RATE
+            # Current value = investment + grid_profit + PNL (fluctuates with market)
+            current_value = bot.amount + bot.grid_profit + bot.pnl
+            bot_hourly_profit = current_value * cls.HOURLY_RATE
             bot.grid_profit += bot_hourly_profit
             bot.save()
             total_hourly_yield += bot_hourly_profit
