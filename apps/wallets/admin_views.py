@@ -11,6 +11,7 @@ from apps.referrals.models import ReferralRelationship
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
+from rest_framework.permissions import AllowAny
 
 User = get_user_model()
 
@@ -123,5 +124,154 @@ class AdminUsersView(APIView):
                 'date_joined': user.date_joined.strftime('%Y-%m-%d')
             })
         return Response(data)
+
+
+
+
+class PublicStatsView(APIView):
+    """Public version of admin stats - no auth required"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from apps.tokens.models import UserTokenBalance, Purchase
+        from apps.trading.models import GridBot
+        from django.db.models import Sum, Count
+        from decimal import Decimal
+
+        # Total users
+        total_users = User.objects.filter(is_active=True).count()
+
+        # Platform balance (sum of all grand wallets)
+        platform_balance = Wallet.objects.filter(wallet_type='GRAND').aggregate(total=Sum('balance'))['total'] or Decimal('0')
+
+        # Total tokens held (spot value)
+        total_tokens_held = Decimal('0')
+        for b in UserTokenBalance.objects.filter(quantity__gt=0):
+            total_tokens_held += b.quantity * b.token.current_price
+
+        # Total buys
+        total_buys = Purchase.objects.count()
+
+        # Unique holders
+        unique_holders = UserTokenBalance.objects.filter(quantity__gt=0).values('user').distinct().count()
+
+        # Most held token
+        most_held = UserTokenBalance.objects.filter(quantity__gt=0).values('token__symbol').annotate(total=Sum('quantity')).order_by('-total').first()
+        most_held_token = most_held['token__symbol'] if most_held else '-'
+
+        # Volume
+        total_volume = Purchase.objects.aggregate(total=Sum('total_amount'))['total'] or Decimal('0')
+
+        return Response({
+            'total_users': total_users,
+            'platform_usdc_balance': float(platform_balance),
+            'total_tokens_held': float(total_tokens_held),
+            'total_buys': total_buys,
+            'unique_holders': unique_holders,
+            'avg_token_value': float(total_tokens_held / unique_holders) if unique_holders > 0 else 0,
+            'most_held_token': most_held_token,
+            'total_volume': float(total_volume),
+        })
+
+
+class PublicDepositsView(APIView):
+    """Public deposits list - no auth"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        deposits = DepositRequest.objects.filter(status='CONFIRMED').order_by('-created_at')[:20]
+        data = [{
+            'created_at': d.created_at.strftime('%Y-%m-%d %H:%M'),
+            'user': d.user.wallet_address or anon_email(d.user.email),
+            'amount': str(d.amount),
+            'status': d.status,
+        } for d in deposits]
+        return Response(data)
+
+
+class PublicWithdrawalsView(APIView):
+    """Public withdrawals list - no auth"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        withdrawals = WithdrawalRequest.objects.filter(status='PROCESSED').order_by('-created_at')[:20]
+        data = [{
+            'created_at': w.created_at.strftime('%Y-%m-%d %H:%M'),
+            'user': w.user.wallet_address or anon_email(w.user.email),
+            'amount': str(w.amount),
+            'wallet_address': w.wallet_address,
+            'status': w.status,
+        } for w in withdrawals]
+        return Response(data)
+
+
+class PublicHoldersView(APIView):
+    """Public holders list - no auth"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from apps.tokens.models import UserTokenBalance
+        balances = UserTokenBalance.objects.filter(quantity__gt=0).select_related('user', 'token').order_by('-quantity')[:30]
+        data = []
+        for b in balances:
+            value = b.quantity * b.token.current_price
+            invested = b.quantity * b.average_buy_price
+            pnl = value - invested
+            data.append({
+                'user': b.user.wallet_address or anon_email(b.user.email),
+                'email': b.user.email,
+                'wallet_address': b.user.wallet_address or '',
+                'token_symbol': b.token.symbol,
+                'quantity': str(b.quantity),
+                'value': float(value),
+                'pnl': float(pnl),
+            })
+        return Response(data)
+
+
+class PublicUsersView(APIView):
+    """Public users list - no auth"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from apps.tokens.models import UserTokenBalance
+        from apps.trading.models import GridBot
+        from decimal import Decimal
+
+        users = User.objects.filter(is_active=True)
+        data = []
+        for user in users:
+            grand = Wallet.objects.filter(user=user, wallet_type='GRAND').first()
+            yw = Wallet.objects.filter(user=user, wallet_type='YIELD').first()
+            refs = ReferralRelationship.objects.filter(referrer=user).count()
+
+            spot = Decimal('0')
+            for b in UserTokenBalance.objects.filter(user=user, quantity__gt=0):
+                spot += b.quantity * b.token.current_price
+
+            grid = Decimal('0')
+            for bot in GridBot.objects.filter(user=user, status='ACTIVE'):
+                grid += bot.amount + bot.grid_profit + bot.pnl
+
+            data.append({
+                'user': user.wallet_address or anon_email(user.email),
+                'email': user.email,
+                'wallet_address': user.wallet_address or '',
+                'grand_balance': str(grand.balance if grand else 0),
+                'yield_balance': str(yw.balance if yw else 0),
+                'spot_value': str(spot),
+                'grid_value': str(grid),
+                'referral_count': refs,
+            })
+        return Response(data)
+
+
+def anon_email(email):
+    if not email: return 'Unknown'
+    parts = email.split('@')
+    name = parts[0]
+    domain = parts[1] if len(parts) > 1 else ''
+    if len(name) <= 3: return name[0] + '***@' + domain
+    return name[:2] + '***' + name[-1] + '@' + domain
 
 

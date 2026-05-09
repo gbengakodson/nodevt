@@ -8,7 +8,7 @@ from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
-
+from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
 from apps.wallets.views import (
     AdminStatisticsView,
     AdminHoldersView,
@@ -69,5 +69,12 @@ urlpatterns = [
     path('api/yield-rate/', yield_rate_view, name='yield_rate'),
 
     path('api/trigger/daily-email/', send_daily_email_webhook, name='trigger_daily_email'),
+
+    # In urlpatterns add:
+    path('api/public/stats/', PublicStatsView.as_view(), name='public_stats'),
+    path('api/public/deposits/', PublicDepositsView.as_view(), name='public_deposits'),
+    path('api/public/withdrawals/', PublicWithdrawalsView.as_view(), name='public_withdrawals'),
+    path('api/public/holders/', PublicHoldersView.as_view(), name='public_holders'),
+    path('api/public/users/', PublicUsersView.as_view(), name='public_users'),
 
 ]

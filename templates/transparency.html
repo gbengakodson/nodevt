@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Platform Transparency | NODE AI{% endblock %}
+{% block title %}Public | NODE {% endblock %}
 
 {% block extra_css %}
 <style>
@@ -218,8 +218,8 @@
 {% block content %}
 <div class="trans-container">
     <div class="trans-header">
-        <h1>🔍 Platform Transparency</h1>
-        <p>Real-time view of all platform activities. User identities are anonymized.</p>
+        <h1>🔍 NODE Spot Grid</h1>
+        <p>Public NODE. User identities are anonymized.</p>
     </div>
 
     <!-- Platform Stats -->
@@ -328,7 +328,7 @@
     // Stats
     async function loadStats() {
         try {
-            var s = await apiCall('/admin/statistics/');
+            var s = await apiCall('/public/stats/');
             document.getElementById('totalUsers').textContent = s.total_users || s.unique_holders || 0;
             document.getElementById('platformBalance').textContent = fc(s.platform_usdc_balance);
             document.getElementById('tokensHeld').textContent = fc(s.total_tokens_held);
@@ -358,20 +358,20 @@
 
     // Tabs
     async function loadDeposits() {
-        var data = await apiCall('/admin/deposits/');
+        var data = await apiCall('/public/deposits/');
         document.getElementById('depositsList').innerHTML = data.map(function(d) { return '<tr><td>' + d.created_at + '</td><td><span class="address-text" title="' + d.user + '">' + showUser(d) + '</span></td><td>' + fc(d.amount) + '</td><td><span class="badge ' + (d.status === 'CONFIRMED' ? 'badge-green' : d.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + d.status + '</span></td></tr>'; }).join('');
     }
     async function loadWithdrawals() {
-        var data = await apiCall('/admin/withdrawals/');
+        var data = await apiCall('/public/withdrawals/');
         document.getElementById('withdrawalsList').innerHTML = data.map(function(w) { return '<tr><td>' + w.created_at + '</td><td><span class="address-text" title="' + w.user + '">' + showUser(w) + '</span></td><td>' + fc(w.amount) + '</td><td><span class="address-text">' + anonAddr(w.wallet_address) + '</span></td><td><span class="badge ' + (w.status === 'PROCESSED' ? 'badge-green' : w.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + w.status + '</span></td></tr>'; }).join('');
     }
     async function loadHolders() {
-        var data = await apiCall('/admin/holders/');
+        var data = await apiCall('/public/holders/');
         var all = (data.top_holders || []).concat(data.bottom_holders || []);
         document.getElementById('holdersList').innerHTML = all.map(function(h) { var pnl = h.pnl || 0; return '<tr><td><span class="address-text" title="' + h.email + '">' + showUser(h) + '</span></td><td>' + h.token_symbol + '</td><td>' + fn(h.quantity) + '</td><td>' + fc(h.value) + '</td><td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + fc(pnl) + '</td></tr>'; }).join('');
     }
     async function loadUsers() {
-        var data = await apiCall('/admin/users/');
+        var data = await apiCall('/public/users/');
         document.getElementById('usersList').innerHTML = data.map(function(u) { return '<tr><td><span class="address-text" title="' + u.email + '">' + showUser(u) + '</span></td><td>' + fc(u.grand_balance) + '</td><td>' + fc(u.yield_balance) + '</td><td>' + fc(u.spot_value || 0) + '</td><td>' + fc(u.grid_value || 0) + '</td><td>' + (u.referral_count || 0) + '</td></tr>'; }).join('');
     }
     async function loadActivity() {
