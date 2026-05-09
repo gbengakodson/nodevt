@@ -212,6 +212,17 @@
         .stats-grid { grid-template-columns: 1fr 1fr; }
         .stat-card .value { font-size: 13px; }
     }
+
+        .panel-scroll {
+        max-height: 350px;
+        overflow-y: auto;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+    .panel-scroll::-webkit-scrollbar { width: 4px; }
+    .panel-scroll::-webkit-scrollbar-track { background: transparent; }
+    .panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
 </style>
 {% endblock %}
 
@@ -258,27 +269,27 @@
 
     <!-- Deposits -->
     <div id="panel-deposits" class="card">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Status</th></tr></thead><tbody id="depositsList"></tbody></table></div>
+        <div class="panel-scroll"><div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Status</th></tr></thead><tbody id="depositsList"></tbody></table></div></div>
     </div>
 
     <!-- Withdrawals -->
     <div id="panel-withdrawals" class="card" style="display:none;">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Address</th><th>Status</th></tr></thead><tbody id="withdrawalsList"></tbody></table></div>
+        <div class="panel-scroll"><div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Address</th><th>Status</th></tr></thead><tbody id="withdrawalsList"></tbody></table></div></div>
     </div>
 
     <!-- Holders -->
     <div id="panel-holders" class="card" style="display:none;">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Token</th><th>Qty</th><th>Value</th><th>PNL</th></tr></thead><tbody id="holdersList"></tbody></table></div>
+        <div class="panel-scroll"><div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Token</th><th>Qty</th><th>Value</th><th>PNL</th></tr></thead><tbody id="holdersList"></tbody></table></div></div>
     </div>
 
     <!-- Users -->
     <div id="panel-users" class="card" style="display:none;">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Grand</th><th>Yield</th><th>Spot</th><th>Grid</th><th>Refs</th></tr></thead><tbody id="usersList"></tbody></table></div>
+        <div class="panel-scroll"><div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Grand</th><th>Yield</th><th>Spot</th><th>Grid</th><th>Refs</th></tr></thead><tbody id="usersList"></tbody></table></div></div>
     </div>
 
     <!-- Activity -->
     <div id="panel-activity" class="card" style="display:none;">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Details</th></tr></thead><tbody id="activityList"></tbody></table></div>
+        <div class="panel-scroll"><div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Details</th></tr></thead><tbody id="activityList"></tbody></table></div></div>
     </div>
 
     <!-- Community Chat -->
