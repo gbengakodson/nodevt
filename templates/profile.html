@@ -1,424 +1,431 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Profile{% endblock %}
+{% block title %}Profile | NODE 2.0{% endblock %}
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #0B0E11;
+        --bg-card: #1E2329;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; }
+    body { background: var(--bg-body); max-width: 100vw; overflow-x: hidden; }
+
     .profile-container {
-        max-width: 1200px;
+        max-width: 800px;
         margin: 0 auto;
-    }
-
-    .profile-header {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 24px;
-        margin-bottom: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 20px;
-    }
-
-    .profile-title h1 {
-        font-size: 24px;
-        font-weight: 600;
-        margin: 0 0 4px 0;
-        color: #1E2329;
-    }
-
-    .profile-title p {
-        font-size: 13px;
-        color: #707A8A;
-        margin: 0;
-    }
-
-    .profile-badge {
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        border-radius: 20px;
-        padding: 6px 14px;
-        font-size: 12px;
-        color: #0ECB81;
-    }
-
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 20px;
-        margin-bottom: 24px;
-    }
-
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        transition: transform 0.2s;
-    }
-
-    .stat-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-    }
-
-    .stat-icon {
-        width: 40px;
-        height: 40px;
-        background: #F8F9FA;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 12px;
-        font-size: 20px;
-    }
-
-    .stat-label {
-        font-size: 11px;
-        color: #707A8A;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin-bottom: 6px;
-    }
-
-    .stat-value {
-        font-size: 22px;
-        font-weight: 600;
-        color: #1E2329;
-    }
-
-    .two-column {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 24px;
-        margin-bottom: 24px;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        overflow: hidden;
-    }
-
-    .card-header {
-        padding: 16px 20px;
-        border-bottom: 1px solid #E2E4E8;
-        background: #F8F9FA;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-
-    .card-header h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0;
-        color: #1E2329;
-    }
-
-    .card-body {
-        padding: 20px;
-    }
-
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 12px 0;
-        border-bottom: 1px solid #E2E4E8;
-    }
-
-    .info-row:last-child {
-        border-bottom: none;
-    }
-
-    .info-label {
-        font-size: 13px;
-        color: #707A8A;
-    }
-
-    .info-value {
-        font-size: 13px;
-        font-weight: 500;
-        color: #1E2329;
-        word-break: break-all;
-        text-align: right;
-        max-width: 60%;
-        font-family: monospace;
-    }
-
-    .address-box {
-        background: #F8F9FA;
-        border-radius: 8px;
         padding: 12px;
-        font-family: monospace;
-        font-size: 12px;
-        word-break: break-all;
-        text-align: center;
-        border: 1px solid #E2E4E8;
-        margin: 12px 0;
-    }
-
-    .copy-btn {
         width: 100%;
-        background: #F8F9FA;
-        border: 1px solid #E2E4E8;
-        border-radius: 8px;
-        padding: 10px;
+    }
+
+    /* Header */
+    .profile-header {
+        display: flex; align-items: center; gap: 16px;
+        padding: 20px; margin-bottom: 10px;
+        background: var(--bg-card); border-radius: 10px;
+        border: 1px solid var(--border); flex-wrap: wrap;
+    }
+    .avatar-wrap { position: relative; flex-shrink: 0; }
+    .avatar {
+        width: 64px; height: 64px; border-radius: 50%;
+        background: var(--primary); display: flex; align-items: center;
+        justify-content: center; font-size: 24px; font-weight: 700;
+        color: #1E2329; cursor: pointer;
+    }
+    .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+    .avatar-change {
+        position: absolute; bottom: -2px; right: -2px;
+        width: 22px; height: 22px; border-radius: 50%;
+        background: var(--primary); border: 2px solid var(--bg-card);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 10px;
+    }
+    .profile-info { flex: 1; min-width: 150px; }
+    .profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
+    .profile-email { font-size: 11px; color: var(--text-secondary); }
+    .profile-since { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
+    .btn-logout {
+        padding: 8px 16px; border-radius: 6px; border: 1px solid var(--danger);
+        background: transparent; color: var(--danger); font-weight: 600;
+        font-size: 11px; cursor: pointer; transition: all 0.15s;
+    }
+    .btn-logout:hover { background: rgba(246,70,93,0.1); }
+
+    /* Stats */
+    .stats-row {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 6px; margin-bottom: 10px;
+    }
+    .stat-mini {
+        background: var(--bg-card); border-radius: 8px;
+        border: 1px solid var(--border); padding: 12px; text-align: center;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .stat-mini:hover { border-color: var(--primary); }
+    .stat-mini .label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+    .stat-mini .value { font-size: 16px; font-weight: 700; color: var(--primary); margin-top: 3px; }
+    .stat-mini .value.green { color: var(--success); }
+
+    /* Cards */
+    .card {
+        background: var(--bg-card); border-radius: 10px;
+        border: 1px solid var(--border); padding: 16px; margin-bottom: 10px;
+    }
+    .card-title {
+        font-size: 12px; font-weight: 700; color: var(--text-primary);
+        margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+        justify-content: space-between;
+    }
+    .card-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.03);
         font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
+    }
+    .card-row:last-child { border-bottom: none; }
+    .card-label { color: var(--text-secondary); }
+    .card-value { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
+
+    /* Inputs */
+    .form-input {
+        width: 100%; padding: 10px 12px; border-radius: 6px;
+        border: 1px solid var(--border); background: rgba(0,0,0,0.3);
+        color: var(--text-primary); font-size: 12px; margin-bottom: 8px;
+    }
+    .form-input:focus { outline: none; border-color: var(--primary); }
+
+    /* Buttons */
+    .btn-sm {
+        padding: 6px 14px; border-radius: 5px; font-size: 10px;
+        font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+    }
+    .btn-primary { background: var(--primary); color: #1E2329; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-outline {
+        background: transparent; border: 1px solid var(--border);
+        color: var(--text-secondary);
+    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: rgba(246,70,93,0.1); }
+
+    /* Address */
+    .address-box {
+        background: rgba(0,0,0,0.3); border-radius: 6px;
+        padding: 10px; font-family: monospace; font-size: 11px;
+        text-align: center; word-break: break-all; color: var(--text-primary);
+        border: 1px solid var(--border); margin: 8px 0;
+    }
+
+    /* Toggle Switch */
+    .toggle {
+        width: 40px; height: 22px; border-radius: 11px;
+        background: var(--border); position: relative; cursor: pointer;
+        transition: all 0.2s; flex-shrink: 0;
+    }
+    .toggle.active { background: var(--success); }
+    .toggle::after {
+        content: ''; width: 18px; height: 18px; border-radius: 50%;
+        background: white; position: absolute; top: 2px; left: 2px;
         transition: all 0.2s;
-        color: #1E2329;
-        margin-top: 8px;
+    }
+    .toggle.active::after { left: 20px; }
+
+    /* Referral */
+    .ref-code {
+        font-size: 20px; font-weight: 700; color: var(--primary);
+        font-family: monospace; letter-spacing: 2px;
+    }
+    .ref-link {
+        font-size: 11px; color: var(--text-secondary); margin-top: 4px;
+        word-break: break-all;
     }
 
-    .copy-btn:hover {
-        background: #EFF2F5;
-        border-color: #D9DDE2;
+    /* Danger zone */
+    .danger-zone {
+        opacity: 0.6; transition: opacity 0.2s;
     }
+    .danger-zone:hover { opacity: 1; }
 
-    .warning-box {
-        background: rgba(246, 70, 93, 0.08);
-        border-left: 3px solid #F6465D;
-        padding: 12px 16px;
-        border-radius: 8px;
-        margin-top: 16px;
-    }
+    /* QR */
+    .qr-img { width: 120px; height: 120px; display: block; margin: 8px auto; }
 
-    .warning-text {
-        font-size: 11px;
-        color: #F6465D;
-        line-height: 1.5;
+    /* Modal */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 1000;
+        display: none; align-items: center; justify-content: center;
     }
-
-    .action-btn {
-        background: none;
-        border: 1px solid #E2E4E8;
-        border-radius: 6px;
-        padding: 6px 12px;
-        font-size: 11px;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: #1E2329;
+    .modal-box {
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 10px; max-width: 400px; width: 90%; padding: 20px;
     }
-
-    .action-btn:hover {
-        background: #F8F9FA;
-        border-color: #D9DDE2;
-    }
+    .modal-box h3 { font-size: 14px; color: var(--text-primary); margin-bottom: 12px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
 
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: 1fr;
-        }
-        .two-column {
-            grid-template-columns: 1fr;
-        }
-        .info-value {
-            max-width: 50%;
-            font-size: 11px;
-        }
+        .profile-container { padding: 6px; }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .avatar { width: 48px; height: 48px; font-size: 18px; }
+        .card-row { font-size: 11px; }
     }
-
-
-@media (max-width: 768px) {
-    .mobile-logout {
-        display: block !important;
-    }
-    .btn-logout-mobile {
-        width: 100%;
-        background: #F6465D;
-        color: white;
-        padding: 12px;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-    }
-}
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="profile-container">
+
+    <!-- Header -->
     <div class="profile-header">
-        <div class="profile-title">
-            <h1>Account Profile</h1>
-            <p>Manage your account and security settings</p>
-
-            <div class="mobile-logout" style="display: none; margin-top: 20px;">
-                <button onclick="logout()" style="width: 100%; background: #F6465D; color: white; padding: 12px; border: none; border-radius: 8px; font-weight: 600;">Logout</button></div>
-
-                <style>
-                    @media (max-width: 768px) {
-                        .mobile-logout {
-                             display: block !important;
-                        }
-                    }
-                </style>
+        <div class="avatar-wrap">
+            <div class="avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
+                <span id="avatarText">U</span>
+                <img id="avatarImg" style="display:none;">
             </div>
+            <div class="avatar-change" onclick="document.getElementById('avatarInput').click()">📷</div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
         </div>
+        <div class="profile-info">
+            <div class="profile-name" id="displayName">Loading...</div>
+            <div class="profile-email" id="displayEmail">Loading...</div>
+            <div class="profile-since" id="displayJoined">Member since —</div>
+        </div>
+        <button class="btn-logout" onclick="logout()">Logout</button>
+    </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-chart-line"></i>
-            </div>
-            <div class="stat-label">Total Deposits</div>
-            <div class="stat-value" id="totalDeposits">$0.00</div>
+    <!-- Quick Stats -->
+    <div class="stats-row">
+        <div class="stat-mini"><div class="label">Grand</div><div class="value" id="grandBal">$0</div></div>
+        <div class="stat-mini"><div class="label">Yield</div><div class="value green" id="yieldBal">$0</div></div>
+        <div class="stat-mini" onclick="window.location.href='/portfolio/'"><div class="label">Portfolio</div><div class="value" id="portfolioVal">$0</div></div>
+        <div class="stat-mini" onclick="window.location.href='/referral/'"><div class="label">Referrals</div><div class="value green" id="refEarnings">$0</div></div>
+    </div>
+
+    <!-- Account Info -->
+    <div class="card">
+        <div class="card-title">👤 Account Information <button class="btn-sm btn-primary" onclick="saveProfile()">Save</button></div>
+        <div class="card-row"><span class="card-label">Email</span><input type="email" id="editEmail" class="form-input" style="max-width:60%;margin-bottom:0;"></div>
+        <div class="card-row"><span class="card-label">Username</span><input type="text" id="editUsername" class="form-input" style="max-width:60%;margin-bottom:0;"></div>
+        <div class="card-row"><span class="card-label">Password</span><button class="btn-sm btn-outline" onclick="openPasswordModal()">Change</button></div>
+    </div>
+
+    <!-- Wallet -->
+    <div class="card">
+        <div class="card-title">💳 Wallet <button class="btn-sm btn-outline" onclick="copyAddress()">📋 Copy</button></div>
+        <div class="card-row"><span class="card-label">Network</span><span class="card-value">BSC (BEP20)</span></div>
+        <div class="card-row"><span class="card-label">Token</span><span class="card-value">USDC</span></div>
+        <div class="address-box" id="depositAddr">Loading...</div>
+        <img id="qrCode" class="qr-img" src="" alt="QR" style="display:none;">
+        <div style="font-size:10px;color:var(--danger);text-align:center;margin-top:6px;">⚠️ Send only USDC on BEP20. Other tokens will be lost.</div>
+    </div>
+
+    <!-- Notifications -->
+    <div class="card">
+        <div class="card-title">🔔 Notifications</div>
+        <div class="card-row">
+            <span class="card-label">Daily Email Summary</span>
+            <div class="toggle active" id="toggleDailyEmail" onclick="toggleNotification('daily_email')"></div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-exchange-alt"></i>
-            </div>
-            <div class="stat-label">Total Trades</div>
-            <div class="stat-value" id="totalTrades">0</div>
+        <div class="card-row">
+            <span class="card-label">Yield Credit Alerts</span>
+            <div class="toggle" id="toggleYieldAlert" onclick="toggleNotification('yield_alert')"></div>
         </div>
-        <div class="stat-card">
-            <div class="stat-icon">
-                <i class="fas fa-gem"></i>
-            </div>
-            <div class="stat-label">Total Yield Earned</div>
-            <div class="stat-value" id="totalYield">$0.00</div>
+        <div class="card-row">
+            <span class="card-label">Trade Confirmations</span>
+            <div class="toggle" id="toggleTradeAlert" onclick="toggleNotification('trade_alert')"></div>
         </div>
     </div>
 
-    <div class="two-column">
-        <div class="info-card">
-            <div class="card-header">
-                <h3><i class="fas fa-user me-2"></i>Account Information</h3>
-                <button class="action-btn" onclick="editProfile()">Edit</button>
-            </div>
-            <div class="card-body">
-                <div class="info-row">
-                    <span class="info-label">Email Address</span>
-                    <span class="info-value" id="userEmail">Loading...</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Username</span>
-                    <span class="info-value" id="userUsername">Loading...</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Member Since</span>
-                    <span class="info-value" id="userJoined">Loading...</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Referral Code</span>
-                    <span class="info-value" id="referralCode" style="font-family: monospace; font-size: 16px; font-weight: 600; color: #F0B90B;">Loading...</span>
-                </div>
-            </div>
+    <!-- Referral -->
+    <div class="card">
+        <div class="card-title">🔗 Referral Program</div>
+        <div class="ref-code" id="refCode">—</div>
+        <div class="ref-link" id="refLink">—</div>
+        <div style="display:flex;gap:8px;margin-top:10px;">
+            <button class="btn-sm btn-primary" onclick="copyReferralLink()">📋 Copy Link</button>
+            <button class="btn-sm btn-outline" onclick="window.location.href='/referral/'">View Full Program →</button>
         </div>
+    </div>
 
-        <div class="info-card">
-            <div class="card-header">
-                <h3><i class="fas fa-wallet me-2"></i>Wallet Information</h3>
-                <button class="action-btn" onclick="copyAddress()">Copy</button>
-            </div>
-            <div class="card-body">
-                <div class="info-row">
-                    <span class="info-label">Network</span>
-                    <span class="info-value">BSC (BEP20)</span>
-                </div>
-                <div class="info-row">
-                    <span class="info-label">Token</span>
-                    <span class="info-value">USDC</span>
-                </div>
-                <div class="address-box" id="depositAddress">Loading...</div>
-                <div class="warning-box">
-                    <div class="warning-text">
-                        ⚠️ Send only USDC on BEP20 network to this address. Sending any other token may result in permanent loss.
-                    </div>
-                </div>
-            </div>
+    <!-- Danger Zone -->
+    <div class="card danger-zone">
+        <div class="card-title" style="color:var(--danger);">⚠️ Danger Zone</div>
+        <p style="font-size:10px;color:var(--text-secondary);">Permanently delete your account and all data.</p>
+        <button class="btn-sm btn-danger" onclick="openDeleteModal()">Delete Account</button>
+    </div>
+</div>
+
+<!-- Password Modal -->
+<div class="modal-overlay" id="passwordModal">
+    <div class="modal-box">
+        <h3>Change Password</h3>
+        <input type="password" id="currentPassword" class="form-input" placeholder="Current password">
+        <input type="password" id="newPassword" class="form-input" placeholder="New password">
+        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm new password">
+        <div class="modal-actions">
+            <button class="btn-sm btn-outline" onclick="closePasswordModal()">Cancel</button>
+            <button class="btn-sm btn-primary" onclick="changePassword()">Update</button>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal-overlay" id="deleteModal">
+    <div class="modal-box">
+        <h3 style="color:var(--danger);">Delete Account</h3>
+        <p style="font-size:11px;color:var(--text-secondary);">This action is irreversible. All your data will be permanently deleted.</p>
+        <input type="text" id="deleteConfirm" class="form-input" placeholder="Type DELETE to confirm">
+        <div class="modal-actions">
+            <button class="btn-sm btn-outline" onclick="closeDeleteModal()">Cancel</button>
+            <button class="btn-sm btn-danger" onclick="deleteAccount()">Delete Forever</button>
         </div>
     </div>
 </div>
 
 <script>
-    const API_BASE = '/api';
+    const API = '/api';
+    var userData = {};
+    var balanceData = {};
 
-    function getToken() {
-        return localStorage.getItem('access_token');
+    function getToken() { return localStorage.getItem('access_token'); }
+
+    async function apiCall(url, method = 'GET', data = null) {
+        var token = getToken();
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        var opts = { method: method, headers: headers };
+        if (data) opts.body = JSON.stringify(data);
+        var res = await fetch(API + url, opts);
+        if (res.status === 401) { localStorage.clear(); window.location.href = '/login/'; }
+        return res.json();
     }
 
-    async function apiCall(endpoint, method = 'GET', data = null) {
-        const token = getToken();
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
-        }
-
-        const options = {
-            method: method,
-            headers: headers,
-        };
-
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
-
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-
-        if (response.status === 401) {
-            localStorage.clear();
-            sessionStorage.clear();
-            window.location.href = '/login/';
-            throw new Error('Session expired');
-        }
-
-        return response.json();
-    }
-
-
-
-    function formatCurrency(num) {
-            if (!num) return '$0.00';
-            const value = parseFloat(num);
-            if (isNaN(value)) return '$0.00';
-            if (value === 0) return '$0.00';
-            if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-            if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-            if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-            if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-            return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
-    }
-
+    function fc(num) { if (!num) return '$0.00'; var v = parseFloat(num); if (isNaN(v) || v === 0) return '$0.00'; return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
     async function loadProfile() {
         try {
-            const userData = await apiCall('/auth/profile/');
-            const balance = await apiCall('/trading/my_balance/');
+            userData = await apiCall('/auth/profile/');
+            balanceData = await apiCall('/trading/my_balance/');
+            var stats = await apiCall('/trading/referral_stats/');
+            var portfolio = await apiCall('/trading/portfolio_summary/').catch(() => null);
 
-            document.getElementById('userEmail').innerHTML = userData.email || 'N/A';
-            document.getElementById('userUsername').innerHTML = userData.username || 'N/A';
-            document.getElementById('userJoined').innerHTML = userData.created_at ? new Date(userData.created_at).toLocaleDateString() : 'N/A';
-            document.getElementById('referralCode').innerHTML = userData.referral_code || 'N/A';
-            document.getElementById('depositAddress').innerHTML = balance.deposit_address || 'No wallet created yet';
+            document.getElementById('displayName').textContent = userData.username || 'User';
+            document.getElementById('displayEmail').textContent = userData.email;
+            document.getElementById('displayJoined').textContent = 'Member since ' + (userData.created_at ? new Date(userData.created_at).toLocaleDateString() : '—');
+            document.getElementById('editEmail').value = userData.email || '';
+            document.getElementById('editUsername').value = userData.username || '';
+            document.getElementById('avatarText').textContent = (userData.username || 'U').charAt(0).toUpperCase();
 
-            // Placeholder stats until we have transaction endpoint
-            document.getElementById('totalDeposits').innerHTML = formatCurrency(0);
-            document.getElementById('totalTrades').innerHTML = '0';
-            document.getElementById('totalYield').innerHTML = formatCurrency(balance.yield_balance);
+            document.getElementById('grandBal').textContent = fc(balanceData.grand_balance);
+            document.getElementById('yieldBal').textContent = fc(balanceData.yield_balance);
+            document.getElementById('portfolioVal').textContent = portfolio ? fc(portfolio.total_portfolio) : '$0';
+            document.getElementById('refEarnings').textContent = fc(stats.total_commissions);
 
-        } catch (e) {
-            console.error('Error loading profile:', e);
-        }
+            document.getElementById('depositAddr').textContent = balanceData.deposit_address || 'No wallet';
+            if (balanceData.deposit_address) {
+                var qr = document.getElementById('qrCode');
+                qr.src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(balanceData.deposit_address);
+                qr.style.display = 'block';
+            }
+
+            document.getElementById('refCode').textContent = userData.referral_code || '—';
+            document.getElementById('refLink').textContent = window.location.origin + '/register?ref=' + (userData.referral_code || '');
+
+            // Load notification prefs
+            var prefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"daily_email":true,"yield_alert":false,"trade_alert":false}');
+            updateToggle('toggleDailyEmail', prefs.daily_email);
+            updateToggle('toggleYieldAlert', prefs.yield_alert);
+            updateToggle('toggleTradeAlert', prefs.trade_alert);
+
+        } catch(e) { console.error(e); }
     }
 
-    function editProfile() {
-        showModal('Profile editing feature coming soon', 'info');
+    function updateToggle(id, state) {
+        var el = document.getElementById(id);
+        if (state) el.classList.add('active'); else el.classList.remove('active');
+    }
+
+    function toggleNotification(type) {
+        var prefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"daily_email":true,"yield_alert":false,"trade_alert":false}');
+        prefs[type] = !prefs[type];
+        localStorage.setItem('notifPrefs', JSON.stringify(prefs));
+        var idMap = { daily_email: 'toggleDailyEmail', yield_alert: 'toggleYieldAlert', trade_alert: 'toggleTradeAlert' };
+        updateToggle(idMap[type], prefs[type]);
+    }
+
+    async function saveProfile() {
+        var email = document.getElementById('editEmail').value.trim();
+        var username = document.getElementById('editUsername').value.trim();
+        if (!email) return alert('Email required');
+        try {
+            await apiCall('/auth/profile/', 'PUT', { email: email, username: username });
+            alert('Profile updated!');
+            loadProfile();
+        } catch(e) { alert('Failed to update'); }
+    }
+
+    function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
+    function closePasswordModal() { document.getElementById('passwordModal').style.display = 'none'; }
+
+    async function changePassword() {
+        var curr = document.getElementById('currentPassword').value;
+        var newP = document.getElementById('newPassword').value;
+        var conf = document.getElementById('confirmPassword').value;
+        if (!curr || !newP) return alert('Fill all fields');
+        if (newP !== conf) return alert('Passwords do not match');
+        try {
+            var res = await apiCall('/auth/change-password/', 'POST', { current_password: curr, new_password: newP });
+            if (res.success) { alert('Password changed!'); closePasswordModal(); }
+            else alert(res.error || 'Failed');
+        } catch(e) { alert('Error'); }
+    }
+
+    function openDeleteModal() { document.getElementById('deleteModal').style.display = 'flex'; }
+    function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
+
+    async function deleteAccount() {
+        if (document.getElementById('deleteConfirm').value !== 'DELETE') return alert('Type DELETE to confirm');
+        try {
+            await apiCall('/auth/profile/', 'DELETE');
+            localStorage.clear();
+            window.location.href = '/register/';
+        } catch(e) { alert('Failed to delete account'); }
     }
 
     function copyAddress() {
-        const address = document.getElementById('depositAddress').innerText;
-        navigator.clipboard.writeText(address);
-        showModal('Address copied to clipboard!', 'success');
+        var addr = document.getElementById('depositAddr').textContent;
+        navigator.clipboard.writeText(addr);
+        alert('Address copied!');
+    }
+
+    function copyReferralLink() {
+        var link = document.getElementById('refLink').textContent;
+        navigator.clipboard.writeText(link);
+        alert('Referral link copied!');
+    }
+
+    function handleAvatar(e) {
+        var file = e.target.files[0];
+        if (!file) return;
+        var reader = new FileReader();
+        reader.onload = function(ev) {
+            document.getElementById('avatarImg').src = ev.target.result;
+            document.getElementById('avatarImg').style.display = 'block';
+            document.getElementById('avatarText').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+    }
+
+    function logout() {
+        localStorage.clear();
+        sessionStorage.clear();
+        window.location.href = '/login/';
     }
 
     loadProfile();
