@@ -89,8 +89,8 @@
 
     .holding-stats {
         display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 8px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
         margin-bottom: 12px;
     }
     .stat-item {
@@ -920,7 +920,7 @@
                     const pnlSymbol = bot.pnl >= 0 ? '+' : '';
                     const canClose = bot.pnl > 0;
                     const hasProfit = bot.grid_profit > 0;
-                    totalPortfolioValue += bot.amount + bot.grid_profit;
+                    totalPortfolioValue += bot.amount + bot.grid_profit + bot.pnl;
                     const currentToken = tokens.find(t => t.symbol === bot.token_symbol);
                     const currentPrice = currentToken ? currentToken.current_price : 0;
 
@@ -957,6 +957,10 @@
                                     <label>Grid Profit</label>
                                     <span class="positive">${formatCurrency(bot.grid_profit)}</span>
                                     ${hasProfit ? '<div class="collect-hint">Click to collect →</div>' : ''}
+                                </div>
+                                <div class="stat-item">
+                                    <label>Current Value</label>
+                                    <span style="color:${bot.pnl >= 0 ? '#0ECB81' : '#F6465D'}">${formatCurrency(bot.amount + bot.grid_profit + bot.pnl)}</span>
                                 </div>
                                 <div class="stat-item">
                                     <label>PNL</label>
