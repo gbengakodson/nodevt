@@ -36,9 +36,10 @@ class YieldService:
     @classmethod
     @transaction.atomic
     def credit_hourly_yield(cls, user):
-        """Credit hourly yield based on current portfolio value - only once per hour"""
+        """Credit hourly yield based on ACTIVE GRID BOTS only (not spot holdings)"""
         from decimal import Decimal
         from apps.wallets.models import Wallet, Transaction
+        from apps.trading.models import GridBot
         from django.utils import timezone
 
         # Check if we already credited this hour
@@ -52,16 +53,23 @@ class YieldService:
         if last_transaction:
             return Decimal('0')
 
-        # Get user's total portfolio value
-        holdings = user.token_balances.filter(quantity__gt=0)
-        total_value = Decimal('0')
-        for h in holdings:
-            total_value += h.quantity * h.token.current_price
+        # Get active grid bots only
+        active_bots = GridBot.objects.filter(user=user, status='ACTIVE')
 
-        if total_value <= 0:
+        if not active_bots.exists():
             return Decimal('0')
 
-        hourly_yield = total_value * cls.HOURLY_RATE
+        total_hourly_yield = Decimal('0')
+
+        for bot in active_bots:
+            # Hourly profit: bot.amount * HOURLY_RATE
+            bot_hourly_profit = bot.amount * cls.HOURLY_RATE
+            bot.grid_profit += bot_hourly_profit
+            bot.save()
+            total_hourly_yield += bot_hourly_profit
+
+        if total_hourly_yield <= 0:
+            return Decimal('0')
 
         # Get or create yield wallet
         yield_wallet, created = Wallet.objects.get_or_create(
@@ -71,25 +79,26 @@ class YieldService:
         )
 
         # Credit to yield wallet
-        yield_wallet.balance += hourly_yield
+        yield_wallet.balance += total_hourly_yield
         yield_wallet.save()
 
         # Create transaction record
         Transaction.objects.create(
             user=user,
             transaction_type='YIELD',
-            amount=hourly_yield,
+            amount=total_hourly_yield,
             fee=Decimal('0'),
             status='COMPLETED',
             metadata={
                 'type': 'hourly_yield',
-                'portfolio_value': str(total_value),
+                'source': 'grid_bots',
+                'active_bots': active_bots.count(),
                 'hourly_rate': str(cls.HOURLY_RATE)
             },
             completed_at=timezone.now()
         )
 
-        return hourly_yield
+        return total_hourly_yield
 
     @classmethod
     @transaction.atomic
