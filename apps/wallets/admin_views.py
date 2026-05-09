@@ -100,22 +100,20 @@ class AdminUsersView(APIView):
             yield_wallet = Wallet.objects.filter(user=user, wallet_type='YIELD').first()
             referral_count = ReferralRelationship.objects.filter(referrer=user).count()
 
-            # Spot value
             spot_value = Decimal('0')
             for b in UserTokenBalance.objects.filter(user=user, quantity__gt=0):
                 spot_value += b.quantity * b.token.current_price
 
-            # Grid value
             grid_value = Decimal('0')
             for bot in GridBot.objects.filter(user=user, status='ACTIVE'):
                 grid_value += bot.amount + bot.grid_profit + bot.pnl
 
-            # Is sample? Users with no purchases and no referrals = sample
             has_purchases = Purchase.objects.filter(user=user).exists()
             is_sample = not has_purchases and referral_count == 0
 
             data.append({
                 'email': user.email,
+                'wallet_address': user.wallet_address or '',  # ← ADD THIS
                 'grand_balance': str(grand_wallet.balance if grand_wallet else 0),
                 'yield_balance': str(yield_wallet.balance if yield_wallet else 0),
                 'spot_value': str(spot_value),

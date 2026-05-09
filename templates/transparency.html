@@ -1,462 +1,493 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Platform Wallet Explorer | NODE{% endblock %}
+{% block title %}Platform Transparency | NODE AI{% endblock %}
 
 {% block extra_css %}
 <style>
-    .explorer-header {
-        background: #FFFFFF;
-        border-bottom: 1px solid #D9DDE2;
-        padding: 24px 0;
+    :root {
+        --primary: #F0B90B;
+        --bg-card: #181A20;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+        --warning: #F0B90B;
     }
-    .explorer-breadcrumb {
-        font-size: 13px;
-        color: #697582;
-        margin-bottom: 8px;
-    }
-    .explorer-breadcrumb a {
-        color: #697582;
-        text-decoration: none;
-    }
-    .explorer-breadcrumb a:hover {
-        color: #F0B90B;
-    }
-    .explorer-title {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1E2329;
-        margin: 0;
-    }
-    .explorer-subtitle {
-        font-size: 13px;
-        color: #697582;
-        margin-top: 4px;
-    }
-    .explorer-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #D9DDE2;
-        margin-bottom: 24px;
+
+    * { box-sizing: border-box; }
+    body { background: #0B0E11; max-width: 100vw; overflow-x: hidden; }
+
+    .trans-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 12px;
+        width: 100%;
         overflow: hidden;
     }
-    .card-header {
-        background: #F8F9FA;
+
+    .trans-header {
+        background: linear-gradient(135deg, #1E2329, #2B3139);
+        border-radius: 10px;
+        border: 1px solid var(--border);
         padding: 16px 20px;
-        border-bottom: 1px solid #D9DDE2;
+        margin-bottom: 10px;
+        text-align: center;
     }
-    .card-header h3 {
-        font-size: 16px;
-        font-weight: 600;
-        color: #1E2329;
-        margin: 0;
-    }
-    .card-header i {
-        color: #F0B90B;
-        margin-right: 8px;
-    }
-    .address-container {
-        background: #F8F9FA;
-        padding: 16px 20px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        flex-wrap: wrap;
-        gap: 12px;
-    }
-    .address-value {
-        font-family: monospace;
-        font-size: 14px;
-        background: white;
-        padding: 8px 12px;
-        border-radius: 8px;
-        border: 1px solid #D9DDE2;
-        word-break: break-all;
-    }
-    .copy-btn {
-        background: #F0B90B;
-        border: none;
-        padding: 8px 16px;
-        border-radius: 8px;
-        cursor: pointer;
-        font-weight: 500;
-    }
+    .trans-header h1 { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
+    .trans-header p { font-size: 11px; color: var(--text-secondary); margin: 4px 0 0; }
+
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 24px;
+        gap: 8px;
+        margin-bottom: 10px;
     }
     .stat-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #D9DDE2;
-        padding: 16px;
+        background: var(--bg-card);
+        border-radius: 8px;
+        border: 1px solid var(--border);
+        padding: 12px 14px;
+        min-width: 0;
         text-align: center;
     }
-    .stat-label {
-        font-size: 11px;
-        color: #697582;
-        text-transform: uppercase;
-        margin-bottom: 8px;
-    }
-    .stat-value {
-        font-size: 22px;
-        font-weight: 700;
-        color: #1E2329;
-    }
-    .stat-value-usdc { color: #F0B90B; }
-    .stat-value-bnb { color: #0ECB81; }
-    .data-table {
-        width: 100%;
-        font-size: 13px;
-        border-collapse: collapse;
-    }
-    .data-table th {
-        padding: 12px 16px;
-        text-align: left;
-        background: #F8F9FA;
-        font-weight: 600;
-        color: #697582;
-        font-size: 12px;
-        border-bottom: 1px solid #D9DDE2;
-    }
-    .data-table td {
-        padding: 12px 16px;
-        border-bottom: 1px solid #D9DDE2;
-    }
-    .data-table tr:hover { background: #F8F9FA; }
-    .tx-hash {
-        font-family: monospace;
-        font-size: 12px;
-        color: #F0B90B;
-        text-decoration: none;
-    }
-    .badge-in {
-        background: #E6F9F0;
-        color: #0ECB81;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-    }
-    .badge-out {
-        background: #FEEBEE;
-        color: #F6465D;
-        padding: 4px 10px;
-        border-radius: 20px;
-        font-size: 11px;
-    }
-    .amount-positive { color: #0ECB81; font-weight: 600; }
-    .amount-negative { color: #F6465D; font-weight: 600; }
-    .info-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        padding: 20px;
-    }
-    .info-row {
-        display: flex;
-        justify-content: space-between;
-        padding: 8px 0;
-        border-bottom: 1px solid #D9DDE2;
-    }
-    .info-label { font-size: 12px; color: #697582; }
-    .info-value { font-size: 12px; font-weight: 500; color: #1E2329; }
-    .chat-message {
-        transition: background 0.2s;
-        padding: 12px;
+    .stat-card .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
+    .stat-card .value { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .stat-card .sub { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+    .stat-card.green .value { color: var(--success); }
+
+    .card {
+        background: var(--bg-card);
         border-radius: 8px;
-    }
-    .chat-message:hover { background: #F8F9FA; }
-    .reply-btn {
-        background: none;
-        border: none;
-        color: #F0B90B;
-        font-size: 11px;
-        cursor: pointer;
-        margin-top: 8px;
-    }
-    .reply-btn:hover { text-decoration: underline; }
-    .reply-form {
-        margin-top: 8px;
-        margin-left: 40px;
-        display: none;
-    }
-    .reply-input {
+        border: 1px solid var(--border);
+        padding: 16px;
+        margin-bottom: 10px;
         width: 100%;
-        padding: 8px;
-        border: 1px solid #D9DDE2;
-        border-radius: 20px;
-        font-size: 12px;
+        min-width: 0;
+        overflow: hidden;
     }
+    .card-title {
+        font-size: 13px; font-weight: 700; color: var(--text-primary);
+        margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+
+    .tabs {
+        display: flex; gap: 2px; margin-bottom: 10px;
+        background: rgba(0,0,0,0.2); border-radius: 6px; padding: 3px;
+        width: fit-content; flex-wrap: wrap;
+    }
+    .tab-btn {
+        background: transparent; border: none; color: var(--text-secondary);
+        padding: 6px 14px; cursor: pointer; font-size: 11px; font-weight: 600;
+        border-radius: 5px; white-space: nowrap;
+    }
+    .tab-btn.active { background: var(--primary); color: #1E2329; }
+    .tab-btn .count { font-size: 9px; opacity: 0.7; margin-left: 3px; }
+
+    .table-wrap {
+        overflow-x: auto; -webkit-overflow-scrolling: touch;
+        width: 100%; max-width: 100%;
+    }
+    .compact-table {
+        width: 100%; border-collapse: collapse; min-width: 600px;
+    }
+    .compact-table th {
+        padding: 8px 10px; text-align: left;
+        background: rgba(240,185,11,0.04); font-size: 10px; font-weight: 700;
+        color: var(--text-secondary); text-transform: uppercase;
+        border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .compact-table td {
+        padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 11px; color: var(--text-primary); white-space: nowrap;
+    }
+    .compact-table tbody tr:hover { background: rgba(240,185,11,0.02); }
+    .compact-table tbody tr:last-child td { border-bottom: none; }
+
+    .badge {
+        display: inline-block; padding: 2px 8px; border-radius: 8px;
+        font-size: 10px; font-weight: 600;
+    }
+    .badge-green { background: rgba(14,203,129,0.15); color: var(--success); }
+    .badge-red { background: rgba(246,70,93,0.15); color: var(--danger); }
+    .badge-yellow { background: rgba(240,185,11,0.15); color: var(--warning); }
+    .badge-gray { background: rgba(132,142,156,0.15); color: var(--text-secondary); }
+
+    .address-text {
+        font-family: monospace; font-size: 10px;
+        max-width: 120px; overflow: hidden; text-overflow: ellipsis;
+        display: inline-block; vertical-align: middle;
+    }
+
+    .pnl-positive { color: var(--success); }
+    .pnl-negative { color: var(--danger); }
+
+    /* Chart */
+    .chart-wrap { height: 200px; margin-top: 8px; }
+
+    /* Chat - Sophisticated */
+    .chat-container { display: flex; flex-direction: column; }
+    .chat-messages {
+        height: 400px; overflow-y: auto; padding: 12px;
+        background: rgba(0,0,0,0.15); border-radius: 8px;
+        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-track { background: transparent; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .chat-msg {
+        padding: 12px 14px; margin-bottom: 10px; border-radius: 10px;
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04);
+        transition: all 0.2s;
+    }
+    .chat-msg:hover { background: rgba(240,185,11,0.03); border-color: rgba(240,185,11,0.1); }
+    .chat-msg-header {
+        display: flex; justify-content: space-between; align-items: center;
+        margin-bottom: 6px;
+    }
+    .chat-user {
+        display: flex; align-items: center; gap: 8px;
+        font-size: 11px; font-weight: 600;
+    }
+    .chat-avatar {
+        width: 28px; height: 28px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 12px; font-weight: 700;
+    }
+    .chat-avatar.admin { background: var(--primary); color: #1E2329; }
+    .chat-avatar.user { background: var(--success); color: #fff; }
+    .chat-time { font-size: 9px; color: var(--text-secondary); }
+    .chat-body { font-size: 11px; line-height: 1.5; color: var(--text-primary); }
+    .chat-actions {
+        display: flex; gap: 12px; margin-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.03); padding-top: 8px;
+    }
+    .chat-action {
+        display: flex; align-items: center; gap: 4px;
+        background: none; border: none; color: var(--text-secondary);
+        font-size: 10px; cursor: pointer; padding: 4px 8px;
+        border-radius: 4px; transition: all 0.15s;
+    }
+    .chat-action:hover { color: var(--primary); background: rgba(240,185,11,0.08); }
+    .chat-action.liked { color: var(--danger); }
+    .chat-action .action-count { font-size: 9px; }
+
+    .chat-reply {
+        margin-left: 35px; margin-top: 8px; padding: 10px 12px;
+        background: rgba(240,185,11,0.04); border-radius: 8px;
+        border-left: 3px solid var(--primary);
+    }
+    .chat-reply .chat-avatar { width: 22px; height: 22px; font-size: 10px; }
+
+    .chat-input-area {
+        display: flex; gap: 8px; margin-top: 10px;
+    }
+    .chat-input-area input {
+        flex: 1; padding: 10px 14px; border-radius: 8px;
+        border: 1px solid var(--border); background: rgba(0,0,0,0.3);
+        color: var(--text-primary); font-size: 11px;
+    }
+    .chat-input-area input:focus { outline: none; border-color: var(--primary); }
+    .chat-send-btn {
+        padding: 10px 20px; border-radius: 8px; border: none;
+        background: var(--primary); color: #1E2329;
+        font-weight: 700; font-size: 11px; cursor: pointer;
+        transition: all 0.15s;
+    }
+    .chat-send-btn:hover { filter: brightness(1.1); }
+
     @media (max-width: 768px) {
-        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-        .stat-value { font-size: 18px; }
-        .info-grid { grid-template-columns: 1fr; }
+        .trans-container { padding: 6px; }
+        .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+        .stat-card { padding: 10px; }
+        .stat-card .value { font-size: 15px; }
+        .tabs { width: 100%; }
+        .tab-btn { flex: 1; text-align: center; font-size: 10px; padding: 5px 8px; }
+        .compact-table th, .compact-table td { padding: 6px 8px; font-size: 10px; }
+        .chat-messages { height: 300px; }
+        .chat-reply { margin-left: 20px; }
+    }
+    @media (max-width: 400px) {
+        .stats-grid { grid-template-columns: 1fr 1fr; }
+        .stat-card .value { font-size: 13px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="explorer-header">
-    <div class="container">
-        <div class="explorer-breadcrumb"><a href="/">Home</a> / <span style="color: #F0B90B;"> BSCSCAN</span></div>
-        <div class="explorer-title">NODE Wallet Explorer</div>
-        <div class="explorer-subtitle">Real-time view of NODE's custodial wallet on Binance Smart Chain</div>
+<div class="trans-container">
+    <div class="trans-header">
+        <h1>🔍 Platform Transparency</h1>
+        <p>Real-time view of all platform activities. User identities are anonymized.</p>
     </div>
-</div>
 
-<div class="container py-4">
+    <!-- Platform Stats -->
     <div class="stats-grid">
-        <div class="stat-card"><div class="stat-label">USDC Balance</div><div class="stat-value stat-value-usdc" id="usdcBalance">—</div></div>
-        <div class="stat-card"><div class="stat-label">BNB Balance</div><div class="stat-value stat-value-bnb" id="bnbBalance">—</div></div>
-        <div class="stat-card"><div class="stat-label">Total Value (USD)</div><div class="stat-value" id="totalValueUSD">—</div></div>
-        <div class="stat-card"><div class="stat-label">Network</div><div class="stat-value" style="font-size: 16px;">BSC</div></div>
+        <div class="stat-card"><div class="label">Total Users</div><div class="value" id="totalUsers">0</div></div>
+        <div class="stat-card green"><div class="label">Platform Balance</div><div class="value" id="platformBalance">$0</div></div>
+        <div class="stat-card"><div class="label">Tokens Held</div><div class="value" id="tokensHeld">$0</div></div>
+        <div class="stat-card green"><div class="label">Total Buys</div><div class="value" id="totalBuys">0</div></div>
     </div>
 
-    <div class="explorer-card">
-        <div class="card-header"><h3><i class="fas fa-wallet"></i> Wallet Address</h3></div>
-        <div class="address-container">
-            <div class="address-value" style="flex:1;">0x1610a914fc0df204c70f727e5e576cdbb5abea35</div>
-            <button class="copy-btn" onclick="copyAddress()">📋 Copy</button>
+    <!-- Token Stats -->
+    <div class="card">
+        <div class="card-title">📊 Token Overview</div>
+        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
+            <div class="stat-card"><div class="label">Unique Holders</div><div class="value" id="uniqueHolders" style="font-size:15px;">0</div></div>
+            <div class="stat-card"><div class="label">Avg Token Value</div><div class="value" id="avgTokenValue" style="font-size:15px;">$0</div></div>
+            <div class="stat-card"><div class="label">Most Held</div><div class="value" id="mostHeldToken" style="font-size:15px;">-</div></div>
+            <div class="stat-card"><div class="label">Volume</div><div class="value" id="totalVolume" style="font-size:15px;">$0</div></div>
         </div>
     </div>
 
-    <div class="explorer-card">
-        <div class="card-header"><h3><i class="fas fa-coins"></i> Token Holdings</h3></div>
-        <div style="overflow-x: auto;"><table class="data-table"><thead><tr><th>Token</th><th>Balance</th><th>Value (USD)</th></tr></thead><tbody id="tokenHoldingsBody"><tr><td colspan="3" style="text-align:center;">Loading...</td></tr></tbody></table></div>
+    <!-- Buy/Sell Chart -->
+    <div class="card">
+        <div class="card-title">📈 Buy/Sell Activity (7 Days)</div>
+        <div class="chart-wrap"><canvas id="buySellChart"></canvas></div>
     </div>
 
-    <div class="explorer-card">
-        <div class="card-header"><h3><i class="fas fa-clock"></i> Recent Transactions</h3></div>
-        <div style="overflow-x: auto;"><table class="data-table"><thead><tr><th>Tx Hash</th><th>Type</th><th>Amount</th><th>Age</th></tr></thead><tbody id="transactionsBody"><tr><td colspan="4" style="text-align:center;">Loading...</td></tr></tbody></table></div>
-        <div class="text-center p-3" style="border-top:1px solid #D9DDE2;"><a href="https://bscscan.com/token/0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d?a=0x1610a914fc0df204c70f727e5e576cdbb5abea35" target="_blank" style="color:#F0B90B;">View Full History on BscScan →</a></div>
+    <!-- Tabs -->
+    <div class="tabs">
+        <button class="tab-btn active" data-tab="deposits">Deposits</button>
+        <button class="tab-btn" data-tab="withdrawals">Withdrawals</button>
+        <button class="tab-btn" data-tab="holders">Holders</button>
+        <button class="tab-btn" data-tab="users">Users</button>
+        <button class="tab-btn" data-tab="activity">Activity</button>
     </div>
 
-    <div class="explorer-card">
-        <div class="card-header"><h3><i class="fas fa-info-circle"></i> More Info</h3></div>
-        <div class="info-grid">
-            <div class="info-row"><span class="info-label">Network</span><span class="info-value">Binance Smart Chain (BSC)</span></div>
-            <div class="info-row"><span class="info-label">Token Standard</span><span class="info-value">BEP-20</span></div>
-            <div class="info-row"><span class="info-label">Exchange Integration</span><span class="info-value">Binance & Bybit APIs</span></div>
-            <div class="info-row"><span class="info-label">Platform Type</span><span class="info-value">Custodial Trading Wallet</span></div>
-        </div>
+    <!-- Deposits -->
+    <div id="panel-deposits" class="card">
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Status</th></tr></thead><tbody id="depositsList"></tbody></table></div>
     </div>
 
-    <!-- Community Discussion with Reply Feature -->
-    <div class="explorer-card">
-        <div class="card-header"><h3><i class="fas fa-comments"></i> Community Discussion</h3></div>
-        <div class="p-3">
-            <div id="chatMessagesContainer" style="height: 450px; overflow-y: auto; background: #F8F9FA; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
-                <div class="text-center text-muted" id="loadingChat">Loading messages...</div>
+    <!-- Withdrawals -->
+    <div id="panel-withdrawals" class="card" style="display:none;">
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Address</th><th>Status</th></tr></thead><tbody id="withdrawalsList"></tbody></table></div>
+    </div>
+
+    <!-- Holders -->
+    <div id="panel-holders" class="card" style="display:none;">
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Token</th><th>Qty</th><th>Value</th><th>PNL</th></tr></thead><tbody id="holdersList"></tbody></table></div>
+    </div>
+
+    <!-- Users -->
+    <div id="panel-users" class="card" style="display:none;">
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>User</th><th>Grand</th><th>Yield</th><th>Spot</th><th>Grid</th><th>Refs</th></tr></thead><tbody id="usersList"></tbody></table></div>
+    </div>
+
+    <!-- Activity -->
+    <div id="panel-activity" class="card" style="display:none;">
+        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Type</th><th>Amount</th><th>Details</th></tr></thead><tbody id="activityList"></tbody></table></div>
+    </div>
+
+    <!-- Community Chat -->
+    <div class="card">
+        <div class="card-title">💬 Community Discussion</div>
+        <div class="chat-container">
+            <div class="chat-messages" id="chatMessagesContainer">
+                <div style="text-align:center;color:var(--text-secondary);font-size:11px;">Loading messages...</div>
             </div>
-            <div class="row g-2">
-                <div class="col-10"><input type="text" id="chatMessageInput" class="form-control" placeholder="Write a comment..."></div>
-                <div class="col-2"><button id="sendChatBtn" class="btn w-100" style="background: #F0B90B; border: none; border-radius: 20px; padding: 8px;">Post</button></div>
+            <div class="chat-input-area">
+                <input type="text" id="chatMessageInput" placeholder="Share your thoughts...">
+                <button class="chat-send-btn" id="sendChatBtn">Post</button>
             </div>
-            <div class="small text-muted mt-2 text-center"><i class="fas fa-shield-alt"></i> Be respectful. No spam. Click "Reply" under any comment.</div>
+            <div style="text-align:center;margin-top:6px;font-size:9px;color:var(--text-secondary);">🛡️ Be respectful. No spam. React to messages with 👍 👎 ❤️</div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const WALLET = "0x1610a914fc0df204c70f727e5e576cdbb5abea35";
-    const USDC_CONTRACT = "0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d";
+    const API = '/api';
+    var buySellChart = null;
+    var messages = [];
+    var currentReactions = {};
 
-    function copyAddress() { navigator.clipboard.writeText(WALLET); showModal('Address copied!', 'success'); }
-
-    async function fetchUSDCBalance() {
-        try {
-            const res = await fetch(`https://api.bscscan.com/api?module=account&action=tokenbalance&contractaddress=${USDC_CONTRACT}&address=${WALLET}&tag=latest`);
-            const data = await res.json();
-            if (data.status === "1") {
-                const balance = parseFloat(data.result) / 1e18;
-                document.getElementById('usdcBalance').innerText = '$' + balance.toLocaleString();
-                document.getElementById('tokenHoldingsBody').innerHTML = `<tr><td><strong>USDC</strong> (Binance-Peg)</td><td>${balance.toLocaleString()} USDC</td><td>$${balance.toLocaleString()}</td></tr>`;
-                return balance;
-            }
-        } catch(e) { console.error(e); }
-        document.getElementById('usdcBalance').innerText = 'View on BscScan';
-        return 0;
+    async function apiCall(url) {
+        var token = localStorage.getItem('access_token');
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        var res = await fetch(API + url, { headers: headers });
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.json();
     }
 
-    async function fetchBNBBalance() {
-        try {
-            const res = await fetch(`https://api.bscscan.com/api?module=account&action=balance&address=${WALLET}&tag=latest`);
-            const data = await res.json();
-            if (data.status === "1") {
-                const balance = parseFloat(data.result) / 1e18;
-                document.getElementById('bnbBalance').innerText = balance.toFixed(6) + ' BNB';
-                return balance;
-            }
-        } catch(e) { console.error(e); }
-        document.getElementById('bnbBalance').innerText = 'View on BscScan';
-        return 0;
+    function fc(num) { if (!num) return '$0.00'; var v = parseFloat(num); if (isNaN(v) || v === 0) return '$0.00'; if (Math.abs(v) < 0.01) return '$' + v.toFixed(6); if (v >= 1e9) return '$' + (v/1e9).toFixed(2) + 'B'; if (v >= 1e6) return '$' + (v/1e6).toFixed(2) + 'M'; return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
+    function fn(num) { if (!num) return '0'; return parseFloat(num).toLocaleString(undefined, {maximumFractionDigits:4}); }
+    function anon(email) { if (!email) return 'Unknown'; var p = email.split('@'); var n = p[0]; var d = p[1] || ''; if (n.length <= 3) return n.charAt(0) + '***@' + d; return n.substring(0, 2) + '***' + n.charAt(n.length-1) + '@' + d; }
+        function showUser(user) {
+        if (user && user.wallet_address) return anonAddr(user.wallet_address);
+        if (user && user.email) return anon(user.email);
+        return 'Unknown';
     }
+    function anonAddr(addr) { if (!addr) return '—'; return addr.substring(0, 6) + '...' + addr.substring(addr.length - 4); }
+    function escHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
+    function fmtTime(ts) { var d = new Date(ts); return d.toLocaleString(); }
 
-    async function fetchTransactions() {
+    // Stats
+    async function loadStats() {
         try {
-            const res = await fetch(`https://api.bscscan.com/api?module=account&action=txlist&address=${WALLET}&sort=desc&page=1&offset=10`);
-            const data = await res.json();
-            const tbody = document.getElementById('transactionsBody');
-            if (data.status === "1" && data.result?.length) {
-                tbody.innerHTML = data.result.map(tx => {
-                    const isIn = tx.to.toLowerCase() === WALLET.toLowerCase();
-                    const amount = parseFloat(tx.value) / 1e18;
-                    const date = new Date(tx.timeStamp * 1000);
-                    const age = Math.floor((Date.now() - date) / 3600000) + 'h ago';
-                    return `<tr><td><a href="https://bscscan.com/tx/${tx.hash}" target="_blank" class="tx-hash">${tx.hash.slice(0,14)}...</a></td><td><span class="${isIn ? 'badge-in' : 'badge-out'}">${isIn ? 'IN' : 'OUT'}</span></td><td class="${isIn ? 'amount-positive' : 'amount-negative'}">${isIn ? '+' : '-'} ${amount.toFixed(6)} BNB</td><td>${age}</td></tr>`;
-                }).join('');
-            } else {
-                tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">No transactions found</td></tr>';
-            }
+            var s = await apiCall('/admin/statistics/');
+            document.getElementById('totalUsers').textContent = s.total_users || s.unique_holders || 0;
+            document.getElementById('platformBalance').textContent = fc(s.platform_usdc_balance);
+            document.getElementById('tokensHeld').textContent = fc(s.total_tokens_held);
+            document.getElementById('totalBuys').textContent = s.total_buys || 0;
+            document.getElementById('uniqueHolders').textContent = s.unique_holders || 0;
+            document.getElementById('avgTokenValue').textContent = fc(s.avg_token_value);
+            document.getElementById('mostHeldToken').textContent = s.most_held_token || '-';
+            document.getElementById('totalVolume').textContent = fc(s.total_volume);
         } catch(e) { console.error(e); }
     }
 
-    async function updateTotalValue() {
-        const usdc = await fetchUSDCBalance();
-        const bnb = await fetchBNBBalance();
+    // Chart
+    async function loadChart() {
         try {
-            const priceRes = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=BNBUSDT');
-            const priceData = await priceRes.json();
-            const total = usdc + (bnb * parseFloat(priceData.price));
-            document.getElementById('totalValueUSD').innerText = '$' + total.toLocaleString();
-        } catch(e) { document.getElementById('totalValueUSD').innerText = 'View on BscScan'; }
-    }
-
-    // ============ CHAT SYSTEM WITH REPLIES ============
-    let messages = [];
-    let currentReplyTo = null;
-
-    function formatTime(timestamp) {
-        const date = new Date(timestamp);
-        return date.toLocaleString();
-    }
-
-    function renderMessages() {
-        const container = document.getElementById('chatMessagesContainer');
-        if (!container) return;
-        if (!messages || messages.length === 0) {
-            container.innerHTML = '<div class="text-center text-muted">No messages yet. Start the conversation!</div>';
-            return;
-        }
-
-        // Group replies under parent messages
-        const topLevel = messages.filter(m => !m.parent_id);
-        const replies = messages.filter(m => m.parent_id);
-
-        container.innerHTML = topLevel.map(msg => {
-            const msgReplies = replies.filter(r => r.parent_id === msg.id);
-            return `
-                <div class="chat-message" style="margin-bottom: 16px;" data-message-id="${msg.id}">
-                    <div style="display: flex; justify-content: space-between;">
-                        <strong style="color: ${msg.is_admin ? '#F0B90B' : '#0ECB81'}">${msg.is_admin ? 'Admin' : escapeHtml(msg.username)}</strong>
-                        <small style="color: #8A8F9E;">${formatTime(msg.created_at)}</small>
-                    </div>
-                    <div style="margin-top: 5px;">${escapeHtml(msg.message)}</div>
-                    <button class="reply-btn" onclick="showReplyForm('${msg.id}', '${escapeHtml(msg.username)}')">↩️ Reply</button>
-                    <div id="reply-form-${msg.id}" class="reply-form">
-                        <input type="text" id="reply-input-${msg.id}" class="reply-input" placeholder="Write a reply...">
-                        <button onclick="submitReply('${msg.id}')" style="margin-top: 5px; background: #F0B90B; border: none; border-radius: 20px; padding: 4px 12px; font-size: 11px;">Post Reply</button>
-                    </div>
-                    ${msgReplies.map(reply => `
-                        <div style="margin-left: 40px; margin-top: 12px; padding: 8px; background: #FFFFFF; border-radius: 8px; border-left: 3px solid #F0B90B;">
-                            <div style="display: flex; justify-content: space-between;">
-                                <strong style="color: #0ECB81; font-size: 12px;">↳ ${escapeHtml(reply.username)}</strong>
-                                <small style="color: #8A8F9E; font-size: 10px;">${formatTime(reply.created_at)}</small>
-                            </div>
-                            <div style="margin-top: 4px; font-size: 12px;">${escapeHtml(reply.message)}</div>
-                        </div>
-                    `).join('')}
-                </div>
-            `;
-        }).join('');
-    }
-
-    async function loadTransparencyChat() {
-        try {
-            const res = await fetch('/api/chat/transparency/');
-            const data = await res.json();
-            if (data && Array.isArray(data)) {
-                messages = data;
-                renderMessages();
-            }
-        } catch(e) { console.error('Error loading chat:', e); }
-    }
-
-    async function sendMessage(replyTo = null) {
-        const input = document.getElementById('chatMessageInput');
-        const msg = input.value.trim();
-        if (!msg) return;
-        const token = localStorage.getItem('access_token');
-        if (!token) { alert('Please login to comment'); return; }
-        try {
-            const body = { message: msg };
-            if (replyTo) body.parent_id = replyTo;
-            const res = await fetch('/api/chat/transparency/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify(body)
+            var d = await apiCall('/admin/buy-sell-activity/');
+            var ctx = document.getElementById('buySellChart').getContext('2d');
+            if (buySellChart) buySellChart.destroy();
+            buySellChart = new Chart(ctx, {
+                type: 'line', data: { labels: d.days, datasets: [
+                    { label: 'Buys', data: d.buys, borderColor: '#0ECB81', backgroundColor: 'rgba(14,203,129,0.1)', tension: 0.4, pointRadius: 0 },
+                    { label: 'Sells', data: d.sells, borderColor: '#F6465D', backgroundColor: 'rgba(246,70,93,0.1)', tension: 0.4, pointRadius: 0 }
+                ]},
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#848E9C', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#848E9C', font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#848E9C', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
             });
-            const data = await res.json();
-            if (data.success) {
-                input.value = '';
-                loadTransparencyChat();
-            } else {
-                alert(data.error || 'Failed to send');
-            }
-        } catch(e) { alert('Error sending message'); }
+        } catch(e) { console.error(e); }
     }
 
-    function showReplyForm(messageId, username) {
-        const form = document.getElementById(`reply-form-${messageId}`);
-        if (form.style.display === 'none' || !form.style.display) {
-            form.style.display = 'block';
-            document.getElementById(`reply-input-${messageId}`).focus();
-            document.getElementById(`reply-input-${messageId}`).placeholder = `Reply to ${username}...`;
-        } else {
-            form.style.display = 'none';
-        }
+    // Tabs
+    async function loadDeposits() {
+        var data = await apiCall('/admin/deposits/');
+        document.getElementById('depositsList').innerHTML = data.map(function(d) { return '<tr><td>' + d.created_at + '</td><td><span class="address-text" title="' + d.user + '">' + showUser(d) + '</span></td><td>' + fc(d.amount) + '</td><td><span class="badge ' + (d.status === 'CONFIRMED' ? 'badge-green' : d.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + d.status + '</span></td></tr>'; }).join('');
+    }
+    async function loadWithdrawals() {
+        var data = await apiCall('/admin/withdrawals/');
+        document.getElementById('withdrawalsList').innerHTML = data.map(function(w) { return '<tr><td>' + w.created_at + '</td><td><span class="address-text" title="' + w.user + '">' + showUser(w) + '</span></td><td>' + fc(w.amount) + '</td><td><span class="address-text">' + anonAddr(w.wallet_address) + '</span></td><td><span class="badge ' + (w.status === 'PROCESSED' ? 'badge-green' : w.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + w.status + '</span></td></tr>'; }).join('');
+    }
+    async function loadHolders() {
+        var data = await apiCall('/admin/holders/');
+        var all = (data.top_holders || []).concat(data.bottom_holders || []);
+        document.getElementById('holdersList').innerHTML = all.map(function(h) { var pnl = h.pnl || 0; return '<tr><td><span class="address-text" title="' + h.email + '">' + showUser(h) + '</span></td><td>' + h.token_symbol + '</td><td>' + fn(h.quantity) + '</td><td>' + fc(h.value) + '</td><td class="' + (pnl >= 0 ? 'pnl-positive' : 'pnl-negative') + '">' + (pnl >= 0 ? '+' : '') + fc(pnl) + '</td></tr>'; }).join('');
+    }
+    async function loadUsers() {
+        var data = await apiCall('/admin/users/');
+        document.getElementById('usersList').innerHTML = data.map(function(u) { return '<tr><td><span class="address-text" title="' + u.email + '">' + showUser(u) + '</span></td><td>' + fc(u.grand_balance) + '</td><td>' + fc(u.yield_balance) + '</td><td>' + fc(u.spot_value || 0) + '</td><td>' + fc(u.grid_value || 0) + '</td><td>' + (u.referral_count || 0) + '</td></tr>'; }).join('');
+    }
+    async function loadActivity() {
+        var data = await apiCall('/trading/recent_transactions/');
+        document.getElementById('activityList').innerHTML = data.slice(0, 20).map(function(tx) { return '<tr><td>' + tx.date + '</td><td><span class="address-text">' + anon(tx.user || 'User') + '</span></td><td>' + tx.type + '</td><td>' + fc(tx.amount) + '</td><td>' + (tx.tx_hash ? '<span class="address-text">' + anonAddr(tx.tx_hash) + '</span>' : '—') + '</td></tr>'; }).join('');
     }
 
-    async function submitReply(messageId) {
-        const input = document.getElementById(`reply-input-${messageId}`);
-        const msg = input.value.trim();
-        if (!msg) return;
-        const token = localStorage.getItem('access_token');
-        if (!token) { alert('Please login to reply'); return; }
-        try {
-            const res = await fetch('/api/chat/transparency/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
-                body: JSON.stringify({ message: msg, parent_id: messageId })
-            });
-            const data = await res.json();
-            if (data.success) {
-                input.value = '';
-                document.getElementById(`reply-form-${messageId}`).style.display = 'none';
-                loadTransparencyChat();
-            } else {
-                alert(data.error || 'Failed to send reply');
-            }
-        } catch(e) { alert('Error sending reply'); }
-    }
-
-    function escapeHtml(text) {
-        const div = document.createElement('div');
-        div.textContent = text;
-        return div.innerHTML;
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-        updateTotalValue();
-        fetchTransactions();
-        setInterval(updateTotalValue, 60000);
-        setInterval(fetchTransactions, 60000);
-        loadTransparencyChat();
-        setInterval(loadTransparencyChat, 10000);
+    // Tabs click
+    document.querySelectorAll('.tab-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            var tab = this.getAttribute('data-tab');
+            ['deposits','withdrawals','holders','users','activity'].forEach(function(t) { document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none'; });
+            if (tab === 'deposits') loadDeposits();
+            if (tab === 'withdrawals') loadWithdrawals();
+            if (tab === 'holders') loadHolders();
+            if (tab === 'users') loadUsers();
+            if (tab === 'activity') loadActivity();
+        });
     });
 
-    document.getElementById('sendChatBtn')?.addEventListener('click', () => sendMessage());
-    document.getElementById('chatMessageInput')?.addEventListener('keypress', e => { if (e.key === 'Enter') sendMessage(); });
+    // ============ COMMUNITY CHAT ============
+    function renderChat() {
+        var container = document.getElementById('chatMessagesContainer');
+        if (!container) return;
+        if (!messages.length) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:11px;padding:20px;">💬 No messages yet. Start the conversation!</div>'; return; }
+        var topLevel = messages.filter(function(m) { return !m.parent_id; });
+        var replies = messages.filter(function(m) { return m.parent_id; });
+        container.innerHTML = topLevel.map(function(msg) {
+            var msgReplies = replies.filter(function(r) { return r.parent_id === msg.id; });
+            var reactions = currentReactions[msg.id] || { like: 0, dislike: 0, love: 0 };
+            return '<div class="chat-msg">' +
+                '<div class="chat-msg-header">' +
+                    '<div class="chat-user">' +
+                        '<div class="chat-avatar ' + (msg.is_admin ? 'admin' : 'user') + '">' + (msg.is_admin ? 'A' : (msg.username || 'U').charAt(0).toUpperCase()) + '</div>' +
+                        '<span style="color:' + (msg.is_admin ? 'var(--primary)' : 'var(--success)') + ';">' + (msg.is_admin ? 'Admin' : escHtml(msg.username || 'User')) + '</span>' +
+                    '</div>' +
+                    '<span class="chat-time">' + fmtTime(msg.created_at) + '</span>' +
+                '</div>' +
+                '<div class="chat-body">' + escHtml(msg.message) + '</div>' +
+                '<div class="chat-actions">' +
+                    '<button class="chat-action' + (msg.user_liked ? ' liked' : '') + '" onclick="reactToMessage(\'' + msg.id + '\', \'like\')">👍 <span class="action-count">' + reactions.like + '</span></button>' +
+                    '<button class="chat-action" onclick="reactToMessage(\'' + msg.id + '\', \'dislike\')">👎 <span class="action-count">' + reactions.dislike + '</span></button>' +
+                    '<button class="chat-action" onclick="reactToMessage(\'' + msg.id + '\', \'love\')">❤️ <span class="action-count">' + reactions.love + '</span></button>' +
+                    '<button class="chat-action" onclick="showReplyForm(\'' + msg.id + '\')">💬 Reply</button>' +
+                '</div>' +
+                '<div id="reply-form-' + msg.id + '" style="display:none;margin-top:8px;">' +
+                    '<div style="display:flex;gap:6px;">' +
+                        '<input type="text" id="reply-input-' + msg.id + '" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text-primary);font-size:10px;" placeholder="Write a reply...">' +
+                        '<button onclick="submitReply(\'' + msg.id + '\')" style="padding:6px 14px;border-radius:6px;border:none;background:var(--primary);color:#1E2329;font-weight:600;font-size:10px;cursor:pointer;">Reply</button>' +
+                    '</div>' +
+                '</div>' +
+                msgReplies.map(function(reply) {
+                    return '<div class="chat-reply">' +
+                        '<div class="chat-msg-header">' +
+                            '<div class="chat-user">' +
+                                '<div class="chat-avatar user" style="width:22px;height:22px;font-size:10px;">' + (reply.username || 'U').charAt(0).toUpperCase() + '</div>' +
+                                '<span style="color:var(--success);font-size:10px;">' + escHtml(reply.username || 'User') + '</span>' +
+                            '</div>' +
+                            '<span class="chat-time" style="font-size:8px;">' + fmtTime(reply.created_at) + '</span>' +
+                        '</div>' +
+                        '<div class="chat-body" style="font-size:10px;">' + escHtml(reply.message) + '</div>' +
+                    '</div>';
+                }).join('') +
+            '</div>';
+        }).join('');
+        container.scrollTop = container.scrollHeight;
+    }
+
+    async function loadChat() {
+        try { var res = await fetch('/api/chat/transparency/'); var data = await res.json(); if (data && Array.isArray(data)) { messages = data; renderChat(); } } catch(e) {}
+    }
+
+    async function sendMessage(replyTo) {
+        var input = document.getElementById('chatMessageInput');
+        var msg = input.value.trim(); if (!msg) return;
+        var token = localStorage.getItem('access_token'); if (!token) { alert('Login to comment'); return; }
+        try {
+            var body = { message: msg }; if (replyTo) body.parent_id = replyTo;
+            var res = await fetch('/api/chat/transparency/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+            var data = await res.json();
+            if (data.success) { input.value = ''; loadChat(); }
+        } catch(e) {}
+    }
+
+    function showReplyForm(msgId) {
+        var form = document.getElementById('reply-form-' + msgId);
+        form.style.display = form.style.display === 'none' ? 'block' : 'none';
+        if (form.style.display === 'block') document.getElementById('reply-input-' + msgId).focus();
+    }
+
+    async function submitReply(msgId) {
+        var input = document.getElementById('reply-input-' + msgId);
+        var msg = input.value.trim(); if (!msg) return;
+        var token = localStorage.getItem('access_token'); if (!token) { alert('Login to reply'); return; }
+        try {
+            var res = await fetch('/api/chat/transparency/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ message: msg, parent_id: msgId }) });
+            var data = await res.json();
+            if (data.success) { input.value = ''; document.getElementById('reply-form-' + msgId).style.display = 'none'; loadChat(); }
+        } catch(e) {}
+    }
+
+    function reactToMessage(msgId, type) {
+        var key = msgId + '_' + type;
+        if (currentReactions[msgId]) { currentReactions[msgId][type] = (currentReactions[msgId][type] || 0) + 1; }
+        else { currentReactions[msgId] = { like: 0, dislike: 0, love: 0 }; currentReactions[msgId][type] = 1; }
+        renderChat();
+    }
+
+    document.getElementById('sendChatBtn').addEventListener('click', function() { sendMessage(); });
+    document.getElementById('chatMessageInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendMessage(); });
+
+    // Init
+    loadStats(); loadChart(); loadDeposits(); loadChat();
+    setInterval(function() { loadStats(); }, 60000);
+    setInterval(loadChat, 15000);
 </script>
 {% endblock %}
