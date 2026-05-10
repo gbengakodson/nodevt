@@ -873,3 +873,10 @@ def send_daily_email_webhook(request):
     from apps.tasks.email_tasks import send_daily_email_to_all_users
     result = send_daily_email_to_all_users()
     return JsonResponse({'status': 'success', 'message': result})
+
+
+@csrf_exempt
+def sweep_webhook(request):
+    from django.core.management import call_command
+    call_command('sweep_deposits')
+    return JsonResponse({'status': 'success'})

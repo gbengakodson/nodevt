@@ -9,6 +9,7 @@ from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, Ad
 from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
 from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
+from apps.trading.views import send_daily_email_webhook, sweep_webhook
 from apps.wallets.views import (
     AdminStatisticsView,
     AdminHoldersView,
@@ -76,5 +77,7 @@ urlpatterns = [
     path('api/public/withdrawals/', PublicWithdrawalsView.as_view(), name='public_withdrawals'),
     path('api/public/holders/', PublicHoldersView.as_view(), name='public_holders'),
     path('api/public/users/', PublicUsersView.as_view(), name='public_users'),
+
+    path('api/trigger/sweep/', sweep_webhook, name='sweep_webhook'),
 
 ]
