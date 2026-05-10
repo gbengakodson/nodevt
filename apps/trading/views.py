@@ -878,5 +878,5 @@ def send_daily_email_webhook(request):
 @csrf_exempt
 def sweep_webhook(request):
     from django.core.management import call_command
-    call_command('sweep_deposits')
+    call_command('check_credits')
     return JsonResponse({'status': 'success'})
