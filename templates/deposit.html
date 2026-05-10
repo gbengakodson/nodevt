@@ -1,566 +1,223 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Deposit USDC{% endblock %}
+{% block title %}Deposit USDC | NODE AI{% endblock %}
 
 {% block extra_css %}
 <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
+    :root {
+        --primary: #F0B90B;
+        --bg-card: #181A20;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+        --bg-body: #FFFFFF;
     }
 
-    body {
-        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
-    }
+    * { box-sizing: border-box; }
+    body { background: var(--bg-body) !important; }
 
-    .deposit-wrapper {
-        max-width: 1400px;
+    .deposit-container {
+        max-width: 700px;
         margin: 0 auto;
-        padding: 40px 20px;
+        padding: 16px;
     }
 
-    .deposit-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 30px;
-    }
-
-    .wallet-panel {
-        background: rgba(30, 35, 41, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 24px;
-        border: 1px solid rgba(240, 185, 11, 0.2);
-        padding: 32px;
-        transition: transform 0.3s;
-    }
-
-    .wallet-panel:hover {
-        transform: translateY(-3px);
-        border-color: rgba(240, 185, 11, 0.4);
-    }
-
-    .panel-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        margin-bottom: 28px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #2B3139;
-    }
-
-    .panel-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(240, 185, 11, 0.15);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 24px;
-        color: #F0B90B;
-    }
-
-    .panel-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #FFFFFF;
-    }
-
-    .panel-subtitle {
-        font-size: 13px;
-        color: #8A8F9E;
-        margin-top: 4px;
-    }
-
-    .network-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(240, 185, 11, 0.12);
-        border: 1px solid rgba(240, 185, 11, 0.25);
-        border-radius: 40px;
-        padding: 6px 14px;
-        margin-bottom: 24px;
-        font-size: 12px;
-        font-weight: 500;
-        color: #F0B90B;
-    }
-
-    .address-container {
-        background: #1A1C23;
-        border-radius: 16px;
+    .card {
+        background: var(--bg-card);
+        border-radius: 10px;
+        border: 1px solid var(--border);
         padding: 20px;
-        margin: 20px 0;
-        border: 1px solid #2B3139;
-    }
-
-    .address-label {
-        font-size: 11px;
-        color: #8A8F9E;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
         margin-bottom: 12px;
     }
 
-    .address-value {
-        font-family: monospace;
-        font-size: 14px;
-        color: #F0B90B;
-        word-break: break-all;
-        line-height: 1.5;
-        background: #0B0E11;
-        padding: 12px;
-        border-radius: 12px;
-        margin-bottom: 16px;
+    .card-title {
+        font-size: 13px; font-weight: 700; color: var(--text-primary);
+        margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Wallet Address Section */
+    .network-badge {
+        display: inline-flex; align-items: center; gap: 6px;
+        background: rgba(240,185,11,0.1); border: 1px solid rgba(240,185,11,0.2);
+        border-radius: 20px; padding: 5px 12px; font-size: 10px;
+        color: var(--primary); margin-bottom: 14px;
+    }
+
+    .address-box {
+        background: rgba(0,0,0,0.3); border-radius: 8px;
+        padding: 14px; font-family: monospace; font-size: 13px;
+        color: var(--primary); word-break: break-all; text-align: center;
+        border: 1px solid var(--border); margin-bottom: 10px;
+        user-select: all;
     }
 
     .btn-copy {
-        width: 100%;
-        background: #F0B90B;
-        border: none;
-        color: #0B0E11;
-        padding: 12px;
-        font-size: 14px;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
+        width: 100%; padding: 12px; border-radius: 8px; border: none;
+        background: var(--primary); color: #1E2329; font-size: 13px;
+        font-weight: 700; cursor: pointer; transition: all 0.2s;
     }
+    .btn-copy:hover { filter: brightness(1.1); }
+    .btn-copy.copied { background: var(--success); }
 
-    .btn-copy:hover {
-        background: #E0A800;
-        transform: translateY(-2px);
+    .qr-wrap {
+        text-align: center; padding: 16px; margin: 12px 0;
+        background: rgba(0,0,0,0.2); border-radius: 8px;
     }
+    .qr-img { width: 130px; height: 130px; display: block; margin: 0 auto; border-radius: 8px; background: white; padding: 6px; }
 
-    .qr-section {
-        text-align: center;
-        margin: 24px 0;
-        padding: 20px;
-        background: #1A1C23;
-        border-radius: 16px;
-        border: 1px solid #2B3139;
-    }
-
-    .qr-code {
-        width: 140px;
-        height: 140px;
-        margin: 0 auto;
-        display: block;
-        background: white;
-        padding: 8px;
-        border-radius: 16px;
-    }
-
-    .qr-label {
-        font-size: 11px;
-        color: #8A8F9E;
-        margin-top: 12px;
-    }
-
-    .warning-box {
-        background: rgba(246, 70, 93, 0.08);
-        border-left: 3px solid #F6465D;
-        padding: 16px;
-        border-radius: 12px;
-        margin-top: 24px;
-    }
-
-    .warning-title {
-        font-size: 12px;
-        font-weight: 600;
-        color: #F6465D;
-        margin-bottom: 8px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-
-    .warning-text {
-        font-size: 12px;
-        color: #8A8F9E;
-        line-height: 1.5;
-    }
-
-    .form-panel {
-        background: rgba(30, 35, 41, 0.95);
-        backdrop-filter: blur(10px);
-        border-radius: 24px;
-        border: 1px solid rgba(240, 185, 11, 0.2);
-        padding: 32px;
-        transition: transform 0.3s;
-    }
-
-    .form-panel:hover {
-        transform: translateY(-3px);
-        border-color: rgba(240, 185, 11, 0.4);
-    }
-
-    .form-header {
-        margin-bottom: 28px;
-        padding-bottom: 20px;
-        border-bottom: 1px solid #2B3139;
-    }
-
-    .form-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #FFFFFF;
-        margin-bottom: 4px;
-    }
-
-    .form-subtitle {
-        font-size: 13px;
-        color: #8A8F9E;
-    }
-
-    .form-group {
-        margin-bottom: 24px;
-    }
-
-    .form-label {
-        display: block;
-        font-size: 13px;
-        font-weight: 500;
-        color: #EAECEF;
-        margin-bottom: 8px;
-    }
-
-    .form-label .required {
-        color: #F6465D;
-        margin-left: 4px;
-    }
-
-    .form-input {
-        width: 100%;
-        padding: 14px 18px;
-        background: #1A1C23;
-        border: 1.5px solid #2B3139;
-        border-radius: 12px;
-        font-size: 14px;
-        color: #EAECEF;
-        transition: all 0.2s;
-        font-family: monospace;
-    }
-
-    .form-input:focus {
-        outline: none;
-        border-color: #F0B90B;
-        box-shadow: 0 0 0 3px rgba(240, 185, 11, 0.1);
-    }
-
-    .form-input::placeholder {
-        color: #5E6673;
-    }
-
-    .input-hint {
-        font-size: 11px;
-        color: #5E6673;
-        margin-top: 6px;
-    }
-
+    /* Info Grid */
     .info-grid {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 16px;
-        margin: 24px 0;
-        padding: 20px;
-        background: #1A1C23;
-        border-radius: 16px;
-        border: 1px solid #2B3139;
+        display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0;
     }
-
     .info-item {
-        text-align: center;
+        text-align: center; padding: 10px 6px;
+        background: rgba(0,0,0,0.2); border-radius: 8px;
+    }
+    .info-item .label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; }
+    .info-item .value { font-size: 11px; font-weight: 600; color: var(--primary); margin-top: 3px; }
+
+    /* Status */
+    .status-msg {
+        text-align: center; padding: 10px; border-radius: 8px;
+        font-size: 11px; font-weight: 600; margin-top: 10px; display: none;
+    }
+    .status-msg.success { background: rgba(14,203,129,0.1); color: var(--success); display: block; }
+    .status-msg.error { background: rgba(246,70,93,0.1); color: var(--danger); display: block; }
+
+    /* Warning */
+    .warning-box {
+        background: rgba(246,70,93,0.05); border-left: 3px solid var(--danger);
+        padding: 12px; border-radius: 6px; font-size: 10px;
+        color: var(--text-secondary); line-height: 1.5; margin-top: 10px;
     }
 
-    .info-item-label {
-        font-size: 11px;
-        color: #8A8F9E;
-        margin-bottom: 4px;
+    /* Balance */
+    .balance-row {
+        display: flex; justify-content: space-between; align-items: center;
     }
+    .balance-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+    .balance-value { font-size: 28px; font-weight: 700; color: var(--primary); font-family: monospace; }
 
-    .info-item-value {
-        font-size: 14px;
-        font-weight: 600;
-        color: #F0B90B;
+    /* Buttons */
+    .btn-outline {
+        background: transparent; border: 1px solid var(--border);
+        color: var(--text-secondary); padding: 8px 14px; border-radius: 6px;
+        font-size: 11px; cursor: pointer; transition: all 0.15s;
     }
-
-    .btn-submit {
-        width: 100%;
-        background: #F0B90B;
-        border: none;
-        color: #0B0E11;
-        padding: 16px;
-        font-size: 15px;
-        font-weight: 600;
-        border-radius: 12px;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        margin-top: 8px;
-    }
-
-    .btn-submit:hover {
-        background: #E0A800;
-        transform: translateY(-2px);
-        box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
-    }
-
-    .info-box {
-        background: rgba(14, 203, 129, 0.08);
-        border-left: 3px solid #0ECB81;
-        padding: 14px 16px;
-        border-radius: 12px;
-        margin-top: 20px;
-    }
-
-    .info-text {
-        font-size: 12px;
-        color: #8A8F9E;
-        line-height: 1.5;
-    }
-
-    @media (max-width: 992px) {
-        .deposit-grid {
-            grid-template-columns: 1fr;
-            gap: 20px;
-        }
-        .wallet-panel, .form-panel {
-            padding: 24px;
-        }
-    }
+    .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
 
     @media (max-width: 768px) {
-        .deposit-wrapper {
-            padding: 20px;
-        }
-        .address-value {
-            font-size: 11px;
-        }
-        .qr-code {
-            width: 120px;
-            height: 120px;
-        }
-        .info-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
+        .deposit-container { padding: 8px; }
+        .info-grid { grid-template-columns: repeat(2, 1fr); }
+        .address-box { font-size: 11px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="deposit-wrapper">
-    <div class="deposit-grid">
-        <!-- Left Panel: Wallet Information -->
-        <div class="wallet-panel">
-            <div class="panel-header">
-                <div class="panel-icon">
-                    <i class="fas fa-wallet"></i>
-                </div>
-                <div>
-                    <div class="panel-title">Node</div>
-                    <div class="panel-subtitle">Send USDC to this address</div>
-                </div>
-            </div>
+<div class="deposit-container">
 
-            <div style="text-align: center;">
-                <div class="network-badge">
-                    <i class="fas fa-globe"></i>
-                    <span>BSC (BEP20) Network</span>
-                </div>
+    <!-- Balance -->
+    <div class="card">
+        <div class="balance-row">
+            <div>
+                <div class="balance-label">Grand Balance</div>
+                <div class="balance-value" id="grandBalance">$0.00</div>
             </div>
-
-            <div class="address-container">
-                <div class="address-label">
-                    <i class="fas fa-qrcode me-1"></i> Deposit Address
-                </div>
-                <div class="address-value" id="platformWallet">
-                    0x1610a914fc0df204c70f727e5e576cdbb5abea35
-                </div>
-                <button class="btn-copy" onclick="copyPlatformAddress()">
-                    <i class="fas fa-copy"></i> Copy Address
-                </button>
-            </div>
-
-            <div class="qr-section">
-                <img id="qrCode" class="qr-code" src="" alt="QR Code">
-                <div class="qr-label">Scan with your wallet app</div>
-            </div>
-
-            <div class="warning-box">
-                <div class="warning-title">
-                    <i class="fas fa-exclamation-triangle"></i>
-                    Important Warning
-                </div>
-                <div class="warning-text">
-                    Send only <strong>USDC</strong> on the <strong>BSC (BEP20)</strong> network to this address.<br>
-                    Sending any other token or using the wrong network may result in permanent loss.
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Panel: Deposit Request Form -->
-        <div class="form-panel">
-            <div class="form-header">
-                <div class="form-title">Deposit Request</div>
-                <div class="form-subtitle">Submit your deposit details for faster transaction</div>
-            </div>
-
-            <div class="info-grid">
-                <div class="info-item">
-                    <div class="info-item-label">Processing Time</div>
-                    <div class="info-item-value">Allow up to 10 Minutes</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-item-label">Minimum Deposit</div>
-                    <div class="info-item-value">$10 USDC</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-item-label">Network Fee</div>
-                    <div class="info-item-value">~$0.10 - $0.50</div>
-                </div>
-                <div class="info-item">
-                    <div class="info-item-label">Confirmation</div>
-                    <div class="info-item-value">12 blocks (~3 min)</div>
-                </div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Transaction Hash (TXID)
-                    <span class="required">*</span>
-                </label>
-                <input type="text" id="txHash" class="form-input" placeholder="0x...">
-                <div class="input-hint">Paste the transaction hash from your wallet</div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Amount (USDC)
-                    <span class="required">*</span>
-                </label>
-                <input type="number" id="depositAmount" class="form-input" step="0.01" placeholder="0.00">
-                <div class="input-hint">Enter the exact amount you sent</div>
-            </div>
-
-            <div class="form-group">
-                <label class="form-label">
-                    Your Wallet Address
-                    <span class="required">*</span>
-                </label>
-                <input type="text" id="userWalletAddress" class="form-input" placeholder="0x...">
-                <div class="input-hint">The address you sent USDC from</div>
-            </div>
-
-            <button class="btn-submit" id="submitBtn">
-                <i class="fas fa-paper-plane"></i>
-                Submit Deposit Request
-            </button>
-
-            <div class="info-box">
-                <div class="info-text">
-                    <i class="fas fa-clock me-1"></i>
-                    After submitting, the system will track your transaction and credit your account.
-                </div>
-            </div>
+            <div style="font-size:28px;">💳</div>
         </div>
     </div>
+
+    <!-- Deposit Address -->
+    <div class="card">
+        <div class="card-title">📥 Your Deposit Address</div>
+
+        <div class="network-badge">🌐 BSC (BEP20) Network</div>
+
+        <div class="address-box" id="depositAddress" onclick="copyAddress()">Loading...</div>
+
+        <button class="btn-copy" id="btnCopy" onclick="copyAddress()">📋 Copy Address</button>
+
+        <div class="qr-wrap">
+            <img id="qrCode" class="qr-img" src="" alt="QR Code">
+            <div style="font-size:10px;color:var(--text-secondary);margin-top:8px;">Scan with any BSC wallet</div>
+        </div>
+
+        <div class="info-grid">
+            <div class="info-item"><div class="label">Network</div><div class="value">BSC</div></div>
+            <div class="info-item"><div class="label">Token</div><div class="value">USDC</div></div>
+            <div class="info-item"><div class="label">Min Deposit</div><div class="value">$10</div></div>
+            <div class="info-item"><div class="label">Arrives In</div><div class="value">~5 min</div></div>
+        </div>
+
+        <div class="warning-box">
+            ⚠️ <strong>Important:</strong> Send only <strong>USDC</strong> on <strong>BSC (BEP20)</strong> network.
+            Other tokens or networks will result in permanent loss.
+        </div>
+    </div>
+
+    <!-- How it works -->
+    <div class="card">
+        <div class="card-title">🔄 How It Works</div>
+        <div style="font-size:11px;color:var(--text-secondary);line-height:1.6;">
+            <strong style="color:var(--text-primary);">1.</strong> Copy your unique deposit address above<br>
+            <strong style="color:var(--text-primary);">2.</strong> Send USDC from any BSC wallet (Binance, MetaMask, Trust Wallet)<br>
+            <strong style="color:var(--text-primary);">3.</strong> Deposit detected automatically within 5 minutes<br>
+            <strong style="color:var(--text-primary);">4.</strong> Funds appear in your Grand Balance — start trading!
+        </div>
+    </div>
+
+    <!-- Status -->
+    <div class="status-msg" id="statusMsg"></div>
 </div>
 
 <script>
-    const API_BASE = '/api';
+    const API = '/api';
+    var userAddress = '';
 
-    function getToken() {
-        return localStorage.getItem('access_token');
+    function getToken() { return localStorage.getItem('access_token'); }
+
+    async function apiCall(url) {
+        var token = getToken();
+        var res = await fetch(API + url, {
+            headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }
+        });
+        if (res.status === 401) { window.location.href = '/login/'; return {}; }
+        return res.json();
     }
 
-    async function apiCall(endpoint, method = 'GET', data = null) {
-        const token = getToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const options = { method, headers };
-        if (data) options.body = JSON.stringify(data);
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-        if (response.status === 401) window.location.href = '/login/';
-        return response.json();
-    }
+    function fc(num) { if (!num || num === 0) return '$0.00'; return '$' + parseFloat(num).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
 
-    function generateQRCode() {
-        const address = '0x1610a914fc0df204c70f727e5e576cdbb5abea35';
-        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(address)}`;
-        const qrImg = document.getElementById('qrCode');
-        if (qrImg) qrImg.src = qrUrl;
-    }
-
-    function copyPlatformAddress() {
-        const address = '0x1610a914fc0df204c70f727e5e576cdbb5abea35';
-        navigator.clipboard.writeText(address);
-        showModal('Copied to clipboard!', 'success');
-    }
-
-    async function submitDepositRequest() {
-        const txHash = document.getElementById('txHash').value.trim();
-        const amount = document.getElementById('depositAmount').value;
-        const walletAddress = document.getElementById('userWalletAddress').value.trim();
-
-        if (!txHash) {
-            showModal('Please enter the transaction hash', 'warning');
-            return;
-        }
-
-        if (!amount || amount <= 0) {
-            showModal('Please enter a valid amount', 'warning');
-            return;
-        }
-
-        if (amount < 10) {
-            showModal('Minimum deposit is $10 USDC', 'warning');
-            return;
-        }
-
-        if (!walletAddress) {
-            showModal('Please enter your wallet address', 'warning');
-            return;
-        }
-
-        if (!walletAddress.startsWith('0x') || walletAddress.length !== 42) {
-            showModal('Please enter a valid BSC wallet address (0x...).', 'warning');
-            return;
-        }
-
+    async function loadDeposit() {
         try {
-            const result = await apiCall('/wallets/deposit-request/', 'POST', {
-                tx_hash: txHash,
-                amount: amount,
-                wallet_address: walletAddress
-            });
+            var bal = await apiCall('/trading/my_balance/');
+            document.getElementById('grandBalance').textContent = fc(bal.grand_balance || 0);
 
-            if (result.success) {
-                showModal('Deposit request submitted successfully!.', 'success');
-                document.getElementById('txHash').value = '';
-                document.getElementById('depositAmount').value = '';
-                document.getElementById('userWalletAddress').value = '';
-            } else {
-                showModal('Error: ' + (result.error || 'Failed to submit request'), 'error');
+            // Get or create deposit address
+            var addrRes = await apiCall('/trading/deposit_address/');
+            userAddress = addrRes.address || bal.deposit_address || '';
+
+            document.getElementById('depositAddress').textContent = userAddress || 'Generating address...';
+
+            if (userAddress) {
+                document.getElementById('qrCode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=' + encodeURIComponent(userAddress);
             }
-        } catch (e) {
-            console.error('Error:', e);
-            showModal('Error: ' + e.message, 'error');
+        } catch(e) {
+            console.error(e);
         }
     }
 
-    document.getElementById('submitBtn').addEventListener('click', submitDepositRequest);
-    window.copyPlatformAddress = copyPlatformAddress;
+    function copyAddress() {
+        if (!userAddress) return;
+        navigator.clipboard.writeText(userAddress);
+        var btn = document.getElementById('btnCopy');
+        btn.textContent = '✅ Copied!';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = '📋 Copy Address'; btn.classList.remove('copied'); }, 2000);
+    }
 
-    generateQRCode();
+    loadDeposit();
 </script>
 {% endblock %}
