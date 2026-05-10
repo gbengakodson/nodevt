@@ -38,7 +38,6 @@ class YieldService:
     def credit_hourly_yield(cls, user):
         """Credit hourly yield based on ACTIVE GRID BOTS - current value (variable)"""
         from decimal import Decimal
-        from apps.wallets.models import Wallet, Transaction
         from apps.trading.models import GridBot
         from django.utils import timezone
 
@@ -69,37 +68,13 @@ class YieldService:
             bot.save()
             total_hourly_yield += bot_hourly_profit
 
-        if total_hourly_yield <= 0:
-            return Decimal('0')
-
-        # Get or create yield wallet
-        yield_wallet, created = Wallet.objects.get_or_create(
-            user=user,
-            wallet_type='YIELD',
-            defaults={'balance': Decimal('0')}
-        )
-
-        # Credit to yield wallet
-        yield_wallet.balance += total_hourly_yield
-        yield_wallet.save()
-
-        # Create transaction record
-        Transaction.objects.create(
-            user=user,
-            transaction_type='YIELD',
-            amount=total_hourly_yield,
-            fee=Decimal('0'),
-            status='COMPLETED',
-            metadata={
-                'type': 'hourly_yield',
-                'source': 'grid_bots',
-                'active_bots': active_bots.count(),
-                'hourly_rate': str(cls.HOURLY_RATE)
-            },
-            completed_at=timezone.now()
-        )
+        # Yield only updates grid_profit on bots.
+        # Users must click "Collect" on dashboard to move profit to Yield Wallet.
+        # This prevents double-crediting the yield wallet.
 
         return total_hourly_yield
+
+
 
     @classmethod
     @transaction.atomic
