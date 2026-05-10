@@ -83,38 +83,46 @@ class DepositService:
                 'success': False,
                 'error': str(e)
             }
-    
+
     @classmethod
     def get_deposit_address(cls, user):
-        """Get or create deposit address for user with encryption"""
+        """Get or create deposit address for user"""
         from apps.wallets.models import WalletKey
-        
-        # Check if user already has a wallet key
+
         try:
             wallet_key = WalletKey.objects.get(user=user)
             return wallet_key.address
         except WalletKey.DoesNotExist:
             pass
-        
+
         # Create new wallet
         web3_service = Web3Service()
         wallet = web3_service.create_deposit_wallet()
-        
-        # Create wallet key record
+
+        # Store wallet
         wallet_key = WalletKey.objects.create(
             user=user,
             address=wallet['address'],
             encrypted_key=''
         )
-        
-        # Encrypt and store private key
         wallet_key.set_private_key(wallet['private_key'])
         wallet_key.save()
-        
-        # Update user's wallet_address field
+
         user.wallet_address = wallet['address']
         user.save()
-        
+
+        # Fund with BNB for gas (0.001 BNB ~$0.60)
+        try:
+            from apps.wallets.services.binance_service import BinanceService
+            bs = BinanceService()
+            result = bs.send_bnb(wallet['address'], 0.001)
+            if result['success']:
+                print(f"Funded {wallet['address']} with 0.001 BNB for gas")
+            else:
+                print(f"BNB funding failed: {result.get('error')}")
+        except Exception as e:
+            print(f"Error funding BNB: {e}")
+
         return wallet_key.address
 
     

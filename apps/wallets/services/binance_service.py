@@ -258,3 +258,18 @@ class BinanceService:
             }
         except Exception as e:
             return {'success': False, 'error': str(e)}
+
+    def send_bnb(self, to_address, amount=0.001):
+        """Send small BNB to a wallet for gas fees"""
+        try:
+            result = self.client.withdraw(
+                asset='BNB',
+                address=to_address,
+                amount=amount,
+                network='BSC',
+                name='Gas funding',
+                walletType=0
+            )
+            return {'success': True, 'tx_id': result.get('id', '')}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
