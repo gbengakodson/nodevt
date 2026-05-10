@@ -869,10 +869,15 @@ def yield_rate_view(request):
 
 @csrf_exempt
 def send_daily_email_webhook(request):
-    """Webhook to trigger daily email sending - no auth required"""
+    """Trigger daily emails in background - returns immediately"""
+    import threading
     from apps.tasks.email_tasks import send_daily_email_to_all_users
-    result = send_daily_email_to_all_users()
-    return JsonResponse({'status': 'success', 'message': result})
+
+    # Run in background thread so cron-job.org doesn't timeout
+    thread = threading.Thread(target=send_daily_email_to_all_users)
+    thread.start()
+
+    return JsonResponse({'status': 'queued', 'message': 'Emails sending in background'})
 
 
 @csrf_exempt
