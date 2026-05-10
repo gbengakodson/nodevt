@@ -2,8 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .services.chatbot_service import ChatbotService, NotificationService
-from .models import ChatbotConversation
-from .models import PushSubscription
+from .models import ChatbotConversation, PushSubscription
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
@@ -18,7 +17,7 @@ class ChatbotAPIView(APIView):
         if not user_message:
             return Response({'error': 'Message is required'}, status=400)
 
-        # Get chatbot response
+        # Get chatbot response from FAQ engine
         response, intent = ChatbotService.get_response(user_message, request.user)
 
         # Save conversation
@@ -53,12 +52,7 @@ class NotificationsAPIView(APIView):
     def get(self, request):
         from .models import UserNotification
 
-        print(f"User: {request.user.email}")  # Debug
-        print(f"User ID: {request.user.id}")  # Debug
-
         notifications = UserNotification.objects.filter(user=request.user).order_by('-created_at')[:50]
-
-        print(f"Found {notifications.count()} notifications")  # Debug
 
         data = [{
             'id': str(n.id),
@@ -79,18 +73,6 @@ class MarkAllNotificationsReadAPIView(APIView):
         from .models import UserNotification
         UserNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
         return Response({'success': True})
-
-
-class MarkAllNotificationsReadAPIView(APIView):
-    permission_classes = [IsAuthenticated]
-
-    def post(self, request):
-        from .models import UserNotification
-        UserNotification.objects.filter(user=request.user, is_read=False).update(is_read=True)
-        return Response({'success': True})
-
-
-
 
 
 class SubscribePushAPIView(APIView):
