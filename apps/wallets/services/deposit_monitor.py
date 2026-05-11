@@ -100,12 +100,16 @@ class DepositMonitor:
             addr = Web3.to_checksum_address(address)
             central = Web3.to_checksum_address(cls.CENTRAL_WALLET)
 
-            # Check if already swept
-            if Transaction.objects.filter(
-                    user=user, transaction_type='WITHDRAWAL',
-                    metadata__contains={'source': 'sweep'}
-            ).exists():
-                return
+            # Check USDC balance on blockchain - if 0, already swept
+            usdc_contract = w3.eth.contract(
+                address=Web3.to_checksum_address(cls.USDC_ADDRESS),
+                abi=[{"constant": True, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf",
+                      "outputs": [{"name": "balance", "type": "uint256"}], "type": "function"}]
+            )
+            onchain_balance = usdc_contract.functions.balanceOf(addr).call()
+
+            if onchain_balance == 0:
+                return  # Already swept
 
             bnb_balance = w3.eth.get_balance(addr)
             gas_needed = w3.to_wei('0.00001', 'ether')
@@ -113,12 +117,16 @@ class DepositMonitor:
             # Send BNB if needed
             if bnb_balance < gas_needed:
                 cls._send_gas(w3, addr)
+                import time
+                time.sleep(3)  # Wait for BNB to arrive
 
             # Sweep USDC
             cls._sweep_usdc(w3, addr, central, amount, user)
 
         except Exception as e:
             print(f"Sweep error for {user.email}: {e}")
+
+
 
     @classmethod
     def _send_gas(cls, w3, to_address):
