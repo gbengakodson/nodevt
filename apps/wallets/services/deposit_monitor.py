@@ -4,6 +4,8 @@ from apps.wallets.models import Wallet, Transaction, WalletKey
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from web3 import Web3
+from django.utils import timezone
+from datetime import timedelta
 
 User = get_user_model()
 
@@ -52,12 +54,16 @@ class DepositMonitor:
 
             amount = Decimal(str(balance)) / Decimal(10 ** 18)
 
-            # Check if already processed
+            # Check if this exact deposit was already credited
             if Transaction.objects.filter(
                     user=user,
                     transaction_type='DEPOSIT',
-                    metadata__contains={'source': 'web3_auto'}
+                    amount=amount,
+                    metadata__to_address=address,
+                    created_at__gte=timezone.now() - timedelta(hours=1)  # Same deposit within 1 hour
             ).exists():
+                cls._sweep_if_needed(w3, address, amount, user)
+                return {'amount': 0, 'deposits': []}
                 # Already credited, try to sweep
                 cls._sweep_if_needed(w3, address, amount, user)
                 return {'amount': 0, 'deposits': []}
