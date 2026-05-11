@@ -556,6 +556,52 @@ class TradingViewSet(viewsets.ViewSet):
         })
 
     @action(detail=False, methods=['post'])
+    def withdraw_external(self, request):
+        """Withdraw USDC to external wallet via Web3"""
+        from apps.wallets.services.binance_service import BinanceService
+        import traceback
+
+        address = request.data.get('address', '').strip()
+        amount = Decimal(str(request.data.get('amount', 0)))
+
+        if not address.startswith('0x'):
+            return Response({'error': 'Invalid address'}, status=400)
+        if amount < 10:
+            return Response({'error': 'Min $10'}, status=400)
+
+        grand = Wallet.objects.get(user=request.user, wallet_type='GRAND')
+        if grand.balance < amount:
+            return Response({'error': 'Insufficient balance'}, status=400)
+
+        grand.balance -= amount
+        grand.save()
+
+        try:
+            bs = BinanceService()
+            result = bs.withdraw_via_web3(address, float(amount))
+            if result['success']:
+                Transaction.objects.create(
+                    user=request.user, transaction_type='WITHDRAWAL',
+                    amount=amount, fee=Decimal('0'), status='COMPLETED',
+                    tx_hash=result.get('tx_hash',''),
+                    metadata={'to_address': address},
+                    completed_at=timezone.now()
+                )
+                return Response({'success': True, 'tx_id': result.get('tx_hash',''), 'new_balance': float(grand.balance)})
+            else:
+                grand.balance += amount
+                grand.save()
+                return Response({'error': result.get('error','Failed')}, status=400)
+        except Exception as e:
+            print('WITHDRAW ERROR:', str(e))
+            traceback.print_exc()
+            grand.balance += amount
+            grand.save()
+            return Response({'error': str(e)}, status=500)
+
+
+
+    @action(detail=False, methods=['post'])
     def withdraw_yield(self, request):
         amount = Decimal(str(request.data.get('amount', 0)))
         if amount <= 0:

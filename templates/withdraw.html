@@ -178,6 +178,15 @@
             body: data ? JSON.stringify(data) : undefined
         });
         if (res.status === 401) { window.location.href = '/login/'; return {}; }
+
+        // Handle non-JSON responses
+        var contentType = res.headers.get('content-type');
+        if (!contentType || !contentType.includes('application/json')) {
+            var text = await res.text();
+            console.error('Non-JSON:', text.substring(0, 200));
+            throw new Error('Server error');
+        }
+
         return res.json();
     }
 
@@ -236,7 +245,7 @@
         btn.textContent = '⏳ Processing...';
 
         try {
-            var res = await apiCall('/trading/withdraw/', 'POST', {
+            var res = await apiCall('/trading/withdraw_external/', 'POST', {
                 address: address,
                 amount: amount
             });
