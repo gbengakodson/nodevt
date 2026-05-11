@@ -287,6 +287,8 @@ class BinanceService:
         abi = [
             {"constant": False, "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}],
              "name": "transfer", "outputs": [{"name": "", "type": "bool"}], "type": "function"},
+            {"constant": True, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf",
+             "outputs": [{"name": "", "type": "uint256"}], "type": "function"},
         ]
 
         contract = w3.eth.contract(address=usdc_address, abi=abi)
