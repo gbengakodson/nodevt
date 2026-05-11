@@ -159,6 +159,7 @@ DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
 BINANCE_API_KEY = os.environ.get('BINANCE_API_KEY', '')
 BINANCE_API_SECRET = os.environ.get('BINANCE_API_SECRET', '')
 CENTRAL_WALLET_ADDRESS = os.environ.get('CENTRAL_WALLET_ADDRESS', '')
+CENTRAL_WALLET_PRIVATE_KEY = os.environ.get('CENTRAL_WALLET_PRIVATE_KEY', '')
 
 
 # Channels settings

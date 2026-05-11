@@ -273,3 +273,49 @@ class BinanceService:
             return {'success': True, 'tx_id': result.get('id', '')}
         except Exception as e:
             return {'success': False, 'error': str(e)}
+
+    def withdraw_via_web3(self, to_address, amount_usdc):
+        """Withdraw USDC from central wallet via Web3 (no Binance API)"""
+        from web3 import Web3
+        from decimal import Decimal
+
+        w3 = Web3(Web3.HTTPProvider('https://bsc-rpc.publicnode.com'))
+
+        # USDC contract
+        usdc_address = Web3.to_checksum_address('0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d')
+
+        abi = [
+            {"constant": False, "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}],
+             "name": "transfer", "outputs": [{"name": "", "type": "bool"}], "type": "function"},
+        ]
+
+        contract = w3.eth.contract(address=usdc_address, abi=abi)
+
+        central = Web3.to_checksum_address(settings.CENTRAL_WALLET_ADDRESS)
+        private_key = settings.CENTRAL_WALLET_PRIVATE_KEY
+        amount_wei = int(Decimal(str(amount_usdc)) * Decimal(10 ** 18))
+
+        # Check balance
+        balance = contract.functions.balanceOf(central).call()
+        if balance < amount_wei:
+            return {'success': False, 'error': 'Insufficient central wallet balance'}
+
+        # Build and send transaction
+        tx = contract.functions.transfer(
+            Web3.to_checksum_address(to_address), amount_wei
+        ).build_transaction({
+            'from': central,
+            'nonce': w3.eth.get_transaction_count(central),
+            'gas': 100000,
+            'gasPrice': w3.eth.gas_price,
+            'chainId': 56
+        })
+
+        signed = w3.eth.account.sign_transaction(tx, private_key)
+        tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
+
+        return {
+            'success': True,
+            'tx_hash': tx_hash.hex(),
+            'amount': float(amount_usdc)
+        }

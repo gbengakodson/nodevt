@@ -770,102 +770,59 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def withdraw(self, request):
-        """Withdraw USDC from grand balance to external BSC wallet"""
+        """Withdraw USDC via Web3 from central wallet"""
         from apps.wallets.services.binance_service import BinanceService
 
         address = request.data.get('address', '').strip()
         amount = Decimal(str(request.data.get('amount', 0)))
 
-        # Validation
-        if not address:
-            return Response({'error': 'Wallet address required'}, status=400)
         if not address.startswith('0x') or len(address) != 42:
-            return Response({'error': 'Invalid BSC address. Must start with 0x and be 42 characters.'}, status=400)
+            return Response({'error': 'Invalid BSC address'}, status=400)
         if amount < 10:
-            return Response({'error': 'Minimum withdrawal is $10 USDC'}, status=400)
-        if amount > 10000:
-            return Response({'error': 'Maximum withdrawal is $10,000 per transaction'}, status=400)
+            return Response({'error': 'Minimum $10 USDC'}, status=400)
 
-        # Get user's grand wallet with lock
-        grand_wallet = Wallet.objects.select_for_update().get(
-            user=request.user,
-            wallet_type='GRAND'
-        )
+        grand_wallet = Wallet.objects.select_for_update().get(user=request.user, wallet_type='GRAND')
 
         if grand_wallet.balance < amount:
-            return Response({
-                'error': 'Insufficient balance',
-                'balance': float(grand_wallet.balance)
-            }, status=400)
+            return Response({'error': 'Insufficient balance'}, status=400)
 
-        # Deduct from grand wallet FIRST (prevents double-spend)
+        # Deduct first
         grand_wallet.balance -= amount
         grand_wallet.save()
 
-        # Create pending transaction record
         tx_record = Transaction.objects.create(
-            user=request.user,
-            transaction_type='WITHDRAWAL',
-            amount=amount,
-            fee=Decimal('0'),
-            status='PENDING',
-            metadata={
-                'to_address': address,
-                'network': 'BSC (BEP20)',
-                'token': 'USDC'
-            }
+            user=request.user, transaction_type='WITHDRAWAL',
+            amount=amount, fee=Decimal('0'), status='PENDING',
+            metadata={'to_address': address, 'network': 'BSC'}
         )
 
-        # Process via Binance
         try:
-            binance = BinanceService()
-            result = binance.withdraw_usdc_safe(
-                to_address=address,
-                amount=float(amount),
-                user_email=request.user.email
-            )
+            bs = BinanceService()
+            result = bs.withdraw_via_web3(address, float(amount))
 
             if result['success']:
                 tx_record.status = 'COMPLETED'
-                tx_record.tx_hash = result.get('tx_id', '')
+                tx_record.tx_hash = result.get('tx_hash', '')
                 tx_record.completed_at = timezone.now()
                 tx_record.save()
-
                 return Response({
-                    'success': True,
-                    'amount': float(amount),
-                    'address': address,
-                    'tx_id': result.get('tx_id', ''),
-                    'new_balance': float(grand_wallet.balance),
-                    'message': f'Withdrawal of ${amount:.2f} USDC processing on BSC'
+                    'success': True, 'amount': float(amount),
+                    'tx_id': result.get('tx_hash', ''),
+                    'new_balance': float(grand_wallet.balance)
                 })
             else:
-                # REFUND the user
                 grand_wallet.balance += amount
                 grand_wallet.save()
-
                 tx_record.status = 'FAILED'
-                tx_record.metadata['error'] = result.get('error', 'Unknown error')
                 tx_record.save()
-
-                return Response({
-                    'error': result.get('error', 'Withdrawal failed. Funds returned to your balance.'),
-                    'balance': float(grand_wallet.balance)
-                }, status=400)
+                return Response({'error': result.get('error', 'Failed')}, status=400)
 
         except Exception as e:
-            # REFUND on any error
             grand_wallet.balance += amount
             grand_wallet.save()
-
             tx_record.status = 'FAILED'
-            tx_record.metadata['error'] = str(e)
             tx_record.save()
-
-            return Response({
-                'error': 'Withdrawal system error. Funds returned. Try again.',
-                'balance': float(grand_wallet.balance)
-            }, status=500)
+            return Response({'error': str(e)}, status=500)
 
 
 
