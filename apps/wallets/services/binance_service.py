@@ -209,7 +209,7 @@ class BinanceService:
 
             # Sign and send
             signed = w3.eth.account.sign_transaction(tx, from_private_key)
-            tx_hash = w3.eth.send_raw_transaction(signed.rawTransaction)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
 
             amount_usdc = Decimal(str(balance)) / Decimal(10 ** 18)
 
