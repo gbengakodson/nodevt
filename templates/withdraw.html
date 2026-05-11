@@ -179,15 +179,13 @@
         });
         if (res.status === 401) { window.location.href = '/login/'; return {}; }
 
-        // Handle non-JSON responses
-        var contentType = res.headers.get('content-type');
-        if (!contentType || !contentType.includes('application/json')) {
-            var text = await res.text();
-            console.error('Non-JSON:', text.substring(0, 200));
-            throw new Error('Server error');
+        var text = await res.text();
+        try {
+            return JSON.parse(text);
+        } catch(e) {
+            console.error('Server error:', text.substring(0, 200));
+            return { success: false, error: 'Server error. Please try again.' };
         }
-
-        return res.json();
     }
 
     function fc(num) { if (!num || num === 0) return '$0.00'; return '$' + parseFloat(num).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2}); }
