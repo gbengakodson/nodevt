@@ -557,22 +557,36 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def withdraw_external(self, request):
-        """Withdraw USDC to external wallet via Web3"""
+        """Withdraw USDC to external wallet via Web3 with OTP verification"""
         from apps.wallets.services.binance_service import BinanceService
+        from apps.accounts.services.otp_service import OTPService
         import traceback
 
         address = request.data.get('address', '').strip()
         amount = Decimal(str(request.data.get('amount', 0)))
+        otp_code = request.data.get('otp', '').strip()
 
+        # Validate address and amount
         if not address.startswith('0x'):
             return Response({'error': 'Invalid address'}, status=400)
         if amount < 10:
             return Response({'error': 'Min $10'}, status=400)
 
+        # OTP Verification
+        if not otp_code:
+            OTPService.generate_otp(request.user, 'WITHDRAWAL')
+            return Response({'require_otp': True, 'message': 'OTP sent to your email'})
+
+        otp_result = OTPService.verify_otp(request.user, otp_code, 'WITHDRAWAL')
+        if not otp_result['success']:
+            return Response({'error': otp_result['error']}, status=400)
+
+        # Check balance
         grand = Wallet.objects.get(user=request.user, wallet_type='GRAND')
         if grand.balance < amount:
             return Response({'error': 'Insufficient balance'}, status=400)
 
+        # Deduct first
         grand.balance -= amount
         grand.save()
 
@@ -583,15 +597,16 @@ class TradingViewSet(viewsets.ViewSet):
                 Transaction.objects.create(
                     user=request.user, transaction_type='WITHDRAWAL',
                     amount=amount, fee=Decimal('0'), status='COMPLETED',
-                    tx_hash=result.get('tx_hash',''),
+                    tx_hash=result.get('tx_hash', ''),
                     metadata={'to_address': address},
                     completed_at=timezone.now()
                 )
-                return Response({'success': True, 'tx_id': result.get('tx_hash',''), 'new_balance': float(grand.balance)})
+                return Response(
+                    {'success': True, 'tx_id': result.get('tx_hash', ''), 'new_balance': float(grand.balance)})
             else:
                 grand.balance += amount
                 grand.save()
-                return Response({'error': result.get('error','Failed')}, status=400)
+                return Response({'error': result.get('error', 'Failed')}, status=400)
         except Exception as e:
             print('WITHDRAW ERROR:', str(e))
             traceback.print_exc()

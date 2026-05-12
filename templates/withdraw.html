@@ -217,9 +217,8 @@
         statusEl.className = 'status-msg';
         statusEl.style.display = 'none';
 
-        // Validate
         if (!address.startsWith('0x') || address.length !== 42) {
-            statusEl.textContent = '❌ Invalid BSC address. Must start with 0x and be 42 characters.';
+            statusEl.textContent = '❌ Invalid BSC address.';
             statusEl.className = 'status-msg error';
             return;
         }
@@ -228,13 +227,8 @@
             statusEl.className = 'status-msg error';
             return;
         }
-        if (amount > 10000) {
-            statusEl.textContent = '❌ Maximum withdrawal is $10,000 per transaction.';
-            statusEl.className = 'status-msg error';
-            return;
-        }
         if (amount > userBalance) {
-            statusEl.textContent = '❌ Insufficient balance. You have ' + fc(userBalance) + '.';
+            statusEl.textContent = '❌ Insufficient balance.';
             statusEl.className = 'status-msg error';
             return;
         }
@@ -243,36 +237,62 @@
         btn.textContent = '⏳ Processing...';
 
         try {
+            var otpInput = document.getElementById('otpInput');
+            var otpCode = otpInput ? otpInput.value.trim() : '';
+
             var res = await apiCall('/trading/withdraw_external/', 'POST', {
                 address: address,
-                amount: amount
+                amount: amount,
+                otp: otpCode
             });
 
-            if (res.success) {
-                statusEl.textContent = '✅ Withdrawal successful! TX ID: ' + (res.tx_id || 'N/A') + '. Funds sent to ' + address.substring(0,10) + '...';
+            if (res.require_otp) {
+                showOTPInput();
+                statusEl.textContent = '📧 ' + (res.message || 'OTP sent to your email');
+                statusEl.className = 'status-msg success';
+            } else if (res.success) {
+                hideOTPInput();
+                statusEl.textContent = '✅ Withdrawal successful! TX: ' + (res.tx_id || '').substring(0, 20) + '...';
                 statusEl.className = 'status-msg success';
                 document.getElementById('withdrawAddress').value = '';
                 document.getElementById('withdrawAmount').value = '';
                 updateFee(0);
                 loadBalance();
             } else {
-                statusEl.textContent = '❌ ' + (res.error || 'Withdrawal failed. Funds returned to balance.');
+                statusEl.textContent = '❌ ' + (res.error || 'Failed');
                 statusEl.className = 'status-msg error';
-                loadBalance();
             }
         } catch(e) {
-            statusEl.textContent = '❌ Network error. Please try again.';
+            statusEl.textContent = '❌ Network error.';
             statusEl.className = 'status-msg error';
-            loadBalance();
         } finally {
             btn.disabled = false;
-            btn.textContent = '🔒 Withdraw Now';
+            if (document.getElementById('otpGroup')) {
+                btn.textContent = '🔐 Verify & Withdraw';
+            } else {
+                btn.textContent = '🔒 Withdraw Now';
+            }
         }
     }
 
-    document.getElementById('withdrawAmount').addEventListener('input', function() {
-        updateFee(this.value);
-    });
+    function showOTPInput() {
+        var existing = document.getElementById('otpGroup');
+        if (existing) return;
+
+        var otpGroup = document.createElement('div');
+        otpGroup.id = 'otpGroup';
+        otpGroup.className = 'form-group';
+        otpGroup.innerHTML = '<label class="form-label">Enter OTP Code</label><input type="text" id="otpInput" class="form-input" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code"><div class="input-hint">Check your email for the OTP code. Expires in 10 minutes.</div>';
+
+        var btn = document.getElementById('btnWithdraw');
+        btn.parentNode.insertBefore(otpGroup, btn);
+        document.getElementById('otpInput').focus();
+    }
+
+    function hideOTPInput() {
+        var el = document.getElementById('otpGroup');
+        if (el) el.remove();
+    }
 
     loadBalance();
 </script>
