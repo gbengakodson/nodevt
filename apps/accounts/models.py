@@ -36,6 +36,18 @@ class User(AbstractUser):
     USERNAME_FIELD = 'email'
     REQUIRED_FIELDS = ['username']
 
+    # KYC Fields
+    is_verified = models.BooleanField(default=False)
+    kyc_status = models.CharField(max_length=20, default='NONE', choices=[
+        ('NONE', 'Not Submitted'),
+        ('PENDING', 'Pending Review'),
+        ('APPROVED', 'Approved'),
+        ('REJECTED', 'Rejected'),
+    ])
+    phone_number = models.CharField(max_length=20, blank=True, null=True)
+    country = models.CharField(max_length=50, blank=True, null=True)
+    date_verified = models.DateTimeField(null=True, blank=True)
+
     def save(self, *args, **kwargs):
         if not self.referral_code:
             self.referral_code = self.generate_referral_code()
