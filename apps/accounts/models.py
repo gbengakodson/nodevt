@@ -3,6 +3,7 @@ from django.db import models
 import uuid
 import random
 import string
+from django.conf import settings
 
 
 class User(AbstractUser):
