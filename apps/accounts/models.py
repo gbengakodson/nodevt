@@ -48,6 +48,15 @@ class User(AbstractUser):
     country = models.CharField(max_length=50, blank=True, null=True)
     date_verified = models.DateTimeField(null=True, blank=True)
 
+    id_type = models.CharField(max_length=20, blank=True, null=True, choices=[
+        ('NIN', 'NIN'),
+        ('PASSPORT', 'Passport'),
+        ('DRIVERS', 'Driver\'s License'),
+        ('VOTER', 'Voter\'s Card'),
+        ('NATIONAL_ID', 'National ID'),
+    ])
+    id_number = models.CharField(max_length=50, blank=True, null=True)
+
     def save(self, *args, **kwargs):
         if not self.referral_code:
             self.referral_code = self.generate_referral_code()

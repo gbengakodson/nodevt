@@ -6,11 +6,11 @@
 <style>
     :root {
         --primary: #F0B90B;
-        --bg-body: #F5F6F8;
-        --bg-card: #FFFFFF;
-        --text-primary: #1E2329;
-        --text-secondary: #707A8A;
-        --border: #E2E4E8;
+        --bg-body: #0B0E11;
+        --bg-card: #181A20;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
         --success: #0ECB81;
         --danger: #F6465D;
         --warning: #F0B90B;
@@ -83,7 +83,7 @@
     }
     .card-row {
         display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 0; border-bottom: 1px solid #F0F0F0;
+        padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
         font-size: 12px;
     }
     .card-row:last-child { border-bottom: none; }
@@ -92,8 +92,9 @@
 
     .form-input {
         width: 100%; padding: 10px 12px; border-radius: 6px;
-        border: 1px solid var(--border); background: #F8F9FA;
-        color: var(--text-primary); font-size: 12px; margin-bottom: 8px;
+        background: rgba(0,0,0,0.3);
+        border: 1px solid var(--border);
+        color: var(--text-primary);
     }
     .form-input:focus { outline: none; border-color: var(--primary); background: #fff; }
     .form-select {
@@ -228,11 +229,22 @@
 
     <!-- KYC -->
     <div class="card">
-        <div class="card-title">🛡️ Verification (KYC)</div>
+        <div class="card-title">🛡️ Identity Verification (KYC)</div>
         <div class="card-row"><span class="card-label">Status</span><span id="kycStatus">—</span></div>
-        <div class="card-row"><span class="card-label">Phone</span><input type="text" id="kycPhone" class="form-input" style="max-width:50%;margin-bottom:0;" placeholder="+234..."></div>
+        <div class="card-row"><span class="card-label">ID Type</span>
+            <select id="kycIdType" class="form-select" style="max-width:50%;margin-bottom:0;">
+                <option value="">Select...</option>
+                <option value="NIN">NIN (Nigeria)</option>
+                <option value="PASSPORT">International Passport</option>
+                <option value="DRIVERS">Driver's License</option>
+                <option value="VOTER">Voter's Card</option>
+                <option value="NATIONAL_ID">National ID</option>
+            </select>
+        </div>
+        <div class="card-row"><span class="card-label">ID Number</span><input type="text" id="kycIdNumber" class="form-input" style="max-width:50%;margin-bottom:0;" placeholder="Enter your ID number"></div>
+        <div class="card-row"><span class="card-label">Nationality</span><input type="text" id="kycNationality" class="form-input" style="max-width:50%;margin-bottom:0;" placeholder="e.g., Nigerian"></div>
         <div class="card-row"><span class="card-label">Country</span><select id="kycCountry" class="form-select" style="max-width:50%;margin-bottom:0;"><option value="">Select...</option><option value="NG">Nigeria</option><option value="GH">Ghana</option><option value="KE">Kenya</option><option value="ZA">South Africa</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="AE">UAE</option></select></div>
-        <button class="btn-sm btn-primary" onclick="submitKYC()" style="margin-top:10px;">Submit for Verification</button>
+        <button class="btn-sm btn-primary" onclick="submitKYC()" style="margin-top:10px;">Verify Identity</button>
     </div>
 
     <!-- Wallet -->
@@ -335,6 +347,9 @@
             document.getElementById('editEmail').value = userData.email || '';
             document.getElementById('editUsername').value = userData.username || '';
             document.getElementById('avatarText').textContent = (userData.username || 'U').charAt(0).toUpperCase();
+            document.getElementById('kycIdType').value = userData.id_type || '';
+            document.getElementById('kycIdNumber').value = userData.id_number || '';
+            document.getElementById('kycNationality').value = userData.phone_number || '';
 
             // KYC
             var kycStatus = userData.kyc_status || 'NONE';
@@ -407,13 +422,22 @@
     }
 
     async function submitKYC() {
-        var phone = document.getElementById('kycPhone').value.trim();
+        var idType = document.getElementById('kycIdType').value;
+        var idNumber = document.getElementById('kycIdNumber').value.trim();
+        var nationality = document.getElementById('kycNationality').value.trim();
         var country = document.getElementById('kycCountry').value;
-        if (!phone || !country) return alert('Fill all fields');
+        if (!idType || !idNumber || !nationality || !country) return alert('Fill all fields');
         try {
-            var res = await apiCall('/auth/profile/', 'PUT', { phone_number: phone, country: country, kyc_status: 'PENDING' });
-            if (res.email) { alert('KYC submitted for review!'); loadProfile(); }
-        } catch(e) { alert('Failed'); }
+            var res = await apiCall('/auth/profile/', 'PATCH', {
+                id_type: idType,
+                id_number: idNumber,
+                phone_number: nationality,
+                country: country,
+                kyc_status: 'PENDING'
+            });
+            if (res.email) { alert('Identity verification submitted!'); loadProfile(); }
+            else { alert(res.error || 'Failed'); }
+        } catch(e) { alert('Error'); }
     }
 
     function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }

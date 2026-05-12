@@ -7,7 +7,9 @@ from .models import User
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
+from apps.accounts.services.otp_service import OTPService
 import logging
+
 
 logger = logging.getLogger(__name__)
 
@@ -97,6 +99,32 @@ class UserProfileView(APIView):
     def get(self, request):
         serializer = UserSerializer(request.user)
         return Response(serializer.data)
+
+    def put(self, request):
+        user = request.user
+        data = request.data
+
+        if 'email' in data:
+            user.email = data['email']
+        if 'username' in data:
+            user.username = data['username']
+        if 'kyc_status' in data:
+            user.kyc_status = data['kyc_status']
+        if 'phone_number' in data:
+            user.phone_number = data['phone_number']
+        if 'country' in data:
+            user.country = data['country']
+        if 'id_type' in data:
+            user.id_type = data['id_type']
+        if 'id_number' in data:
+            user.id_number = data['id_number']
+
+        user.save()
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
+    def patch(self, request):
+        return self.put(request)
 
 
 @api_view(['POST'])

@@ -53,3 +53,12 @@ class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('id', 'email', 'username', 'referral_code', 'wallet_address', 'created_at')
+
+
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'email', 'username', 'wallet_address', 'referral_code',
+                  'created_at', 'kyc_status', 'phone_number', 'country',
+                  'id_type', 'id_number', 'is_verified', 'date_verified']
