@@ -93,3 +93,16 @@ class Web3Service:
             return Web3.is_address(address)
         except:
             return False
+
+    def fund_with_bnb(self, to_address, amount_bnb=0.001):
+        """Send BNB to a wallet for gas fees"""
+        try:
+            # This needs the central wallet's private key
+            # We'll use Binance withdrawal for BNB instead
+            from apps.wallets.services.binance_service import BinanceService
+            bs = BinanceService()
+            result = bs.send_bnb(to_address, amount_bnb)
+            return result
+        except Exception as e:
+            print(f"Error funding BNB: {e}")
+            return {'success': False, 'error': str(e)}

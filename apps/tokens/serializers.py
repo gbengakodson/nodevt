@@ -19,6 +19,7 @@ class UserTokenBalanceSerializer(serializers.ModelSerializer):
 class PurchaseSerializer(serializers.Serializer):
     token_id = serializers.UUIDField()
     amount_usdc = serializers.DecimalField(max_digits=20, decimal_places=8, min_value=0.01)
+    order_type = serializers.CharField(required=False, default='market')
     
 class SellSerializer(serializers.Serializer):
     token_id = serializers.UUIDField()

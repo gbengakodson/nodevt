@@ -254,6 +254,7 @@
                 hideOTPInput();
                 statusEl.textContent = '✅ Withdrawal successful! TX: ' + (res.tx_id || '').substring(0, 20) + '...';
                 statusEl.className = 'status-msg success';
+                statusEl.style.display = 'block';
                 document.getElementById('withdrawAddress').value = '';
                 document.getElementById('withdrawAmount').value = '';
                 updateFee(0);

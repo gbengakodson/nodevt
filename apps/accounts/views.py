@@ -98,3 +98,38 @@ class UserProfileView(APIView):
         return Response(serializer.data)
 
 
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def request_login_otp(request):
+    """Step 1: Validate credentials and send OTP"""
+    email = request.data.get('email')
+    password = request.data.get('password')
+
+    user = authenticate(email=email, password=password)
+    if not user:
+        return Response({'error': 'Invalid credentials'}, status=401)
+
+    result = OTPService.generate_otp(user, 'LOGIN')
+    return Response({'success': True, 'message': 'OTP sent', 'user_id': str(user.id)})
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def verify_login_otp(request):
+    """Step 2: Verify OTP and return tokens"""
+    user_id = request.data.get('user_id')
+    code = request.data.get('code')
+
+    user = User.objects.get(id=user_id)
+    result = OTPService.verify_otp(user, code, 'LOGIN')
+
+    if not result['success']:
+        return Response({'error': result['error']}, status=400)
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+    })
+
+

@@ -80,4 +80,8 @@ urlpatterns = [
 
     path('api/trigger/sweep/', sweep_webhook, name='sweep_webhook'),
 
+
+    path('api/auth/request-otp/', request_login_otp, name='request_otp'),
+    path('api/auth/verify-otp/', verify_login_otp, name='verify_otp'),
+
 ]
