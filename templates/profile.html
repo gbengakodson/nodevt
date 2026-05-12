@@ -6,11 +6,11 @@
 <style>
     :root {
         --primary: #F0B90B;
-        --bg-body: #0B0E11;
-        --bg-card: #181A20;
-        --text-primary: #EAECEF;
-        --text-secondary: #848E9C;
-        --border: #2B3139;
+        --bg-body: #F5F6F8;
+        --bg-card: #FFFFFF;
+        --text-primary: #1E2329;
+        --text-secondary: #707A8A;
+        --border: #E2E4E8;
         --success: #0ECB81;
         --danger: #F6465D;
         --warning: #F0B90B;
@@ -357,7 +357,6 @@
             var badgeText = kycStatus === 'APPROVED' ? '✅ Verified' : kycStatus === 'PENDING' ? '⏳ Pending' : '⚠️ Not Verified';
             document.getElementById('kycBadge').innerHTML = '<span class="badge ' + badgeClass + '">' + badgeText + '</span>';
             document.getElementById('kycStatus').innerHTML = '<span class="badge ' + badgeClass + '">' + kycStatus + '</span>';
-            document.getElementById('kycPhone').value = userData.phone_number || '';
             document.getElementById('kycCountry').value = userData.country || '';
 
             document.getElementById('grandBal').textContent = fc(balanceData.grand_balance);
