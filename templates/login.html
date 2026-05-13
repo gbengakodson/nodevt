@@ -1,4 +1,5 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
 {% block title %}Login{% endblock %}
 
@@ -290,25 +291,8 @@
 <div class="login-container">
     <div class="login-card">
         <div class="login-logo">
-    <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 16px;">
-        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="24" cy="24" r="22" stroke="#F0B90B" stroke-width="2" fill="none"/>
-            <polygon points="24,8 32,13 32,21 24,26 16,21 16,13 24,8" fill="none" stroke="#F0B90B" stroke-width="1.5"/>
-            <circle cx="24" cy="18" r="2.5" fill="#F0B90B"/>
-            <circle cx="19" cy="23" r="2.5" fill="#F0B90B"/>
-            <circle cx="29" cy="23" r="2.5" fill="#F0B90B"/>
-            <circle cx="24" cy="28" r="2.5" fill="#F0B90B"/>
-            <line x1="24" y1="18" x2="24" y2="28" stroke="#F0B90B" stroke-width="1.5"/>
-            <line x1="19" y1="23" x2="29" y2="23" stroke="#F0B90B" stroke-width="1.5"/>
-            <path d="M36 36 L38 34 L40 36" stroke="#F6465D" stroke-width="2" stroke-linecap="round" fill="none"/>
-            <path d="M8 12 L10 10 L12 12" stroke="#0ECB81" stroke-width="2" stroke-linecap="round" fill="none"/>
-        </svg>
-        <div>
-            <div style="font-weight: 800; font-size: 28px; letter-spacing: -1px; line-height: 1.2;">
-                <span style="color: white;">NODE</span>
-            </div>
-            <div style="font-size: 10px; color: #F0B90B; letter-spacing: 2px;">Spot Grid Bot</div>
-        </div>
+        <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
+        <img src="{% static 'images/favicon2.png' %}" alt="NODE" style="height: 60px; width: auto;">
     </div>
     <p style="color: #8A8F9E;">Welcome back! Please login to your account</p>
 </div>
