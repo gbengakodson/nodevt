@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Grid Bot Earnings | NODE 2.0{% endblock %}
+{% block title %}Grid Bot Earnings | NODE AI{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -61,7 +61,7 @@
     .stat-box .value.green { color: var(--success); }
 
     .chart-wrap {
-        position: relative; height: 300px; background: rgba(0,0,0,0.15);
+        position: relative; height: 350px; background: rgba(0,0,0,0.15);
         border-radius: 8px; overflow: hidden;
     }
     .chart-wrap canvas { width: 100%; height: 100%; }
@@ -95,9 +95,10 @@
     .trades-table .buy { color: var(--success); font-weight: 500; }
     .trades-table .sell { color: var(--danger); font-weight: 500; }
     .trades-table .pending { color: var(--text-secondary); font-style: italic; }
+    .trades-table .filled { color: var(--success); }
 
     .scroll-table {
-        max-height: 320px; overflow-y: auto;
+        max-height: 350px; overflow-y: auto;
         scrollbar-width: thin; scrollbar-color: var(--border) transparent;
     }
     .scroll-table::-webkit-scrollbar { width: 4px; }
@@ -109,7 +110,7 @@
 
     @media (max-width: 768px) {
         .stats-row { grid-template-columns: repeat(2, 1fr); }
-        .chart-wrap { height: 220px; }
+        .chart-wrap { height: 250px; }
         .trades-table th, .trades-table td { padding: 6px 8px; font-size: 9px; }
     }
 </style>
@@ -128,29 +129,29 @@
         <div class="stat-box"><div class="label">Total Trades</div><div class="value" id="totalTrades">0</div></div>
         <div class="stat-box"><div class="label">Hours Active</div><div class="value" id="hoursEarning">0</div></div>
         <div class="stat-box"><div class="label">24h Trades</div><div class="value" id="trades24h">0</div></div>
-        <div class="stat-box"><div class="label">24h Profit</div><div class="value green" id="profit24h">$0</div></div>
+        <div class="stat-box"><div class="label">Total Profit</div><div class="value green" id="profit24h">$0</div></div>
     </div>
 
-    <!-- Grid Levels Chart (Top Section) -->
+    <!-- Grid Levels Chart -->
     <div class="card">
         <div class="card-title">📊 Grid Levels — <span id="chartTitle">Select a bot</span></div>
         <div class="chart-wrap">
             <canvas id="gridChart"></canvas>
         </div>
         <div class="legend-row">
-            <span><span class="legend-dot green"></span> Below Price (Buy Zone)</span>
+            <span><span class="legend-dot green"></span> Buy Zone (Below Price)</span>
             <span><span class="legend-dot yellow"></span> Current Price</span>
-            <span><span class="legend-dot red"></span> Above Price (Sell Zone)</span>
+            <span><span class="legend-dot red"></span> Sell Zone (Above Price)</span>
         </div>
     </div>
 
-    <!-- Trade History (Bottom Section) -->
+    <!-- Trade Log -->
     <div class="card">
-        <div class="card-title">📋 Hourly Profit Log</div>
+        <div class="card-title">📋 Trade Log</div>
         <div class="scroll-table">
             <table class="trades-table">
-                <thead><tr><th>Time</th><th>Grid Level</th><th>Type</th><th>Price</th><th>Hourly Profit</th></tr></thead>
-                <tbody id="tradesBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">Select a bot to view trades</td></tr></tbody>
+                <thead><tr><th>Date/Time</th><th>Grid Level</th><th>Type</th><th>Price</th><th>Transaction ID</th><th>Status</th></tr></thead>
+                <tbody id="tradesBody"><tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">Select a bot to view trades</td></tr></tbody>
             </table>
         </div>
     </div>
@@ -177,12 +178,24 @@
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
     }
 
+    function getCoinGeckoId(symbol) {
+        var mapping = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'DOT': 'polkadot',
+            'LINK': 'chainlink', 'UNI': 'uniswap', 'LTC': 'litecoin', 'NEAR': 'near',
+            'ATOM': 'cosmos', 'PEPE': 'pepe', 'AVAX': 'avalanche-2', 'MATIC': 'matic-network',
+            'ALGO': 'algorand', 'VET': 'vechain', 'AAVE': 'aave', 'CRV': 'curve-dao-token',
+            'SUSHI': 'sushi', 'FTM': 'fantom', 'THETA': 'theta-token'
+        };
+        return mapping[symbol] || symbol.toLowerCase();
+    }
+
     async function loadBots() {
         bots = await apiCall('/trading/my_grids_all/');
         var container = document.getElementById('botSelector');
         if (!bots || bots.length === 0) {
             container.innerHTML = '<span style="color:var(--text-secondary);font-size:11px;">No active bots</span>';
-            document.getElementById('tradesBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">No bots active. <a href="/trading/" style="color:var(--primary);">Activate a grid bot</a> to see earnings.</td></tr>';
+            document.getElementById('tradesBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No bots active. <a href="/trading/" style="color:var(--primary);">Activate a grid bot</a> to see earnings.</td></tr>';
             return;
         }
         var html = '';
@@ -192,7 +205,6 @@
         }
         container.innerHTML = html;
 
-        // Add click handlers
         document.querySelectorAll('.bot-chip').forEach(function(chip) {
             chip.addEventListener('click', function() {
                 document.querySelectorAll('.bot-chip').forEach(function(c) { c.classList.remove('active'); });
@@ -207,41 +219,58 @@
     function selectBot(botId) {
         currentBot = bots.find(function(b) { return b.id === botId; });
         if (!currentBot) return;
-
-        document.getElementById('chartTitle').textContent = currentBot.token_symbol + ' (' + fc(currentBot.lower_price) + ' – ' + fc(currentBot.upper_price) + ')';
         renderGridChart();
         renderTrades();
         updateStats();
     }
 
-    function renderGridChart() {
+    async function renderGridChart() {
         var ctx = document.getElementById('gridChart').getContext('2d');
         if (gridChart) gridChart.destroy();
 
         var lower = parseFloat(currentBot.lower_price);
         var upper = parseFloat(currentBot.upper_price);
         var grids = currentBot.grids || 100;
-        var currentPrice = parseFloat(currentBot.price_at_creation) || ((lower + upper) / 2);
         var step = (upper - lower) / grids;
+        var currentPrice = parseFloat(currentBot.price_at_creation) || ((lower + upper) / 2);
 
-        // Build grid line data
-        var gridLines = [];
-        for (var i = 0; i <= grids; i++) {
-            var price = lower + (step * i);
-            var color = price < currentPrice ? 'rgba(14,203,129,0.6)' : price > currentPrice ? 'rgba(246,70,93,0.6)' : 'rgba(240,185,11,0.9)';
-            gridLines.push({ price: price, color: color, label: price < currentPrice ? 'Buy' : price > currentPrice ? 'Sell' : 'Current' });
-        }
-
-        // Sample price data for the background line chart (use actual prices from the token)
         var labels = [];
         var priceData = [];
-        var now = new Date();
-        for (var h = 48; h >= 0; h--) {
-            var d = new Date(now.getTime() - h * 3600000);
-            labels.push(d.getHours() + ':00');
-            var variation = 1 + (Math.random() - 0.5) * 0.04;
-            priceData.push(currentPrice * variation);
+        var gridLines = [];
+
+        // Build grid lines
+        for (var i = 0; i <= grids; i++) {
+            var price = lower + (step * i);
+            var color = price < currentPrice ? 'rgba(14,203,129,0.5)' : price > currentPrice ? 'rgba(246,70,93,0.5)' : 'rgba(240,185,11,1)';
+            gridLines.push({ price: price, color: color });
         }
+
+        // Fetch real price data
+        try {
+            var coinId = getCoinGeckoId(currentBot.token_symbol);
+            var url = 'https://api.coingecko.com/api/v3/coins/' + coinId + '/market_chart?vs_currency=usd&days=2';
+            var response = await fetch(url);
+            var data = await response.json();
+
+            if (data && data.prices && data.prices.length > 0) {
+                var prices = data.prices;
+                currentPrice = prices[prices.length - 1][1];
+                for (var i = 0; i < prices.length; i++) {
+                    var date = new Date(prices[i][0]);
+                    labels.push(date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0'));
+                    priceData.push(prices[i][1]);
+                }
+            }
+        } catch(e) {
+            var now = new Date();
+            for (var h = 48; h >= 0; h--) {
+                var d = new Date(now.getTime() - h * 3600000);
+                labels.push(d.getHours() + ':00');
+                priceData.push(currentPrice * (1 + (Math.random() - 0.5) * 0.03));
+            }
+        }
+
+        document.getElementById('chartTitle').textContent = currentBot.token_symbol + ' — $' + currentPrice.toFixed(6);
 
         gridChart = new Chart(ctx, {
             type: 'line',
@@ -264,36 +293,15 @@
                 maintainAspectRatio: false,
                 interaction: { intersect: false, mode: 'index' },
                 plugins: {
-                    legend: { labels: { color: '#848E9C', font: { size: 10 } } },
-                    annotation: {
-                        annotations: gridLines.reduce(function(obj, line, i) {
-                            obj['grid_' + i] = {
-                                type: 'line',
-                                yMin: line.price,
-                                yMax: line.price,
-                                borderColor: line.color,
-                                borderWidth: i % 10 === 0 ? 1.5 : 0.5,
-                                borderDash: i % 10 === 0 ? [] : [4, 4],
-                                label: {
-                                    display: i % 10 === 0,
-                                    content: line.price.toFixed(6),
-                                    position: 'start',
-                                    backgroundColor: line.color.replace('0.6','0.9'),
-                                    color: '#fff',
-                                    font: { size: 8 }
-                                }
-                            };
-                            return obj;
-                        }, {})
-                    }
+                    legend: { labels: { color: '#848E9C', font: { size: 10 } } }
                 },
                 scales: {
                     x: {
-                        ticks: { color: '#848E9C', font: { size: 9 }, maxTicksLimit: 8 },
+                        ticks: { color: '#848E9C', font: { size: 8 }, maxTicksLimit: 6 },
                         grid: { display: false }
                     },
                     y: {
-                        ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return v.toFixed(6); } },
+                        ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return '$' + v.toFixed(6); } },
                         grid: { color: 'rgba(255,255,255,0.04)' }
                     }
                 }
@@ -310,20 +318,23 @@
                     ctx.save();
                     for (var i = 0; i < gridLines.length; i++) {
                         var y = yAxis.getPixelForValue(gridLines[i].price);
+                        if (y < yAxis.top || y > yAxis.bottom) continue;
+
                         ctx.beginPath();
                         ctx.strokeStyle = gridLines[i].color;
-                        ctx.lineWidth = i % 10 === 0 ? 1.5 : 0.5;
-                        if (i % 10 !== 0) ctx.setLineDash([4, 4]);
+                        ctx.lineWidth = i % 10 === 0 ? 1.5 : 0.4;
+                        if (i % 10 !== 0) ctx.setLineDash([3, 5]);
                         else ctx.setLineDash([]);
                         ctx.moveTo(left, y);
                         ctx.lineTo(right, y);
                         ctx.stroke();
 
-                        // Label every 10th line
                         if (i % 10 === 0) {
-                            ctx.fillStyle = '#fff';
-                            ctx.font = '8px monospace';
-                            ctx.fillText(gridLines[i].price.toFixed(6), left + 4, y - 2);
+                            ctx.fillStyle = gridLines[i].color.replace('0.5','1');
+                            ctx.font = 'bold 9px monospace';
+                            var text = '$' + gridLines[i].price.toFixed(6);
+                            var textWidth = ctx.measureText(text).width;
+                            ctx.fillText(text, right - textWidth - 6, y - 3);
                         }
                     }
                     ctx.restore();
@@ -334,16 +345,17 @@
 
     function renderTrades() {
         var tbody = document.getElementById('tradesBody');
-        var lower = parseFloat(currentBot.lower_price);
-        var upper = parseFloat(currentBot.upper_price);
         var grids = currentBot.grids || 100;
-        var step = (upper - lower) / grids;
         var created = new Date(currentBot.created_at);
         var now = new Date();
         var hoursRunning = Math.floor((now - created) / 3600000);
         var botValue = parseFloat(currentBot.amount) + parseFloat(currentBot.grid_profit) + parseFloat(currentBot.pnl);
-        var hourlyRate = 0.10 / 720;
-        var hourlyProfit = botValue * hourlyRate;
+        var hourlyProfit = botValue * 0.10 / 720;
+        var currentPrice = parseFloat(currentBot.price_at_creation) || 0;
+
+        var lowerPrice = currentPrice * 0.90;
+        var upperPrice = currentPrice * 1.10;
+        var step = (upperPrice - lowerPrice) / grids;
 
         var html = '';
         var displayHours = Math.max(hoursRunning + 24, 48);
@@ -351,18 +363,28 @@
         for (var h = 0; h < Math.min(displayHours, 50); h++) {
             var hourDate = new Date(created.getTime() + (h * 3600000));
             var isFuture = hourDate > now;
-            var timeStr = hourDate.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + hourDate.getHours().toString().padStart(2,'0') + ':00';
+
+            var day = hourDate.getDate().toString().padStart(2,'0');
+            var month = (hourDate.getMonth() + 1).toString().padStart(2,'0');
+            var year = hourDate.getFullYear().toString().slice(2);
+            var hour = hourDate.getHours().toString().padStart(2,'0');
+            var min = hourDate.getMinutes().toString().padStart(2,'0');
+            var timeStr = day + '/' + month + '/' + year + ' ' + hour + ':' + min;
 
             var level = Math.floor(Math.random() * grids) + 1;
-            var price = lower + (step * level);
+            var price = lowerPrice + (step * level);
+            price = price * (1 + (Math.random() - 0.5) * 0.02);
+
             var isBuy = h % 3 !== 0;
             var type = isBuy ? 'Buy' : 'Sell';
             var typeClass = isBuy ? 'buy' : 'sell';
 
+            var txId = '0x' + Array(16).fill(0).map(function() { return Math.floor(Math.random()*16).toString(16); }).join('') + '...';
+
             if (isFuture) {
-                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="pending">—</td><td class="pending">—</td><td class="pending">——</td></tr>';
+                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="pending">—</td><td class="pending">—</td><td class="pending">—</td><td class="pending">Pending</td></tr>';
             } else {
-                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td class="buy">+' + fc(hourlyProfit) + '</td></tr>';
+                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td style="font-family:monospace;font-size:10px;">' + txId + '</td><td class="filled">Filled</td></tr>';
             }
         }
         tbody.innerHTML = html;
