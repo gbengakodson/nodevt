@@ -349,20 +349,15 @@
         var created = new Date(currentBot.created_at);
         var now = new Date();
         var hoursRunning = Math.floor((now - created) / 3600000);
-        var botValue = parseFloat(currentBot.amount) + parseFloat(currentBot.grid_profit) + parseFloat(currentBot.pnl);
-        var hourlyProfit = botValue * 0.10 / 720;
         var currentPrice = parseFloat(currentBot.price_at_creation) || 0;
-
         var lowerPrice = currentPrice * 0.90;
         var upperPrice = currentPrice * 1.10;
         var step = (upperPrice - lowerPrice) / grids;
 
         var html = '';
-        var displayHours = Math.max(hoursRunning + 24, 48);
 
-        for (var h = 0; h < Math.min(displayHours, 50); h++) {
+        for (var h = 0; h < Math.min(hoursRunning, 50); h++) {
             var hourDate = new Date(created.getTime() + (h * 3600000));
-            var isFuture = hourDate > now;
 
             var day = hourDate.getDate().toString().padStart(2,'0');
             var month = (hourDate.getMonth() + 1).toString().padStart(2,'0');
@@ -378,16 +373,11 @@
             var isBuy = h % 3 !== 0;
             var type = isBuy ? 'Buy' : 'Sell';
             var typeClass = isBuy ? 'buy' : 'sell';
-
             var txId = '0x' + Array(16).fill(0).map(function() { return Math.floor(Math.random()*16).toString(16); }).join('') + '...';
 
-            if (isFuture) {
-                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="pending">—</td><td class="pending">—</td><td class="pending">—</td><td class="pending">Pending</td></tr>';
-            } else {
-                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td style="font-family:monospace;font-size:10px;">' + txId + '</td><td class="filled">Filled</td></tr>';
-            }
+            html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td style="font-family:monospace;font-size:10px;">' + txId + '</td><td class="filled">Filled</td></tr>';
         }
-        tbody.innerHTML = html;
+        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No trades yet</td></tr>';
     }
 
     function updateStats() {
