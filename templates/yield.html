@@ -224,51 +224,111 @@
         var currentPrice = parseFloat(currentBot.price_at_creation) || ((lower + upper) / 2);
         var step = (upper - lower) / grids;
 
-        var labels = [];
-        var data = [];
-        var bgColors = [];
-        var borderColors = [];
-
+        // Build grid line data
+        var gridLines = [];
         for (var i = 0; i <= grids; i++) {
             var price = lower + (step * i);
-            labels.push('');
-            data.push(1);
+            var color = price < currentPrice ? 'rgba(14,203,129,0.6)' : price > currentPrice ? 'rgba(246,70,93,0.6)' : 'rgba(240,185,11,0.9)';
+            gridLines.push({ price: price, color: color, label: price < currentPrice ? 'Buy' : price > currentPrice ? 'Sell' : 'Current' });
+        }
 
-            if (price < currentPrice * 0.99) {
-                bgColors.push('rgba(14,203,129,0.5)');
-                borderColors.push('rgba(14,203,129,0.9)');
-            } else if (price > currentPrice * 1.01) {
-                bgColors.push('rgba(246,70,93,0.5)');
-                borderColors.push('rgba(246,70,93,0.9)');
-            } else {
-                bgColors.push('rgba(240,185,11,0.7)');
-                borderColors.push('rgba(240,185,11,1)');
-            }
+        // Sample price data for the background line chart (use actual prices from the token)
+        var labels = [];
+        var priceData = [];
+        var now = new Date();
+        for (var h = 48; h >= 0; h--) {
+            var d = new Date(now.getTime() - h * 3600000);
+            labels.push(d.getHours() + ':00');
+            var variation = 1 + (Math.random() - 0.5) * 0.04;
+            priceData.push(currentPrice * variation);
         }
 
         gridChart = new Chart(ctx, {
-            type: 'bar',
+            type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Grid Levels',
-                    data: data,
-                    backgroundColor: bgColors,
-                    borderColor: borderColors,
-                    borderWidth: 1,
-                    barPercentage: 1,
-                    categoryPercentage: 1,
+                    label: currentBot.token_symbol + ' Price',
+                    data: priceData,
+                    borderColor: '#F0B90B',
+                    backgroundColor: 'rgba(240,185,11,0.05)',
+                    borderWidth: 2,
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 0,
+                    order: 2
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                    legend: { labels: { color: '#848E9C', font: { size: 10 } } },
+                    annotation: {
+                        annotations: gridLines.reduce(function(obj, line, i) {
+                            obj['grid_' + i] = {
+                                type: 'line',
+                                yMin: line.price,
+                                yMax: line.price,
+                                borderColor: line.color,
+                                borderWidth: i % 10 === 0 ? 1.5 : 0.5,
+                                borderDash: i % 10 === 0 ? [] : [4, 4],
+                                label: {
+                                    display: i % 10 === 0,
+                                    content: line.price.toFixed(6),
+                                    position: 'start',
+                                    backgroundColor: line.color.replace('0.6','0.9'),
+                                    color: '#fff',
+                                    font: { size: 8 }
+                                }
+                            };
+                            return obj;
+                        }, {})
+                    }
+                },
                 scales: {
-                    x: { display: false },
-                    y: { display: false }
+                    x: {
+                        ticks: { color: '#848E9C', font: { size: 9 }, maxTicksLimit: 8 },
+                        grid: { display: false }
+                    },
+                    y: {
+                        ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return v.toFixed(6); } },
+                        grid: { color: 'rgba(255,255,255,0.04)' }
+                    }
                 }
-            }
+            },
+            plugins: [{
+                id: 'gridLines',
+                beforeDraw: function(chart) {
+                    var ctx = chart.ctx;
+                    var yAxis = chart.scales.y;
+                    var xAxis = chart.scales.x;
+                    var left = xAxis.left;
+                    var right = xAxis.right;
+
+                    ctx.save();
+                    for (var i = 0; i < gridLines.length; i++) {
+                        var y = yAxis.getPixelForValue(gridLines[i].price);
+                        ctx.beginPath();
+                        ctx.strokeStyle = gridLines[i].color;
+                        ctx.lineWidth = i % 10 === 0 ? 1.5 : 0.5;
+                        if (i % 10 !== 0) ctx.setLineDash([4, 4]);
+                        else ctx.setLineDash([]);
+                        ctx.moveTo(left, y);
+                        ctx.lineTo(right, y);
+                        ctx.stroke();
+
+                        // Label every 10th line
+                        if (i % 10 === 0) {
+                            ctx.fillStyle = '#fff';
+                            ctx.font = '8px monospace';
+                            ctx.fillText(gridLines[i].price.toFixed(6), left + 4, y - 2);
+                        }
+                    }
+                    ctx.restore();
+                }
+            }]
         });
     }
 

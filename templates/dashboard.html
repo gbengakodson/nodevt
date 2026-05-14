@@ -926,22 +926,20 @@
 
                     return `
                         <div class="holding-card">
-                            '<div class="card-header-row">' +
-                                '<div class="coin-info">' +
-                                    '<img src="' + getTokenIcon(bot.token_symbol) + '" style="width:32px;height:32px;border-radius:50%;" onerror="this.src=\'/static/coins/BTC.png\'">' +
-                                    '<div>' +
-                                        '<div class="coin-symbol">' + bot.token_symbol + '</div>' +
-                                        '<div class="coin-name">' + (bot.token_name || bot.token_symbol) + '</div>' +
-                                    '</div>' +
-                                '</div>' +
-                                '<div style="text-align:right;">' +
-                                    '<div style="font-size:10px;color:#8A8F9E;">Current Value</div>' +
-                                    '<div style="font-size:14px;font-weight:700;color:' + (bot.pnl >= 0 ? '#0ECB81' : '#F6465D') + ';">' + formatCurrency(bot.amount + bot.grid_profit + bot.pnl) + '</div>' +
-                                    '<span class="bot-status-badge ' + (bot.status === 'ACTIVE' ? 'active' : 'stopped') + '" style="margin-top:4px;">' +
-                                        (bot.status === 'ACTIVE' ? '🤖' : '⏸️') +
-                                    '</span>' +
-                                '</div>' +
-                            '</div>' +
+                            <div class="card-header-row">
+                                <div class="coin-info">
+                                    <img src="${getTokenIcon(bot.token_symbol)}" style="width:32px;height:32px;border-radius:50%;" onerror="this.src='/static/coins/BTC.png'">
+                                    <div>
+                                        <div class="coin-symbol">${bot.token_symbol}</div>
+                                        <div class="coin-name">${bot.token_name || bot.token_symbol}</div>
+                                    </div>
+                                </div>
+                                <div style="text-align:right;">
+                                    <div style="font-size:10px;color:#8A8F9E;">Current Value</div>
+                                    <div style="font-size:14px;font-weight:700;color:${bot.pnl >= 0 ? '#0ECB81' : '#F6465D'};">${formatCurrency(bot.amount + bot.grid_profit + bot.pnl)}</div>
+                                    <span class="bot-status-badge ${bot.status === 'ACTIVE' ? 'active' : 'stopped'}" style="margin-top:4px;">${bot.status === 'ACTIVE' ? '🤖' : '⏸️'}</span>
+                                </div>
+                            </div>
                             <div class="grid-params">
                                 <div class="param-row"><span>Range:</span><span>${formatCurrency(bot.lower_price)} – ${formatCurrency(bot.upper_price)}</span></div>
                                 <div class="param-row"><span>Grids:</span><span>${bot.grids} (geometric)</span></div>
@@ -952,21 +950,21 @@
                                 <div class="param-row"><span>Current Price:</span><span>${formatCurrency(currentPrice)}</span></div>
                                 <div class="param-row"><span>Created:</span><span>${new Date(bot.created_at).toLocaleDateString()}</span></div>
                             </div>
-                            '<div class="holding-stats">' +
-                                '<div class="stat-item">' +
-                                    '<label>Investment</label>' +
-                                    '<span>' + formatCurrency(bot.amount) + '</span>' +
-                                '</div>' +
-                                '<div class="stat-item clickable-profit" onclick="' + (hasProfit ? 'openCollectProfitModal(\'' + bot.id + '\', ' + bot.grid_profit + ')' : '') + '" style="' + (hasProfit ? '' : 'opacity:0.5;cursor:not-allowed;') + '">' +
-                                    '<label>Grid Profit</label>' +
-                                    '<span class="positive">' + formatCurrency(bot.grid_profit) + '</span>' +
-                                    (hasProfit ? '<div class="collect-hint">Click to collect →</div>' : '') +
-                                '</div>' +
-                                '<div class="stat-item">' +
-                                    '<label>PNL</label>' +
-                                    '<span class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(bot.pnl)) + ' (' + pnlSymbol + bot.pnl_percent.toFixed(2) + '%)</span>' +
-                                '</div>' +
-                            '</div>' +
+                            <div class="holding-stats">
+                                <div class="stat-item">
+                                    <label>Investment</label>
+                                    <span>${formatCurrency(bot.amount)}</span>
+                                </div>
+                                <div class="stat-item clickable-profit" onclick="${hasProfit ? `openCollectProfitModal('${bot.id}', ${bot.grid_profit})` : ''}" style="${hasProfit ? '' : 'opacity:0.5;cursor:not-allowed;'}">
+                                    <label>Grid Profit</label>
+                                    <span class="positive">${formatCurrency(bot.grid_profit)}</span>
+                                    ${hasProfit ? '<div class="collect-hint">Click to collect →</div>' : ''}
+                                </div>
+                                <div class="stat-item">
+                                    <label>PNL</label>
+                                    <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(bot.pnl))} (${pnlSymbol}${bot.pnl_percent.toFixed(2)}%)</span>
+                                </div>
+                            </div>
                             ${bot.pnl_percent >= 20 ? '<div class="auto-close-tag">🏁 Ready to close (20%+ PNL)</div>' : ''}
                             ${bot.pnl_percent >= 15 && bot.pnl_percent < 20 ? '<div class="end-grid-tag">⚠️ Near 20% PNL</div>' : ''}
                             <div class="bot-actions">
@@ -974,9 +972,7 @@
                                     ? `<button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">⏸️ Stop</button>`
                                     : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`
                                 }
-                                <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>
-                                    💰 Close
-                                </button>
+                                <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>💰 Close</button>
                             </div>
                         </div>
                     `;
