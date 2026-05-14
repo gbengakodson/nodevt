@@ -606,7 +606,7 @@
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-
+    function showModal(msg, type) { alert(msg); }
 
     // ============ GRID PROFIT COLLECTION ============
     function openCollectProfitModal(botId, profit) {
@@ -625,7 +625,6 @@
         const btn = document.getElementById('btnCollectProfit');
         btn.textContent = 'Processing...';
         btn.disabled = true;
-
         try {
             const res = await apiCall('/trading/collect_grid_profit/', 'POST', { bot_id: currentBotId });
             if (res.success) {
@@ -644,7 +643,6 @@
     }
 
     // ============ YIELD TRANSFER ============
-    // Update the transfer modal
     async function openTransferYieldModal() {
         try {
             portfolioData = await apiCall('/trading/portfolio_summary/');
@@ -667,7 +665,6 @@
     async function transferYieldToGrand() {
         const amount = parseFloat(document.getElementById('transferAmount').value);
         if (!amount || amount <= 0) { showModal('Enter a valid amount', 'warning'); return; }
-
         try {
             const res = await apiCall('/trading/move_yield_to_grand/', 'POST', { amount: amount });
             if (res.success) {
@@ -702,29 +699,12 @@
         else { showModal('Failed. PNL must be positive.', 'error'); }
     }
 
-    // ============ YIELD DISPLAY ============
     async function fetchYieldRate() {
         try {
             const response = await apiCall('/yield-rate/');
             currentYieldRate = response.monthly || 10;
             return currentYieldRate;
         } catch(e) { return 10; }
-    }
-
-    function renderYieldHistogram(values) {
-        const container = document.getElementById('yieldDotPlot');
-        if (!container) return;
-        const maxY = Math.max(...values, 0.01);
-        container.innerHTML = values.filter((_, i) => i % 2 === 0).map((v, i) => {
-            const h = 23 - i * 2;
-            const prev = values[h + 1];
-            const color = prev ? (values[h] >= prev ? '#0ECB81' : '#F6465D') : '#0ECB81';
-            const size = Math.max(6, Math.min(14, (v / maxY) * 12 + 4));
-            return `<div style="display:flex;flex-direction:column;align-items:center;flex:1;" title="${h}h ago: $${v.toFixed(4)}">
-                <div style="width:${size}px;height:${size}px;background:${color};border-radius:50%;margin-bottom:4px;"></div>
-                <div style="font-size:8px;color:#5E6673;">${h === 0 ? 'Now' : h+'h'}</div>
-            </div>`;
-        }).join('');
     }
 
     // ============ GROWTH PROJECTOR ============
@@ -769,29 +749,8 @@
         }
         growthChart = new Chart(ctx, {
             type: 'line',
-            data: {
-                labels,
-                datasets: [{
-                    label: 'Value ($)',
-                    data: dataPoints,
-                    borderColor: '#F0B90B',
-                    backgroundColor: 'rgba(240,185,11,0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#F0B90B'
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: true,
-                plugins: { legend: { display: false } },
-                scales: {
-                    x: { grid: { display: false }, ticks: { color: '#8A8F9E', font: { size: 10 } } },
-                    y: { grid: { color: '#EFF2F5' }, ticks: { color: '#8A8F9E', font: { size: 10 }, callback: v => '$' + v.toLocaleString() } }
-                }
-            }
+            data: { labels, datasets: [{ label: 'Value ($)', data: dataPoints, borderColor: '#F0B90B', backgroundColor: 'rgba(240,185,11,0.05)', borderWidth: 2, fill: true, tension: 0.3, pointRadius: 3, pointBackgroundColor: '#F0B90B' }] },
+            options: { responsive: true, maintainAspectRatio: true, plugins: { legend: { display: false } }, scales: { x: { grid: { display: false }, ticks: { color: '#8A8F9E', font: { size: 10 } } }, y: { grid: { color: '#EFF2F5' }, ticks: { color: '#8A8F9E', font: { size: 10 }, callback: v => '$' + v.toLocaleString() } } } }
         });
     }
 
@@ -807,10 +766,7 @@
                 slider.value = val;
                 updateGrowthProjection();
             });
-            slider.addEventListener('input', function() {
-                manualInput.value = this.value;
-                updateGrowthProjection();
-            });
+            slider.addEventListener('input', function() { manualInput.value = this.value; updateGrowthProjection(); });
         }
         slider.addEventListener('input', updateGrowthProjection);
         document.querySelectorAll('.year-btn').forEach(btn => {
@@ -828,12 +784,7 @@
         try {
             await fetchYieldRate();
 
-            // Load portfolio summary
-            try {
-                portfolioData = await apiCall('/trading/portfolio_summary/');
-            } catch(e) {
-                portfolioData = null;
-            }
+            try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
 
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
@@ -841,22 +792,16 @@
 
             document.getElementById('grandBalance').textContent = formatCurrency(userGrandBalance);
             document.getElementById('yieldBalance').textContent = formatCurrency(userYieldBalance);
-            document.getElementById('yieldBalanceSmall').textContent = formatCurrency(userYieldBalance);
             document.getElementById('yieldWalletBalance').textContent = formatCurrency(userYieldBalance);
 
-            // Update the yield wallet section in loadDashboard
             const btnTransfer = document.getElementById('btnTransferYield');
             const minRequired = portfolioData ? portfolioData.min_required_to_transfer : 0;
             const canTransfer = portfolioData ? portfolioData.can_transfer : false;
-
             document.getElementById('minRequired').textContent = formatCurrency(minRequired);
             btnTransfer.disabled = !canTransfer;
-
             if (!canTransfer && userYieldBalance > 0) {
                 btnTransfer.title = `Need at least ${formatCurrency(minRequired)} in yield (10% of portfolio)`;
-            } else {
-                btnTransfer.title = '';
-            }
+            } else { btnTransfer.title = ''; }
 
             const gridBots = await apiCall('/trading/my_grids_all/');
             tokens = await apiCall('/trading/');
@@ -902,27 +847,14 @@
                                 <div class="param-row"><span>Created:</span><span>${new Date(bot.created_at).toLocaleDateString()}</span></div>
                             </div>
                             <div class="holding-stats">
-                                <div class="stat-item">
-                                    <label>Investment</label>
-                                    <span>${formatCurrency(bot.amount)}</span>
-                                </div>
-                                <div class="stat-item clickable-profit" onclick="${hasProfit ? `openCollectProfitModal('${bot.id}', ${bot.grid_profit})` : ''}" style="${hasProfit ? '' : 'opacity:0.5;cursor:not-allowed;'}">
-                                    <label>Grid Profit</label>
-                                    <span class="positive">${formatCurrency(bot.grid_profit)}</span>
-                                    ${hasProfit ? '<div class="collect-hint">Click to collect →</div>' : ''}
-                                </div>
-                                <div class="stat-item">
-                                    <label>PNL</label>
-                                    <span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(bot.pnl))} (${pnlSymbol}${bot.pnl_percent.toFixed(2)}%)</span>
-                                </div>
+                                <div class="stat-item"><label>Investment</label><span>${formatCurrency(bot.amount)}</span></div>
+                                <div class="stat-item clickable-profit" onclick="${hasProfit ? `openCollectProfitModal('${bot.id}', ${bot.grid_profit})` : ''}" style="${hasProfit ? '' : 'opacity:0.5;cursor:not-allowed;'}"><label>Grid Profit</label><span class="positive">${formatCurrency(bot.grid_profit)}</span>${hasProfit ? '<div class="collect-hint">Click to collect →</div>' : ''}</div>
+                                <div class="stat-item"><label>PNL</label><span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(bot.pnl))} (${pnlSymbol}${bot.pnl_percent.toFixed(2)}%)</span></div>
                             </div>
                             ${bot.pnl_percent >= 20 ? '<div class="auto-close-tag">🏁 Ready to close (20%+ PNL)</div>' : ''}
                             ${bot.pnl_percent >= 15 && bot.pnl_percent < 20 ? '<div class="end-grid-tag">⚠️ Near 20% PNL</div>' : ''}
                             <div class="bot-actions">
-                                ${bot.status === 'ACTIVE'
-                                    ? `<button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">⏸️ Stop</button>`
-                                    : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`
-                                }
+                                ${bot.status === 'ACTIVE' ? `<button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">⏸️ Stop</button>` : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`}
                                 <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>💰 Close</button>
                             </div>
                         </div>
@@ -933,36 +865,8 @@
             document.getElementById('portfolioValue').textContent = formatCurrency(totalPortfolioValue);
             document.getElementById('totalValue').textContent = formatCurrency(userGrandBalance + totalPortfolioValue + userYieldBalance);
 
-            const monthlyYield = totalPortfolioValue * (currentYieldRate / 100);
-            const hourlyYield = monthlyYield / 720;
-            document.getElementById('monthlyYield').textContent = formatCurrency(monthlyYield);
-            document.getElementById('hourlyYield').textContent = formatCurrency(hourlyYield);
-
-            // Yield histogram
-            const histogramData = [];
-            for (let i = 23; i >= 0; i--) {
-                histogramData.push(Math.max(0.0001, hourlyYield * (0.9 + Math.random() * 0.2)));
-            }
-            renderYieldHistogram(histogramData);
-
-            // Recent distributions
-            const distContainer = document.getElementById('recentDistributions');
-            if (distContainer) {
-                const now = new Date();
-                let html = '';
-                for (let i = 0; i < 8; i++) {
-                    const hourAgo = new Date(now.getTime() - i * 3600000);
-                    html += `<div class="dist-row">
-                        <span style="font-size:11px;color:#5E6673;">${hourAgo.toLocaleTimeString([],{hour:'2-digit',minute:'2-digit'})}</span>
-                        <span style="font-size:12px;color:#0ECB81;">+$${(hourlyYield*(0.9+Math.random()*0.2)).toFixed(4)}</span>
-                    </div>`;
-                }
-                distContainer.innerHTML = html;
-            }
-
             setTimeout(() => initGrowthProjector(), 500);
 
-            // Auto-close bots at 20%
             for (const bot of gridBots) {
                 if (bot.pnl_percent >= 20 && bot.status === 'ACTIVE') {
                     await apiCall('/trading/auto-close-grid/', 'POST', { bot_id: bot.id });
@@ -975,7 +879,6 @@
         }
     }
 
-    // Init
     loadDashboard();
     setInterval(loadDashboard, 120000);
 </script>
