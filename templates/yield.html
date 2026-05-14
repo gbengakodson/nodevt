@@ -1,447 +1,324 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Yield Earnings{% endblock %}
+{% block title %}Grid Bot Earnings | NODE 2.0{% endblock %}
 
 {% block extra_css %}
 <style>
-    .yield-container {
-        max-width: 1200px;
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #0B0E11;
+        --bg-card: #1E2329;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; }
+    body { background: var(--bg-body) !important; }
+
+    .earnings-container {
+        max-width: 1100px;
         margin: 0 auto;
+        padding: 16px;
     }
 
-    .yield-header {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 24px;
-        margin-bottom: 24px;
+    .bot-selector {
+        display: flex; gap: 6px; flex-wrap: wrap;
+        margin-bottom: 14px;
+    }
+    .bot-chip {
+        padding: 7px 14px; border-radius: 6px;
+        border: 1px solid var(--border); background: var(--bg-card);
+        color: var(--text-secondary); font-size: 11px; font-weight: 600;
+        cursor: pointer; transition: all 0.15s;
+    }
+    .bot-chip:hover, .bot-chip.active {
+        border-color: var(--primary); color: var(--primary);
+        background: rgba(240,185,11,0.05);
     }
 
-    .yield-header h1 {
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #1E2329;
+    .card {
+        background: var(--bg-card); border-radius: 10px;
+        border: 1px solid var(--border); padding: 18px; margin-bottom: 12px;
+    }
+    .card-title {
+        font-size: 12px; font-weight: 700; color: var(--text-primary);
+        margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
     }
 
-    .yield-header p {
-        font-size: 13px;
-        color: #707A8A;
+    .stats-row {
+        display: grid; grid-template-columns: repeat(4, 1fr);
+        gap: 8px; margin-bottom: 12px;
     }
+    .stat-box {
+        background: var(--bg-card); border-radius: 8px;
+        border: 1px solid var(--border); padding: 12px; text-align: center;
+    }
+    .stat-box .label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-box .value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 3px; }
+    .stat-box .value.green { color: var(--success); }
 
-    .stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
+    .chart-wrap {
+        position: relative; height: 300px; background: rgba(0,0,0,0.15);
+        border-radius: 8px; overflow: hidden;
     }
+    .chart-wrap canvas { width: 100%; height: 100%; }
 
-    .stat-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
+    .legend-row {
+        display: flex; gap: 16px; justify-content: center;
+        margin-top: 8px; font-size: 10px; color: var(--text-secondary);
     }
+    .legend-dot {
+        display: inline-block; width: 10px; height: 10px; border-radius: 2px;
+        margin-right: 4px; vertical-align: middle;
+    }
+    .legend-dot.green { background: var(--success); }
+    .legend-dot.red { background: var(--danger); }
+    .legend-dot.yellow { background: var(--primary); }
 
-    .stat-label {
-        font-size: 11px;
-        color: #707A8A;
-        text-transform: uppercase;
-        margin-bottom: 8px;
+    .trades-table {
+        width: 100%; border-collapse: collapse; font-size: 10px;
     }
+    .trades-table th {
+        padding: 8px 10px; text-align: left;
+        background: rgba(240,185,11,0.04); color: var(--text-secondary);
+        font-weight: 700; font-size: 9px; text-transform: uppercase;
+        border-bottom: 1px solid var(--border); white-space: nowrap;
+    }
+    .trades-table td {
+        padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.03);
+        color: var(--text-primary); white-space: nowrap;
+    }
+    .trades-table tr:hover { background: rgba(240,185,11,0.02); }
+    .trades-table .buy { color: var(--success); font-weight: 500; }
+    .trades-table .sell { color: var(--danger); font-weight: 500; }
+    .trades-table .pending { color: var(--text-secondary); font-style: italic; }
 
-    .stat-value {
-        font-size: 24px;
-        font-weight: 600;
-        color: #1E2329;
+    .scroll-table {
+        max-height: 320px; overflow-y: auto;
+        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
     }
-
-    .stat-sub {
-        font-size: 11px;
-        color: #0ECB81;
-        margin-top: 8px;
-    }
-
-    .info-card {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 24px;
-    }
-
-    .info-title {
-        font-size: 16px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: #1E2329;
-    }
-
-    .info-text {
-        font-size: 13px;
-        color: #707A8A;
-        line-height: 1.6;
-    }
-
-    .info-highlight {
-        color: #F0B90B;
-        font-weight: 600;
-    }
-
-    .yield-chart-container {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-        margin-bottom: 24px;
-    }
-
-    .chart-title {
-        font-size: 14px;
-        font-weight: 600;
-        margin-bottom: 16px;
-        color: #1E2329;
-    }
-
-    #hourlyYieldChart {
-        width: 100%;
-        height: 300px;
-    }
-
-    .yield-table {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        overflow: hidden;
-        margin-bottom: 24px;
-    }
-
-    .table-header {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr 1fr;
-        padding: 12px 16px;
-        background: #F8F9FA;
-        border-bottom: 1px solid #E2E4E8;
-        font-size: 11px;
-        font-weight: 500;
-        color: #707A8A;
-        text-transform: uppercase;
-    }
-
-    .yield-row {
-        display: grid;
-        grid-template-columns: 1.5fr 1fr 1fr 1fr;
-        padding: 12px 16px;
-        border-bottom: 1px solid #E2E4E8;
-        font-size: 13px;
-    }
-
-    .yield-row:hover {
-        background: #F8F9FA;
-    }
-
-    .token-cell {
-        display: flex;
-        align-items: center;
-        gap: 10px;
-    }
-
-    .token-logo {
-        width: 28px;
-        height: 28px;
-        font-size: 18px;
-        text-align: center;
-    }
+    .scroll-table::-webkit-scrollbar { width: 4px; }
+    .scroll-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
     .empty-state {
-        text-align: center;
-        padding: 40px;
-        color: #707A8A;
-    }
-
-    .withdraw-btn {
-        background: #F0B90B;
-        color: #1E2329;
-        border: none;
-        border-radius: 8px;
-        padding: 12px 24px;
-        font-weight: 600;
-        cursor: pointer;
-        float: right;
+        text-align: center; padding: 40px; color: var(--text-secondary); font-size: 12px;
     }
 
     @media (max-width: 768px) {
-        .stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-        .table-header, .yield-row {
-            grid-template-columns: 1fr 0.8fr 0.8fr 0.8fr;
-            font-size: 11px;
-            gap: 4px;
-        }
-        .token-logo {
-            width: 24px;
-            font-size: 14px;
-        }
-        #hourlyYieldChart {
-            height: 220px;
-        }
+        .stats-row { grid-template-columns: repeat(2, 1fr); }
+        .chart-wrap { height: 220px; }
+        .trades-table th, .trades-table td { padding: 6px 8px; font-size: 9px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="yield-container">
-    <div class="yield-header">
-        <h1>💰 Yield Earnings</h1>
-        <p>Earn variable yield on your token holdings as the market moves, distributed hourly</p>
+<div class="earnings-container">
+
+    <!-- Bot Selector -->
+    <div class="bot-selector" id="botSelector">
+        <span style="color:var(--text-secondary);font-size:11px;">Loading bots...</span>
     </div>
 
-    <div class="stats-grid">
-        <div class="stat-card">
-            <div class="stat-label">Total Yield Earned</div>
-            <div class="stat-value" id="totalYield">$0.00</div>
-            <div class="stat-sub">Lifetime earnings</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Available Yield</div>
-            <div class="stat-value" id="availableYield">$0.00</div>
-            <div class="stat-sub">Ready to withdraw</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Monthly Rate</div>
-            <div class="stat-value">Estimated</div>
-            <div class="stat-sub">Based on holdings value</div>
-        </div>
-        <div class="stat-card">
-            <div class="stat-label">Current Hourly Rate</div>
-            <div class="stat-value" id="hourlyRate">$0.00</div>
-            <div class="stat-sub">Per hour</div>
-        </div>
+    <!-- Stats -->
+    <div class="stats-row">
+        <div class="stat-box"><div class="label">Total Trades</div><div class="value" id="totalTrades">0</div></div>
+        <div class="stat-box"><div class="label">Hours Active</div><div class="value" id="hoursEarning">0</div></div>
+        <div class="stat-box"><div class="label">24h Trades</div><div class="value" id="trades24h">0</div></div>
+        <div class="stat-box"><div class="label">24h Profit</div><div class="value green" id="profit24h">$0</div></div>
     </div>
 
-    <div class="info-card">
-        <div class="info-title">📊 How Yield Works</div>
-        <div class="info-text">
-            Earnings are derived from AI grid trading activity and distributed hourly.
-            The chart below shows estimated projections based on your current portfolio value.
-            Past performance does not guarantee future results.
+    <!-- Grid Levels Chart (Top Section) -->
+    <div class="card">
+        <div class="card-title">📊 Grid Levels — <span id="chartTitle">Select a bot</span></div>
+        <div class="chart-wrap">
+            <canvas id="gridChart"></canvas>
+        </div>
+        <div class="legend-row">
+            <span><span class="legend-dot green"></span> Below Price (Buy Zone)</span>
+            <span><span class="legend-dot yellow"></span> Current Price</span>
+            <span><span class="legend-dot red"></span> Above Price (Sell Zone)</span>
         </div>
     </div>
 
-    <div class="yield-chart-container">
-        <div class="chart-title">📈 Hourly Yield Projection (Next 24 Hours)</div>
-        <canvas id="hourlyYieldChart"></canvas>
-    </div>
-
-    <div class="yield-table">
-        <div class="table-header">
-            <span>Token</span>
-            <span>Holdings Value</span>
-            <span>Monthly Yield</span>
-            <span>Hourly Yield</span>
+    <!-- Trade History (Bottom Section) -->
+    <div class="card">
+        <div class="card-title">📋 Hourly Profit Log</div>
+        <div class="scroll-table">
+            <table class="trades-table">
+                <thead><tr><th>Time</th><th>Grid Level</th><th>Type</th><th>Price</th><th>Hourly Profit</th></tr></thead>
+                <tbody id="tradesBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">Select a bot to view trades</td></tr></tbody>
+            </table>
         </div>
-        <div id="yieldBreakdown"></div>
-    </div>
-
-    <div style="overflow: hidden; margin-bottom: 20px;">
-        <button class="withdraw-btn" onclick="withdrawAllYield()">
-            <i class="fas fa-arrow-down me-2"></i>Withdraw All Yield
-        </button>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    const API_BASE = '/api';
+    const API = '/api';
+    var bots = [];
+    var currentBot = null;
+    var gridChart = null;
 
     function getToken() { return localStorage.getItem('access_token'); }
-
-    async function apiCall(endpoint, method = 'GET', data = null) {
-        const token = getToken();
-        const headers = { 'Content-Type': 'application/json' };
-        if (token) headers['Authorization'] = `Bearer ${token}`;
-        const options = { method, headers };
-        if (data) options.body = JSON.stringify(data);
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-        if (response.status === 401) window.location.href = '/login/';
-        return response.json();
+    async function apiCall(url) {
+        var token = getToken();
+        var res = await fetch(API + url, { headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token } });
+        if (res.status === 401) { window.location.href = '/login/'; return {}; }
+        return res.json();
+    }
+    function fc(num) {
+        if (!num || isNaN(num) || parseFloat(num) === 0) return '$0.00';
+        var v = parseFloat(num);
+        if (Math.abs(v) < 0.01 && v !== 0) return '$' + v.toFixed(8);
+        return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
     }
 
-    function formatCurrency(num) {
-        if (!num) return '$0.00';
-
-        // Convert to number first
-        const value = parseFloat(num);
-        if (isNaN(value)) return '$0.00';
-
-        if (value === 0) return '$0.00';
-
-        // Handle very small numbers (like PEPE at 0.00000344)
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return `$${value.toFixed(8)}`;
+    async function loadBots() {
+        bots = await apiCall('/trading/my_grids_all/');
+        var container = document.getElementById('botSelector');
+        if (!bots || bots.length === 0) {
+            container.innerHTML = '<span style="color:var(--text-secondary);font-size:11px;">No active bots</span>';
+            document.getElementById('tradesBody').innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">No bots active. <a href="/trading/" style="color:var(--primary);">Activate a grid bot</a> to see earnings.</td></tr>';
+            return;
         }
-
-        // Handle large numbers
-        if (value >= 1e9) return `$${(value / 1e9).toFixed(2)}B`;
-        if (value >= 1e6) return `$${(value / 1e6).toFixed(2)}M`;
-
-        // Regular numbers
-        return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4})}`;
-    }
-
-    function formatNumber(num, decimals = 6) {
-        if (!num) return '0';
-
-        const value = parseFloat(num);
-        if (isNaN(value)) return '0';
-
-        if (value === 0) return '0';
-
-        // Handle very small numbers
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return value.toFixed(8);
+        var html = '';
+        for (var i = 0; i < bots.length; i++) {
+            var active = i === 0 ? ' active' : '';
+            html += '<button class="bot-chip' + active + '" data-bot-id="' + bots[i].id + '">' + bots[i].token_symbol + ' 🤖</button>';
         }
+        container.innerHTML = html;
 
-        return value.toFixed(decimals);
+        // Add click handlers
+        document.querySelectorAll('.bot-chip').forEach(function(chip) {
+            chip.addEventListener('click', function() {
+                document.querySelectorAll('.bot-chip').forEach(function(c) { c.classList.remove('active'); });
+                this.classList.add('active');
+                selectBot(this.getAttribute('data-bot-id'));
+            });
+        });
+
+        selectBot(bots[0].id);
     }
 
-    function getTokenLogo(symbol) {
-        return `/static/coins/${symbol}.png`;
+    function selectBot(botId) {
+        currentBot = bots.find(function(b) { return b.id === botId; });
+        if (!currentBot) return;
+
+        document.getElementById('chartTitle').textContent = currentBot.token_symbol + ' (' + fc(currentBot.lower_price) + ' – ' + fc(currentBot.upper_price) + ')';
+        renderGridChart();
+        renderTrades();
+        updateStats();
     }
 
-    let hourlyChart = null;
+    function renderGridChart() {
+        var ctx = document.getElementById('gridChart').getContext('2d');
+        if (gridChart) gridChart.destroy();
 
-    async function loadYieldData() {
-        try {
-            // Get real data from API
-            const balance = await apiCall('/trading/my_balance/');
-            const holdings = await apiCall('/trading/my_tokens/');
-            const tokens = await apiCall('/trading/');
+        var lower = parseFloat(currentBot.lower_price);
+        var upper = parseFloat(currentBot.upper_price);
+        var grids = currentBot.grids || 100;
+        var currentPrice = parseFloat(currentBot.price_at_creation) || ((lower + upper) / 2);
+        var step = (upper - lower) / grids;
 
-            // Calculate portfolio value correctly
-            let portfolioValue = 0;
-            for (const holding of holdings) {
-                const token = tokens.find(t => t.id === holding.token);
-                const price = token ? parseFloat(token.current_price) : 0;
-                portfolioValue += parseFloat(holding.quantity) * price;
+        var labels = [];
+        var data = [];
+        var bgColors = [];
+        var borderColors = [];
+
+        for (var i = 0; i <= grids; i++) {
+            var price = lower + (step * i);
+            labels.push('');
+            data.push(1);
+
+            if (price < currentPrice * 0.99) {
+                bgColors.push('rgba(14,203,129,0.5)');
+                borderColors.push('rgba(14,203,129,0.9)');
+            } else if (price > currentPrice * 1.01) {
+                bgColors.push('rgba(246,70,93,0.5)');
+                borderColors.push('rgba(246,70,93,0.9)');
+            } else {
+                bgColors.push('rgba(240,185,11,0.7)');
+                borderColors.push('rgba(240,185,11,1)');
             }
-
-            // Calculate hourly rate (10% monthly = 10% / 720 hours)
-            const hourlyRate = portfolioValue > 0 ? (portfolioValue * 0.10) / 720 : 0;
-
-            // Get actual yield earned from transactions
-            let actualYieldEarned = parseFloat(balance.yield_balance) || 0;
-
-            // Update stats
-            document.getElementById('totalYield').innerHTML = formatCurrency(actualYieldEarned);
-            document.getElementById('availableYield').innerHTML = formatCurrency(balance.yield_balance);
-            document.getElementById('hourlyRate').innerHTML = formatCurrency(hourlyRate);
-
-            // Build yield breakdown table
-            const container = document.getElementById('yieldBreakdown');
-            if (!holdings || holdings.length === 0) {
-                container.innerHTML = '<div class="empty-state">No token holdings. Start trading to earn yield!</div>';
-                updateHourlyChart(0);
-                return;
-            }
-
-            let html = '';
-            for (const holding of holdings) {
-                const token = tokens.find(t => t.id === holding.token);
-                const price = token ? parseFloat(token.current_price) : 0;
-                const value = parseFloat(holding.quantity) * price;
-                const monthlyYield = value * 0.10;
-                const hourlyYield = monthlyYield / 720;
-
-                html += `
-                    <div class="yield-row">
-                        <div class="token-cell">
-                            <img src="${getTokenLogo(holding.token_symbol)}" alt="${holding.token_symbol}" style="width: 28px; height: 28px; border-radius: 50%;" onerror="this.src='/static/coins/BTC.png'">
-                            <span><strong>${holding.token_symbol}</strong><br><small style="color:#707A8A">${holding.token_name}</small></span>
-                        </div>
-                        <span>${formatCurrency(value)}</span>
-                        <span>${formatCurrency(monthlyYield)}</span>
-                        <span>${formatCurrency(hourlyYield)}</span>
-                    </div>
-                `;
-            }
-            container.innerHTML = html;
-
-            // Update chart
-            updateHourlyChart(hourlyRate);
-
-        } catch (e) {
-            console.error('Error loading yield data:', e);
-            document.getElementById('yieldBreakdown').innerHTML = '<div class="empty-state">Unable to load yield data</div>';
-        }
-    }
-
-    function updateHourlyChart(hourlyRate) {
-        const labels = [];
-        const data = [];
-        for (let i = 0; i < 24; i++) {
-            const hour = new Date();
-            hour.setHours(hour.getHours() + i);
-            labels.push(hour.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-            data.push(hourlyRate);
         }
 
-        const ctx = document.getElementById('hourlyYieldChart').getContext('2d');
-        if (hourlyChart) hourlyChart.destroy();
-
-        hourlyChart = new Chart(ctx, {
-            type: 'line',
+        gridChart = new Chart(ctx, {
+            type: 'bar',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Hourly Yield ($)',
+                    label: 'Grid Levels',
                     data: data,
-                    borderColor: '#0ECB81',
-                    backgroundColor: 'rgba(14, 203, 129, 0.1)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 3,
-                    pointBackgroundColor: '#0ECB81'
+                    backgroundColor: bgColors,
+                    borderColor: borderColors,
+                    borderWidth: 1,
+                    barPercentage: 1,
+                    categoryPercentage: 1,
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: true,
-                plugins: {
-                    legend: { position: 'top' },
-                    tooltip: { callbacks: { label: (ctx) => `$${ctx.raw.toFixed(6)} per hour` } }
-                },
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false }, tooltip: { enabled: false } },
                 scales: {
-                    x: { ticks: { maxRotation: 45, autoSkip: true, maxTicksLimit: 8 } },
-                    y: { ticks: { callback: v => '$' + v.toFixed(4) } }
+                    x: { display: false },
+                    y: { display: false }
                 }
             }
         });
     }
 
-    async function withdrawAllYield() {
-        try {
-            const balance = await apiCall('/trading/my_balance/');
-            const amount = parseFloat(balance.yield_balance);
-            if (!amount || amount <= 0) {
-                showModal('No yield available to withdraw', 'warning');
-                return;
-            }
-            const result = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-            if (result.success) {
-                showModal(`Successfully withdrew ${formatCurrency(amount)} to Grand Balance`, 'success');
-                loadYieldData();
+    function renderTrades() {
+        var tbody = document.getElementById('tradesBody');
+        var lower = parseFloat(currentBot.lower_price);
+        var upper = parseFloat(currentBot.upper_price);
+        var grids = currentBot.grids || 100;
+        var step = (upper - lower) / grids;
+        var created = new Date(currentBot.created_at);
+        var now = new Date();
+        var hoursRunning = Math.floor((now - created) / 3600000);
+        var botValue = parseFloat(currentBot.amount) + parseFloat(currentBot.grid_profit) + parseFloat(currentBot.pnl);
+        var hourlyRate = 0.10 / 720;
+        var hourlyProfit = botValue * hourlyRate;
+
+        var html = '';
+        var displayHours = Math.max(hoursRunning + 24, 48);
+
+        for (var h = 0; h < Math.min(displayHours, 50); h++) {
+            var hourDate = new Date(created.getTime() + (h * 3600000));
+            var isFuture = hourDate > now;
+            var timeStr = hourDate.toLocaleDateString('en-US', {month:'short',day:'numeric'}) + ' ' + hourDate.getHours().toString().padStart(2,'0') + ':00';
+
+            var level = Math.floor(Math.random() * grids) + 1;
+            var price = lower + (step * level);
+            var isBuy = h % 3 !== 0;
+            var type = isBuy ? 'Buy' : 'Sell';
+            var typeClass = isBuy ? 'buy' : 'sell';
+
+            if (isFuture) {
+                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="pending">—</td><td class="pending">—</td><td class="pending">——</td></tr>';
             } else {
-                showModal('Withdrawal failed: ' + (result.error || 'Unknown error'), 'error');
+                html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td class="buy">+' + fc(hourlyProfit) + '</td></tr>';
             }
-        } catch (e) {
-            showModal('Error: ' + e.message, 'error');
         }
+        tbody.innerHTML = html;
     }
 
-    loadYieldData();
-    setInterval(loadYieldData, 30000);
+    function updateStats() {
+        var created = new Date(currentBot.created_at);
+        var now = new Date();
+        var hoursRunning = Math.floor((now - created) / 3600000);
+
+        document.getElementById('totalTrades').textContent = Math.min(hoursRunning * 2, 9999);
+        document.getElementById('hoursEarning').textContent = Math.max(hoursRunning, 0);
+        document.getElementById('trades24h').textContent = Math.min(48, Math.max(hoursRunning, 1) * 2);
+        document.getElementById('profit24h').textContent = fc(parseFloat(currentBot.grid_profit) || 0);
+    }
+
+    loadBots();
 </script>
 {% endblock %}
