@@ -10,6 +10,10 @@ from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
 from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
 from apps.trading.views import send_daily_email_webhook, sweep_webhook
+from django.conf import settings
+from django.views.static import serve
+from django.urls import re_path
+
 from apps.wallets.views import (
     AdminStatisticsView,
     AdminHoldersView,
@@ -79,6 +83,8 @@ urlpatterns = [
     path('api/public/users/', PublicUsersView.as_view(), name='public_users'),
 
     path('api/trigger/sweep/', sweep_webhook, name='sweep_webhook'),
+
+    re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
 
 
 
