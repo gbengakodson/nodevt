@@ -350,8 +350,8 @@
         var now = new Date();
         var hoursRunning = Math.floor((now - created) / 3600000);
         var currentPrice = parseFloat(currentBot.price_at_creation) || 0;
-        var lowerPrice = currentPrice * 0.90;
-        var upperPrice = currentPrice * 1.10;
+        var lowerPrice = currentPrice * 0.95;
+        var upperPrice = currentPrice * 1.05;
         var step = (upperPrice - lowerPrice) / grids;
 
         var html = '';
