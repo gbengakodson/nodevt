@@ -1,323 +1,388 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Support{% endblock %}
+{% block title %}Support | NODE AI{% endblock %}
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #0B0E11;
+        --bg-card: #1E2329;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; }
+    body { background: var(--bg-body) !important; }
+
     .support-container {
-        max-width: 800px;
+        max-width: 1200px;
         margin: 0 auto;
-    }
-
-    .support-header {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 24px;
-        margin-bottom: 24px;
-        text-align: center;
-    }
-
-    .support-header h1 {
-        font-size: 24px;
-        font-weight: 600;
-        margin-bottom: 8px;
-        color: #1E2329;
-    }
-
-    .support-header p {
-        font-size: 14px;
-        color: #707A8A;
-    }
-
-    .messages-container {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        margin-bottom: 20px;
-        max-height: 500px;
-        overflow-y: auto;
-    }
-
-    .message-item {
         padding: 16px;
-        border-bottom: 1px solid #E2E4E8;
-        display: flex;
-        gap: 12px;
     }
 
-    .message-avatar {
-        width: 40px;
-        height: 40px;
-        background: #F8F9FA;
-        border-radius: 50%;
+    .support-layout {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 16px;
+        height: calc(100vh - 140px);
+        min-height: 600px;
+    }
+
+    /* FAQ Sidebar */
+    .faq-sidebar {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .faq-header {
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
         display: flex;
         align-items: center;
-        justify-content: center;
-        font-size: 18px;
+        gap: 8px;
     }
-
-    .message-content {
+    .faq-list {
         flex: 1;
+        overflow-y: auto;
+        padding: 8px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
     }
+    .faq-list::-webkit-scrollbar { width: 4px; }
+    .faq-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
-    .message-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 6px;
-    }
-
-    .message-user {
-        font-weight: 600;
-        font-size: 13px;
-        color: #1E2329;
-    }
-
-    .message-time {
+    .faq-item {
+        padding: 10px 14px;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.15s;
         font-size: 11px;
-        color: #707A8A;
+        color: var(--text-secondary);
+        border: 1px solid transparent;
+        margin-bottom: 4px;
+    }
+    .faq-item:hover {
+        background: rgba(240,185,11,0.05);
+        color: var(--primary);
+        border-color: rgba(240,185,11,0.15);
+    }
+    .faq-item .faq-icon {
+        display: inline-block;
+        width: 20px;
+        margin-right: 8px;
+        font-size: 13px;
     }
 
-    .message-text {
+    /* Chat Panel */
+    .chat-panel {
+        background: var(--bg-card);
+        border-radius: 12px;
+        border: 1px solid var(--border);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .chat-header {
+        padding: 14px 20px;
+        border-bottom: 1px solid var(--border);
         font-size: 13px;
-        color: #1E2329;
+        font-weight: 700;
+        color: var(--text-primary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        padding: 16px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+    .chat-messages::-webkit-scrollbar { width: 4px; }
+    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .msg-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 16px;
+    }
+    .msg-row.user { justify-content: flex-end; }
+    .msg-avatar {
+        width: 34px; height: 34px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 16px; flex-shrink: 0;
+    }
+    .msg-avatar.admin { background: var(--primary); color: #1E2329; }
+    .msg-avatar.user { background: var(--success); color: #fff; }
+    .msg-bubble {
+        max-width: 70%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 12px;
         line-height: 1.5;
     }
+    .msg-row.admin .msg-bubble { background: rgba(240,185,11,0.08); color: var(--text-primary); border: 1px solid rgba(240,185,11,0.15); }
+    .msg-row.user .msg-bubble { background: var(--primary); color: #1E2329; }
+    .msg-time { font-size: 9px; color: var(--text-secondary); margin-top: 4px; }
 
-    .message-badge {
-        display: inline-block;
-        padding: 2px 8px;
-        border-radius: 12px;
-        font-size: 10px;
-        font-weight: 500;
-        margin-left: 8px;
+    .chat-input-area {
+        padding: 12px 16px;
+        border-top: 1px solid var(--border);
+        display: flex;
+        gap: 10px;
     }
-
-    .badge-admin {
-        background: #F0B90B;
-        color: white;
-    }
-
-    .badge-user {
-        background: #E2E4E8;
-        color: #707A8A;
-    }
-
-    .message-form {
-        background: white;
-        border-radius: 12px;
-        border: 1px solid #E2E4E8;
-        padding: 20px;
-    }
-
-    .message-input {
-        width: 100%;
-        padding: 12px;
-        border: 1px solid #E2E4E8;
+    .chat-input-area textarea {
+        flex: 1;
+        padding: 10px 14px;
         border-radius: 8px;
-        font-size: 14px;
-        resize: vertical;
+        border: 1px solid var(--border);
+        background: rgba(0,0,0,0.3);
+        color: var(--text-primary);
+        font-size: 12px;
+        resize: none;
+        height: 44px;
         font-family: inherit;
     }
-
-    .message-input:focus {
-        outline: none;
-        border-color: #F0B90B;
-    }
-
-    .send-btn {
-        background: #F0B90B;
-        color: #1E2329;
-        border: none;
+    .chat-input-area textarea:focus { outline: none; border-color: var(--primary); }
+    .btn-send {
+        padding: 10px 20px;
         border-radius: 8px;
-        padding: 10px 24px;
-        font-weight: 600;
+        border: none;
+        background: var(--primary);
+        color: #1E2329;
+        font-weight: 700;
+        font-size: 12px;
         cursor: pointer;
-        margin-top: 12px;
-        width: 100%;
+        white-space: nowrap;
     }
-
-    .send-btn:hover {
-        background: #E0A800;
-    }
+    .btn-send:hover { filter: brightness(1.1); }
+    .btn-send:disabled { opacity: 0.5; cursor: not-allowed; }
 
     .empty-state {
         text-align: center;
-        padding: 60px;
-        color: #707A8A;
+        padding: 40px;
+        color: var(--text-secondary);
+        font-size: 12px;
     }
 
-    @media (max-width: 768px) {
-        .message-item {
-            padding: 12px;
+    /* Modal */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.7); z-index: 1000;
+        display: none; align-items: center; justify-content: center;
+    }
+    .modal-box {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        max-width: 500px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+        padding: 24px;
+        scrollbar-width: thin;
+        scrollbar-color: var(--border) transparent;
+    }
+    .modal-box h3 {
+        font-size: 15px;
+        color: var(--primary);
+        margin-bottom: 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .modal-box p {
+        font-size: 12px;
+        color: var(--text-primary);
+        line-height: 1.6;
+    }
+    .modal-box .btn-close-modal {
+        display: block;
+        margin: 16px auto 0;
+        padding: 8px 24px;
+        border-radius: 6px;
+        border: 1px solid var(--primary);
+        background: transparent;
+        color: var(--primary);
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+    }
+    .modal-box .btn-close-modal:hover { background: var(--primary); color: #1E2329; }
+
+    @media (max-width: 900px) {
+        .support-layout {
+            grid-template-columns: 1fr;
+            height: auto;
         }
-        .message-header {
-            flex-direction: column;
-            gap: 4px;
-        }
+        .faq-sidebar { max-height: 250px; }
+        .chat-panel { height: 450px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
 <div class="support-container">
-    <div class="support-header">
-        <h1>💬 Customer Support</h1>
-        <p>Our support team will respond within 24 hours</p>
-    </div>
+    <div class="support-layout">
 
-    <div class="messages-container" id="messagesContainer">
-        <div class="empty-state">Loading messages...</div>
-    </div>
+        <!-- FAQ Sidebar -->
+        <div class="faq-sidebar">
+            <div class="faq-header">📚 Frequently Asked Questions</div>
+            <div class="faq-list" id="faqList"></div>
+        </div>
 
-    <div class="message-form">
-        <textarea id="messageInput" class="message-input" rows="3" placeholder="Type your message here..."></textarea>
-        <button class="send-btn" onclick="sendMessage()">Send Message</button>
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">💬 Live Support</div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="empty-state">Loading messages...</div>
+            </div>
+            <div class="chat-input-area">
+                <textarea id="messageInput" placeholder="Type your message..."></textarea>
+                <button class="btn-send" id="btnSend" onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- FAQ Modal -->
+<div class="modal-overlay" id="faqModal">
+    <div class="modal-box">
+        <h3 id="faqModalTitle"></h3>
+        <div id="faqModalBody"></div>
+        <button class="btn-close-modal" onclick="closeFaqModal()">Close</button>
     </div>
 </div>
 
 <script>
-    const API_BASE = '/api';
+    const API = '/api';
 
-    function getToken() {
-        return localStorage.getItem('access_token');
+    // FAQ Data
+    const faqs = [
+        { icon: '🤖', q: 'What is NODE exactly?', a: 'NODE is a Spot crypto grid trading system. You deposit USDC, activate a Grid Bot, and the bot automatically buys low and sells high within a price range — 24/7. You earn from trading activity which can go up to 10% monthly profits on your active bots. No manual trading. No chart-watching. No experience needed.' },
+        { icon: '⚙️', q: 'How does NODE work?', a: 'Three steps: 1) Deposit USDC (min $10). 2) Activate a Grid Bot on any coin. The bot places 100 buy/sell orders between a price range. 3) Let it work. When prices move, your bot trades automatically. You collect profit anytime. That\'s it.' },
+        { icon: '🚀', q: 'How can I get started?', a: 'Register on NODE with your email. You\'ll get a unique BSC wallet address. Buy USDC from Binance or any exchange. Send it to your NODE wallet. Once it arrives in your Grand Balance, go to the Trading page, pick a coin, and activate your first Grid Bot. Takes less than 10 minutes.' },
+        { icon: '💵', q: 'How to deposit my first $10?', a: '1) Buy $10 USDC on Binance. 2) Go to your NODE Profile, copy your unique wallet address. 3) On Binance, withdraw USDC to that address — IMPORTANT: select BSC/BEP20 network. 4) Your Grand Balance updates within 5 minutes automatically.' },
+        { icon: '💸', q: 'How to withdraw my first profit?', a: '1) Click the Grid Profit amount on your Dashboard to collect it to your Yield Wallet. 2) When Yield Wallet reaches 10% of your portfolio, transfer to Grand Balance. 3) Go to Withdraw page, enter your external BSC wallet address. 4) Enter OTP sent to your email. 5) Funds arrive in 1-10 minutes. No admin approval needed.' },
+        { icon: '🔙', q: 'How to get back my capital?', a: 'For Grid Bots: Click "Close Bot" on your Dashboard. Your investment + grid profit + PNL all return to your Grand Balance. For Spot tokens: Sell them anytime at market price. Funds go to Grand Balance immediately. Then withdraw to your external wallet. No lock-up. No penalty.' },
+        { icon: '🔒', q: 'How does NODE secure my capital?', a: 'Every user gets their OWN unique BSC wallet. Deposits go to YOUR wallet — verifiable on BSCScan. All funds are swept to a secure central wallet protected by encrypted private keys. Withdrawals require OTP verification. Every transaction is on the blockchain and visible on our Transparency page.' },
+        { icon: '🛡️', q: 'What are the security features?', a: '6 layers: 1) Unique wallet per user. 2) OTP for every withdrawal. 3) KYC identity verification. 4) Encrypted private keys. 5) Blockchain transparency — all transactions public. 6) Auto-refund system — if withdrawal fails, money returns to your balance.' },
+        { icon: '📜', q: 'Is NODE registered?', a: 'Yes. NODE is owned by THRIVALBASE LTD, registered with CAC Nigeria (RC: 1394827). We\'re pursuing SEC registration under the robo-adviser category. Our company is registered. Our platform is transparent. We operate openly while working toward full regulatory compliance.' },
+        { icon: '🤝', q: 'How does referral bonus work?', a: 'Share your unique referral link. When someone signs up and activates a Grid Bot, you earn from the 10% node fee across 7 levels: Level 1 (direct): 50%, Level 2: 25%, down to Level 7. Example: Friend activates $100 bot → $10 fee → you earn $5. Their referrals earn you too. No deposit needed to earn referrals.' },
+        { icon: '📊', q: 'Spot Wallet vs Grid Wallet?', a: 'Spot Wallet: Buy and hold tokens directly. Profit comes from price going up. Sell anytime. Grid Bot: You fund a trading strategy. Bot trades automatically within a price range. You earn from trading activity PLUS hourly yield. Most users do both — spot for long-term, grid for active earning.' },
+        { icon: '📅', q: 'Why can I plan with NODE?', a: 'Grid bots earn up to 10% monthly. The math: $100 compounded at 10% monthly becomes $314 in 12 months. Use the Growth Projector on your Dashboard to project any amount over 2, 3, or 5 years. Unlike savings accounts, you earn in dollars. Predictable. Plannable.' },
+        { icon: '✅', q: 'How can I trust NODE?', a: '1) Transparency Page shows all activity in real-time. 2) Test with $10 — deposit and withdraw to verify. 3) Join our WhatsApp group — ask real users. 4) Every transaction is on BSCScan — permanent and public. Don\'t trust words. Trust evidence. Start with $10.' },
+        { icon: '📉', q: 'Can NODE crash?', a: 'NODE is software — like any tech, it can have downtime. But your money is on the blockchain, not on NODE\'s servers. Even if the website is down, your funds are safe on BSC. Grid bots continue trading via API. Market crashes? Bots profit from volatility — buying dips, selling recoveries. Your capital survives cycles.' },
+        { icon: '💲', q: 'What are the charges?', a: 'Only two fees: Market Order (Spot Buy): 1%. Grid Bot Activation: 10%. Everything else is FREE — deposits, withdrawals, selling, collecting yield, referral earnings, OTP. No monthly subscriptions. No hidden charges. The 10% fee is distributed to referrers and powers the platform.' }
+    ];
+
+    function getToken() { return localStorage.getItem('access_token'); }
+
+    async function apiCall(url, method, data) {
+        var token = getToken();
+        var headers = { 'Content-Type': 'application/json' };
+        if (token) headers['Authorization'] = 'Bearer ' + token;
+        var opts = { method: method || 'GET', headers: headers };
+        if (data) opts.body = JSON.stringify(data);
+        var res = await fetch(API + url, opts);
+        if (res.status === 401) { localStorage.clear(); window.location.href = '/login/?next=/chat/'; return {}; }
+        return res.json();
     }
 
-    async function apiCall(endpoint, method = 'GET', data = null) {
-        const token = getToken();
-        const headers = {
-            'Content-Type': 'application/json',
-        };
-
-        if (token) {
-            headers['Authorization'] = `Bearer ${token}`;
+    // Render FAQ List
+    function renderFAQ() {
+        var html = '';
+        for (var i = 0; i < faqs.length; i++) {
+            html += '<div class="faq-item" onclick="openFaq(' + i + ')"><span class="faq-icon">' + faqs[i].icon + '</span>' + faqs[i].q + '</div>';
         }
-
-        const options = {
-            method: method,
-            headers: headers,
-        };
-
-        if (data) {
-            options.body = JSON.stringify(data);
-        }
-
-        const response = await fetch(`${API_BASE}${endpoint}`, options);
-
-        if (response.status === 401) {
-            window.location.href = '/login/';
-            throw new Error('Session expired');
-        }
-
-        return response.json();
+        document.getElementById('faqList').innerHTML = html;
     }
 
-
-
-    function formatCurrency(num) {
-            if (!num) return '$0.00';
-            const value = parseFloat(num);
-            if (isNaN(value)) return '$0.00';
-            if (value === 0) return '$0.00';
-            if (value >= 1e12) return `$${(value / 1e12).toFixed(1)}T`;
-            if (value >= 1e9) return `$${(value / 1e9).toFixed(1)}B`;
-            if (value >= 1e6) return `$${(value / 1e6).toFixed(1)}M`;
-            if (value < 0.01 && value > 0) return `$${value.toFixed(6)}`;
-            return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
+    function openFaq(index) {
+        var faq = faqs[index];
+        document.getElementById('faqModalTitle').textContent = faq.icon + ' ' + faq.q;
+        document.getElementById('faqModalBody').innerHTML = '<p>' + faq.a.replace(/\n/g, '<br><br>') + '</p>';
+        document.getElementById('faqModal').style.display = 'flex';
     }
 
+    function closeFaqModal() {
+        document.getElementById('faqModal').style.display = 'none';
+    }
+
+    // Chat Functions
     async function loadMessages() {
         try {
-            const response = await apiCall('/chat/messages/');
-            const container = document.getElementById('messagesContainer');
-
-            if (!response || response.length === 0) {
-                container.innerHTML = '<div class="empty-state">No messages yet. Send us a message!</div>';
+            var res = await apiCall('/chat/messages/');
+            var container = document.getElementById('chatMessages');
+            if (!res || res.length === 0) {
+                container.innerHTML = '<div class="empty-state">No messages yet. Ask us anything!</div>';
                 return;
             }
-
-            let html = '';
-            for (const msg of response) {
-                const isAdmin = msg.is_admin;
-                const avatar = isAdmin ? '👨‍💼' : '👤';
-                const badge = isAdmin ? '<span class="message-badge badge-admin">Support</span>' : '<span class="message-badge badge-user">You</span>';
-                const userClass = isAdmin ? 'Support' : 'You';
-
-                html += `
-                    <div class="message-item">
-                        <div class="message-avatar">${avatar}</div>
-                        <div class="message-content">
-                            <div class="message-header">
-                                <span class="message-user">${userClass} ${badge}</span>
-                                <span class="message-time">${msg.time || msg.date || 'Just now'}</span>
-                            </div>
-                            <div class="message-text">${escapeHtml(msg.message)}</div>
-                        </div>
-                    </div>
-                `;
+            var html = '';
+            for (var i = 0; i < res.length; i++) {
+                var msg = res[i];
+                var isAdmin = msg.is_admin;
+                html += '<div class="msg-row ' + (isAdmin ? 'admin' : 'user') + '">' +
+                    (isAdmin ? '<div class="msg-avatar admin">👨‍💼</div>' : '') +
+                    '<div><div class="msg-bubble">' + escHtml(msg.message) + '</div><div class="msg-time">' + (msg.time || msg.date || '') + '</div></div>' +
+                    (!isAdmin ? '<div class="msg-avatar user">👤</div>' : '') +
+                '</div>';
             }
             container.innerHTML = html;
-
-            // Scroll to bottom
             container.scrollTop = container.scrollHeight;
-
-        } catch (e) {
-            console.error('Error loading messages:', e);
-            document.getElementById('messagesContainer').innerHTML = '<div class="empty-state">Unable to load messages. Please refresh the page.</div>';
-        }
+        } catch(e) {}
     }
 
     async function sendMessage() {
-        const input = document.getElementById('messageInput');
-        const message = input.value.trim();
-
-        if (!message) {
-            showModal('Please enter a message', 'warning');
-            return;
-        }
-
-        showLoading();
-
+        var input = document.getElementById('messageInput');
+        var msg = input.value.trim();
+        if (!msg) return;
+        var btn = document.getElementById('btnSend');
+        btn.disabled = true;
+        btn.textContent = '...';
         try {
-            const result = await apiCall('/chat/send/', 'POST', { message: message });
-
-            if (result.success) {
-                input.value = '';
-                await loadMessages();
-            } else {
-                showModal('Failed to send message: ' + (result.error || 'Unknown error'), 'error');
-            }
-        } catch (e) {
-            showModal('Error sending message: ' + e.message, 'error');
-        }
-
-        hideLoading();
+            var res = await apiCall('/chat/send/', 'POST', { message: msg });
+            if (res.success) { input.value = ''; loadMessages(); }
+        } catch(e) {}
+        btn.disabled = false;
+        btn.textContent = 'Send';
     }
 
-    function escapeHtml(text) {
-        const div = document.createElement('div');
+    function escHtml(text) {
+        var div = document.createElement('div');
         div.textContent = text;
         return div.innerHTML;
     }
 
-    function showLoading() {
-        // Simple loading indicator
-        const btn = document.querySelector('.send-btn');
-        if (btn) {
-            btn.textContent = 'Sending...';
-            btn.disabled = true;
+    // Check for FAQ query parameter (for shared links)
+    function checkQueryParam() {
+        var params = new URLSearchParams(window.location.search);
+        var faqIndex = parseInt(params.get('faq'));
+        if (!isNaN(faqIndex) && faqIndex >= 0 && faqIndex < faqs.length) {
+            openFaq(faqIndex);
         }
     }
 
-    function hideLoading() {
-        const btn = document.querySelector('.send-btn');
-        if (btn) {
-            btn.textContent = 'Send Message';
-            btn.disabled = false;
-        }
-    }
-
+    // Init
+    renderFAQ();
     loadMessages();
-    setInterval(loadMessages, 10000);
+    checkQueryParam();
+    setInterval(loadMessages, 15000);
+
+    // Close modal on overlay click
+    document.getElementById('faqModal').addEventListener('click', function(e) {
+        if (e.target === this) closeFaqModal();
+    });
 </script>
 {% endblock %}
