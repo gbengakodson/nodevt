@@ -341,6 +341,12 @@
         document.getElementById('faqModalTitle').textContent = faq.icon + ' ' + faq.q;
         document.getElementById('faqModalBody').innerHTML = '<p>' + faq.a.replace(/\n/g, '<br><br>') + '</p>';
         document.getElementById('faqModal').style.display = 'flex';
+
+        // Update URL with referral code for sharing
+        if (userData && userData.referral_code) {
+            var newUrl = '/chat/?faq=' + index + '&ref=' + userData.referral_code;
+            window.history.replaceState({}, '', newUrl);
+        }
     }
 
     function closeFaqModal() {
@@ -399,6 +405,14 @@
         if (!isNaN(faqIndex) && faqIndex >= 0 && faqIndex < faqs.length) {
             openFaq(faqIndex);
         }
+    }
+
+    // When user copies FAQ link, include their referral code
+    function getFaqShareLink(index) {
+        var code = userData ? userData.referral_code : '';
+        var base = window.location.origin + '/chat/?faq=' + index;
+        if (code) base += '&ref=' + code;
+        return base;
     }
 
     // Init
