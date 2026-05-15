@@ -1215,29 +1215,96 @@
         }
     }
 
-    // Grid Bot Activation
+    // Grid Bot Activation with animated loader
     async function activateGridBot() {
         const amount = parseFloat(document.getElementById('gridAmount').value);
         if (!amount || amount < 10) { showModal('Please enter a valid investment amount (minimum $10 USDC)', 'warning'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
         if (!token) return;
+
+        const btn = document.getElementById('activateGridBtn');
+        btn.disabled = true;
+
+        // Show loader overlay
+        showGridLoader();
+
         try {
+            // Step 1: Attaching Grids
+            updateLoaderStep(1, '...attaching Grids');
+            await sleep(800);
+
             const result = await apiCall('/trading/buy/', 'POST', {
                 token_id: token.id,
                 amount_usdc: amount,
                 order_type: 'grid'
             });
+
             if (result.success) {
+                // Step 2: Setting up
+                updateLoaderStep(2, '...setting up');
+                await sleep(1000);
+
+                // Step 3: Grid Activated
+                updateLoaderStep(3, '...Grid activated ✅');
+                await sleep(1200);
+
+                hideGridLoader();
                 showModal(`Grid bot activated for ${currentSymbol} with $${amount} (10% fee applied). Your grid bot will appear in dashboard.`, 'success');
                 document.getElementById('gridAmount').value = '';
             } else {
+                hideGridLoader();
                 showModal('Failed to activate grid bot', 'error');
             }
         } catch (e) {
-             showModal('Error: ' + e.message, 'error');
+            hideGridLoader();
+            showModal('Error: ' + e.message, 'error');
         }
 
+        btn.disabled = false;
+    }
 
+    function sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    function showGridLoader() {
+        // Remove existing loader if any
+        var existing = document.getElementById('gridLoaderOverlay');
+        if (existing) existing.remove();
+
+        var overlay = document.createElement('div');
+        overlay.id = 'gridLoaderOverlay';
+        overlay.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 9999;
+            display: flex; flex-direction: column;
+            align-items: center; justify-content: center;
+        `;
+        overlay.innerHTML = `
+            <div style="width: 60px; height: 60px; border: 4px solid #2B3139; border-top: 4px solid #F0B90B; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
+            <div id="loaderStep1" style="color: #848E9C; font-size: 16px; font-weight: 600; margin-bottom: 8px; opacity: 0.4;">...attaching Grids</div>
+            <div id="loaderStep2" style="color: #848E9C; font-size: 16px; font-weight: 600; margin-bottom: 8px; opacity: 0.4;">...setting up</div>
+            <div id="loaderStep3" style="color: #848E9C; font-size: 16px; font-weight: 600; opacity: 0.4;">...Grid activated</div>
+        `;
+        document.body.appendChild(overlay);
+    }
+
+    function updateLoaderStep(step, text) {
+        var el = document.getElementById('loaderStep' + step);
+        if (el) {
+            el.textContent = text;
+            el.style.color = step === 3 ? '#0ECB81' : '#F0B90B';
+            el.style.opacity = '1';
+        }
+    }
+
+    function hideGridLoader() {
+        var overlay = document.getElementById('gridLoaderOverlay');
+        if (overlay) {
+            overlay.style.opacity = '0';
+            overlay.style.transition = 'opacity 0.3s';
+            setTimeout(function() { overlay.remove(); }, 300);
+        }
     }
 
     document.querySelectorAll('[data-market-perc]').forEach(btn => {
@@ -1279,6 +1346,7 @@
         @keyframes slideInRight { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
         @keyframes fadeOut { to { opacity: 0; visibility: hidden; } }
         @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); } 70% { box-shadow: 0 0 0 10px rgba(14,203,129,0); } 100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); } }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .price-up { color: #0ECB81; } .price-down { color: #F6465D; }
         .trading-bot-icon:hover, .chart-bot-icon:hover { transform: scale(1.1); }
         .btn-buy-disabled, .btn-sell-disabled { opacity: 0.5; cursor: not-allowed; }
