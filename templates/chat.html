@@ -267,6 +267,7 @@
 
 <script>
     const API = '/api';
+    var userData = null;
 
     // FAQ Data
     const faqs = [
@@ -342,8 +343,8 @@
         document.getElementById('faqModalBody').innerHTML = '<p>' + faq.a.replace(/\n/g, '<br><br>') + '</p>';
         document.getElementById('faqModal').style.display = 'flex';
 
-        // Update URL with referral code for sharing
-        if (userData && userData.referral_code) {
+        // Update URL with referral code for sharing (if user is logged in)
+        if (typeof userData !== 'undefined' && userData && userData.referral_code) {
             var newUrl = '/chat/?faq=' + index + '&ref=' + userData.referral_code;
             window.history.replaceState({}, '', newUrl);
         }
