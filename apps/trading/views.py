@@ -980,8 +980,9 @@ def send_daily_email_webhook(request):
     return JsonResponse({'status': 'queued', 'message': 'Emails sending in background'})
 
 
-@csrf_exempt
 def sweep_webhook(request):
+    from apps.tokens.services import PriceService
+    PriceService.update_token_prices()
     from django.core.management import call_command
     call_command('check_credits')
     return JsonResponse({'status': 'success'})
