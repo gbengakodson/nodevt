@@ -355,14 +355,26 @@
         }
     }
 
+    async function loadUserData() {
+        try {
+            userData = await apiCall('/auth/profile/');
+        } catch(e) {
+            userData = null;
+        }
+    }
+
+    // Call it on init
+    loadUserData();
+
     function copyFaqLink() {
         var link = window.location.origin + '/chat/?faq=' + currentFaqIndex;
         if (typeof userData !== 'undefined' && userData && userData.referral_code) {
             link += '&ref=' + userData.referral_code;
         }
         navigator.clipboard.writeText(link);
-        alert('Link copied! Share with friends.');
+        showModal('✅ Link copied! Share with friends.', 'success');
     }
+
 
     function closeFaqModal() {
         document.getElementById('faqModal').style.display = 'none';
@@ -434,6 +446,7 @@
     renderFAQ();
     loadMessages();
     checkQueryParam();
+    loadUserData();
     setInterval(loadMessages, 15000);
 
     // Close modal on overlay click
