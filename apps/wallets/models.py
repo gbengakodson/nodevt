@@ -14,6 +14,11 @@ class Wallet(models.Model):
     balance = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    lock_enabled = models.BooleanField(default=False)
+    locked_until = models.DateTimeField(null=True, blank=True)
+    pension_fund = models.BooleanField(default=False)
+    pension_reinvest_months = models.IntegerField(default=6)
+    pension_reinvest_years = models.IntegerField(default=5)
     
     class Meta:
         unique_together = ['user', 'wallet_type']
@@ -124,3 +129,19 @@ class WithdrawalRequest(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.amount} USDC - {self.status}"
+
+
+class Purse(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='purses')
+    name = models.CharField(max_length=50)  # "Emergency", "Shop Rent", "Inventory", "School Fees", "House Rent"
+    balance = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    auto_sweep_enabled = models.BooleanField(default=False)
+    sweep_percentage = models.IntegerField(default=10)  # % of grid profit to auto-sweep
+    sweep_schedule = models.CharField(max_length=20, default='weekly')  # daily, weekly, monthly
+    withdraw_schedule = models.CharField(max_length=20, default='anytime')  # anytime, monthly, quarterly, annually
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ['user', 'name']
