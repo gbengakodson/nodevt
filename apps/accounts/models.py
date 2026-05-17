@@ -57,6 +57,14 @@ class User(AbstractUser):
     ])
     id_number = models.CharField(max_length=50, blank=True, null=True)
 
+    user_type = models.CharField(max_length=20, default='MICRO', choices=[
+        ('MICRO', 'Micro-Investor'),
+        ('SALARY', 'Salary Earner'),
+        ('BUSINESS', 'Business Owner / HNI'),
+        ('REFERRAL', 'Referral Builder'),
+        ('DIASPORA', 'Diaspora Nigerian'),
+    ])
+
     def save(self, *args, **kwargs):
         if not self.referral_code:
             self.referral_code = self.generate_referral_code()

@@ -419,6 +419,8 @@
                 </div>
             </div>
         </div>
+        <div id="personalizedContent"></div>
+        <div id="referralHighlight" style="display:none;background:var(--bg-card);border:1px solid var(--primary);border-radius:8px;padding:14px;margin-bottom:10px;text-align:center;font-size:13px;font-weight:600;color:var(--primary);cursor:pointer;" onclick="window.location.href='/referral/'"></div>
 
         <!-- Holdings -->
         <div class="card mb-4" style="background: #FFFFFF; border: 1px solid #E2E4E8; border-radius: 16px;">
@@ -783,6 +785,45 @@
     async function loadDashboard() {
         try {
             await fetchYieldRate();
+
+            // Fetch user profile for type
+            var userProfile = await apiCall('/auth/profile/');
+            var userType = userProfile.user_type || 'MICRO';
+
+            try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
+
+            const balance = await apiCall('/trading/my_balance/');
+            userGrandBalance = parseFloat(balance.grand_balance) || 0;
+            userYieldBalance = parseFloat(balance.yield_balance) || 0;
+
+            document.getElementById('grandBalance').textContent = formatCurrency(userGrandBalance);
+            document.getElementById('yieldBalance').textContent = formatCurrency(userYieldBalance);
+            document.getElementById('yieldWalletBalance').textContent = formatCurrency(userYieldBalance);
+
+            // Personalized content based on user type
+            var personalizationDiv = document.getElementById('personalizedContent');
+            if (personalizationDiv) {
+                var messages = {
+                    'MICRO': '🚀 Start small, dream big. Your first $10 bot is waiting.',
+                    'SALARY': '💼 Your salary works hard. Now let your money work harder.',
+                    'BUSINESS': '🏢 Scale your wealth with multiple bots and strategies.',
+                    'REFERRAL': '🔗 Share your link. Build your network. Earn forever.',
+                    'DIASPORA': '🌍 Your dollars are already here. Now multiply them for home.'
+                };
+                personalizationDiv.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:10px;text-align:center;font-size:12px;color:var(--primary);">' + (messages[userType] || messages['MICRO']) + '</div>';
+            }
+
+            // Show referral earnings prominently for REFERRAL type
+            if (userType === 'REFERRAL') {
+                var refStats = await apiCall('/trading/referral_stats/');
+                var refCard = document.getElementById('referralHighlight');
+                if (refCard) {
+                    refCard.style.display = 'block';
+                    refCard.innerHTML = '💰 Referral Earnings: ' + formatCurrency(refStats.total_commissions || 0) + ' | Referrals: ' + (refStats.total_referrals || 0);
+                }
+            }
+
+            // ... rest of existing loadDashboard code ...
 
             try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
 

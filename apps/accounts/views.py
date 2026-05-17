@@ -22,6 +22,10 @@ class RegisterView(APIView):
         if serializer.is_valid():
             user = serializer.save()
 
+            # Save user type
+            user.user_type = request.data.get('user_type', 'MICRO')
+            user.save()
+
             # Create wallet for user
             from apps.wallets.services.deposit_service import DepositService
             try:
