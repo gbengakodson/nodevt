@@ -823,18 +823,7 @@
                 }
             }
 
-            // ... rest of existing loadDashboard code ...
-
-            try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
-
-            const balance = await apiCall('/trading/my_balance/');
-            userGrandBalance = parseFloat(balance.grand_balance) || 0;
-            userYieldBalance = parseFloat(balance.yield_balance) || 0;
-
-            document.getElementById('grandBalance').textContent = formatCurrency(userGrandBalance);
-            document.getElementById('yieldBalance').textContent = formatCurrency(userYieldBalance);
-            document.getElementById('yieldWalletBalance').textContent = formatCurrency(userYieldBalance);
-
+            // Yield wallet transfer button
             const btnTransfer = document.getElementById('btnTransferYield');
             const minRequired = portfolioData ? portfolioData.min_required_to_transfer : 0;
             const canTransfer = portfolioData ? portfolioData.can_transfer : false;
@@ -844,6 +833,7 @@
                 btnTransfer.title = `Need at least ${formatCurrency(minRequired)} in yield (10% of portfolio)`;
             } else { btnTransfer.title = ''; }
 
+            // Grid Bots
             const gridBots = await apiCall('/trading/my_grids_all/');
             tokens = await apiCall('/trading/');
             const container = document.getElementById('holdingsCards');
