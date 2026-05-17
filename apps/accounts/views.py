@@ -26,6 +26,22 @@ class RegisterView(APIView):
             user.user_type = request.data.get('user_type', 'MICRO')
             user.save()
 
+            # Default to admin if no referrer
+            if not user.referrer:
+                from django.contrib.auth import get_user_model
+                UserModel = get_user_model()
+                admin = UserModel.objects.filter(is_superuser=True).first()
+                if admin:
+                    user.referrer = admin
+                    user.save()
+                    # Create referral relationship
+                    try:
+                        from apps.referrals.services.referral_service import ReferralService
+                        ReferralService.create_referral(admin, user)
+                        print(f"Default referral: admin -> {user.email}")
+                    except Exception as e:
+                        print(f"Error creating default referral: {e}")
+
             # Create wallet for user
             from apps.wallets.services.deposit_service import DepositService
             try:

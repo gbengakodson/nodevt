@@ -11,7 +11,7 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email', 'username', 'password', 'referral_code', 'user_type']
+        fields = ['email', 'username', 'password', 'password2', 'referral_code', 'user_type']
         extra_kwargs = {
             'password': {'write_only': True},
             'user_type': {'required': False, 'default': 'MICRO'}
@@ -51,12 +51,6 @@ class LoginSerializer(serializers.Serializer):
     email = serializers.EmailField()
     password = serializers.CharField()
 
-class UserSerializer(serializers.ModelSerializer):
-    referral_code = serializers.ReadOnlyField()
-    
-    class Meta:
-        model = User
-        fields = ('id', 'email', 'username', 'referral_code', 'wallet_address', 'created_at')
 
 
 
@@ -65,4 +59,4 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'username', 'wallet_address', 'referral_code',
                   'created_at', 'kyc_status', 'phone_number', 'country',
-                  'id_type', 'id_number', 'is_verified', 'date_verified']
+                  'id_type', 'id_number', 'is_verified', 'date_verified', 'user_type']
