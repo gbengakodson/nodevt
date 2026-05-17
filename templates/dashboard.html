@@ -450,6 +450,84 @@
                 📤 Transfer to Grand Wallet
             </button>
         </div>
+        <!-- ============ SEGMENT-SPECIFIC CARDS ============ -->
+
+        <!-- SURVIVOR: Emergency Purse -->
+        <div id="survivorPurse" class="yield-card" style="display:none;">
+            <div class="yield-card-title">🆘 Emergency Fund</div>
+            <div class="yield-balance-row">
+                <span class="yield-balance-label">Emergency Balance</span>
+                <span class="yield-balance-value" id="emergencyBalance">$0.00</span>
+            </div>
+            <div style="font-size:10px;color:#707A8A;margin-bottom:8px;">
+                Auto-sweeps grid profit weekly. Withdraw any amount anytime.
+            </div>
+            <div class="card-row" style="padding:8px 0;">
+                <span class="card-label">Auto-Sweep</span>
+                <div class="toggle" id="toggleEmergencySweep" onclick="togglePurse('Emergency')"></div>
+            </div>
+            <div class="card-row" style="padding:8px 0;">
+                <span class="card-label">Sweep % of Profit</span>
+                <select id="emergencySweepPct" class="form-select" style="max-width:80px;">
+                    <option value="10">10%</option>
+                    <option value="25">25%</option>
+                    <option value="50">50%</option>
+                    <option value="100">100%</option>
+                </select>
+            </div>
+            <button class="btn-transfer-yield" onclick="withdrawFromPurse('Emergency')" style="margin-top:8px;">💸 Withdraw Emergency Fund</button>
+        </div>
+
+        <!-- HUSTLER: Business Purses -->
+        <div id="hustlerPurses" style="display:none;">
+            <div class="yield-card">
+                <div class="yield-card-title">🏪 Business Reserves</div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">Shop Rent</span>
+                    <span class="card-value" id="purseShopRent">$0.00</span>
+                </div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">Inventory</span>
+                    <span class="card-value" id="purseInventory">$0.00</span>
+                </div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">Repairs</span>
+                    <span class="card-value" id="purseRepair">$0.00</span>
+                </div>
+                <div style="font-size:10px;color:#707A8A;margin-top:8px;">Auto-sweeps grid profit weekly to each purse.</div>
+                <button class="btn-transfer-yield" onclick="setupBusinessPurses()" style="margin-top:8px;">⚙️ Configure Business Purses</button>
+            </div>
+        </div>
+
+        <!-- PROVIDER/DIASPORA: Pension & Goal Purses -->
+        <div id="providerPurses" style="display:none;">
+            <div class="yield-card">
+                <div class="yield-card-title">🏦 Pension Fund</div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">Status</span>
+                    <span class="card-value" id="pensionStatus">Inactive</span>
+                </div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">Reinvests Every</span>
+                    <span class="card-value">6 months</span>
+                </div>
+                <button class="btn-transfer-yield" onclick="activatePension()" id="btnPension" style="margin-top:8px;">🔒 Activate Pension Fund</button>
+                <div style="font-size:10px;color:#F6465D;margin-top:6px;">⚠️ Irreversible: Creates a new Grid Bot every 6 months from your Yield Wallet.</div>
+            </div>
+            <div class="yield-card">
+                <div class="yield-card-title">🎯 Goal Purses</div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">School Fees</span>
+                    <span class="card-value" id="purseSchoolFees">$0.00</span>
+                </div>
+                <div class="card-row" style="padding:8px 0;">
+                    <span class="card-label">House Rent</span>
+                    <span class="card-value" id="purseHouseRent">$0.00</span>
+                </div>
+                <div style="font-size:10px;color:#707A8A;margin-top:8px;">School Fees: withdrawable every 3 months. Rent: annually.</div>
+                <button class="btn-transfer-yield" onclick="setupGoalPurses()" style="margin-top:8px;">⚙️ Configure Goal Purses</button>
+            </div>
+        </div>
 
         <!-- Yield Earnings Section -->
         <div class="card" style="background: #F5F7FA; border: none; border-radius: 16px;">
@@ -781,6 +859,74 @@
         updateGrowthProjection();
     }
 
+    // ============ PURSE FUNCTIONS ============
+    async function loadPurse(name) {
+        try {
+            var res = await apiCall('/trading/purse/?name=' + encodeURIComponent(name));
+            var elId = 'purse' + name.replace(/\s/g, '');
+            var el = document.getElementById(elId);
+            if (!el) {
+                // Try emergency balance
+                el = document.getElementById('emergencyBalance');
+            }
+            if (el && res.balance !== undefined) {
+                el.textContent = formatCurrency(res.balance);
+            }
+        } catch(e) {}
+    }
+
+    async function togglePurse(name) {
+        try {
+            await apiCall('/trading/purse/toggle/', 'POST', { name: name });
+            loadPurse(name);
+        } catch(e) {}
+    }
+
+    async function withdrawFromPurse(name) {
+        var amount = prompt('Enter amount to withdraw from ' + name + ':');
+        if (!amount) return;
+        try {
+            var res = await apiCall('/trading/purse/withdraw/', 'POST', { name: name, amount: parseFloat(amount) });
+            if (res.success) {
+                showModal('✅ Withdrawn to Grand Balance!', 'success');
+                loadDashboard();
+            } else {
+                showModal('❌ ' + (res.error || 'Failed'), 'error');
+            }
+        } catch(e) { showModal('Error', 'error'); }
+    }
+
+    async function activatePension() {
+        if (!confirm('Activate Pension Fund? This will create a new Grid Bot from your Yield Wallet every 6 months. This cannot be undone.')) return;
+        try {
+            var res = await apiCall('/trading/pension/activate/', 'POST', {});
+            if (res.success) {
+                showModal('🔒 Pension Fund activated!', 'success');
+                loadDashboard();
+            } else {
+                showModal('❌ ' + (res.error || 'Failed'), 'error');
+            }
+        } catch(e) { showModal('Error', 'error'); }
+    }
+
+    async function checkPensionStatus() {
+        try {
+            var res = await apiCall('/trading/pension/status/');
+            if (res.active) {
+                document.getElementById('pensionStatus').textContent = '🔒 Active';
+                document.getElementById('btnPension').style.display = 'none';
+            }
+        } catch(e) {}
+    }
+
+    function setupBusinessPurses() {
+        showModal('Configure auto-sweep from grid profit to each business purse.', 'info');
+    }
+
+    function setupGoalPurses() {
+        showModal('Configure auto-sweep from grid profit to School Fees and House Rent purses.', 'info');
+    }
+
     // ============ MAIN LOAD ============
     async function loadDashboard() {
         try {
@@ -823,14 +969,48 @@
                 }
             }
 
+            // ============ SEGMENT-SPECIFIC CARDS ============
+            // Show/hide segment cards based on user type
+            var survEl = document.getElementById('survivorPurse');
+            var hustEl = document.getElementById('hustlerPurses');
+            var provEl = document.getElementById('providerPurses');
+            if (survEl) survEl.style.display = (userType === 'MICRO') ? 'block' : 'none';
+            if (hustEl) hustEl.style.display = (userType === 'BUSINESS') ? 'block' : 'none';
+            if (provEl) provEl.style.display = (userType === 'SALARY' || userType === 'DIASPORA') ? 'block' : 'none';
+
+            // SURVIVOR: Load emergency purse
+            if (userType === 'MICRO') {
+                loadPurse('Emergency');
+            }
+
+            // HUSTLER: Load business purses + set 3% yield threshold
+            if (userType === 'BUSINESS') {
+                loadPurse('Shop Rent');
+                loadPurse('Inventory');
+                loadPurse('Repair');
+                var minReqEl = document.getElementById('minRequired');
+                if (minReqEl && portfolioData) {
+                    minReqEl.textContent = formatCurrency(portfolioData.total_portfolio * 0.03);
+                }
+            }
+
+            // PROVIDER/DIASPORA: Load goal purses + pension status
+            if (userType === 'SALARY' || userType === 'DIASPORA') {
+                loadPurse('School Fees');
+                loadPurse('House Rent');
+                checkPensionStatus();
+            }
+
             // Yield wallet transfer button
             const btnTransfer = document.getElementById('btnTransferYield');
-            const minRequired = portfolioData ? portfolioData.min_required_to_transfer : 0;
-            const canTransfer = portfolioData ? portfolioData.can_transfer : false;
-            document.getElementById('minRequired').textContent = formatCurrency(minRequired);
+            const minRequired = portfolioData ? (userType === 'BUSINESS' ? portfolioData.total_portfolio * 0.03 : portfolioData.min_required_to_transfer) : 0;
+            const canTransfer = portfolioData ? (userType === 'BUSINESS' ? (userYieldBalance >= minRequired && userYieldBalance > 0) : portfolioData.can_transfer) : false;
+            if (document.getElementById('minRequired')) {
+                document.getElementById('minRequired').textContent = formatCurrency(minRequired);
+            }
             btnTransfer.disabled = !canTransfer;
             if (!canTransfer && userYieldBalance > 0) {
-                btnTransfer.title = `Need at least ${formatCurrency(minRequired)} in yield (10% of portfolio)`;
+                btnTransfer.title = 'Need at least ' + formatCurrency(minRequired) + ' in yield (' + (userType === 'BUSINESS' ? '3' : '10') + '% of portfolio)';
             } else { btnTransfer.title = ''; }
 
             // Grid Bots

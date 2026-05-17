@@ -19,6 +19,7 @@ from apps.tokens.serializers import CryptoTokenSerializer, UserTokenBalanceSeria
 from apps.wallets.models import Wallet, Transaction
 from apps.trading.models import GridBot
 from apps.core.models import PlatformSetting
+from datetime import timedelta
 
 
 
@@ -905,6 +906,150 @@ class TradingViewSet(viewsets.ViewSet):
 
         serializer = UserTokenBalanceSerializer(spot_balances, many=True)
         return Response(serializer.data)
+
+    # ============ PURSE ENDPOINTS ============
+
+    @action(detail=False, methods=['get'])
+    def purse(self, request):
+        """Get purse balance by name"""
+        from apps.wallets.models import Purse
+        name = request.GET.get('name', '')
+        if not name:
+            return Response({'error': 'Purse name required'}, status=400)
+
+        purse, created = Purse.objects.get_or_create(
+            user=request.user,
+            name=name,
+            defaults={'balance': Decimal('0')}
+        )
+
+        return Response({
+            'name': purse.name,
+            'balance': float(purse.balance),
+            'auto_sweep_enabled': purse.auto_sweep_enabled,
+            'sweep_percentage': purse.sweep_percentage,
+            'withdraw_schedule': purse.withdraw_schedule,
+            'is_active': purse.is_active
+        })
+
+    @action(detail=False, methods=['post'])
+    def purse_toggle(self, request):
+        """Toggle auto-sweep for a purse"""
+        from apps.wallets.models import Purse
+        name = request.data.get('name', '')
+        purse = Purse.objects.get(user=request.user, name=name)
+        purse.auto_sweep_enabled = not purse.auto_sweep_enabled
+        purse.save()
+        return Response({'success': True, 'auto_sweep_enabled': purse.auto_sweep_enabled})
+
+    @action(detail=False, methods=['post'])
+    def purse_withdraw(self, request):
+        """Withdraw from purse to Grand Balance"""
+        from apps.wallets.models import Purse
+        name = request.data.get('name', '')
+        amount = Decimal(str(request.data.get('amount', 0)))
+
+        if amount <= 0:
+            return Response({'error': 'Invalid amount'}, status=400)
+
+        purse = Purse.objects.get(user=request.user, name=name)
+
+        if purse.balance < amount:
+            return Response({'error': 'Insufficient purse balance'}, status=400)
+
+        # Check withdraw schedule
+        from datetime import datetime
+        now = timezone.now()
+
+        if purse.withdraw_schedule == 'monthly':
+            last_withdraw = Transaction.objects.filter(
+                user=request.user,
+                transaction_type='PURSE_WITHDRAW',
+                metadata__purse_name=name,
+                created_at__month=now.month
+            ).first()
+            if last_withdraw:
+                return Response({'error': f'{name} can only be withdrawn once per month'}, status=400)
+
+        elif purse.withdraw_schedule == 'quarterly':
+            three_months_ago = now - timedelta(days=90)
+            last_withdraw = Transaction.objects.filter(
+                user=request.user,
+                transaction_type='PURSE_WITHDRAW',
+                metadata__purse_name=name,
+                created_at__gte=three_months_ago
+            ).first()
+            if last_withdraw:
+                return Response({'error': f'{name} can only be withdrawn every 3 months'}, status=400)
+
+        elif purse.withdraw_schedule == 'annually':
+            year_ago = now - timedelta(days=365)
+            last_withdraw = Transaction.objects.filter(
+                user=request.user,
+                transaction_type='PURSE_WITHDRAW',
+                metadata__purse_name=name,
+                created_at__gte=year_ago
+            ).first()
+            if last_withdraw:
+                return Response({'error': f'{name} can only be withdrawn once per year'}, status=400)
+
+        # Transfer from purse to grand
+        purse.balance -= amount
+        purse.save()
+
+        grand = Wallet.objects.get(user=request.user, wallet_type='GRAND')
+        grand.balance += amount
+        grand.save()
+
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='PURSE_WITHDRAW',
+            amount=amount,
+            fee=Decimal('0'),
+            status='COMPLETED',
+            metadata={'purse_name': name, 'to_wallet': 'GRAND'},
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True,
+            'amount': float(amount),
+            'purse_balance': float(purse.balance),
+            'grand_balance': float(grand.balance)
+        })
+
+    @action(detail=False, methods=['post'])
+    def pension_activate(self, request):
+        """Activate pension fund on Yield Wallet"""
+        yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
+
+        if yield_wallet.pension_fund:
+            return Response({'error': 'Pension fund already active'}, status=400)
+
+        yield_wallet.pension_fund = True
+        yield_wallet.lock_enabled = True
+        yield_wallet.locked_until = timezone.now() + timedelta(days=365 * 5)  # 5 years
+        yield_wallet.pension_reinvest_months = 6
+        yield_wallet.pension_reinvest_years = 5
+        yield_wallet.save()
+
+        return Response({
+            'success': True,
+            'message': 'Pension fund activated. Yield Wallet locked. Auto-reinvest every 6 months for 5 years.'
+        })
+
+    @action(detail=False, methods=['get'])
+    def pension_status(self, request):
+        """Check pension fund status"""
+        yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
+
+        return Response({
+            'active': yield_wallet.pension_fund,
+            'lock_enabled': yield_wallet.lock_enabled,
+            'locked_until': yield_wallet.locked_until.isoformat() if yield_wallet.locked_until else None,
+            'reinvest_months': yield_wallet.pension_reinvest_months,
+            'reinvest_years': yield_wallet.pension_reinvest_years
+        })
 
 
 class AdminYieldRateView(APIView):
