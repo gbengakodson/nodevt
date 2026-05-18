@@ -794,12 +794,13 @@ async function loadPurseCard() {
         };
         document.getElementById('purseModalHint').textContent = hints[name] || 'Withdraw anytime';
 
-        // Load balance into modal
         apiCall('/trading/purse/?name=' + encodeURIComponent(name)).then(function(res) {
             document.getElementById('purseModalBalance').textContent = formatCurrency(res.balance || 0);
         });
 
-        document.getElementById('purseModal').style.display = 'flex';
+        var modal = document.getElementById('purseModal');
+        modal.style.display = 'flex';
+        modal.style.setProperty('display', 'flex', 'important');
     }
 
     function closePurseModal() {
