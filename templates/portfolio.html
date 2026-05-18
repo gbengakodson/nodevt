@@ -862,16 +862,18 @@ async function loadPurseCard() {
         try {
             var res = await apiCall('/trading/purse/withdraw/', 'POST', { name: currentPurseName, amount: amount });
             if (res.success) {
-                if (typeof showModal === 'function') showModal('✅ Withdrawn to Grand Balance!', 'success');
+                if (typeof showModal === 'function') showModal('✅ Withdrawn ' + formatCurrency(amount) + ' from ' + currentPurseName + ' to Grand Balance!', 'success');
                 else alert('✅ Withdrawn to Grand Balance!');
                 closePurseModal();
                 loadPurseCard();
             } else {
-                if (typeof showModal === 'function') showModal('❌ ' + (res.error || 'Failed'), 'error');
-                else alert('❌ ' + (res.error || 'Failed'));
+                var msg = res.error || 'Failed';
+                if (typeof showModal === 'function') showModal('❌ ' + msg, 'error');
+                else alert('❌ ' + msg);
             }
         } catch(e) {
-            alert('Network error');
+            if (typeof showModal === 'function') showModal('Network error', 'error');
+            else alert('Network error');
         }
     }
 
