@@ -596,7 +596,7 @@
         document.getElementById('goalTargetDisplay').textContent = formatCurrency(target);
         document.getElementById('progressFill').style.width = progressPercent + '%';
         document.getElementById('progressPercent').textContent = progressPercent.toFixed(1);
-        document.getElementById('requiredMonthly').textContent = formatCurrency(Math.max(0, (target - portfolioValue) / (targetYears * 12)));
+
 
         // Calculate projected years
         var currentYear = new Date().getFullYear();
