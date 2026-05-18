@@ -374,6 +374,48 @@
     .purse-item .p-icon { font-size: 14px; width: 20px; }
     .purse-item .p-name { flex: 1; font-size: 10px; font-weight: 500; }
     .purse-item .p-balance { font-size: 11px; font-weight: 600; color: var(--success); }
+
+    .modal-overlay {
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 100% !important;
+        height: 100% !important;
+        background: rgba(0, 0, 0, 0.85) !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    .modal-box {
+        background: #1E2329 !important;
+        border: 1px solid #2B3139 !important;
+        border-radius: 12px !important;
+        max-width: 400px;
+        width: 90%;
+        padding: 20px;
+    }
+
+    .modal-box h3 {
+        font-size: 14px;
+        color: #EAECEF !important;
+        margin-bottom: 12px;
+    }
+
+    .modal-box label {
+        font-size: 10px;
+        color: #848E9C !important;
+        display: block;
+        margin-bottom: 4px;
+    }
+
+    .modal-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: flex-end;
+        margin-top: 14px;
+    }
 </style>
 {% endblock %}
 
