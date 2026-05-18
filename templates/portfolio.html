@@ -846,7 +846,9 @@ async function loadPurseCard() {
     }
 
     function closePurseModal() {
-        document.getElementById('purseModal').style.display = 'none';
+        var modal = document.getElementById('purseModal');
+        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
         currentPurseName = '';
     }
 
