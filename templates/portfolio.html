@@ -855,25 +855,33 @@ async function loadPurseCard() {
     async function withdrawPurse() {
         var amount = parseFloat(document.getElementById('purseWithdrawAmount').value);
         if (!amount || amount <= 0) {
-            if (typeof showModal === 'function') showModal('Enter a valid amount', 'warning');
-            else alert('Enter a valid amount');
+            closePurseModal();
+            setTimeout(function() {
+                if (typeof showModal === 'function') showModal('Enter a valid amount', 'warning');
+                else alert('Enter a valid amount');
+            }, 200);
             return;
         }
         try {
             var res = await apiCall('/trading/purse/withdraw/', 'POST', { name: currentPurseName, amount: amount });
-            if (res.success) {
-                if (typeof showModal === 'function') showModal('✅ Withdrawn ' + formatCurrency(amount) + ' from ' + currentPurseName + ' to Grand Balance!', 'success');
-                else alert('✅ Withdrawn to Grand Balance!');
-                closePurseModal();
-                loadPurseCard();
-            } else {
-                var msg = res.error || 'Failed';
-                if (typeof showModal === 'function') showModal('❌ ' + msg, 'error');
-                else alert('❌ ' + msg);
-            }
+            closePurseModal();
+            setTimeout(function() {
+                if (res.success) {
+                    if (typeof showModal === 'function') showModal('✅ Withdrawn ' + formatCurrency(amount) + ' from ' + currentPurseName + ' to Grand Balance!', 'success');
+                    else alert('✅ Withdrawn to Grand Balance!');
+                    loadPurseCard();
+                } else {
+                    var msg = res.error || 'Failed';
+                    if (typeof showModal === 'function') showModal('❌ ' + msg, 'error');
+                    else alert('❌ ' + msg);
+                }
+            }, 300);
         } catch(e) {
-            if (typeof showModal === 'function') showModal('Network error', 'error');
-            else alert('Network error');
+            closePurseModal();
+            setTimeout(function() {
+                if (typeof showModal === 'function') showModal('Network error', 'error');
+                else alert('Network error');
+            }, 200);
         }
     }
 
