@@ -364,6 +364,16 @@
         .stat-card { padding: 8px 10px; }
         .stat-value { font-size: 14px; }
     }
+
+    .purse-item {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 4px 0; cursor: pointer; border-bottom: 1px solid rgba(255,255,255,0.03);
+        transition: all 0.15s;
+    }
+    .purse-item:hover { color: var(--primary); }
+    .purse-item .p-icon { font-size: 14px; width: 20px; }
+    .purse-item .p-name { flex: 1; font-size: 10px; font-weight: 500; }
+    .purse-item .p-balance { font-size: 11px; font-weight: 600; color: var(--success); }
 </style>
 {% endblock %}
 
@@ -383,10 +393,9 @@
             <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
             <div class="stat-subtitle"><span id="progressPercent">0</span>% complete</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Required/Month</div>
-            <div class="stat-value" id="requiredMonthly">$0</div>
-            <div class="stat-subtitle">To reach goal</div>
+        <div class="stat-card" id="purseCard" style="cursor:default;">
+            <div class="stat-label" id="purseCardTitle">💰 Funding</div>
+            <div id="purseCardContent" style="font-size:10px;color:var(--text-secondary);">Loading...</div>
         </div>
     </div>
 
@@ -429,6 +438,23 @@
             </div>
         </div>
     </div>
+    <!-- Purse Withdraw Modal -->
+    <div class="modal-overlay" id="purseModal" style="display:none;">
+        <div class="modal-box">
+            <h3 id="purseModalTitle">💰 Purse</h3>
+            <div style="margin-bottom:12px;">
+                <span style="font-size:10px;color:var(--text-secondary);">Available Balance:</span>
+                <span style="font-size:20px;font-weight:700;color:var(--success);" id="purseModalBalance">$0.00</span>
+            </div>
+            <label style="font-size:10px;color:var(--text-secondary);">Amount to Withdraw</label>
+            <input type="number" id="purseWithdrawAmount" class="form-input" placeholder="0.00" step="0.01" min="0.01">
+            <div style="font-size:9px;color:var(--text-secondary);margin-top:4px;" id="purseModalHint">Withdraw anytime</div>
+            <div class="modal-actions">
+                <button class="btn-sm btn-outline" onclick="closePurseModal()">Cancel</button>
+                <button class="btn-sm btn-primary" onclick="withdrawPurse()">Withdraw</button>
+            </div>
+        </div>
+</div>
 
 </div>
 
@@ -686,6 +712,124 @@
             drawJourneyMap(target > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0);
         }
     });
+
+    var currentPurseName = '';
+var userType = 'MICRO';
+
+async function loadPurseCard() {
+    var card = document.getElementById('purseCard');
+    var content = document.getElementById('purseCardContent');
+    var title = document.getElementById('purseCardTitle');
+
+    if (!card || !content) return;
+
+    // Get user type
+    try {
+        var profile = await apiCall('/auth/profile/');
+        userType = profile.user_type || 'MICRO';
+    } catch(e) {}
+
+    var purses = [];
+
+    if (userType === 'MICRO') {
+        title.textContent = '🆘 Emergency Fund';
+        purses = ['Emergency'];
+    } else if (userType === 'BUSINESS') {
+        title.textContent = '🏪 Business Purses';
+        purses = ['Shop Rent', 'Inventory', 'Repair'];
+    } else if (userType === 'SALARY' || userType === 'DIASPORA') {
+        title.textContent = '🎯 Goal Purses';
+        purses = ['School Fees', 'House Rent'];
+    } else {
+        title.textContent = '💰 Purses';
+        content.innerHTML = '<span style="font-size:9px;">Switch profile type to unlock purses</span>';
+        return;
+    }
+
+    var icons = {
+        'Emergency': '🆘', 'Shop Rent': '🏪', 'Inventory': '📦', 'Repair': '🔧',
+        'School Fees': '🎓', 'House Rent': '🏠'
+    };
+
+    var html = '';
+    for (var i = 0; i < purses.length; i++) {
+        var name = purses[i];
+        var icon = icons[name] || '💰';
+        html += '<div class="purse-item" onclick="openPurseModal(\'' + name + '\')">' +
+            '<span class="p-icon">' + icon + '</span>' +
+            '<span class="p-name">' + name + '</span>' +
+            '<span class="p-balance" id="pbal_' + name.replace(/\s/g,'') + '">—</span>' +
+        '</div>';
+    }
+    content.innerHTML = html;
+
+    // Load balances
+        for (var i = 0; i < purses.length; i++) {
+            loadPurseBalance(purses[i]);
+        }
+    }
+
+    async function loadPurseBalance(name) {
+        try {
+            var res = await apiCall('/trading/purse/?name=' + encodeURIComponent(name));
+            var el = document.getElementById('pbal_' + name.replace(/\s/g,''));
+            if (el && res.balance !== undefined) {
+                el.textContent = formatCurrency(res.balance);
+            }
+        } catch(e) {}
+    }
+
+    function openPurseModal(name) {
+        currentPurseName = name;
+        document.getElementById('purseModalTitle').textContent = '💰 ' + name;
+        document.getElementById('purseWithdrawAmount').value = '';
+
+        var hints = {
+            'Emergency': 'Withdraw anytime, any amount',
+            'Shop Rent': 'Withdraw anytime',
+            'Inventory': 'Withdraw anytime',
+            'Repair': 'Withdraw anytime',
+            'School Fees': 'Withdrawable every 3 months',
+            'House Rent': 'Withdrawable once per year'
+        };
+        document.getElementById('purseModalHint').textContent = hints[name] || 'Withdraw anytime';
+
+        // Load balance into modal
+        apiCall('/trading/purse/?name=' + encodeURIComponent(name)).then(function(res) {
+            document.getElementById('purseModalBalance').textContent = formatCurrency(res.balance || 0);
+        });
+
+        document.getElementById('purseModal').style.display = 'flex';
+    }
+
+    function closePurseModal() {
+        document.getElementById('purseModal').style.display = 'none';
+        currentPurseName = '';
+    }
+
+    async function withdrawPurse() {
+        var amount = parseFloat(document.getElementById('purseWithdrawAmount').value);
+        if (!amount || amount <= 0) {
+            showModal('Enter a valid amount', 'warning');
+            return;
+        }
+        try {
+            var res = await apiCall('/trading/purse/withdraw/', 'POST', { name: currentPurseName, amount: amount });
+            if (res.success) {
+                showModal('✅ Withdrawn to Grand Balance!', 'success');
+                closePurseModal();
+                loadPurseCard();
+            } else {
+                showModal('❌ ' + (res.error || 'Failed'), 'error');
+            }
+        } catch(e) {
+            showModal('Network error', 'error');
+        }
+    }
+
+    // Call on load
+    loadPurseCard();
+
 
     // Init
     document.addEventListener('DOMContentLoaded', function() {
