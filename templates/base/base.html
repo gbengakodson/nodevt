@@ -275,6 +275,33 @@
         background: rgba(0, 0, 0, 0.5);
         backdrop-filter: blur(4px);
     }
+        .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.75);
+        z-index: 9999;
+        display: none;
+        align-items: center;
+        justify-content: center;
+    }
+    .modal-box {
+        background: #1E2329;
+        border: 1px solid #2B3139;
+        border-radius: 12px;
+        padding: 20px;
+        max-width: 450px;
+        width: 90%;
+        max-height: 80vh;
+        overflow-y: auto;
+    }
+    .modal-box h3 {
+        font-size: 15px;
+        color: #EAECEF;
+        margin-bottom: 14px;
+    }
 
     .custom-modal-container {
         position: relative;
