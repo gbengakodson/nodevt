@@ -266,6 +266,40 @@ class PublicUsersView(APIView):
         return Response(data)
 
 
+class AdminKYCActions(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        """Get pending KYC applications"""
+        from apps.accounts.models import User
+        pending = User.objects.filter(kyc_status='PENDING').order_by('-date_joined')
+        data = [{
+            'email': u.email,
+            'id_type': u.id_type,
+            'id_number': u.id_number,
+            'phone_number': u.phone_number,
+            'country': u.country,
+            'date_joined': u.date_joined.strftime('%Y-%m-%d'),
+            'kyc_status': u.kyc_status
+        } for u in pending]
+        return Response(data)
+
+    def post(self, request):
+        """Approve or reject KYC"""
+        email = request.data.get('email')
+        action = request.data.get('action')  # 'approve' or 'reject'
+
+        user = User.objects.get(email=email)
+        if action == 'approve':
+            user.kyc_status = 'APPROVED'
+            user.is_verified = True
+            user.date_verified = timezone.now()
+        elif action == 'reject':
+            user.kyc_status = 'REJECTED'
+        user.save()
+        return Response({'success': True})
+
+
 def anon_email(email):
     if not email: return 'Unknown'
     parts = email.split('@')

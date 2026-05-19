@@ -10,9 +10,11 @@ from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
 from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
 from apps.trading.views import send_daily_email_webhook, sweep_webhook
+from apps.wallets.admin_views import AdminKYCActions
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
+
 
 from apps.wallets.views import (
     AdminStatisticsView,
@@ -46,6 +48,7 @@ urlpatterns = [
     path('api/admin/deposits/', AdminDepositsView.as_view(), name='admin_deposits'),
     path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
+    path('api/admin/kyc/', AdminKYCActions.as_view(), name='admin_kyc'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),

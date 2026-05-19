@@ -222,7 +222,11 @@
     <!-- Account -->
     <div class="card">
         <div class="card-title">👤 Account <button class="btn-sm btn-primary" onclick="saveProfile()">Save</button></div>
-        <div class="card-row"><span class="card-label">Email</span><input type="email" id="editEmail" class="form-input" style="max-width:60%;margin-bottom:0;"></div>
+        <div class="card-row">
+            <span class="card-label">Email</span>
+            <input type="email" id="editEmail" class="form-input" style="max-width:60%;margin-bottom:0;opacity:0.7;" readonly>
+        </div>
+        <div style="font-size:9px;color:var(--text-secondary);margin-top:-4px;margin-bottom:8px;">To change your email, contact support via the <a href="/chat/" style="color:var(--primary);">chat page</a>.</div>
         <div class="card-row"><span class="card-label">Username</span><input type="text" id="editUsername" class="form-input" style="max-width:60%;margin-bottom:0;"></div>
         <div class="card-row"><span class="card-label">Password</span><button class="btn-sm btn-outline" onclick="openPasswordModal()">Change</button></div>
     </div>
@@ -410,14 +414,13 @@
     }
 
     async function saveProfile() {
-        var email = document.getElementById('editEmail').value.trim();
         var username = document.getElementById('editUsername').value.trim();
-        if (!email) return alert('Email required');
+        if (!username) return alert('Username required');
         try {
-            await apiCall('/auth/profile/', 'PUT', { email: email, username: username });
-            alert('Profile updated!');
+            await apiCall('/auth/profile/', 'PUT', { username: username });
+            showModal('✅ Profile updated!', 'success');
             loadProfile();
-        } catch(e) { alert('Failed'); }
+        } catch(e) { showModal('Failed to update', 'error'); }
     }
 
     async function submitKYC() {
@@ -434,8 +437,12 @@
                 country: country,
                 kyc_status: 'PENDING'
             });
-            if (res.email) { alert('Identity verification submitted!'); loadProfile(); }
-            else { alert(res.error || 'Failed'); }
+            if (res.email) {
+                showModal('✅ Identity verification submitted! Your KYC is pending review (24-48 hours). You can continue using NODE — deposits, trading, and withdrawals are not affected.', 'success');
+                loadProfile();
+            } else {
+                showModal(res.error || 'Failed', 'error');
+            }
         } catch(e) { alert('Error'); }
     }
 
