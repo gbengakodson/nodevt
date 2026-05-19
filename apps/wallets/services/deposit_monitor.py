@@ -4,7 +4,6 @@ from apps.wallets.models import Wallet, Transaction, WalletKey
 from django.contrib.auth import get_user_model
 from django.conf import settings
 from web3 import Web3
-from django.utils import timezone
 from datetime import timedelta
 
 User = get_user_model()
@@ -18,7 +17,7 @@ class DepositMonitor:
     TRANSFER_TOPIC = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
     CENTRAL_WALLET = settings.CENTRAL_WALLET_ADDRESS
     PRIVATE_KEY = settings.CENTRAL_WALLET_PRIVATE_KEY
-    GAS_BNB = Decimal('0.0005')  # BNB to send for gas
+    GAS_BNB = Decimal('0.0005')
 
     @classmethod
     def check_all_users(cls):
@@ -29,8 +28,9 @@ class DepositMonitor:
                 result = cls.check_deposits(wk.address, wk.user)
                 if result.get('amount', 0) > 0:
                     total += result['amount']
+                    print(f"Deposit: ${result['amount']:.2f} to {wk.user.email}")
             except Exception as e:
-                pass
+                print(f"Error checking {wk.user.email}: {e}")
         return total
 
     @classmethod
@@ -40,57 +40,55 @@ class DepositMonitor:
             if not w3.is_connected():
                 return {'amount': 0, 'deposits': []}
 
-            # Check USDC balance directly
-            usdc_contract = w3.eth.contract(
-                address=Web3.to_checksum_address(cls.USDC_ADDRESS),
-                abi=[{"constant": True, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf",
-                      "outputs": [{"name": "balance", "type": "uint256"}], "type": "function"}]
-            )
+            # Get transfer logs for incoming USDC
+            to_padded = '0x' + address[2:].lower().zfill(64)
 
-            balance = usdc_contract.functions.balanceOf(Web3.to_checksum_address(address)).call()
+            logs = w3.eth.get_logs({
+                'fromBlock': w3.eth.block_number - 20000,
+                'toBlock': 'latest',
+                'address': Web3.to_checksum_address(cls.USDC_ADDRESS),
+                'topics': [cls.TRANSFER_TOPIC, None, to_padded]
+            })
 
-            if balance == 0:
-                return {'amount': 0, 'deposits': []}
+            total_new = Decimal('0')
 
-            amount = Decimal(str(balance)) / Decimal(10 ** 18)
+            for log in logs:
+                tx_hash = log['transactionHash'].hex()
 
-            # Check if this exact deposit was already credited
-            if Transaction.objects.filter(
+                # Check if this transaction was already credited
+                if Transaction.objects.filter(
                     user=user,
                     transaction_type='DEPOSIT',
-                    amount=amount,
-                    metadata__to_address=address,
-                    created_at__gte=timezone.now() - timedelta(hours=1)  # Same deposit within 1 hour
-            ).exists():
-                cls._sweep_if_needed(w3, address, amount, user)
-                return {'amount': 0, 'deposits': []}
-                # Already credited, try to sweep
-                cls._sweep_if_needed(w3, address, amount, user)
-                return {'amount': 0, 'deposits': []}
+                    tx_hash=tx_hash
+                ).exists():
+                    continue  # Skip already credited
 
-            # Credit user's Grand Balance
-            grand_wallet, _ = Wallet.objects.get_or_create(
-                user=user, wallet_type='GRAND', defaults={'balance': Decimal('0')}
-            )
-            grand_wallet.balance += amount
-            grand_wallet.save()
+                deposit_amount = Decimal(str(int(log['data'].hex(), 16))) / Decimal(10 ** 18)
 
-            Transaction.objects.create(
-                user=user, transaction_type='DEPOSIT', amount=amount,
-                fee=Decimal('0'), status='COMPLETED',
-                metadata={'to_address': address, 'source': 'web3_auto', 'amount': str(amount)},
-                completed_at=timezone.now()
-            )
+                # Credit this specific transaction
+                grand_wallet, _ = Wallet.objects.get_or_create(
+                    user=user, wallet_type='GRAND', defaults={'balance': Decimal('0')}
+                )
+                grand_wallet.balance += deposit_amount
+                grand_wallet.save()
 
-            print(f"✅ Credited ${amount:.2f} to {user.email}")
+                Transaction.objects.create(
+                    user=user, transaction_type='DEPOSIT', amount=deposit_amount,
+                    fee=Decimal('0'), status='COMPLETED', tx_hash=tx_hash,
+                    metadata={'to_address': address, 'source': 'web3_txhash'},
+                    completed_at=timezone.now()
+                )
 
-            # Auto-sweep to central
-            cls._sweep_if_needed(w3, address, amount, user)
+                total_new += deposit_amount
+                print(f"  ✅ Credited ${deposit_amount:.2f} — {tx_hash[:20]}...")
 
-            return {'amount': float(amount), 'deposits': [{'amount': float(amount)}]}
+            if total_new > 0:
+                cls._sweep_if_needed(w3, address, total_new, user)
+
+            return {'amount': float(total_new), 'deposits': []}
 
         except Exception as e:
-            print(f"Error: {e}")
+            print(f"Error checking deposits for {address}: {e}")
             return {'amount': 0, 'deposits': []}
 
     @classmethod
@@ -100,7 +98,6 @@ class DepositMonitor:
             addr = Web3.to_checksum_address(address)
             central = Web3.to_checksum_address(cls.CENTRAL_WALLET)
 
-            # Check USDC balance on blockchain - if 0, already swept
             usdc_contract = w3.eth.contract(
                 address=Web3.to_checksum_address(cls.USDC_ADDRESS),
                 abi=[{"constant": True, "inputs": [{"name": "_owner", "type": "address"}], "name": "balanceOf",
@@ -114,19 +111,15 @@ class DepositMonitor:
             bnb_balance = w3.eth.get_balance(addr)
             gas_needed = w3.to_wei('0.00001', 'ether')
 
-            # Send BNB if needed
             if bnb_balance < gas_needed:
                 cls._send_gas(w3, addr)
                 import time
-                time.sleep(3)  # Wait for BNB to arrive
+                time.sleep(3)
 
-            # Sweep USDC
             cls._sweep_usdc(w3, addr, central, amount, user)
 
         except Exception as e:
             print(f"Sweep error for {user.email}: {e}")
-
-
 
     @classmethod
     def _send_gas(cls, w3, to_address):
@@ -159,7 +152,7 @@ class DepositMonitor:
     def _sweep_usdc(cls, w3, from_address, to_address, amount, user):
         """Sweep USDC from user wallet to central"""
         try:
-            wk = WalletKey.objects.get(address=from_address.lower())
+            wk = WalletKey.objects.get(address__iexact=from_address)
             private_key = wk.get_private_key()
 
             usdc_contract = w3.eth.contract(
@@ -192,7 +185,7 @@ class DepositMonitor:
                 user=user, transaction_type='WITHDRAWAL',
                 amount=amount, fee=Decimal('0'), status='COMPLETED',
                 tx_hash=tx_hash.hex(),
-                metadata={'source': 'sweep', 'to': to_address},
+                metadata={'source': 'sweep', 'to': str(to_address)},
                 completed_at=timezone.now()
             )
 
@@ -200,4 +193,3 @@ class DepositMonitor:
 
         except Exception as e:
             print(f"Sweep error: {e}")
-
