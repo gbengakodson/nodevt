@@ -328,22 +328,17 @@
     </div>
 </div>
 
-<!-- Email Modal -->
-<div class="modal-overlay" id="emailModal">
-    <div class="modal-box">
-        <h3>📧 Send Email to All Users</h3>
-        <label>Subject</label>
-        <input type="text" id="emailSubject" placeholder="Daily Update">
-        <label>Message</label>
-        <textarea id="emailMessage" placeholder="Your message..."></textarea>
-        <div class="modal-actions">
-            <button class="btn-cancel" onclick="closeEmailModal()">Cancel</button>
-            <button class="btn-send" onclick="sendEmail()">Send to All</button>
-        </div>
+    <div class="card" style="margin-top:10px;">
+        <div class="card-title">📢 Broadcast Message</div>
+        <input type="text" id="broadcastTitle" class="form-input" placeholder="Title" style="margin-bottom:8px;">
+        <textarea id="broadcastMessage" class="form-input" rows="3" placeholder="Message to all users..." style="margin-bottom:8px;"></textarea>
+        <select id="broadcastType" class="form-select" style="margin-bottom:8px;">
+            <option value="INFO">Information</option>
+            <option value="ALERT">Alert</option>
+            <option value="TIP">Tip</option>
+        </select>
+        <button class="btn-sm btn-primary" onclick="sendBroadcast()">📢 Send to All Users</button>
     </div>
-</div>
-
-<button class="btn-email" onclick="openEmailModal()">📧 Email Users</button>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -488,16 +483,28 @@
         loadWithdrawals(); loadStats();
     }
 
-    // Email
-    function openEmailModal() { document.getElementById('emailModal').style.display = 'flex'; }
-    function closeEmailModal() { document.getElementById('emailModal').style.display = 'none'; }
+    async function sendBroadcast() {
+        var title = document.getElementById('broadcastTitle').value.trim();
+        var message = document.getElementById('broadcastMessage').value.trim();
+        var type = document.getElementById('broadcastType').value;
+        if (!title || !message) { alert('Fill all fields'); return; }
 
-    async function sendEmail() {
-        var subject = document.getElementById('emailSubject').value;
-        var message = document.getElementById('emailMessage').value;
-        if (!subject || !message) return alert('Fill both fields');
-        var result = await apiCall('/admin/send-email/', 'POST', { subject: subject, message: message, user_ids: [] });
-        if (result.success) { alert('Sent to ' + result.sent_count + ' users'); closeEmailModal(); }
+        try {
+            var res = await fetch('/api/admin/broadcast/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+                },
+                body: JSON.stringify({ title: title, message: message, type: type })
+            });
+            var data = await res.json();
+            alert('✅ Sent to ' + data.sent_to + ' users!');
+            document.getElementById('broadcastTitle').value = '';
+            document.getElementById('broadcastMessage').value = '';
+        } catch(e) {
+            alert('Failed to send');
+        }
     }
 
     async function loadKYC() {

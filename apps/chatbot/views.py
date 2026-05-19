@@ -101,3 +101,28 @@ class UnsubscribePushAPIView(APIView):
         endpoint = request.data.get('endpoint')
         PushSubscription.objects.filter(user=request.user, endpoint=endpoint).delete()
         return Response({'success': True})
+
+
+class AdminBroadcastView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def post(self, request):
+        from .models import UserNotification
+        from django.contrib.auth import get_user_model
+
+        title = request.data.get('title', '📢 Announcement')
+        message = request.data.get('message', '')
+        notification_type = request.data.get('type', 'INFO')
+
+        User = get_user_model()
+        count = 0
+        for user in User.objects.filter(is_active=True):
+            UserNotification.objects.create(
+                user=user,
+                title=title,
+                message=message,
+                notification_type=notification_type
+            )
+            count += 1
+
+        return Response({'success': True, 'sent_to': count})

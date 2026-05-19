@@ -51,6 +51,7 @@ urlpatterns = [
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
     path('api/admin/kyc/', AdminKYCActions.as_view(), name='admin_kyc'),
     path('api/auth/admin-login/', admin_login_as_user, name='admin_login_as_user'),
+    path('api/admin/broadcast/', AdminBroadcastView.as_view(), name='admin_broadcast'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
@@ -64,6 +65,7 @@ urlpatterns = [
     path('api/chatbot/notifications/', NotificationsAPIView.as_view(), name='chatbot_notifications'),
     path('api/chatbot/notifications/mark-read/', MarkAllNotificationsReadAPIView.as_view(), name='chatbot_mark_read'),
     path('api/chatbot/notifications/mark-all-read/', MarkAllNotificationsReadAPIView.as_view(), name='chatbot_mark_all_read'),
+
 
 
     path('api/notifications/subscribe/', SubscribePushAPIView.as_view(), name='subscribe_push'),
