@@ -304,6 +304,28 @@
             </table>
         </div>
     </div>
+    <!-- KYC Rejection Modal -->
+    <div class="modal-overlay" id="kycRejectModal" style="display:none;">
+        <div class="modal-box">
+            <h3>❌ Reject KYC — <span id="kycRejectEmail"></span></h3>
+            <label style="font-size:10px;color:var(--text-secondary);">Reason for Rejection:</label>
+            <select id="kycRejectReason" class="form-select" style="margin-bottom:8px;">
+                <option value="">Select reason...</option>
+                <option value="Invalid ID number — please check and resubmit">Invalid ID number</option>
+                <option value="ID type mismatch — please use NIN, Passport, or Driver's License">Wrong ID type</option>
+                <option value="Name doesn't match ID — please use your legal name">Name mismatch</option>
+                <option value="Blurry or unreadable — please resubmit clearly">Unclear document</option>
+                <option value="Incomplete information — fill all fields">Incomplete info</option>
+                <option value="Other — see custom message">Other</option>
+            </select>
+            <label style="font-size:10px;color:var(--text-secondary);">Custom Message (optional):</label>
+            <textarea id="kycCustomReason" class="form-input" rows="2" placeholder="Additional details..."></textarea>
+            <div class="modal-actions">
+                <button class="btn-sm btn-outline" onclick="closeKYCModal()">Cancel</button>
+                <button class="btn-sm btn-danger" onclick="var reason = document.getElementById('kycRejectReason').value || document.getElementById('kycCustomReason').value; processKYC(reason)">Reject</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <!-- Email Modal -->
@@ -487,9 +509,36 @@
         } catch(e) { console.error(e); }
     }
 
-    async function kycAction(email, action) {
-        await apiCall('/admin/kyc/', 'POST', { email: email, action: action });
+    var currentKYCEmail = '';
+    var currentKYCAction = '';
+
+    function kycAction(email, action) {
+        currentKYCEmail = email;
+        currentKYCAction = action;
+
+        if (action === 'approve') {
+            if (confirm('Approve KYC for ' + email + '?')) {
+                processKYC();
+            }
+        } else {
+            // Show rejection reason modal
+            document.getElementById('kycRejectModal').style.display = 'flex';
+            document.getElementById('kycRejectEmail').textContent = email;
+        }
+    }
+
+    async function processKYC(reason) {
+        var data = { email: currentKYCEmail, action: currentKYCAction };
+        if (reason) data.reason = reason;
+
+        await apiCall('/admin/kyc/', 'POST', data);
         loadKYC();
+        closeKYCModal();
+    }
+
+    function closeKYCModal() {
+        document.getElementById('kycRejectModal').style.display = 'none';
+        document.getElementById('kycRejectReason').value = '';
     }
 
     // Yield Rate

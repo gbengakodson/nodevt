@@ -285,9 +285,9 @@ class AdminKYCActions(APIView):
         return Response(data)
 
     def post(self, request):
-        """Approve or reject KYC"""
         email = request.data.get('email')
-        action = request.data.get('action')  # 'approve' or 'reject'
+        action = request.data.get('action')
+        reason = request.data.get('reason', '')
 
         user = User.objects.get(email=email)
         if action == 'approve':
@@ -296,6 +296,14 @@ class AdminKYCActions(APIView):
             user.date_verified = timezone.now()
         elif action == 'reject':
             user.kyc_status = 'REJECTED'
+            # Store rejection reason in metadata or a notification
+            from apps.chatbot.models import UserNotification
+            NotificationService.create_notification(
+                user=user,
+                title='🔴 KYC Rejected — Action Required',
+                message=f'Your KYC was rejected. Reason: {reason}. Please update your information and resubmit.',
+                notification_type='ALERT'
+            )
         user.save()
         return Response({'success': True})
 
