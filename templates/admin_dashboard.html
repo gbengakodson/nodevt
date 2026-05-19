@@ -259,6 +259,7 @@
         <button class="tab-btn" data-tab="users">Users</button>
         <button class="tab-btn" data-tab="holders">Holders</button>
         <button class="tab-btn" data-tab="chat">Messages</button>
+        <button class="tab-btn" data-tab="kyc">KYC</button>
     </div>
 
     <!-- Deposits -->
@@ -293,6 +294,14 @@
                     <button onclick="sendAdminReply()">Send</button>
                 </div>
             </div>
+        </div>
+    </div>
+    <div id="panel-kyc" class="card" style="display:none;">
+        <div class="table-wrap">
+            <table class="compact-table">
+                <thead><tr><th>User</th><th>ID Type</th><th>ID Number</th><th>Country</th><th>Status</th><th>Actions</th></tr></thead>
+                <tbody id="kycList"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -469,6 +478,20 @@
         if (result.success) { alert('Sent to ' + result.sent_count + ' users'); closeEmailModal(); }
     }
 
+    async function loadKYC() {
+        try {
+            var data = await apiCall('/admin/kyc/');
+            document.getElementById('kycList').innerHTML = data.map(function(u) {
+                return '<tr><td>' + u.email + '</td><td>' + (u.id_type || '-') + '</td><td>' + (u.id_number || '-') + '</td><td>' + (u.country || '-') + '</td><td><span class="badge badge-yellow">' + u.kyc_status + '</span></td><td><button class="btn-sm btn-confirm" onclick="kycAction(\'' + u.email + '\',\'approve\')">✓</button> <button class="btn-sm btn-reject" onclick="kycAction(\'' + u.email + '\',\'reject\')">✕</button></td></tr>';
+            }).join('') || '<tr><td colspan="6" style="text-align:center;">No pending KYC</td></tr>';
+        } catch(e) { console.error(e); }
+    }
+
+    async function kycAction(email, action) {
+        await apiCall('/admin/kyc/', 'POST', { email: email, action: action });
+        loadKYC();
+    }
+
     // Yield Rate
     async function loadYieldRate() {
         var res = await fetch(API + '/trading/admin/yield-rate/', { headers: { 'Authorization': 'Bearer ' + getToken() } });
@@ -489,7 +512,7 @@
             document.querySelectorAll('.tab-btn').forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
             var tab = this.getAttribute('data-tab');
-            ['deposits','withdrawals','users','holders','chat'].forEach(function(t) {
+            ['deposits','withdrawals','users','holders','kyc','chat'].forEach(function(t) {
                 document.getElementById('panel-' + t).style.display = t === tab ? 'block' : 'none';
             });
             if (tab === 'deposits') loadDeposits();
@@ -497,6 +520,7 @@
             if (tab === 'users') loadUsers();
             if (tab === 'holders') loadHolders();
             if (tab === 'chat') loadChatUsers();
+            if (tab === 'kyc') loadKYC();
         });
     });
 

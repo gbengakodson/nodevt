@@ -481,7 +481,7 @@
         </div>
     </div>
     <!-- Purse Withdraw Modal -->
-    <div class="modal-overlay" id="purseModal" style="display:none;">
+    <div class="modal-overlay" id="purseModal" style="display:none !important;">
         <div class="modal-box">
             <h3 id="purseModalTitle">💰 Purse</h3>
             <div style="margin-bottom:12px;">
@@ -492,7 +492,7 @@
             <input type="number" id="purseWithdrawAmount" class="form-input" placeholder="0.00" step="0.01" min="0.01">
             <div style="font-size:9px;color:var(--text-secondary);margin-top:4px;" id="purseModalHint">Withdraw anytime</div>
             <div class="modal-actions">
-                <button class="btn-sm btn-outline" onclick="closePurseModal()">Cancel</button>
+                <button class="btn-sm btn-outline" id="btnCancelPurse">Cancel</button>
                 <button class="btn-sm btn-primary" onclick="withdrawPurse()">Withdraw</button>
             </div>
         </div>
@@ -759,6 +759,13 @@
 var userType = 'MICRO';
 
 async function loadPurseCard() {
+    // Ensure modal is closed on load
+    var modal = document.getElementById('purseModal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
+    }
+
     var card = document.getElementById('purseCard');
     var content = document.getElementById('purseCardContent');
     var title = document.getElementById('purseCardTitle');
@@ -804,6 +811,7 @@ async function loadPurseCard() {
         '</div>';
     }
     content.innerHTML = html;
+    document.getElementById('btnCancelPurse').onclick = closePurseModal;
 
     // Load balances
         for (var i = 0; i < purses.length; i++) {
