@@ -125,6 +125,15 @@ class UserProfileView(APIView):
         user = request.user
         data = request.data
 
+        # If KYC approved, lock all fields except username
+        if user.kyc_status == 'APPROVED':
+            if 'username' in data:
+                user.username = data['username']
+                user.save()
+            serializer = UserSerializer(user)
+            return Response(serializer.data)
+
+        # Normal updates for non-verified users
         if 'email' in data:
             user.email = data['email']
         if 'username' in data:
@@ -146,6 +155,7 @@ class UserProfileView(APIView):
 
     def patch(self, request):
         return self.put(request)
+
 
 
 @api_view(['POST'])

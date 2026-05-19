@@ -362,6 +362,20 @@
             document.getElementById('kycBadge').innerHTML = '<span class="badge ' + badgeClass + '">' + badgeText + '</span>';
             document.getElementById('kycStatus').innerHTML = '<span class="badge ' + badgeClass + '">' + kycStatus + '</span>';
             document.getElementById('kycCountry').value = userData.country || '';
+            // If KYC is APPROVED, lock all fields
+            if (userData.kyc_status === 'APPROVED') {
+                document.getElementById('editEmail').readOnly = true;
+                document.getElementById('editUsername').readOnly = true;
+                document.getElementById('kycIdType').disabled = true;
+                document.getElementById('kycIdNumber').readOnly = true;
+                document.getElementById('kycNationality').readOnly = true;
+                document.getElementById('kycCountry').disabled = true;
+                // Hide submit buttons
+                var kycBtn = document.querySelector('#kycCard .btn-primary');
+                if (kycBtn) kycBtn.style.display = 'none';
+                // Show verified badge
+                document.getElementById('kycStatus').innerHTML = '<span class="badge badge-approved">✅ Verified — Data Locked</span>';
+            }
 
             document.getElementById('grandBal').textContent = fc(balanceData.grand_balance);
             document.getElementById('yieldBal').textContent = fc(balanceData.yield_balance);
