@@ -610,31 +610,20 @@
 
         <div class="order-card">
             <div class="order-tabs">
-                <button class="order-tab active" data-tab="market">Market Order</button>
-                <button class="order-tab" data-tab="grid">Spot Grid Bot</button>
+                <button class="order-tab" data-tab="market" disabled style="opacity:0.4;cursor:not-allowed;">Market Order 🔒</button>
+                <button class="order-tab active" data-tab="grid">Spot Grid Bot</button>
             </div>
 
             <!-- Market Order Panel (Simple Spot Buy/Sell) -->
-            <div id="marketPanel" class="order-form">
-                <div class="form-group">
-                    <label class="form-label">Amount (USDC)</label>
-                    <input type="number" id="marketAmount" class="form-input" step="0.01" placeholder="0.00">
-                    <div class="perc-group">
-                        <button class="perc-btn" data-market-perc="25">25%</button>
-                        <button class="perc-btn" data-market-perc="50">50%</button>
-                        <button class="perc-btn" data-market-perc="75">75%</button>
-                        <button class="perc-btn" data-market-perc="100">100%</button>
-                    </div>
+            <div id="marketPanel" class="order-form" style="display: none;">
+                <div style="text-align:center;padding:40px;color:var(--text-secondary);font-size:12px;">
+                    🚧 Market orders are temporarily unavailable.<br>
+                    Use <strong>Spot Grid Bot</strong> for crypto automation.
                 </div>
-                <div class="fee-info">
-                    <i class="fas fa-info-circle"></i> Fee: 1% for market orders
-                </div>
-                <button class="btn-buy" id="buyBtnMarket">Buy Market</button>
-                <button class="btn-sell" id="sellBtnMarket">Sell Market</button>
             </div>
 
             <!-- Spot Grid Bot Panel -->
-            <div id="gridPanel" class="order-form" style="display: none;">
+            <div id="gridPanel" class="order-form" style="display: block;">
                 <div class="form-group">
                     <label class="form-label">Investment Amount (USDC)</label>
                     <input type="number" id="gridAmount" class="form-input" step="10" placeholder="Minimum 10 USDC">
