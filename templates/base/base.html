@@ -208,39 +208,33 @@
         top: 50%;
         left: 50%;
         transform: translate(-50%, -50%);
-        width: 350px;
-        max-height: 400px;
-        background: white;
+        width: 380px;
+        max-height: 450px;
+        background: #1E2329;
+        border: 1px solid #2B3139;
         border-radius: 12px;
-        box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
         z-index: 10001;
         overflow: hidden;
     }
 
-    .notification-item {
-        padding: 12px;
-        border-bottom: 1px solid #E2E4E8;
+    .notif-item {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.04);
         cursor: pointer;
+        transition: background 0.15s;
     }
-
-    .notification-item:hover {
-        background: #F8F9FA;
-    }
+    .notif-item:hover { background: rgba(240,185,11,0.03); }
+    .notif-item.unread { background: rgba(240,185,11,0.06); }
+    .notif-item .n-title { font-weight: 600; font-size: 11px; color: #EAECEF; }
+    .notif-item .n-body { font-size: 10px; color: #848E9C; margin-top: 3px; }
+    .notif-item .n-time { font-size: 9px; color: #5E6673; margin-top: 2px; }
 
     /* Responsive */
     @media (max-width: 768px) {
-        .live-clock {
-            font-size: 9px;
-            padding: 4px 8px;
-        }
-        .mobile-footer {
-            display: flex;
-        }
-        .notification-panel {
-            width: 90%;
-            left: 5%;
-            transform: translate(0, -50%);
-        }
+        .live-clock { font-size: 9px; padding: 4px 8px; }
+        .mobile-footer { display: flex; }
+        .notification-panel { width: 90%; left: 5%; transform: translate(0, -50%); }
     }
 
     @media (min-width: 769px) and (max-width: 1024px) {
@@ -673,11 +667,11 @@
             for (var i = 0; i < data.length; i++) {
                 var n = data[i];
                 if (!n.is_read) unread++;
-                var bg = n.is_read ? '' : 'background:rgba(240,185,11,0.05);';
-                html += '<div style="padding:10px;border-bottom:1px solid rgba(255,255,255,0.05);' + bg + '">' +
-                    '<div style="font-weight:600;font-size:11px;color:var(--text-primary);">' + escHtml(n.title) + '</div>' +
-                    '<div style="font-size:10px;color:var(--text-secondary);margin-top:2px;">' + escHtml(n.message) + '</div>' +
-                    '<div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">' + n.created_at + '</div></div>';
+                var bg = n.is_read ? '' : ' unread';
+                html += '<div class="notif-item' + bg + '">' +
+                    '<div class="n-title">' + escHtml(n.title) + '</div>' +
+                    '<div class="n-body">' + escHtml(n.message) + '</div>' +
+                    '<div class="n-time">' + n.created_at + '</div></div>';
             }
             document.getElementById('notifList').innerHTML = html || '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No notifications</div>';
 
