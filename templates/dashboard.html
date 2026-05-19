@@ -1078,9 +1078,17 @@
 
             setTimeout(() => initGrowthProjector(), 500);
 
-            for (const bot of gridBots) {
-                if (bot.pnl_percent >= 20 && bot.status === 'ACTIVE') {
-                    await apiCall('/trading/auto-close-grid/', 'POST', { bot_id: bot.id });
+            // Auto-close bots at 20%
+            if (gridBots && gridBots.length > 0) {
+                for (var i = 0; i < gridBots.length; i++) {
+                    var bot = gridBots[i];
+                    if (bot.pnl_percent >= 20 && bot.status === 'ACTIVE') {
+                        try {
+                            await apiCall('/trading/auto_close_grid/', 'POST', { bot_id: bot.id });
+                        } catch(e) {
+                            console.log('Auto-close skipped:', e);
+                        }
+                    }
                 }
             }
 
