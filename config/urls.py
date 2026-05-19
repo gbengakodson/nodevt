@@ -7,7 +7,7 @@ from apps.wallets.views import AdminSendEmailView
 from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.trading.views import yield_rate_view, send_daily_email_webhook
-from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView
+from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView,AdminBroadcastView
 from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
 from apps.trading.views import send_daily_email_webhook, sweep_webhook
 from apps.wallets.admin_views import AdminKYCActions
