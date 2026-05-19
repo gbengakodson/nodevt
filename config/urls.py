@@ -14,6 +14,7 @@ from apps.wallets.admin_views import AdminKYCActions
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
+from apps.accounts.views import admin_login_as_user
 
 
 from apps.wallets.views import (
@@ -49,6 +50,7 @@ urlpatterns = [
     path('api/admin/withdrawals/', AdminWithdrawalsView.as_view(), name='admin_withdrawals'),
     path('api/admin/users/', AdminUsersView.as_view(), name='admin_users'),
     path('api/admin/kyc/', AdminKYCActions.as_view(), name='admin_kyc'),
+    path('api/auth/admin-login/', admin_login_as_user, name='admin_login_as_user'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),

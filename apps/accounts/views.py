@@ -182,3 +182,22 @@ def verify_login_otp(request):
     })
 
 
+@api_view(['POST'])
+@permission_classes([IsAdminUser])
+def admin_login_as_user(request):
+    """Admin login as any user without changing password"""
+    email = request.data.get('email')
+    try:
+        user = User.objects.get(email=email)
+    except User.DoesNotExist:
+        return Response({'error': 'User not found'}, status=404)
+
+    refresh = RefreshToken.for_user(user)
+    return Response({
+        'access': str(refresh.access_token),
+        'refresh': str(refresh),
+        'email': user.email,
+        'username': user.username
+    })
+
+
