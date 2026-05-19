@@ -3,351 +3,65 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NODE 2.0</title>
+    <title>NODE — Crypto Automation on the Go!</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <link rel="manifest" href="/static/manifest.json">
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
-            min-height: 100vh;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-            color: white;
-        }
-
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            z-index: 1000;
-            background: rgba(11, 14, 17, 0.95);
-            backdrop-filter: blur(10px);
-            padding: 1rem 2rem;
-            border-bottom: 1px solid rgba(240, 185, 11, 0.2);
-        }
-
-        .navbar-brand {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            text-decoration: none;
-        }
-
-        .navbar-nav .nav-link {
-            color: #8A8F9E !important;
-            font-size: 14px;
-            transition: color 0.3s;
-        }
-
-        .navbar-nav .nav-link:hover {
-            color: #F0B90B !important;
-        }
-
-        .btn-login {
-            background: transparent;
-            border: 1px solid #F0B90B;
-            color: #F0B90B;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 500;
-            transition: all 0.3s;
-        }
-
-        .btn-login:hover {
-            background: #F0B90B;
-            color: #0B0E11;
-        }
-
-        .btn-register {
-            background: #F0B90B;
-            border: none;
-            color: #0B0E11;
-            padding: 8px 20px;
-            border-radius: 40px;
-            font-weight: 600;
-            margin-left: 12px;
-            transition: all 0.3s;
-        }
-
-        .btn-register:hover {
-            background: #E0A800;
-            transform: translateY(-2px);
-        }
-
-        .hero {
-            min-height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 100px 20px 60px;
-        }
-
-        .hero-logo {
-            margin-bottom: 32px;
-        }
-
-        .hero h1 {
-            font-size: 56px;
-            font-weight: 700;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #FFFFFF 0%, #F0B90B 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .hero p {
-            font-size: 18px;
-            color: #8A8F9E;
-            max-width: 600px;
-            margin: 0 auto 32px;
-        }
-
-        .btn-hero-primary {
-            background: #F0B90B;
-            color: #0B0E11;
-            padding: 14px 36px;
-            border-radius: 40px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-        }
-
-        .btn-hero-primary:hover {
-            background: #E0A800;
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3);
-        }
-
-        .btn-hero-secondary {
-            background: transparent;
-            border: 1px solid #F0B90B;
-            color: #F0B90B;
-            padding: 14px 36px;
-            border-radius: 40px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            margin-left: 16px;
-            transition: all 0.3s;
-        }
-
-        .btn-hero-secondary:hover {
-            background: rgba(240, 185, 11, 0.1);
-            transform: translateY(-2px);
-        }
-
-        .stats-section {
-            padding: 80px 0;
-            background: rgba(30, 35, 41, 0.5);
-            border-top: 1px solid rgba(240, 185, 11, 0.1);
-            border-bottom: 1px solid rgba(240, 185, 11, 0.1);
-        }
-
-        .stat-number {
-            font-size: 48px;
-            font-weight: 700;
-            color: #F0B90B;
-            margin-bottom: 8px;
-        }
-
-        .stat-label {
-            font-size: 14px;
-            color: #8A8F9E;
-        }
-
-        .features-section {
-            padding: 80px 0;
-        }
-
-        .section-title {
-            font-size: 36px;
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 16px;
-        }
-
-        .section-subtitle {
-            font-size: 16px;
-            color: #8A8F9E;
-            text-align: center;
-            margin-bottom: 48px;
-            max-width: 700px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        .feature-card {
-            background: rgba(30, 35, 41, 0.8);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 32px;
-            text-align: center;
-            border: 1px solid rgba(240, 185, 11, 0.2);
-            transition: all 0.3s;
-            height: 100%;
-        }
-
-        .feature-card:hover {
-            transform: translateY(-5px);
-            border-color: #F0B90B;
-        }
-
-        .feature-icon {
-            width: 64px;
-            height: 64px;
-            background: rgba(240, 185, 11, 0.1);
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            font-size: 28px;
-            color: #F0B90B;
-        }
-
-        .feature-title {
-            font-size: 18px;
-            font-weight: 600;
-            margin-bottom: 12px;
-        }
-
-        .feature-text {
-            font-size: 13px;
-            color: #8A8F9E;
-            line-height: 1.6;
-        }
-
-        .ai-grid-card {
-            background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%);
-            border-radius: 20px;
-            padding: 40px;
-            text-align: center;
-            border: 1px solid #F0B90B;
-        }
-
-        .grid-stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 30px 0;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-
-        .grid-stat-value {
-            font-size: 36px;
-            font-weight: 700;
-            color: #F0B90B;
-        }
-
-        .price-movement {
-            display: flex;
-            justify-content: center;
-            gap: 40px;
-            margin: 30px 0;
-        }
-
-        .movement-up {
-            color: #0ECB81;
-            text-align: center;
-        }
-
-        .movement-down {
-            color: #F6465D;
-            text-align: center;
-        }
-
-        .movement-value {
-            font-size: 24px;
-            font-weight: 700;
-        }
-
-        .cta-section {
-            padding: 80px 0;
-            background: linear-gradient(135deg, #F0B90B 0%, #E0A800 100%);
-            text-align: center;
-        }
-
-        .cta-section h2 {
-            font-size: 32px;
-            font-weight: 700;
-            color: #0B0E11;
-            margin-bottom: 16px;
-        }
-
-        .cta-section p {
-            font-size: 16px;
-            color: #1E2329;
-            margin-bottom: 32px;
-        }
-
-        .btn-cta {
-            background: #0B0E11;
-            color: #F0B90B;
-            padding: 14px 36px;
-            border-radius: 40px;
-            font-weight: 600;
-            text-decoration: none;
-            display: inline-block;
-            transition: all 0.3s;
-        }
-
-        .btn-cta:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
-        }
-
-        .footer {
-            padding: 48px 0 24px;
-            border-top: 1px solid rgba(240, 185, 11, 0.1);
-        }
-
-        .footer-links a {
-            color: #8A8F9E;
-            text-decoration: none;
-            font-size: 13px;
-            transition: color 0.3s;
-        }
-
-        .footer-links a:hover {
-            color: #F0B90B;
-        }
-
-        @media (max-width: 768px) {
-            .hero h1 { font-size: 36px; }
-            .hero p { font-size: 14px; }
-            .stat-number { font-size: 32px; }
-            .section-title { font-size: 28px; }
-            .btn-hero-primary, .btn-hero-secondary { padding: 10px 24px; }
-            .grid-stat-value { font-size: 24px; }
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%); min-height: 100vh; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif; color: white; }
+        .navbar { position: fixed; top: 0; width: 100%; z-index: 1000; background: rgba(11, 14, 17, 0.95); backdrop-filter: blur(10px); padding: 1rem 2rem; border-bottom: 1px solid rgba(240, 185, 11, 0.2); }
+        .navbar-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; }
+        .navbar-nav .nav-link { color: #8A8F9E !important; font-size: 14px; transition: color 0.3s; }
+        .navbar-nav .nav-link:hover { color: #F0B90B !important; }
+        .btn-login { background: transparent; border: 1px solid #F0B90B; color: #F0B90B; padding: 8px 20px; border-radius: 40px; font-weight: 500; transition: all 0.3s; text-decoration: none; }
+        .btn-login:hover { background: #F0B90B; color: #0B0E11; }
+        .btn-register { background: #F0B90B; border: none; color: #0B0E11; padding: 8px 20px; border-radius: 40px; font-weight: 600; margin-left: 12px; transition: all 0.3s; text-decoration: none; }
+        .btn-register:hover { background: #E0A800; transform: translateY(-2px); }
+        .hero { min-height: 100vh; display: flex; align-items: center; justify-content: center; text-align: center; padding: 100px 20px 60px; }
+        .hero h1 { font-size: 56px; font-weight: 700; margin-bottom: 20px; background: linear-gradient(135deg, #FFFFFF 0%, #F0B90B 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+        .hero p { font-size: 18px; color: #8A8F9E; max-width: 600px; margin: 0 auto 32px; }
+        .btn-hero-primary { background: #F0B90B; color: #0B0E11; padding: 14px 36px; border-radius: 40px; font-weight: 600; text-decoration: none; display: inline-block; transition: all 0.3s; }
+        .btn-hero-primary:hover { background: #E0A800; transform: translateY(-2px); box-shadow: 0 8px 20px rgba(240, 185, 11, 0.3); }
+        .btn-hero-secondary { background: transparent; border: 1px solid #F0B90B; color: #F0B90B; padding: 14px 36px; border-radius: 40px; font-weight: 600; text-decoration: none; display: inline-block; margin-left: 16px; transition: all 0.3s; }
+        .btn-hero-secondary:hover { background: rgba(240, 185, 11, 0.1); transform: translateY(-2px); }
+        .stats-section { padding: 80px 0; background: rgba(30, 35, 41, 0.5); border-top: 1px solid rgba(240, 185, 11, 0.1); border-bottom: 1px solid rgba(240, 185, 11, 0.1); }
+        .stat-number { font-size: 48px; font-weight: 700; color: #F0B90B; margin-bottom: 8px; }
+        .stat-label { font-size: 14px; color: #8A8F9E; }
+        .features-section { padding: 80px 0; }
+        .section-title { font-size: 36px; font-weight: 700; text-align: center; margin-bottom: 16px; }
+        .section-subtitle { font-size: 16px; color: #8A8F9E; text-align: center; margin-bottom: 48px; max-width: 700px; margin-left: auto; margin-right: auto; }
+        .feature-card { background: rgba(30, 35, 41, 0.8); backdrop-filter: blur(10px); border-radius: 20px; padding: 32px; text-align: center; border: 1px solid rgba(240, 185, 11, 0.2); transition: all 0.3s; height: 100%; }
+        .feature-card:hover { transform: translateY(-5px); border-color: #F0B90B; }
+        .feature-icon { width: 64px; height: 64px; background: rgba(240, 185, 11, 0.1); border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; font-size: 28px; color: #F0B90B; }
+        .feature-title { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+        .feature-text { font-size: 13px; color: #8A8F9E; line-height: 1.6; }
+        .faq-card { background: rgba(30, 35, 41, 0.8); border-radius: 12px; padding: 16px; border: 1px solid rgba(240, 185, 11, 0.15); cursor: pointer; transition: all 0.2s; margin-bottom: 8px; }
+        .faq-card:hover { border-color: #F0B90B; background: rgba(240, 185, 11, 0.05); }
+        .faq-card .faq-q { font-size: 14px; font-weight: 600; color: #EAECEF; }
+        .faq-card .faq-a { font-size: 12px; color: #8A8F9E; margin-top: 4px; display: none; }
+        .faq-card.open .faq-a { display: block; }
+        .cta-section { padding: 80px 0; background: linear-gradient(135deg, #F0B90B 0%, #E0A800 100%); text-align: center; }
+        .cta-section h2 { font-size: 32px; font-weight: 700; color: #0B0E11; margin-bottom: 16px; }
+        .cta-section p { font-size: 16px; color: #1E2329; margin-bottom: 32px; }
+        .btn-cta { background: #0B0E11; color: #F0B90B; padding: 14px 36px; border-radius: 40px; font-weight: 600; text-decoration: none; display: inline-block; transition: all 0.3s; }
+        .btn-cta:hover { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.2); }
+        .footer { padding: 48px 0 24px; border-top: 1px solid rgba(240, 185, 11, 0.1); }
+        .footer-links a { color: #8A8F9E; text-decoration: none; font-size: 13px; transition: color 0.3s; }
+        .footer-links a:hover { color: #F0B90B; }
+        .chain-levels { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-top: 16px; }
+        .chain-level { background: rgba(240,185,11,0.1); border: 1px solid rgba(240,185,11,0.3); padding: 8px 16px; border-radius: 20px; font-size: 12px; color: #F0B90B; }
+        @media (max-width: 768px) { .hero h1 { font-size: 36px; } .hero p { font-size: 14px; } .stat-number { font-size: 32px; } .section-title { font-size: 28px; } .btn-hero-primary, .btn-hero-secondary { padding: 10px 24px; } }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg">
         <div class="container">
             <a class="navbar-brand" href="/">
-                <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="16" cy="16" r="15" stroke="#F0B90B" stroke-width="1.5" fill="none"/>
-                    <polygon points="16,6 23,10 23,18 16,22 9,18 9,10 16,6" fill="none" stroke="#F0B90B" stroke-width="1.2"/>
-                    <circle cx="16" cy="12" r="1.8" fill="#F0B90B"/>
-                    <circle cx="12" cy="16" r="1.8" fill="#F0B90B"/>
-                    <circle cx="20" cy="16" r="1.8" fill="#F0B90B"/>
-                    <circle cx="16" cy="20" r="1.8" fill="#F0B90B"/>
-                    <line x1="16" y1="12" x2="16" y2="20" stroke="#F0B90B" stroke-width="1"/>
-                    <line x1="12" y1="16" x2="20" y2="16" stroke="#F0B90B" stroke-width="1"/>
-                </svg>
+                <img src="/static/favicon.png" alt="NODE" style="height: 36px; width: auto;">
                 <div>
                     <div style="font-weight: 700; font-size: 18px; letter-spacing: -0.5px; color: white;">NODE</div>
-                    <div style="font-size: 7px; color: #F0B90B; letter-spacing: 1px;">Spot Grid Bot</div>
+                    <div style="font-size: 7px; color: #F0B90B; letter-spacing: 1px;">Crypto Automation</div>
                 </div>
             </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -356,8 +70,8 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link" href="#features">Features</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/about/">About</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/how-it-works/">How It Works</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#faq">FAQ</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/chat/">Support</a></li>
                     <li class="nav-item ms-lg-3"><a href="/login/" class="btn-login">Login</a></li>
                     <li class="nav-item"><a href="/register/" class="btn-register">Get Started</a></li>
                 </ul>
@@ -368,22 +82,13 @@
     <section class="hero">
         <div class="container">
             <div class="hero-logo">
-                <svg width="80" height="80" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="40" cy="40" r="38" stroke="#F0B90B" stroke-width="2" fill="none"/>
-                    <polygon points="40,15 52,22 52,35 40,42 28,35 28,22 40,15" fill="none" stroke="#F0B90B" stroke-width="1.8"/>
-                    <circle cx="40" cy="28" r="3.5" fill="#F0B90B"/>
-                    <circle cx="31" cy="37" r="3.5" fill="#F0B90B"/>
-                    <circle cx="49" cy="37" r="3.5" fill="#F0B90B"/>
-                    <circle cx="40" cy="46" r="3.5" fill="#F0B90B"/>
-                    <line x1="40" y1="28" x2="40" y2="46" stroke="#F0B90B" stroke-width="2"/>
-                    <line x1="31" y1="37" x2="49" y2="37" stroke="#F0B90B" stroke-width="2"/>
-                </svg>
+                <img src="/static/favicon.png" alt="NODE" style="height: 80px; width: auto;">
             </div>
-            <h1>Cryptocurrency volatility manager<br><span style="color: #F0B90B;">For Modern Traders</span></h1>
-            <p>Automated grid trading, transparent technology, and real-time portfolio tracking.</p>
+            <h1>Cryptocurrency Automation<br><span style="color: #F0B90B;">For Modern Traders</span></h1>
+            <p>Automated grid trading, transparent technology, and real-time portfolio tracking — all on the go.</p>
             <div>
                 <a href="/register/" class="btn-hero-primary">Start Trading</a>
-                <a href="#features" class="btn-hero-secondary">Learn More</a>
+                <a href="#faq" class="btn-hero-secondary">Learn More</a>
             </div>
         </div>
     </section>
@@ -397,7 +102,7 @@
                 </div>
                 <div class="col-md-4 col-6 mb-4 mb-md-0">
                     <div class="stat-number">24/7</div>
-                    <div class="stat-label">AI Grid Trading</div>
+                    <div class="stat-label">Spot Grid Trading</div>
                 </div>
                 <div class="col-md-4">
                     <div class="stat-number">100</div>
@@ -415,7 +120,7 @@
                 <div class="col-md-4">
                     <div class="feature-card">
                         <div class="feature-icon"><i class="fas fa-robot"></i></div>
-                        <h3 class="feature-title">AI Grid Trading</h3>
+                        <h3 class="feature-title">Spot Grid Trading</h3>
                         <p class="feature-text">Automated grid strategy that buys at dips and sells at rises, operating 24/7 on your behalf.</p>
                     </div>
                 </div>
@@ -437,87 +142,54 @@
         </div>
     </section>
 
-    <section id="ai-bot" class="features-section" style="background: rgba(30, 35, 41, 0.3);">
+    <!-- FAQ Section -->
+    <section id="faq" class="features-section" style="background: rgba(30, 35, 41, 0.3);">
         <div class="container">
-            <h2 class="section-title">🤖 How the AI Grid Works</h2>
-            <p class="section-subtitle">A transparent, rules-based trading strategy</p>
-
-            <div class="ai-grid-card mt-4">
-                <h3 style="margin-bottom: 20px;">⚡ Grid Strategy</h3>
-                <div class="price-movement">
-                    <div class="movement-up">
-                        <div class="movement-value">↑ 1.2%</div>
-                        <div>Strategy sells → Takes profit</div>
-                    </div>
-                    <div class="movement-down">
-                        <div class="movement-value">↓ 1.2%</div>
-                        <div>Strategy buys → Accumulates</div>
-                    </div>
-                </div>
-                <div class="grid-stats">
-                    <div class="grid-stat">
-                        <div class="grid-stat-value">100</div>
-                        <div class="grid-stat-label">Grid Levels</div>
-                    </div>
-                    <div class="grid-stat">
-                        <div class="grid-stat-value">24/7</div>
-                        <div class="grid-stat-label">Continuous Operation</div>
-                    </div>
-                    <div class="grid-stat">
-                        <div class="grid-stat-value">Binance + Bybit</div>
-                        <div class="grid-stat-label">Execution Partners</div>
-                    </div>
-                </div>
-                <p class="small" style="color: #8A8F9E; margin-top: 20px;">The strategy operates continuously, responding to market movements. Results vary based on market conditions.</p>
-            </div>
-        </div>
-    </section>
-
-    <!-- Live AI Trading Demo -->
-    <section class="features-section">
-        <div class="container">
+            <h2 class="section-title">❓ Frequently Asked Questions</h2>
+            <p class="section-subtitle">Everything you need to know about NODE</p>
             <div class="row">
                 <div class="col-lg-8 mx-auto">
-                    <div class="feature-card" style="background: linear-gradient(135deg, #1E2329 0%, #2B3139 100%); border: 1px solid rgba(240,185,11,0.3);">
-                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
-                            <h3 style="font-size: 18px; margin: 0; color: #F0B90B;">
-                                <i class="fas fa-robot me-2"></i>Live Trading Demo
-                            </h3>
-                            <span class="badge" style="background: #0ECB81; color: #0B0E11; padding: 4px 10px; border-radius: 20px; font-size: 11px;">
-                                SIMULATION
-                            </span>
-                        </div>
-
-                        <div class="row g-3 mb-4">
-                            <div class="col-6">
-                                <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
-                                    <div style="font-size: 11px; color: #8A8F9E;">Current Token</div>
-                                    <div style="font-size: 20px; font-weight: 700; color: #F0B90B;" id="demoToken">BTC/USDC</div>
-                                </div>
-                            </div>
-                            <div class="col-6">
-                                <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 12px;">
-                                    <div style="font-size: 11px; color: #8A8F9E;">Grid Level</div>
-                                    <div style="font-size: 20px; font-weight: 700; color: #0ECB81;" id="demoGridLevel">47/100</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div style="background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-bottom: 20px;">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 10px;">
-                                <i class="fas fa-exchange-alt" style="color: #0ECB81;"></i>
-                                <span style="font-size: 12px; color: #8A8F9E;">Last Grid Action</span>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: baseline;">
-                                <span style="font-size: 18px; font-weight: 700;" id="demoTradeAction">🟢 BUY</span>
-                                <span style="font-size: 14px;" id="demoTradeAmount">$50 USDC</span>
-                            </div>
-                            <div style="font-size: 11px; color: #8A8F9E; margin-top: 5px;" id="demoTradeTime">Simulated activity</div>
-                        </div>
-
-                        <div class="mt-3 text-center">
-                            <small style="color: #5E6673;">This is a simulation. Actual performance depends on market conditions.</small>
-                        </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🤖 What is NODE exactly?</div>
+                        <div class="faq-a">NODE is an Cryptocurrency automation Robo-Advisor. It is designed with a 100grid strategy that flips coins
+                            with a buy and sell actions over a given range to generate variable profits as the markets fluctuate.
+                            You deposit USDC, activate a Grid Bot, and the bot automatically buys low and sells high within a price range — 24/7. No manual trading. No chart-watching. No experience needed.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">⚙️ What is the NODE procedure?</div>
+                        <div class="faq-a">Three steps: 1) Deposit USDC (min $10). 2) Activate a Grid Bot on any coin. The bot places 100 buy/sell orders between a price range. 3) Let it work. When prices move, your bot trades automatically. You collect profit anytime.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🚀 How can I get started?</div>
+                        <div class="faq-a">Register on NODE with your email. You'll get a unique BSC wallet address. Buy USDC from Binance. Send it to your NODE wallet. Once it arrives in your Grand Balance, activate your first Grid Bot. Takes less than 10 minutes.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">💵 How do I deposit my first $10?</div>
+                        <div class="faq-a">Buy $10 USDC on Binance. Copy your unique NODE wallet address from your Profile. Withdraw USDC to that address using BSC/BEP20 network. Your Grand Balance updates within 5 minutes automatically.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">💸 How do I withdraw my profit?</div>
+                        <div class="faq-a">Click the Grid Profit amount on your Dashboard to collect it to your Yield Wallet. Transfer to Grand Balance when ready. Go to Withdraw page, enter your external wallet address, enter OTP sent to your email. Funds arrive in 1-10 minutes.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🔒 How does NODE secure my capital?</div>
+                        <div class="faq-a">Every user gets their OWN unique BSC wallet. Deposits go to YOUR wallet — verifiable on BSCScan. Withdrawals require OTP verification. Every transaction is on the blockchain and visible on our Transparency page.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">📜 Is NODE registered?</div>
+                        <div class="faq-a">Yes. NODE is owned by THRIVALBASE LTD, registered with CAC Nigeria (RC: 1394827). We're pursuing SEC registration under the robo-adviser category.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🤝 How does the Affiliate Program work?</div>
+                        <div class="faq-a">Share your unique referral link. When someone signs up and activates a Grid Bot, you earn from the 10% node fee across 7 levels. Level 1 (direct): 50%, Level 2: 25%, down to Level 7. No deposit needed to earn.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🚫 Is NODE a Ponzi scheme?</div>
+                        <div class="faq-a">Absolutely not. NODE pays from TRADING PROFITS generated by grid bots on real exchanges. You can withdraw anytime — withdrawals arrive in minutes. Transparency page shows all activity. Test it: deposit $10, withdraw it tomorrow.</div>
+                    </div>
+                    <div class="faq-card" onclick="this.classList.toggle('open')">
+                        <div class="faq-q">🏛️ How is NODE better than a bank?</div>
+                        <div class="faq-a">Banks pay 1-4% annually in naira. NODE earns up to 10% monthly in dollars. Bank savings lose value to inflation. NODE grows value above inflation. No minimum balance. Free deposits/withdrawals. Your money works 24/7.</div>
                     </div>
                 </div>
             </div>
@@ -525,79 +197,76 @@
     </section>
 
     <!-- How It Works -->
-    <section class="features-section" style="background: rgba(30, 35, 41, 0.3);">
+    <section class="features-section">
         <div class="container">
-            <h2 class="section-title">How It Works</h2>
+            <h2 class="section-title">How To Start</h2>
             <p class="section-subtitle">Get started in 4 simple steps</p>
             <div class="row g-4">
                 <div class="col-md-3">
                     <div class="feature-card">
                         <div class="feature-icon">1️⃣</div>
                         <h3 class="feature-title">Register</h3>
-                        <p class="feature-text">Create your free account</p>
+                        <p class="feature-text">Create your free account in seconds</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="feature-card">
                         <div class="feature-icon">2️⃣</div>
                         <h3 class="feature-title">Deposit USDC</h3>
-                        <p class="feature-text">Minimum $10 USDC on BSC (BEP-20) network</p>
+                        <p class="feature-text">Send $10+ USDC to your unique BSC wallet</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="feature-card">
                         <div class="feature-icon">3️⃣</div>
-                        <h3 class="feature-title">Buy Tokens</h3>
-                        <p class="feature-text">Choose from available tokens</p>
+                        <h3 class="feature-title">Activate Grid Bot</h3>
+                        <p class="feature-text">Your AI bot places 100 orders automatically</p>
                     </div>
                 </div>
                 <div class="col-md-3">
                     <div class="feature-card">
                         <div class="feature-icon">4️⃣</div>
-                        <h3 class="feature-title">AI Activates</h3>
-                        <p class="feature-text">Grid strategy begins automatically</p>
+                        <h3 class="feature-title">Earn & Withdraw</h3>
+                        <p class="feature-text">Collect profits anytime. Withdraw in minutes.</p>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- Referral Section (Optional) -->
-    <section id="referral" class="features-section">
-        <div class="container">
-            <div class="referral-chain">
-                <h2 style="font-size: 28px; margin-bottom: 20px;">🤝 Referral Program (Optional)</h2>
-                <p>Share your referral code and earn from the platform fee (optional participation)</p>
-                <div class="chain-levels">
-                    <span class="chain-level">Level 6: 50%</span>
-                    <span class="chain-level">Level 5: 25%</span>
-                    <span class="chain-level">Level 4: 12.5%</span>
-                    <span class="chain-level">Level 3: 6.25%</span>
-                    <span class="chain-level">Level 2: 3.125%</span>
-                    <span class="chain-level">Level 1: 1.5625%</span>
-                    <span class="chain-level">Platform: 1.5625%</span>
-                </div>
-                <p class="mt-3 small text-muted">Referral participation is completely optional. You can register without a referral code.</p>
+    <!-- Affiliate Program -->
+    <section class="features-section" style="background: rgba(30, 35, 41, 0.3);">
+        <div class="container text-center">
+            <h2 class="section-title">🤝 Affiliate Program</h2>
+            <p class="section-subtitle">Share NODE and earn from 7 levels of referrals</p>
+            <div class="chain-levels">
+                <span class="chain-level">Level 1: 50%</span>
+                <span class="chain-level">Level 2: 25%</span>
+                <span class="chain-level">Level 3: 12.5%</span>
+                <span class="chain-level">Level 4: 6.25%</span>
+                <span class="chain-level">Level 5: 3.125%</span>
+                <span class="chain-level">Level 6: 1.5625%</span>
+                <span class="chain-level">Level 7: 0.78125%</span>
             </div>
+            <p class="mt-3 small" style="color: #8A8F9E;">Affiliate participation is completely optional. You can register without a referral code.</p>
         </div>
     </section>
 
-    <!-- Risk Disclosure Notice -->
+    <!-- Risk Disclosure -->
     <section class="features-section">
         <div class="container">
             <div class="alert alert-warning text-center small" style="background: rgba(255,193,7,0.1); border-color: #F0B90B; color: #8A8F9E;">
-                <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading carries significant risk. Past performance does not guarantee future results.
-                The automated trading strategy may underperform. Users should only invest what they can afford to lose.
+                <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading carries significant risk. Past performance does not guarantee future results. The automated trading strategy may underperform. Users should only invest what they can afford to lose.
                 <a href="/risk-disclosure/" class="d-block mt-2" style="color: #F0B90B;">Read Full Risk Disclosure →</a>
             </div>
         </div>
     </section>
 
-    <!-- CTA Section -->
+    <!-- CTA -->
     <section class="cta-section">
         <div class="container">
-            <h2>Ready to Start Trading?</h2>
-            <p>Join NodeVT and experience AI-powered crypto trading</p>
+            <h2>Ready to Start?</h2>
+            <p>Join NODE and experience AI-powered crypto automation</p>
             <a href="/register/" class="btn-cta">Get Started Now</a>
         </div>
         <p class="small text-dark mt-3">*Cryptocurrency trading carries risk. Past performance does not guarantee future results.</p>
@@ -609,20 +278,13 @@
             <div class="row">
                 <div class="col-md-4 mb-4 mb-md-0">
                     <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="14" cy="14" r="13" stroke="#F0B90B" stroke-width="1.2" fill="none"/>
-                            <polygon points="14,5 19,9 19,16 14,19 9,16 9,9 14,5" fill="none" stroke="#F0B90B" stroke-width="1"/>
-                            <circle cx="14" cy="10" r="1.5" fill="#F0B90B"/>
-                            <circle cx="11" cy="13" r="1.5" fill="#F0B90B"/>
-                            <circle cx="17" cy="13" r="1.5" fill="#F0B90B"/>
-                            <circle cx="14" cy="16" r="1.5" fill="#F0B90B"/>
-                        </svg>
+                        <img src="/static/favicon.png" alt="NODE" style="height: 28px; width: auto;">
                         <div>
                             <div style="font-weight: 700; font-size: 16px; color: white;">NODE</div>
-                            <div style="font-size: 7px; color: #F0B90B;">AUTOTRADER</div>
+                            <div style="font-size: 7px; color: #F0B90B;">CRYPTO AUTOMATION</div>
                         </div>
                     </div>
-                    <p class="small opacity-75">AI-powered crypto trading platform. Automated grid trading with transparent technology.</p>
+                    <p class="small opacity-75">Cryptocurrency automation. Automated grid trading with transparent technology.</p>
                 </div>
                 <div class="col-md-2 col-6 mb-3">
                     <h6 class="mb-3">Platform</h6>
@@ -636,53 +298,23 @@
                     <h6 class="mb-3">Company</h6>
                     <div class="footer-links d-flex flex-column gap-2">
                         <a href="/about/">About</a>
-                        <a href="/how-it-works/">How It Works</a>
-                        <a href="/risk-disclosure/">Risk Disclosure</a>
                         <a href="/chat/">Support</a>
+                        <a href="/risk-disclosure/">Risk Disclosure</a>
                     </div>
                 </div>
                 <div class="col-md-4">
                     <h6 class="mb-3">Network</h6>
                     <p class="small opacity-75 mb-2">BSC (BEP20) - USDC</p>
-                    <p class="small opacity-75">Powered by Binance & Bybit APIs</p>
                     <p class="small opacity-75">24/7 Automated Trading</p>
                 </div>
             </div>
             <hr class="mt-4 mb-3" style="border-color: rgba(240,185,11,0.2);">
             <div class="text-center small opacity-50">
-                &copy; 2026 Node Autotrader. All rights reserved.
+                &copy; 2026 NODE — Crypto Automation on the Go! All rights reserved.
             </div>
         </div>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <script>
-        // Live Trading Demo Simulation
-        (function() {
-            const tokens = ['BTC/USDC', 'ETH/USDC', 'BNB/USDC', 'SOL/USDC'];
-            let tokenIndex = 0;
-            let gridLevel = 47;
-            let gridDirection = 1;
-
-            function updateDemo() {
-                tokenIndex = (tokenIndex + 1) % tokens.length;
-                document.getElementById('demoToken').innerHTML = tokens[tokenIndex];
-
-                gridLevel += gridDirection;
-                if (gridLevel >= 100) gridDirection = -1;
-                if (gridLevel <= 0) gridDirection = 1;
-                document.getElementById('demoGridLevel').innerHTML = Math.floor(gridLevel) + '/100';
-
-                const isBuy = Math.random() > 0.5;
-                const amount = (Math.random() * 100 + 20).toFixed(0);
-                document.getElementById('demoTradeAction').innerHTML = isBuy ? '🟢 BUY' : '🔴 SELL';
-                document.getElementById('demoTradeAmount').innerHTML = `$${amount} USDC`;
-                document.getElementById('demoTradeTime').innerHTML = 'Simulated grid activity';
-            }
-
-            setInterval(updateDemo, 5000);
-            updateDemo();
-        })();
-    </script>
 </body>
 </html>
