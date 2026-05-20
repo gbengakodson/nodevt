@@ -95,7 +95,7 @@
             return;
         }
 
-        const data = { username, email, password, password2 };
+        const data = { username, email, password, password2, user_type: document.getElementById("userType").value };
         if (referralCode) {
             data.referral_code = referralCode;
         }

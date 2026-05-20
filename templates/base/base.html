@@ -676,7 +676,9 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
         }
-        document.getElementById('notifModal').style.display = 'none';
+        var modal = document.getElementById('notifModal');
+        modal.style.display = 'none';
+        modal.style.setProperty('display', 'none', 'important');
         document.getElementById('mobileBadge').style.display = 'none';
         if (navigator.clearAppBadge) navigator.clearAppBadge();
     }
