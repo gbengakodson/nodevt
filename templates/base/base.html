@@ -722,8 +722,29 @@
         return div.innerHTML;
     }
 
-    setInterval(loadNotifs, 120000);
-    loadNotifs();
+    // Auto-check for badge count only (don't open modal)
+    async function checkBadge() {
+        var token = localStorage.getItem('access_token');
+        if (!token) return;
+        try {
+            var res = await fetch('/api/chatbot/notifications/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await res.json();
+            var unread = data.filter(function(n) { return !n.is_read; }).length;
+            var badge = document.getElementById('mobileBadge');
+            if (unread > 0) {
+                badge.textContent = unread > 9 ? '9+' : unread;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+            if (navigator.setAppBadge) navigator.setAppBadge(unread);
+        } catch(e) {}
+    }
+
+    setInterval(checkBadge, 120000);
+    checkBadge();
 
     async function markAsRead(notificationId) {
         const token = localStorage.getItem('access_token');
