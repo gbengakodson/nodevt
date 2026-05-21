@@ -151,47 +151,98 @@ class FadakkaService:
 
     @classmethod
     def _activate_grid(cls, symbol, level):
-        """Activate a master grid for a coin"""
+        """Activate a master grid for a coin on Binance"""
         try:
-            token = CryptoToken.objects.get(symbol=symbol)
+            from apps.wallets.services.binance_service import BinanceService
 
-            # Calculate grid range based on current price
+            token = CryptoToken.objects.get(symbol=symbol)
             current_price = token.current_price
             upper = current_price * Decimal('1.8')
             lower = current_price * Decimal('0.2')
             min_invest = cls.get_min_investment(symbol)
 
-            # Create master grid record
+            # Place grid orders on Binance
+            bs = BinanceService()
+            result = bs.place_grid_orders(
+                symbol=symbol,
+                lower_price=lower,
+                upper_price=upper,
+                total_amount=min_invest,
+                grids=100
+            )
+
+            if not result['success']:
+                print(f"Failed to place Binance orders for {symbol}: {result.get('error')}")
+                return False
+
+            # Create master grid record with Binance order IDs
             MasterGridBot.objects.create(
                 token=token,
                 total_amount=min_invest,
                 lower_price=lower,
                 upper_price=upper,
-                grids=100,
+                grids=result['orders_placed'],
                 status='ACTIVE',
                 price_at_creation=current_price,
                 metadata={
                     'fadakka_level': level,
                     'fadakka_k': float(cls.get_fadakka(symbol)),
                     'activation_price': float(current_price),
+                    'binance_order_ids': result['order_ids'],
+                    'binance_symbol': result['symbol'],
                 }
             )
 
-            print(f"✅ Grid activated: {symbol} at {level} (Price: ${float(current_price):.4f})")
+            print(f"✅ Grid activated: {symbol} at {level} ({result['orders_placed']} orders placed)")
             return True
 
         except Exception as e:
             print(f"Error activating grid for {symbol}: {e}")
             return False
 
+
+
+
+
     @classmethod
     def _close_grid(cls, symbol):
-        """Close all active grids for a coin"""
+        """Close all active master grids for a coin on Binance"""
         try:
-            count = MasterGridBot.objects.filter(
+            from apps.wallets.services.binance_service import BinanceService
+
+            bs = BinanceService()
+
+            grids = MasterGridBot.objects.filter(
                 token__symbol=symbol,
                 status='ACTIVE'
-            ).update(status='COMPLETED')
-            print(f"🔒 Closed {count} grid(s) for {symbol} (hit 2k exit)")
+            )
+
+            for grid in grids:
+                # Cancel open orders on Binance
+                order_ids = grid.metadata.get('binance_order_ids', [])
+                cancel_result = bs.cancel_grid_orders(symbol, order_ids)
+                print(f"Cancelled {cancel_result.get('cancelled', 0)} orders for {symbol}")
+
+                # Sell accumulated position at market
+                sell_result = bs.market_sell_position(symbol)
+
+                # Get filled trades for profit calculation
+                trade_history = bs.get_filled_grid_orders(
+                    symbol,
+                    start_time=grid.created_at
+                )
+
+                profit = Decimal(str(trade_history.get('profit', 0)))
+
+                # Update grid record
+                grid.grid_profit = profit
+                grid.status = 'COMPLETED'
+                grid.metadata['close_price'] = str(sell_result.get('avg_price', 0))
+                grid.metadata['close_profit'] = str(profit)
+                grid.metadata['close_trades'] = trade_history.get('total_trades', 0)
+                grid.save()
+
+                print(f"🔒 Closed grid for {symbol}: Profit ${profit:.2f}")
+
         except Exception as e:
             print(f"Error closing grid for {symbol}: {e}")

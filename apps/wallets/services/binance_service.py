@@ -18,6 +18,224 @@ class BinanceService:
         )
         self.central_wallet = settings.CENTRAL_WALLET_ADDRESS
 
+
+    def _get_binance_symbol(self, symbol):
+        """Convert internal symbol to Binance pair format"""
+        usdt_pairs = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE',
+                      'AVAX', 'DOT', 'LINK', 'LTC', 'NEAR', 'ATOM',
+                      'ALGO', 'VET', 'UNI', 'EGLD', 'THETA', 'PEPE']
+
+        if symbol in usdt_pairs:
+            return f'{symbol}USDT'
+        return None
+
+    def place_grid_orders(self, symbol, lower_price, upper_price, total_amount, grids=100):
+        """
+        Place buy limit orders across the grid range on Binance.
+        Returns: {success: bool, orders_placed: int, order_ids: list, error: str}
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return {'success': False, 'error': f'No Binance pair for {symbol}'}
+
+            # Get symbol info for lot size and tick size
+            info = self.client.get_symbol_info(binance_symbol)
+            lot_filter = next(f for f in info['filters'] if f['filterType'] == 'LOT_SIZE')
+            price_filter = next(f for f in info['filters'] if f['filterType'] == 'PRICE_FILTER')
+
+            min_qty = float(lot_filter['minQty'])
+            step_size = float(lot_filter['stepSize'])
+            tick_size = float(price_filter['tickSize'])
+
+            # Calculate grid step
+            grid_step = (float(upper_price) - float(lower_price)) / grids
+
+            # Amount per order
+            amount_per_order = float(total_amount) / grids
+
+            order_ids = []
+            placed = 0
+
+            for i in range(grids):
+                price = float(lower_price) + (i * grid_step)
+
+                # Round price to tick size
+                price = round(price / tick_size) * tick_size
+                price = round(price, 8)
+
+                # Calculate quantity
+                quantity = amount_per_order / price
+
+                # Round quantity to step size
+                quantity = round(quantity / step_size) * step_size
+                quantity = round(quantity, 8)
+
+                if quantity < min_qty:
+                    continue
+
+                try:
+                    order = self.client.create_order(
+                        symbol=binance_symbol,
+                        side=SIDE_BUY,
+                        type=ORDER_TYPE_LIMIT,
+                        timeInForce=TIME_IN_FORCE_GTC,
+                        quantity=quantity,
+                        price=str(price)
+                    )
+                    order_ids.append(str(order['orderId']))
+                    placed += 1
+
+                    if placed % 10 == 0:
+                        import time
+                        time.sleep(0.1)
+
+                except Exception as e:
+                    print(f"Order {i} failed at ${price:.4f}: {e}")
+                    continue
+
+            return {
+                'success': True,
+                'orders_placed': placed,
+                'total_grids': grids,
+                'order_ids': order_ids,
+                'symbol': binance_symbol
+            }
+
+        except Exception as e:
+            print(f"Grid order placement error: {e}")
+            return {'success': False, 'error': str(e)}
+
+
+
+    def cancel_grid_orders(self, symbol, order_ids=None):
+        """
+        Cancel all open orders for a grid.
+        If order_ids not provided, cancel all open orders for the symbol.
+        Returns: {success: bool, cancelled: int}
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return {'success': False, 'error': f'No Binance pair for {symbol}'}
+
+            cancelled = 0
+
+            if order_ids:
+                for order_id in order_ids:
+                    try:
+                        self.client.cancel_order(
+                            symbol=binance_symbol,
+                            orderId=order_id
+                        )
+                        cancelled += 1
+                    except Exception as e:
+                        print(f"Failed to cancel order {order_id}: {e}")
+            else:
+                open_orders = self.client.get_open_orders(symbol=binance_symbol)
+                for order in open_orders:
+                    try:
+                        self.client.cancel_order(
+                            symbol=binance_symbol,
+                            orderId=order['orderId']
+                        )
+                        cancelled += 1
+                    except:
+                        pass
+
+            return {'success': True, 'cancelled': cancelled}
+
+        except Exception as e:
+            print(f"Cancel grid error: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def market_sell_position(self, symbol):
+        """
+        Sell all accumulated position at market price.
+        Used when closing a grid.
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return {'success': False, 'error': f'No Binance pair for {symbol}'}
+
+            base_asset = binance_symbol.replace('USDT', '')
+
+            account = self.client.get_account()
+            balance = 0
+            for b in account['balances']:
+                if b['asset'] == base_asset:
+                    balance = float(b['free'])
+                    break
+
+            if balance <= 0:
+                return {'success': True, 'sold': 0, 'message': 'No position to sell'}
+
+            order = self.client.create_order(
+                symbol=binance_symbol,
+                side=SIDE_SELL,
+                type=ORDER_TYPE_MARKET,
+                quantity=round(balance, 6)
+            )
+
+            fills = order.get('fills', [])
+            total_qty = sum(float(f['qty']) for f in fills)
+            total_cost = sum(float(f['qty']) * float(f['price']) for f in fills)
+            avg_price = total_cost / total_qty if total_qty > 0 else 0
+
+            return {
+                'success': True,
+                'sold': total_qty,
+                'avg_price': avg_price,
+                'total_usdt': total_cost,
+                'order_id': str(order['orderId'])
+            }
+
+        except Exception as e:
+            print(f"Market sell error: {e}")
+            return {'success': False, 'error': str(e)}
+
+    def get_filled_grid_orders(self, symbol, start_time=None):
+        """
+        Get filled orders for profit calculation.
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return {'success': False, 'error': f'No Binance pair for {symbol}'}
+
+            trades = self.client.get_my_trades(symbol=binance_symbol, limit=500)
+
+            if start_time:
+                start_ts = int(start_time.timestamp() * 1000)
+                trades = [t for t in trades if t['time'] >= start_ts]
+
+            buy_trades = [t for t in trades if not t['isBuyer']]
+            sell_trades = [t for t in trades if t['isBuyer']]
+
+            total_bought = sum(float(t['qty']) * float(t['price']) for t in buy_trades)
+            total_sold = sum(float(t['qty']) * float(t['price']) for t in sell_trades)
+
+            return {
+                'success': True,
+                'symbol': binance_symbol,
+                'total_trades': len(trades),
+                'buy_trades': len(buy_trades),
+                'sell_trades': len(sell_trades),
+                'total_bought_usdt': round(total_bought, 2),
+                'total_sold_usdt': round(total_sold, 2),
+                'profit': round(total_sold - total_bought, 2),
+                'trades': trades[:20]
+            }
+
+        except Exception as e:
+            print(f"Trade history error: {e}")
+            return {'success': False, 'error': str(e)}
+
+
+
+
+
     def get_usdc_balance(self):
         """Get USDC BEP20 balance of central wallet on Binance"""
         try:
