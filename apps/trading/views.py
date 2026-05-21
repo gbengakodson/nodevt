@@ -1131,3 +1131,10 @@ def sweep_webhook(request):
     from django.core.management import call_command
     call_command('check_credits')
     return JsonResponse({'status': 'success'})
+
+@csrf_exempt
+def platform_report_webhook(request):
+    """Trigger daily platform report"""
+    from apps.tasks.platform_report import send_daily_platform_report
+    send_daily_platform_report()
+    return JsonResponse({'status': 'success'})

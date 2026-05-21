@@ -1,32 +1,30 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Public | NODE {% endblock %}
+{% block title %}Public | NODE 2.0{% endblock %}
 
 {% block extra_css %}
 <style>
     :root {
         --primary: #F0B90B;
-        --bg-card: #181A20;
+        --bg-card: #1E2329;
         --text-primary: #EAECEF;
         --text-secondary: #848E9C;
         --border: #2B3139;
         --success: #0ECB81;
         --danger: #F6465D;
-        --warning: #F0B90B;
     }
 
     * { box-sizing: border-box; }
     body { background: #0B0E11; max-width: 100vw; overflow-x: hidden; }
 
-    .trans-container {
-        max-width: 1200px;
+    .pub-container {
+        max-width: 1100px;
         margin: 0 auto;
-        padding: 12px;
+        padding: 16px;
         width: 100%;
-        overflow: hidden;
     }
 
-    .trans-header {
+    .pub-header {
         background: linear-gradient(135deg, #1E2329, #2B3139);
         border-radius: 10px;
         border: 1px solid var(--border);
@@ -34,9 +32,10 @@
         margin-bottom: 10px;
         text-align: center;
     }
-    .trans-header h1 { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
-    .trans-header p { font-size: 11px; color: var(--text-secondary); margin: 4px 0 0; }
+    .pub-header h1 { font-size: 18px; font-weight: 700; color: var(--primary); margin: 0; }
+    .pub-header p { font-size: 11px; color: var(--text-secondary); margin: 4px 0 0; }
 
+    /* Stats */
     .stats-grid {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
@@ -48,29 +47,69 @@
         border-radius: 8px;
         border: 1px solid var(--border);
         padding: 12px 14px;
-        min-width: 0;
         text-align: center;
+        min-width: 0;
     }
-    .stat-card .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; margin-bottom: 4px; }
-    .stat-card .value { font-size: 18px; font-weight: 700; color: var(--primary); }
+    .stat-card .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+    .stat-card .value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 4px; }
     .stat-card .sub { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
-    .stat-card.green .value { color: var(--success); }
 
-    .card {
+    /* Binance Monitor */
+    .binance-card {
         background: var(--bg-card);
-        border-radius: 8px;
+        border-radius: 10px;
         border: 1px solid var(--border);
         padding: 16px;
         margin-bottom: 10px;
-        width: 100%;
-        min-width: 0;
-        overflow: hidden;
     }
-    .card-title {
-        font-size: 13px; font-weight: 700; color: var(--text-primary);
-        margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    .binance-title {
+        font-size: 13px; font-weight: 700; color: var(--primary);
+        margin-bottom: 12px;
+        display: flex; align-items: center; gap: 8px;
+    }
+    .binance-title .live-dot {
+        width: 8px; height: 8px; border-radius: 50%;
+        background: var(--success); animation: pulse 1.5s infinite;
+    }
+    @keyframes pulse {
+        0% { box-shadow: 0 0 0 0 rgba(14,203,129,0.4); }
+        70% { box-shadow: 0 0 0 8px rgba(14,203,129,0); }
+        100% { box-shadow: 0 0 0 0 rgba(14,203,129,0); }
     }
 
+    .bal-row {
+        display: flex; gap: 8px; margin-bottom: 10px;
+    }
+    .bal-item {
+        flex: 1; padding: 12px; border-radius: 8px;
+        background: rgba(0,0,0,0.2); border: 1px solid var(--border);
+        text-align: center;
+    }
+    .bal-item .blabel { font-size: 10px; color: var(--text-secondary); }
+    .bal-item .bvalue { font-size: 16px; font-weight: 700; color: var(--success); margin-top: 2px; }
+
+    .trades-table {
+        width: 100%; border-collapse: collapse; font-size: 10px;
+    }
+    .trades-table th {
+        padding: 6px 8px; text-align: left;
+        background: rgba(240,185,11,0.04); color: var(--text-secondary);
+        font-size: 9px; text-transform: uppercase; border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+    .trades-table td {
+        padding: 6px 8px; border-bottom: 1px solid rgba(255,255,255,0.03);
+        color: var(--text-primary); white-space: nowrap;
+    }
+    .trades-table .buy { color: var(--success); }
+    .trades-table .sell { color: var(--danger); }
+
+    .scroll-trades {
+        max-height: 250px; overflow-y: auto;
+        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+    }
+
+    /* Tabs */
     .tabs {
         display: flex; gap: 2px; margin-bottom: 10px;
         background: rgba(0,0,0,0.2); border-radius: 6px; padding: 3px;
@@ -82,15 +121,9 @@
         border-radius: 5px; white-space: nowrap;
     }
     .tab-btn.active { background: var(--primary); color: #1E2329; }
-    .tab-btn .count { font-size: 9px; opacity: 0.7; margin-left: 3px; }
 
-    .table-wrap {
-        overflow-x: auto; -webkit-overflow-scrolling: touch;
-        width: 100%; max-width: 100%;
-    }
-    .compact-table {
-        width: 100%; border-collapse: collapse; min-width: 600px;
-    }
+    .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; width: 100%; }
+    .compact-table { width: 100%; border-collapse: collapse; min-width: 500px; }
     .compact-table th {
         padding: 8px 10px; text-align: left;
         background: rgba(240,185,11,0.04); font-size: 10px; font-weight: 700;
@@ -102,15 +135,14 @@
         font-size: 11px; color: var(--text-primary); white-space: nowrap;
     }
     .compact-table tbody tr:hover { background: rgba(240,185,11,0.02); }
-    .compact-table tbody tr:last-child td { border-bottom: none; }
 
     .badge {
         display: inline-block; padding: 2px 8px; border-radius: 8px;
         font-size: 10px; font-weight: 600;
     }
     .badge-green { background: rgba(14,203,129,0.15); color: var(--success); }
-    .badge-red { background: rgba(246,70,93,0.15); color: var(--danger); }
     .badge-yellow { background: rgba(240,185,11,0.15); color: var(--warning); }
+    .badge-red { background: rgba(246,70,93,0.15); color: var(--danger); }
     .badge-gray { background: rgba(132,142,156,0.15); color: var(--text-secondary); }
 
     .address-text {
@@ -118,144 +150,58 @@
         max-width: 120px; overflow: hidden; text-overflow: ellipsis;
         display: inline-block; vertical-align: middle;
     }
-
     .pnl-positive { color: var(--success); }
     .pnl-negative { color: var(--danger); }
 
-    /* Chart */
-    .chart-wrap { height: 200px; margin-top: 8px; }
-
-    /* Chat - Sophisticated */
-    .chat-container { display: flex; flex-direction: column; }
-    .chat-messages {
-        height: 400px; overflow-y: auto; padding: 12px;
-        background: rgba(0,0,0,0.15); border-radius: 8px;
-        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-    }
-    .chat-messages::-webkit-scrollbar { width: 4px; }
-    .chat-messages::-webkit-scrollbar-track { background: transparent; }
-    .chat-messages::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    .chat-msg {
-        padding: 12px 14px; margin-bottom: 10px; border-radius: 10px;
-        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.04);
-        transition: all 0.2s;
-    }
-    .chat-msg:hover { background: rgba(240,185,11,0.03); border-color: rgba(240,185,11,0.1); }
-    .chat-msg-header {
-        display: flex; justify-content: space-between; align-items: center;
-        margin-bottom: 6px;
-    }
-    .chat-user {
-        display: flex; align-items: center; gap: 8px;
-        font-size: 11px; font-weight: 600;
-    }
-    .chat-avatar {
-        width: 28px; height: 28px; border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 12px; font-weight: 700;
-    }
-    .chat-avatar.admin { background: var(--primary); color: #1E2329; }
-    .chat-avatar.user { background: var(--success); color: #fff; }
-    .chat-time { font-size: 9px; color: var(--text-secondary); }
-    .chat-body { font-size: 11px; line-height: 1.5; color: var(--text-primary); }
-    .chat-actions {
-        display: flex; gap: 12px; margin-top: 8px;
-        border-top: 1px solid rgba(255,255,255,0.03); padding-top: 8px;
-    }
-    .chat-action {
-        display: flex; align-items: center; gap: 4px;
-        background: none; border: none; color: var(--text-secondary);
-        font-size: 10px; cursor: pointer; padding: 4px 8px;
-        border-radius: 4px; transition: all 0.15s;
-    }
-    .chat-action:hover { color: var(--primary); background: rgba(240,185,11,0.08); }
-    .chat-action.liked { color: var(--danger); }
-    .chat-action .action-count { font-size: 9px; }
-
-    .chat-reply {
-        margin-left: 35px; margin-top: 8px; padding: 10px 12px;
-        background: rgba(240,185,11,0.04); border-radius: 8px;
-        border-left: 3px solid var(--primary);
-    }
-    .chat-reply .chat-avatar { width: 22px; height: 22px; font-size: 10px; }
-
-    .chat-input-area {
-        display: flex; gap: 8px; margin-top: 10px;
-    }
-    .chat-input-area input {
-        flex: 1; padding: 10px 14px; border-radius: 8px;
-        border: 1px solid var(--border); background: rgba(0,0,0,0.3);
-        color: var(--text-primary); font-size: 11px;
-    }
-    .chat-input-area input:focus { outline: none; border-color: var(--primary); }
-    .chat-send-btn {
-        padding: 10px 20px; border-radius: 8px; border: none;
-        background: var(--primary); color: #1E2329;
-        font-weight: 700; font-size: 11px; cursor: pointer;
-        transition: all 0.15s;
-    }
-    .chat-send-btn:hover { filter: brightness(1.1); }
+    .empty-state { text-align: center; padding: 20px; color: var(--text-secondary); font-size: 11px; }
 
     @media (max-width: 768px) {
-        .trans-container { padding: 6px; }
+        .pub-container { padding: 6px; }
         .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 4px; }
-        .stat-card { padding: 10px; }
-        .stat-card .value { font-size: 15px; }
         .tabs { width: 100%; }
         .tab-btn { flex: 1; text-align: center; font-size: 10px; padding: 5px 8px; }
-        .compact-table th, .compact-table td { padding: 6px 8px; font-size: 10px; }
-        .chat-messages { height: 300px; }
-        .chat-reply { margin-left: 20px; }
+        .bal-row { flex-wrap: wrap; }
     }
-    @media (max-width: 400px) {
-        .stats-grid { grid-template-columns: 1fr 1fr; }
-        .stat-card .value { font-size: 13px; }
-    }
-
-        .panel-scroll {
-        max-height: 350px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--border) transparent;
-    }
-    .panel-scroll::-webkit-scrollbar { width: 4px; }
-    .panel-scroll::-webkit-scrollbar-track { background: transparent; }
-    .panel-scroll::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
 
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="trans-container">
-    <div class="trans-header">
-        <h1>🔍 NODE Spot Grid</h1>
-        <p>Public NODE. User identities are anonymized.</p>
+<div class="pub-container">
+
+    <!-- Header -->
+    <div class="pub-header">
+        <h1>🔍 Public Ledger</h1>
+        <p>Connected to Binance API — live trading data and platform activity</p>
     </div>
 
     <!-- Platform Stats -->
     <div class="stats-grid">
         <div class="stat-card"><div class="label">Total Users</div><div class="value" id="totalUsers">0</div></div>
-        <div class="stat-card green"><div class="label">Platform Balance</div><div class="value" id="platformBalance">$0</div></div>
-        <div class="stat-card"><div class="label">Tokens Held</div><div class="value" id="tokensHeld">$0</div></div>
-        <div class="stat-card green"><div class="label">Total Buys</div><div class="value" id="totalBuys">0</div></div>
+        <div class="stat-card"><div class="label">Platform Balance</div><div class="value" id="platformBalance">$0</div></div>
+        <div class="stat-card"><div class="label">Total Buys</div><div class="value" id="totalBuys">0</div></div>
+        <div class="stat-card"><div class="label">Grid Bots</div><div class="value" id="gridBots">0</div></div>
     </div>
 
-    <!-- Token Stats -->
-    <div class="card">
-        <div class="card-title">📊 Token Overview</div>
-        <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr);">
-            <div class="stat-card"><div class="label">Unique Holders</div><div class="value" id="uniqueHolders" style="font-size:15px;">0</div></div>
-            <div class="stat-card"><div class="label">Avg Token Value</div><div class="value" id="avgTokenValue" style="font-size:15px;">$0</div></div>
-            <div class="stat-card"><div class="label">Most Held</div><div class="value" id="mostHeldToken" style="font-size:15px;">-</div></div>
-            <div class="stat-card"><div class="label">Volume</div><div class="value" id="totalVolume" style="font-size:15px;">$0</div></div>
+    <!-- Binance Connection Monitor -->
+    <div class="binance-card">
+        <div class="binance-title">
+            <span class="live-dot"></span> Binance Live Monitor
+            <span style="font-size:10px;color:var(--text-secondary);margin-left:auto;" id="binanceUpdateTime">—</span>
         </div>
-    </div>
-
-    <!-- Buy/Sell Chart -->
-    <div class="card">
-        <div class="card-title">📈 Buy/Sell Activity (7 Days)</div>
-        <div class="chart-wrap"><canvas id="buySellChart"></canvas></div>
+        <div class="bal-row">
+            <div class="bal-item"><div class="blabel">USDC</div><div class="bvalue" id="binanceUSDC">$0.00</div></div>
+            <div class="bal-item"><div class="blabel">USDT</div><div class="bvalue" id="binanceUSDT">$0.00</div></div>
+            <div class="bal-item"><div class="blabel">BNB</div><div class="bvalue" id="binanceBNB">0.0000</div></div>
+            <div class="bal-item"><div class="blabel">Open Orders</div><div class="bvalue" id="binanceOrders">0</div></div>
+        </div>
+        <div style="font-size:9px;color:var(--text-secondary);margin-bottom:8px;">Recent Binance Trades (Last 20)</div>
+        <div class="scroll-trades">
+            <table class="trades-table">
+                <thead><tr><th>Pair</th><th>Side</th><th>Price</th><th>Qty</th><th>Time</th></tr></thead>
+                <tbody id="binanceTrades"><tr><td colspan="5" class="empty-state">Loading Binance data...</td></tr></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -311,7 +257,6 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API = '/api';
-    var buySellChart = null;
     var messages = [];
     var currentReactions = {};
 
@@ -336,36 +281,48 @@
     function escHtml(text) { var div = document.createElement('div'); div.textContent = text; return div.innerHTML; }
     function fmtTime(ts) { var d = new Date(ts); return d.toLocaleString(); }
 
-    // Stats
     async function loadStats() {
         try {
             var s = await apiCall('/public/stats/');
             document.getElementById('totalUsers').textContent = s.total_users || s.unique_holders || 0;
             document.getElementById('platformBalance').textContent = fc(s.platform_usdc_balance);
-            document.getElementById('tokensHeld').textContent = fc(s.total_tokens_held);
             document.getElementById('totalBuys').textContent = s.total_buys || 0;
-            document.getElementById('uniqueHolders').textContent = s.unique_holders || 0;
-            document.getElementById('avgTokenValue').textContent = fc(s.avg_token_value);
-            document.getElementById('mostHeldToken').textContent = s.most_held_token || '-';
-            document.getElementById('totalVolume').textContent = fc(s.total_volume);
+            document.getElementById('gridBots').textContent = s.active_bots || s.total_bots || 0;
         } catch(e) { console.error(e); }
     }
 
-    // Chart
-    async function loadChart() {
+    async function loadBinanceData() {
         try {
-            var d = await apiCall('/admin/buy-sell-activity/');
-            var ctx = document.getElementById('buySellChart').getContext('2d');
-            if (buySellChart) buySellChart.destroy();
-            buySellChart = new Chart(ctx, {
-                type: 'line', data: { labels: d.days, datasets: [
-                    { label: 'Buys', data: d.buys, borderColor: '#0ECB81', backgroundColor: 'rgba(14,203,129,0.1)', tension: 0.4, pointRadius: 0 },
-                    { label: 'Sells', data: d.sells, borderColor: '#F6465D', backgroundColor: 'rgba(246,70,93,0.1)', tension: 0.4, pointRadius: 0 }
-                ]},
-                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#848E9C', font: { size: 10 } } } }, scales: { x: { ticks: { color: '#848E9C', font: { size: 9 } }, grid: { display: false } }, y: { ticks: { color: '#848E9C', font: { size: 9 } }, grid: { color: 'rgba(255,255,255,0.05)' } } } }
-            });
-        } catch(e) { console.error(e); }
+            var res = await apiCall('/trading/binance_monitor/');
+            if (res && res.balances) {
+                document.getElementById('binanceUSDC').textContent = '$' + (parseFloat(res.balances.USDC || 0)).toFixed(2);
+                document.getElementById('binanceUSDT').textContent = '$' + (parseFloat(res.balances.USDT || 0)).toFixed(2);
+                document.getElementById('binanceBNB').textContent = parseFloat(res.balances.BNB || 0).toFixed(4);
+                document.getElementById('binanceOrders').textContent = res.open_orders || 0;
+
+                var now = new Date();
+                document.getElementById('binanceUpdateTime').textContent = 'Updated ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+
+                var tbody = document.getElementById('binanceTrades');
+                if (res.trades && res.trades.length > 0) {
+                    var html = '';
+                    for (var i = 0; i < Math.min(res.trades.length, 20); i++) {
+                        var t = res.trades[i];
+                        var side = t.isBuyer ? 'Buy' : 'Sell';
+                        var cls = t.isBuyer ? 'buy' : 'sell';
+                        var d = new Date(t.time);
+                        var timeStr = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
+                        html += '<tr><td>' + t.symbol + '</td><td class="' + cls + '">' + side + '</td><td>$' + parseFloat(t.price).toFixed(4) + '</td><td>' + t.qty + '</td><td>' + timeStr + '</td></tr>';
+                    }
+                    tbody.innerHTML = html;
+                } else {
+                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No recent trades</td></tr>';
+                }
+            }
+        } catch(e) { console.error('Binance:', e); }
     }
+
+
 
     // Tabs
     async function loadDeposits() {
@@ -497,8 +454,11 @@
     document.getElementById('chatMessageInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendMessage(); });
 
     // Init
-    loadStats(); loadChart(); loadDeposits(); loadChat();
-    setInterval(function() { loadStats(); }, 60000);
+    loadStats();
+    loadBinanceData();
+    loadDeposits();
+    loadChat();
+    setInterval(function() { loadStats(); loadBinanceData(); }, 60000);
     setInterval(loadChat, 15000);
 </script>
 {% endblock %}
