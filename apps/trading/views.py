@@ -1051,6 +1051,39 @@ class TradingViewSet(viewsets.ViewSet):
             'reinvest_years': yield_wallet.pension_reinvest_years
         })
 
+    @action(detail=False, methods=['get'])
+    def binance_monitor(self, request):
+        """Fetch live Binance data for public monitoring"""
+        from binance.client import Client
+        from django.conf import settings
+
+        try:
+            client = Client(settings.BINANCE_API_KEY, settings.BINANCE_API_SECRET)
+            acct = client.get_account()
+            balances = {}
+            for b in acct['balances']:
+                if b['asset'] in ['USDC', 'USDT', 'BNB']:
+                    balances[b['asset']] = float(b['free'])
+
+            open_orders = client.get_open_orders()
+
+            trades = []
+            for pair in ['BTCUSDT', 'ETHUSDT', 'BNBUSDT', 'SOLUSDT']:
+                try:
+                    pair_trades = client.get_my_trades(symbol=pair, limit=5)
+                    trades.extend(pair_trades)
+                except:
+                    pass
+            trades.sort(key=lambda x: x['time'], reverse=True)
+
+            return Response({
+                'balances': balances,
+                'open_orders': len(open_orders),
+                'trades': trades[:20]
+            })
+        except Exception as e:
+            return Response({'error': str(e)}, status=500)
+
 
 class AdminYieldRateView(APIView):
     permission_classes = [IsAdminUser]
