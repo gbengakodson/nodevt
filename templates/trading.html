@@ -1344,26 +1344,23 @@
         var coinParam = params.get('coin');
         var sellParam = params.get('sell');
 
-        if (coinParam) {
-            currentSymbol = coinParam;
-        }
-
         tokens = await apiCall('/trading/');
         await loadFadakkaData();
         await loadUserData();
-        renderOrderBook();
-        updateButtonState();
-
-        // Always update the chart for the current symbol
-        await updateChart();
 
         if (coinParam) {
+            currentSymbol = coinParam;
             selectCoin(coinParam);
-            if (sellParam) {
-                setTimeout(function() {
-                    document.getElementById('marketAmount').value = parseFloat(sellParam).toFixed(2);
-                }, 500);
-            }
+        }
+
+        renderOrderBook();
+        updateButtonState();
+        await updateChart();
+
+        if (sellParam) {
+            setTimeout(function() {
+                document.getElementById('marketAmount').value = parseFloat(sellParam).toFixed(2);
+            }, 500);
         }
 
         setInterval(function() { renderOrderBook(); }, 3000);
