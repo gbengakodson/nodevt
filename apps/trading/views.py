@@ -1084,36 +1084,38 @@ class TradingViewSet(viewsets.ViewSet):
         except Exception as e:
             return Response({'error': str(e)}, status=500)
 
+    @action(detail=False, methods=['get'])
+    def fadakka_status(self, request):
+        """Get Fadakka Index status for all coins"""
+        from apps.trading.services.fadakka_service import FadakkaService
+        from apps.tokens.models import CryptoToken
 
-        @action(detail=False, methods=['get'])
-        def fadakka_status(self, request):
-            """Get Fadakka Index status for all coins"""
-            from apps.trading.services.fadakka_service import FadakkaService
-            from apps.tokens.models import CryptoToken
+        data = []
+        for token in CryptoToken.objects.filter(is_active=True):
+            alpha = FadakkaService.get_alpha_levels(token.symbol)
+            trigger = FadakkaService.check_trigger(token.symbol, token.current_price)
+            has_grid = FadakkaService.has_active_grid(token.symbol)
+            should_exit = FadakkaService.should_exit(token.symbol, token.current_price)
 
-            data = []
-            for token in CryptoToken.objects.filter(is_active=True):
-                alpha = FadakkaService.get_alpha_levels(token.symbol)
-                trigger = FadakkaService.check_trigger(token.symbol, token.current_price)
-                has_grid = FadakkaService.has_active_grid(token.symbol)
-                should_exit = FadakkaService.should_exit(token.symbol, token.current_price)
+            data.append({
+                'symbol': token.symbol,
+                'current_price': float(token.current_price),
+                'fadakka_k': alpha['k'] if alpha else None,
+                'a1': alpha['a1'] if alpha else None,
+                'a2': alpha['a2'] if alpha else None,
+                'a3': alpha['a3'] if alpha else None,
+                'exit_price': alpha['exit_price'] if alpha else None,
+                'trigger': trigger['level'] if trigger else None,
+                'tier': trigger['tier'] if trigger else None,
+                'discount': trigger['discount'] if trigger else None,
+                'has_active_grid': has_grid,
+                'should_exit': should_exit,
+            })
 
-                data.append({
-                    'symbol': token.symbol,
-                    'current_price': float(token.current_price),
-                    'fadakka_k': alpha['k'] if alpha else None,
-                    'a1': alpha['a1'] if alpha else None,
-                    'a2': alpha['a2'] if alpha else None,
-                    'a3': alpha['a3'] if alpha else None,
-                    'exit_price': alpha['exit_price'] if alpha else None,
-                    'trigger': trigger['level'] if trigger else None,
-                    'tier': trigger['tier'] if trigger else None,
-                    'discount': trigger['discount'] if trigger else None,
-                    'has_active_grid': has_grid,
-                    'should_exit': should_exit,
-                })
+        return Response(data)
 
-            return Response(data)
+
+
 
 
 class AdminYieldRateView(APIView):
