@@ -162,6 +162,98 @@
         .tab-btn { flex: 1; text-align: center; font-size: 10px; padding: 5px 8px; }
         .bal-row { flex-wrap: wrap; }
     }
+        /* Community Feed */
+    .feed-composer {
+        display: flex; gap: 12px; padding: 14px;
+        background: rgba(0,0,0,0.2); border-radius: 10px;
+        margin-bottom: 16px; border: 1px solid var(--border);
+    }
+    .composer-avatar {
+        width: 40px; height: 40px; border-radius: 50%;
+        background: var(--primary); display: flex; align-items: center;
+        justify-content: center; font-size: 18px; flex-shrink: 0;
+        color: #1E2329;
+    }
+    .composer-input-wrap { flex: 1; }
+    .composer-input {
+        width: 100%; padding: 10px 14px; border-radius: 20px;
+        border: 1px solid var(--border); background: rgba(0,0,0,0.3);
+        color: var(--text-primary); font-size: 12px; resize: none;
+        font-family: inherit;
+    }
+    .composer-input:focus { outline: none; border-color: var(--primary); }
+    .composer-actions { display: flex; justify-content: flex-end; margin-top: 8px; }
+    .composer-btn {
+        padding: 6px 16px; border-radius: 20px; border: none;
+        background: var(--primary); color: #1E2329;
+        font-size: 11px; font-weight: 600; cursor: pointer;
+    }
+
+    .feed-post {
+        background: rgba(0,0,0,0.15); border-radius: 10px;
+        padding: 14px; margin-bottom: 10px; border: 1px solid rgba(255,255,255,0.04);
+    }
+    .post-header {
+        display: flex; align-items: center; gap: 10px; margin-bottom: 10px;
+    }
+    .post-avatar {
+        width: 36px; height: 36px; border-radius: 50%;
+        background: var(--success); display: flex; align-items: center;
+        justify-content: center; font-size: 14px; font-weight: 700;
+        color: #fff; flex-shrink: 0;
+    }
+    .post-avatar.admin { background: var(--primary); color: #1E2329; }
+    .post-user-info { flex: 1; }
+    .post-username { font-size: 12px; font-weight: 600; color: var(--text-primary); }
+    .post-time { font-size: 9px; color: var(--text-secondary); }
+    .post-body { font-size: 12px; color: var(--text-primary); line-height: 1.5; margin-bottom: 10px; }
+
+    .post-actions {
+        display: flex; gap: 16px; padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.04);
+    }
+    .post-action {
+        display: flex; align-items: center; gap: 4px;
+        background: none; border: none; color: var(--text-secondary);
+        font-size: 10px; cursor: pointer; padding: 4px 8px;
+        border-radius: 4px; transition: all 0.15s;
+    }
+    .post-action:hover { color: var(--primary); background: rgba(240,185,11,0.05); }
+    .post-action.liked { color: var(--danger); }
+    .post-action-count { font-size: 9px; }
+
+    .post-comments {
+        margin-top: 8px; padding-top: 8px;
+        border-top: 1px solid rgba(255,255,255,0.03);
+    }
+    .comment-item {
+        display: flex; gap: 8px; padding: 6px 0;
+    }
+    .comment-avatar {
+        width: 24px; height: 24px; border-radius: 50%;
+        background: var(--success); display: flex; align-items: center;
+        justify-content: center; font-size: 10px; font-weight: 700;
+        color: #fff; flex-shrink: 0;
+    }
+    .comment-bubble {
+        background: rgba(0,0,0,0.2); padding: 6px 10px;
+        border-radius: 14px; font-size: 11px; color: var(--text-primary);
+    }
+    .comment-username { font-size: 10px; font-weight: 600; color: var(--success); margin-bottom: 2px; }
+
+    .comment-input-wrap {
+        display: flex; gap: 8px; margin-top: 6px;
+    }
+    .comment-input {
+        flex: 1; padding: 6px 10px; border-radius: 16px;
+        border: 1px solid var(--border); background: rgba(0,0,0,0.3);
+        color: var(--text-primary); font-size: 10px;
+    }
+    .comment-submit {
+        padding: 4px 12px; border-radius: 16px; border: none;
+        background: var(--primary); color: #1E2329;
+        font-size: 10px; font-weight: 600; cursor: pointer;
+    }
 
 </style>
 {% endblock %}
@@ -239,17 +331,24 @@
     </div>
 
     <!-- Community Chat -->
+    <!-- Community Feed -->
     <div class="card">
-        <div class="card-title">💬 Community Discussion</div>
-        <div class="chat-container">
-            <div class="chat-messages" id="chatMessagesContainer">
-                <div style="text-align:center;color:var(--text-secondary);font-size:11px;">Loading messages...</div>
+        <div class="card-title">💬 Community Feed</div>
+
+        <!-- Post Composer -->
+        <div class="feed-composer">
+            <div class="composer-avatar">👤</div>
+            <div class="composer-input-wrap">
+                <textarea id="feedPostInput" class="composer-input" placeholder="Share your thoughts, questions, or wins..." rows="2"></textarea>
+                <div class="composer-actions">
+                    <button class="composer-btn" onclick="submitFeedPost()">📝 Post</button>
+                </div>
             </div>
-            <div class="chat-input-area">
-                <input type="text" id="chatMessageInput" placeholder="Share your thoughts...">
-                <button class="chat-send-btn" id="sendChatBtn">Post</button>
-            </div>
-            <div style="text-align:center;margin-top:6px;font-size:9px;color:var(--text-secondary);">🛡️ Be respectful. No spam. React to messages with 👍 👎 ❤️</div>
+        </div>
+
+        <!-- Feed Posts -->
+        <div class="feed-posts" id="feedPosts">
+            <div class="empty-state">Loading community posts...</div>
         </div>
     </div>
 </div>
@@ -257,8 +356,8 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API = '/api';
-    var messages = [];
-    var currentReactions = {};
+    var feedPosts = [];
+    var feedReactions = {};
 
     async function apiCall(url) {
         var token = localStorage.getItem('access_token');
@@ -327,12 +426,21 @@
     // Tabs
     async function loadDeposits() {
         var data = await apiCall('/public/deposits/');
-        document.getElementById('depositsList').innerHTML = data.map(function(d) { return '<tr><td>' + d.created_at + '</td><td><span class="address-text" title="' + d.user + '">' + showUser(d) + '</span></td><td>' + fc(d.amount) + '</td><td><span class="badge ' + (d.status === 'CONFIRMED' ? 'badge-green' : d.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + d.status + '</span></td></tr>'; }).join('');
+        document.getElementById('depositsList').innerHTML = data.map(function(d) {
+            var userDisplay = d.wallet_address ? anonAddr(d.wallet_address) : anon(d.email || '');
+            return '<tr><td>' + d.created_at + '</td><td><span class="address-text" title="' + (d.email || '') + '">' + userDisplay + '</span></td><td>' + fc(d.amount) + '</td><td><span class="badge badge-green">' + (d.status || 'COMPLETED') + '</span></td></tr>';
+        }).join('') || '<tr><td colspan="4" class="empty-state">No deposits yet</td></tr>';
     }
+
     async function loadWithdrawals() {
         var data = await apiCall('/public/withdrawals/');
-        document.getElementById('withdrawalsList').innerHTML = data.map(function(w) { return '<tr><td>' + w.created_at + '</td><td><span class="address-text" title="' + w.user + '">' + showUser(w) + '</span></td><td>' + fc(w.amount) + '</td><td><span class="address-text">' + anonAddr(w.wallet_address) + '</span></td><td><span class="badge ' + (w.status === 'PROCESSED' ? 'badge-green' : w.status === 'PENDING' ? 'badge-yellow' : 'badge-red') + '">' + w.status + '</span></td></tr>'; }).join('');
+        document.getElementById('withdrawalsList').innerHTML = data.map(function(w) {
+            var userDisplay = w.wallet_address ? anonAddr(w.wallet_address) : anon(w.email || '');
+            var addrDisplay = w.wallet_address ? anonAddr(w.wallet_address) : '—';
+            return '<tr><td>' + w.created_at + '</td><td><span class="address-text" title="' + (w.email || '') + '">' + userDisplay + '</span></td><td>' + fc(w.amount) + '</td><td><span class="address-text">' + addrDisplay + '</span></td><td><span class="badge badge-green">' + (w.status || 'COMPLETED') + '</span></td></tr>';
+        }).join('') || '<tr><td colspan="5" class="empty-state">No withdrawals yet</td></tr>';
     }
+
     async function loadHolders() {
         var data = await apiCall('/public/holders/');
         var all = (data.top_holders || []).concat(data.bottom_holders || []);
@@ -362,96 +470,128 @@
         });
     });
 
-    // ============ COMMUNITY CHAT ============
-    function renderChat() {
-        var container = document.getElementById('chatMessagesContainer');
+    // ============ COMMUNITY FEED ============
+
+    function renderFeed() {
+        var container = document.getElementById('feedPosts');
         if (!container) return;
-        if (!messages.length) { container.innerHTML = '<div style="text-align:center;color:var(--text-secondary);font-size:11px;padding:20px;">💬 No messages yet. Start the conversation!</div>'; return; }
-        var topLevel = messages.filter(function(m) { return !m.parent_id; });
-        var replies = messages.filter(function(m) { return m.parent_id; });
-        container.innerHTML = topLevel.map(function(msg) {
-            var msgReplies = replies.filter(function(r) { return r.parent_id === msg.id; });
-            var reactions = currentReactions[msg.id] || { like: 0, dislike: 0, love: 0 };
-            return '<div class="chat-msg">' +
-                '<div class="chat-msg-header">' +
-                    '<div class="chat-user">' +
-                        '<div class="chat-avatar ' + (msg.is_admin ? 'admin' : 'user') + '">' + (msg.is_admin ? 'A' : (msg.username || 'U').charAt(0).toUpperCase()) + '</div>' +
-                        '<span style="color:' + (msg.is_admin ? 'var(--primary)' : 'var(--success)') + ';">' + (msg.is_admin ? 'Admin' : escHtml(msg.username || 'User')) + '</span>' +
-                    '</div>' +
-                    '<span class="chat-time">' + fmtTime(msg.created_at) + '</span>' +
-                '</div>' +
-                '<div class="chat-body">' + escHtml(msg.message) + '</div>' +
-                '<div class="chat-actions">' +
-                    '<button class="chat-action' + (msg.user_liked ? ' liked' : '') + '" onclick="reactToMessage(\'' + msg.id + '\', \'like\')">👍 <span class="action-count">' + reactions.like + '</span></button>' +
-                    '<button class="chat-action" onclick="reactToMessage(\'' + msg.id + '\', \'dislike\')">👎 <span class="action-count">' + reactions.dislike + '</span></button>' +
-                    '<button class="chat-action" onclick="reactToMessage(\'' + msg.id + '\', \'love\')">❤️ <span class="action-count">' + reactions.love + '</span></button>' +
-                    '<button class="chat-action" onclick="showReplyForm(\'' + msg.id + '\')">💬 Reply</button>' +
-                '</div>' +
-                '<div id="reply-form-' + msg.id + '" style="display:none;margin-top:8px;">' +
-                    '<div style="display:flex;gap:6px;">' +
-                        '<input type="text" id="reply-input-' + msg.id + '" style="flex:1;padding:6px 10px;border-radius:6px;border:1px solid var(--border);background:rgba(0,0,0,0.3);color:var(--text-primary);font-size:10px;" placeholder="Write a reply...">' +
-                        '<button onclick="submitReply(\'' + msg.id + '\')" style="padding:6px 14px;border-radius:6px;border:none;background:var(--primary);color:#1E2329;font-weight:600;font-size:10px;cursor:pointer;">Reply</button>' +
+        if (!feedPosts.length) {
+            container.innerHTML = '<div class="empty-state">No posts yet. Be the first to share!</div>';
+            return;
+        }
+
+        container.innerHTML = feedPosts.map(function(post) {
+            var reactions = feedReactions[post.id] || { like: 0, love: 0 };
+            var topComments = (post.comments || []).slice(0, 3);
+            var hasMore = (post.comments || []).length > 3;
+
+            return '<div class="feed-post">' +
+                '<div class="post-header">' +
+                    '<div class="post-avatar' + (post.is_admin ? ' admin' : '') + '">' + (post.is_admin ? 'A' : (post.username || 'U').charAt(0).toUpperCase()) + '</div>' +
+                    '<div class="post-user-info">' +
+                        '<div class="post-username">' + (post.is_admin ? 'Admin' : escHtml(post.username || 'User')) + '</div>' +
+                        '<div class="post-time">' + fmtTime(post.created_at) + '</div>' +
                     '</div>' +
                 '</div>' +
-                msgReplies.map(function(reply) {
-                    return '<div class="chat-reply">' +
-                        '<div class="chat-msg-header">' +
-                            '<div class="chat-user">' +
-                                '<div class="chat-avatar user" style="width:22px;height:22px;font-size:10px;">' + (reply.username || 'U').charAt(0).toUpperCase() + '</div>' +
-                                '<span style="color:var(--success);font-size:10px;">' + escHtml(reply.username || 'User') + '</span>' +
-                            '</div>' +
-                            '<span class="chat-time" style="font-size:8px;">' + fmtTime(reply.created_at) + '</span>' +
-                        '</div>' +
-                        '<div class="chat-body" style="font-size:10px;">' + escHtml(reply.message) + '</div>' +
-                    '</div>';
-                }).join('') +
+                '<div class="post-body">' + escHtml(post.message) + '</div>' +
+                '<div class="post-actions">' +
+                    '<button class="post-action' + (post.user_liked ? ' liked' : '') + '" onclick="reactToPost(\'' + post.id + '\', \'like\')">👍 <span class="post-action-count">' + reactions.like + '</span></button>' +
+                    '<button class="post-action" onclick="reactToPost(\'' + post.id + '\', \'love\')">❤️ <span class="post-action-count">' + reactions.love + '</span></button>' +
+                    '<button class="post-action" onclick="showCommentBox(\'' + post.id + '\')">💬 <span class="post-action-count">' + (post.comments || []).length + '</span></button>' +
+                '</div>' +
+                (topComments.length > 0 ? '<div class="post-comments">' +
+                    topComments.map(function(c) {
+                        return '<div class="comment-item">' +
+                            '<div class="comment-avatar">' + (c.username || 'U').charAt(0).toUpperCase() + '</div>' +
+                            '<div><div class="comment-bubble"><span class="comment-username">' + escHtml(c.username || 'User') + '</span> ' + escHtml(c.message) + '</div></div>' +
+                        '</div>';
+                    }).join('') +
+                    (hasMore ? '<div style="font-size:10px;color:var(--text-secondary);cursor:pointer;margin-top:4px;" onclick="toggleComments(\'' + post.id + '\')">View all ' + (post.comments || []).length + ' comments</div>' : '') +
+                '</div>' : '') +
+                '<div id="comment-box-' + post.id + '" style="display:none;" class="comment-input-wrap">' +
+                    '<input type="text" id="comment-input-' + post.id + '" class="comment-input" placeholder="Write a comment...">' +
+                    '<button class="comment-submit" onclick="submitComment(\'' + post.id + '\')">Post</button>' +
+                '</div>' +
             '</div>';
         }).join('');
-        container.scrollTop = container.scrollHeight;
     }
 
-    async function loadChat() {
-        try { var res = await fetch('/api/chat/transparency/'); var data = await res.json(); if (data && Array.isArray(data)) { messages = data; renderChat(); } } catch(e) {}
-    }
-
-    async function sendMessage(replyTo) {
-        var input = document.getElementById('chatMessageInput');
-        var msg = input.value.trim(); if (!msg) return;
-        var token = localStorage.getItem('access_token'); if (!token) { alert('Login to comment'); return; }
+    async function loadFeed() {
         try {
-            var body = { message: msg }; if (replyTo) body.parent_id = replyTo;
-            var res = await fetch('/api/chat/transparency/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify(body) });
+            var res = await fetch('/api/chat/transparency/');
             var data = await res.json();
-            if (data.success) { input.value = ''; loadChat(); }
+            if (data && Array.isArray(data)) {
+                // Organize: parent messages = posts, replies = comments
+                feedPosts = data.filter(function(m) { return !m.parent_id; });
+                var allReplies = data.filter(function(m) { return m.parent_id; });
+
+                // Attach replies as comments to their parent posts
+                feedPosts.forEach(function(post) {
+                    post.comments = allReplies.filter(function(r) { return r.parent_id === post.id; });
+                });
+
+                renderFeed();
+            }
         } catch(e) {}
     }
 
-    function showReplyForm(msgId) {
-        var form = document.getElementById('reply-form-' + msgId);
-        form.style.display = form.style.display === 'none' ? 'block' : 'none';
-        if (form.style.display === 'block') document.getElementById('reply-input-' + msgId).focus();
-    }
-
-    async function submitReply(msgId) {
-        var input = document.getElementById('reply-input-' + msgId);
-        var msg = input.value.trim(); if (!msg) return;
-        var token = localStorage.getItem('access_token'); if (!token) { alert('Login to reply'); return; }
+    async function submitFeedPost() {
+        var input = document.getElementById('feedPostInput');
+        var msg = input.value.trim();
+        if (!msg) return;
+        var token = localStorage.getItem('access_token');
+        if (!token) { alert('Login to post'); return; }
         try {
-            var res = await fetch('/api/chat/transparency/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token }, body: JSON.stringify({ message: msg, parent_id: msgId }) });
+            var res = await fetch('/api/chat/transparency/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ message: msg })
+            });
             var data = await res.json();
-            if (data.success) { input.value = ''; document.getElementById('reply-form-' + msgId).style.display = 'none'; loadChat(); }
+            if (data.success) { input.value = ''; loadFeed(); }
         } catch(e) {}
     }
 
-    function reactToMessage(msgId, type) {
-        var key = msgId + '_' + type;
-        if (currentReactions[msgId]) { currentReactions[msgId][type] = (currentReactions[msgId][type] || 0) + 1; }
-        else { currentReactions[msgId] = { like: 0, dislike: 0, love: 0 }; currentReactions[msgId][type] = 1; }
-        renderChat();
+    function showCommentBox(postId) {
+        var box = document.getElementById('comment-box-' + postId);
+        if (box) box.style.display = box.style.display === 'none' ? 'flex' : 'none';
     }
 
-    document.getElementById('sendChatBtn').addEventListener('click', function() { sendMessage(); });
-    document.getElementById('chatMessageInput').addEventListener('keypress', function(e) { if (e.key === 'Enter') sendMessage(); });
+    async function submitComment(postId) {
+        var input = document.getElementById('comment-input-' + postId);
+        var msg = input.value.trim();
+        if (!msg) return;
+        var token = localStorage.getItem('access_token');
+        if (!token) { alert('Login to comment'); return; }
+        try {
+            var res = await fetch('/api/chat/transparency/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+                body: JSON.stringify({ message: msg, parent_id: postId })
+            });
+            var data = await res.json();
+            if (data.success) { input.value = ''; showCommentBox(postId); loadFeed(); }
+        } catch(e) {}
+    }
+
+    function reactToPost(postId, type) {
+        var key = postId + '_' + type;
+        if (!feedReactions[postId]) feedReactions[postId] = { like: 0, love: 0 };
+        feedReactions[postId][type] = (feedReactions[postId][type] || 0) + 1;
+        renderFeed();
+    }
+
+    function toggleComments(postId) {
+        // Expand to show all comments
+        var post = feedPosts.find(function(p) { return p.id === postId; });
+        if (post) {
+            alert(post.comments.map(function(c) { return (c.username || 'User') + ': ' + c.message; }).join('\n'));
+        }
+    }
+
+    // Init feed
+    loadFeed();
+    setInterval(loadFeed, 15000);
 
     // Init
     loadStats();

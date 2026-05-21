@@ -175,33 +175,51 @@ class PublicStatsView(APIView):
 
 
 class PublicDepositsView(APIView):
-    """Public deposits list - no auth"""
     permission_classes = [AllowAny]
 
     def get(self, request):
-        deposits = DepositRequest.objects.filter(status='CONFIRMED').order_by('-created_at')[:20]
-        data = [{
-            'created_at': d.created_at.strftime('%Y-%m-%d %H:%M'),
-            'user': d.user.wallet_address or anon_email(d.user.email),
-            'amount': str(d.amount),
-            'status': d.status,
-        } for d in deposits]
+        from apps.wallets.models import Transaction
+
+        deposits = Transaction.objects.filter(
+            transaction_type='DEPOSIT',
+            status='COMPLETED'
+        ).select_related('user').order_by('-created_at')[:30]
+
+        data = []
+        for d in deposits:
+            data.append({
+                'created_at': d.created_at.strftime('%Y-%m-%d %H:%M'),
+                'user': d.user.wallet_address or d.user.email,
+                'email': d.user.email,
+                'amount': str(d.amount),
+                'tx_hash': d.tx_hash or '',
+                'status': d.status,
+            })
         return Response(data)
 
 
 class PublicWithdrawalsView(APIView):
-    """Public withdrawals list - no auth"""
     permission_classes = [AllowAny]
 
     def get(self, request):
-        withdrawals = WithdrawalRequest.objects.filter(status='PROCESSED').order_by('-created_at')[:20]
-        data = [{
-            'created_at': w.created_at.strftime('%Y-%m-%d %H:%M'),
-            'user': w.user.wallet_address or anon_email(w.user.email),
-            'amount': str(w.amount),
-            'wallet_address': w.wallet_address,
-            'status': w.status,
-        } for w in withdrawals]
+        from apps.wallets.models import Transaction
+
+        withdrawals = Transaction.objects.filter(
+            transaction_type='WITHDRAWAL',
+            status='COMPLETED'
+        ).select_related('user').order_by('-created_at')[:30]
+
+        data = []
+        for w in withdrawals:
+            data.append({
+                'created_at': w.created_at.strftime('%Y-%m-%d %H:%M'),
+                'user': w.user.wallet_address or w.user.email,
+                'email': w.user.email,
+                'amount': str(w.amount),
+                'wallet_address': w.metadata.get('to_address', '') if w.metadata else '',
+                'tx_hash': w.tx_hash or '',
+                'status': w.status,
+            })
         return Response(data)
 
 
