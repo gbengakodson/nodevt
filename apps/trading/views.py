@@ -1116,6 +1116,80 @@ class TradingViewSet(viewsets.ViewSet):
 
 
 
+    @action(detail=False, methods=['get'])
+    def grid_performance(self, request):
+        """Get real Master Grid Bot performance data from Binance"""
+        from apps.trading.models import MasterGridBot
+        from apps.trading.services.fadakka_service import FadakkaService
+        from apps.wallets.services.binance_service import BinanceService
+
+        grids = MasterGridBot.objects.filter(status='ACTIVE').select_related('token')
+
+        bs = BinanceService()
+        performance_data = []
+        total_invested = Decimal('0')
+        total_profit = Decimal('0')
+        total_trades = 0
+
+        for grid in grids:
+            # Get real Binance trade data
+            trades = bs.get_filled_grid_orders(grid.token.symbol, start_time=grid.created_at)
+
+            # Get current open orders
+            binance_symbol = bs._get_binance_symbol(grid.token.symbol)
+            open_orders = 0
+            try:
+                orders = bs.client.get_open_orders(symbol=binance_symbol)
+                open_orders = len(orders)
+            except:
+                pass
+
+            invested = grid.total_amount
+            profit = Decimal(str(trades.get('profit', 0)))
+            profit_percent = (profit / invested * 100) if invested > 0 else Decimal('0')
+
+            total_invested += invested
+            total_profit += profit
+            total_trades += trades.get('total_trades', 0)
+
+            performance_data.append({
+                'id': str(grid.id),
+                'symbol': grid.token.symbol,
+                'invested': float(invested),
+                'entry_price': float(grid.price_at_creation),
+                'current_price': float(grid.token.current_price),
+                'profit': float(profit),
+                'profit_percent': float(profit_percent),
+                'total_trades': trades.get('total_trades', 0),
+                'buy_trades': trades.get('buy_trades', 0),
+                'sell_trades': trades.get('sell_trades', 0),
+                'open_orders': open_orders,
+                'grids': grid.grids,
+                'lower_price': float(grid.lower_price),
+                'upper_price': float(grid.upper_price),
+                'activated_at': grid.metadata.get('fadakka_level', 'unknown'),
+                'created_at': grid.created_at.isoformat(),
+                'last_trades': trades.get('trades', [])[:10],
+            })
+
+        # Aggregate stats
+        grid_count = len(performance_data)
+        avg_profit_percent = float(total_profit / total_invested * 100) if total_invested > 0 else 0
+
+        return Response({
+            'grids': performance_data,
+            'stats': {
+                'active_grids': grid_count,
+                'total_invested': float(total_invested),
+                'total_profit': float(total_profit),
+                'avg_profit_percent': round(avg_profit_percent, 2),
+                'total_trades': total_trades,
+                'monthly_yield_rate': round(avg_profit_percent * 4, 2),  # Annualized estimate
+            }
+        })
+
+
+
 
 
 class AdminYieldRateView(APIView):

@@ -158,10 +158,11 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API = '/api';
-    var bots = [];
-    var currentBot = null;
+    var masterGrids = [];
+    var currentGrid = null;
     var gridChart = null;
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -178,67 +179,97 @@
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
     }
 
-    function getCoinGeckoId(symbol) {
-        var mapping = {
-            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
-            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'DOT': 'polkadot',
-            'LINK': 'chainlink', 'UNI': 'uniswap', 'LTC': 'litecoin', 'NEAR': 'near',
-            'ATOM': 'cosmos', 'PEPE': 'pepe', 'AVAX': 'avalanche-2', 'MATIC': 'matic-network',
-            'ALGO': 'algorand', 'VET': 'vechain', 'AAVE': 'aave', 'CRV': 'curve-dao-token',
-            'SUSHI': 'sushi', 'FTM': 'fantom', 'THETA': 'theta-token'
+    function getTokenIcon(symbol) {
+        const icons = {
+            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
+            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
+            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
+            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
+            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
+            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
+            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
+            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
+            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
+            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
+            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
+            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
+            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
+            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
+            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
+            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/fantom.png',
+            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/elrond-egld.png',
+            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png'
         };
-        return mapping[symbol] || symbol.toLowerCase();
+        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    async function loadBots() {
-        bots = await apiCall('/trading/my_grids_all/');
-        var container = document.getElementById('botSelector');
-        if (!bots || bots.length === 0) {
-            container.innerHTML = '<span style="color:var(--text-secondary);font-size:11px;">No active bots</span>';
-            document.getElementById('tradesBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No bots active. <a href="/trading/" style="color:var(--primary);">Activate a grid bot</a> to see earnings.</td></tr>';
-            return;
-        }
-        var html = '';
-        for (var i = 0; i < bots.length; i++) {
-            var active = i === 0 ? ' active' : '';
-            html += '<button class="bot-chip' + active + '" data-bot-id="' + bots[i].id + '">' + bots[i].token_symbol + ' 🤖</button>';
-        }
-        container.innerHTML = html;
+    async function loadPerformance() {
+        try {
+            var data = await apiCall('/trading/grid_performance/');
+            masterGrids = data.grids || [];
+            var stats = data.stats || {};
 
-        document.querySelectorAll('.bot-chip').forEach(function(chip) {
-            chip.addEventListener('click', function() {
-                document.querySelectorAll('.bot-chip').forEach(function(c) { c.classList.remove('active'); });
-                this.classList.add('active');
-                selectBot(this.getAttribute('data-bot-id'));
+            // Update stats
+            document.getElementById('totalTrades').textContent = stats.total_trades || 0;
+            document.getElementById('hoursEarning').textContent = stats.active_grids || 0;
+            document.getElementById('trades24h').textContent = stats.monthly_yield_rate ? stats.monthly_yield_rate.toFixed(2) + '%' : '0%';
+            document.getElementById('profit24h').textContent = fc(stats.total_profit || 0);
+
+            // Render bot selector
+            var container = document.getElementById('botSelector');
+            if (masterGrids.length === 0) {
+                container.innerHTML = '<span style="color:var(--text-secondary);font-size:11px;">No active master grids</span>';
+                document.getElementById('tradesBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No master grids active. Grids activate when coins hit Fadakka alpha levels.</td></tr>';
+                document.getElementById('chartTitle').textContent = 'Waiting for grid activation';
+                return;
+            }
+
+            var html = '';
+            for (var i = 0; i < masterGrids.length; i++) {
+                var g = masterGrids[i];
+                var active = i === 0 ? ' active' : '';
+                html += '<button class="bot-chip' + active + '" data-idx="' + i + '">' +
+                    '<img src="' + getTokenIcon(g.symbol) + '" style="width:16px;height:16px;border-radius:50%;vertical-align:middle;margin-right:4px;">' +
+                    g.symbol + ' 🤖 ' + (g.profit_percent >= 0 ? '+' : '') + g.profit_percent.toFixed(2) + '%' +
+                    '</button>';
+            }
+            container.innerHTML = html;
+
+            document.querySelectorAll('.bot-chip').forEach(function(chip) {
+                chip.addEventListener('click', function() {
+                    document.querySelectorAll('.bot-chip').forEach(function(c) { c.classList.remove('active'); });
+                    this.classList.add('active');
+                    selectGrid(parseInt(this.getAttribute('data-idx')));
+                });
             });
-        });
 
-        selectBot(bots[0].id);
+            selectGrid(0);
+        } catch(e) {
+            console.error('Error loading performance:', e);
+        }
     }
 
-    function selectBot(botId) {
-        currentBot = bots.find(function(b) { return b.id === botId; });
-        if (!currentBot) return;
+    function selectGrid(idx) {
+        currentGrid = masterGrids[idx];
+        if (!currentGrid) return;
         renderGridChart();
         renderTrades();
-        updateStats();
     }
 
     async function renderGridChart() {
         var ctx = document.getElementById('gridChart').getContext('2d');
         if (gridChart) gridChart.destroy();
 
-        var lower = parseFloat(currentBot.lower_price);
-        var upper = parseFloat(currentBot.upper_price);
-        var grids = currentBot.grids || 100;
+        var lower = currentGrid.lower_price;
+        var upper = currentGrid.upper_price;
+        var grids = currentGrid.grids || 100;
         var step = (upper - lower) / grids;
-        var currentPrice = parseFloat(currentBot.price_at_creation) || ((lower + upper) / 2);
+        var currentPrice = currentGrid.current_price;
 
-        var labels = [];
-        var priceData = [];
-        var gridLines = [];
+        document.getElementById('chartTitle').textContent = currentGrid.symbol + ' Master Grid — $' + currentPrice.toFixed(6);
 
         // Build grid lines
+        var gridLines = [];
         for (var i = 0; i <= grids; i++) {
             var price = lower + (step * i);
             var color = price < currentPrice ? 'rgba(14,203,129,0.5)' : price > currentPrice ? 'rgba(246,70,93,0.5)' : 'rgba(240,185,11,1)';
@@ -246,19 +277,20 @@
         }
 
         // Fetch real price data
+        var labels = [];
+        var priceData = [];
         try {
-            var coinId = getCoinGeckoId(currentBot.token_symbol);
-            var url = 'https://api.coingecko.com/api/v3/coins/' + coinId + '/market_chart?vs_currency=usd&days=2';
+            var coinId = currentGrid.symbol.toLowerCase();
+            var url = 'https://api.coingecko.com/api/v3/coins/' +
+                ({'BTC':'bitcoin','ETH':'ethereum','BNB':'binancecoin','SOL':'solana','XRP':'ripple','ADA':'cardano','DOGE':'dogecoin','DOT':'polkadot','LINK':'chainlink','UNI':'uniswap','LTC':'litecoin','NEAR':'near','ATOM':'cosmos','PEPE':'pepe','AVAX':'avalanche-2','ALGO':'algorand','VET':'vechain','FTM':'fantom','THETA':'theta-token','EGLD':'elrond-erd-2'}[currentGrid.symbol] || currentGrid.symbol.toLowerCase()) +
+                '/market_chart?vs_currency=usd&days=2';
             var response = await fetch(url);
             var data = await response.json();
-
-            if (data && data.prices && data.prices.length > 0) {
-                var prices = data.prices;
-                currentPrice = prices[prices.length - 1][1];
-                for (var i = 0; i < prices.length; i++) {
-                    var date = new Date(prices[i][0]);
+            if (data && data.prices) {
+                for (var i = 0; i < data.prices.length; i++) {
+                    var date = new Date(data.prices[i][0]);
                     labels.push(date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0'));
-                    priceData.push(prices[i][1]);
+                    priceData.push(data.prices[i][1]);
                 }
             }
         } catch(e) {
@@ -270,71 +302,45 @@
             }
         }
 
-        document.getElementById('chartTitle').textContent = currentBot.token_symbol + ' — $' + currentPrice.toFixed(6);
-
         gridChart = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: currentBot.token_symbol + ' Price',
+                    label: currentGrid.symbol + ' Price',
                     data: priceData,
                     borderColor: '#F0B90B',
                     backgroundColor: 'rgba(240,185,11,0.05)',
-                    borderWidth: 2,
-                    fill: true,
-                    tension: 0.3,
-                    pointRadius: 0,
-                    order: 2
+                    borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0, order: 2
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false,
                 interaction: { intersect: false, mode: 'index' },
-                plugins: {
-                    legend: { labels: { color: '#848E9C', font: { size: 10 } } }
-                },
+                plugins: { legend: { labels: { color: '#848E9C', font: { size: 10 } } } },
                 scales: {
-                    x: {
-                        ticks: { color: '#848E9C', font: { size: 8 }, maxTicksLimit: 6 },
-                        grid: { display: false }
-                    },
-                    y: {
-                        ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return '$' + v.toFixed(6); } },
-                        grid: { color: 'rgba(255,255,255,0.04)' }
-                    }
+                    x: { ticks: { color: '#848E9C', font: { size: 8 }, maxTicksLimit: 6 }, grid: { display: false } },
+                    y: { ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return '$' + v.toFixed(6); } }, grid: { color: 'rgba(255,255,255,0.04)' } }
                 }
             },
             plugins: [{
                 id: 'gridLines',
                 beforeDraw: function(chart) {
-                    var ctx = chart.ctx;
-                    var yAxis = chart.scales.y;
-                    var xAxis = chart.scales.x;
-                    var left = xAxis.left;
-                    var right = xAxis.right;
-
+                    var ctx = chart.ctx, yAxis = chart.scales.y, xAxis = chart.scales.x;
                     ctx.save();
                     for (var i = 0; i < gridLines.length; i++) {
                         var y = yAxis.getPixelForValue(gridLines[i].price);
                         if (y < yAxis.top || y > yAxis.bottom) continue;
-
                         ctx.beginPath();
                         ctx.strokeStyle = gridLines[i].color;
                         ctx.lineWidth = i % 10 === 0 ? 1.5 : 0.4;
-                        if (i % 10 !== 0) ctx.setLineDash([3, 5]);
-                        else ctx.setLineDash([]);
-                        ctx.moveTo(left, y);
-                        ctx.lineTo(right, y);
-                        ctx.stroke();
-
+                        if (i % 10 !== 0) ctx.setLineDash([3, 5]); else ctx.setLineDash([]);
+                        ctx.moveTo(xAxis.left, y); ctx.lineTo(xAxis.right, y); ctx.stroke();
                         if (i % 10 === 0) {
                             ctx.fillStyle = gridLines[i].color.replace('0.5','1');
                             ctx.font = 'bold 9px monospace';
                             var text = '$' + gridLines[i].price.toFixed(6);
-                            var textWidth = ctx.measureText(text).width;
-                            ctx.fillText(text, right - textWidth - 6, y - 3);
+                            ctx.fillText(text, xAxis.right - ctx.measureText(text).width - 6, y - 3);
                         }
                     }
                     ctx.restore();
@@ -345,52 +351,40 @@
 
     function renderTrades() {
         var tbody = document.getElementById('tradesBody');
-        var grids = currentBot.grids || 100;
-        var created = new Date(currentBot.created_at);
-        var now = new Date();
-        var hoursRunning = Math.floor((now - created) / 3600000);
-        var currentPrice = parseFloat(currentBot.price_at_creation) || 0;
-        var lowerPrice = currentPrice * 0.95;
-        var upperPrice = currentPrice * 1.05;
-        var step = (upperPrice - lowerPrice) / grids;
+        var trades = currentGrid.last_trades || [];
+
+        if (trades.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No trades yet — grid waiting for price to hit levels</td></tr>';
+            return;
+        }
 
         var html = '';
-
-        for (var h = 0; h < Math.min(hoursRunning, 50); h++) {
-            var hourDate = new Date(created.getTime() + (h * 3600000));
-
-            var day = hourDate.getDate().toString().padStart(2,'0');
-            var month = (hourDate.getMonth() + 1).toString().padStart(2,'0');
-            var year = hourDate.getFullYear().toString().slice(2);
-            var hour = hourDate.getHours().toString().padStart(2,'0');
-            var min = hourDate.getMinutes().toString().padStart(2,'0');
-            var timeStr = day + '/' + month + '/' + year + ' ' + hour + ':' + min;
-
-            var level = Math.floor(Math.random() * grids) + 1;
-            var price = lowerPrice + (step * level);
-            price = price * (1 + (Math.random() - 0.5) * 0.02);
-
-            var isBuy = h % 3 !== 0;
+        for (var i = 0; i < trades.length; i++) {
+            var t = trades[i];
+            var date = new Date(t.time);
+            var timeStr = date.getDate().toString().padStart(2,'0') + '/' +
+                         (date.getMonth()+1).toString().padStart(2,'0') + '/' +
+                         date.getFullYear().toString().slice(2) + ' ' +
+                         date.getHours().toString().padStart(2,'0') + ':' +
+                         date.getMinutes().toString().padStart(2,'0');
+            var isBuy = !t.isBuyer;
             var type = isBuy ? 'Buy' : 'Sell';
             var typeClass = isBuy ? 'buy' : 'sell';
-            var txId = '0x' + Array(16).fill(0).map(function() { return Math.floor(Math.random()*16).toString(16); }).join('') + '...';
+            var txId = (t.orderId || '') + '...';
 
-            html += '<tr><td>' + timeStr + '</td><td>L' + level + '</td><td class="' + typeClass + '">' + type + '</td><td>' + fc(price) + '</td><td style="font-family:monospace;font-size:10px;">' + txId + '</td><td class="filled">Filled</td></tr>';
+            html += '<tr>' +
+                '<td>' + timeStr + '</td>' +
+                '<td>—</td>' +
+                '<td class="' + typeClass + '">' + type + '</td>' +
+                '<td>' + fc(t.price) + '</td>' +
+                '<td style="font-family:monospace;font-size:10px;">' + txId + '</td>' +
+                '<td class="filled">Filled</td>' +
+                '</tr>';
         }
-        tbody.innerHTML = html || '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No trades yet</td></tr>';
+        tbody.innerHTML = html;
     }
 
-    function updateStats() {
-        var created = new Date(currentBot.created_at);
-        var now = new Date();
-        var hoursRunning = Math.floor((now - created) / 3600000);
-
-        document.getElementById('totalTrades').textContent = Math.min(hoursRunning * 2, 9999);
-        document.getElementById('hoursEarning').textContent = Math.max(hoursRunning, 0);
-        document.getElementById('trades24h').textContent = Math.min(48, Math.max(hoursRunning, 1) * 2);
-        document.getElementById('profit24h').textContent = fc(parseFloat(currentBot.grid_profit) || 0);
-    }
-
-    loadBots();
+    loadPerformance();
+    setInterval(loadPerformance, 60000);
 </script>
 {% endblock %}
