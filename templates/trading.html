@@ -1350,7 +1350,12 @@
 
         if (coinParam) {
             currentSymbol = coinParam;
-            selectCoin(coinParam);
+        } else {
+            var storedCoin = localStorage.getItem('selectedCoin');
+            if (storedCoin) {
+                currentSymbol = storedCoin;
+                coinParam = storedCoin;
+            }
         }
 
         renderOrderBook();

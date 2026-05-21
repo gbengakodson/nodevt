@@ -433,8 +433,7 @@
     }
 
     function goToTrading(symbol) {
-        localStorage.setItem('selectedCoin', symbol);
-        window.location.href = '/trading/';
+        window.location.href = '/trading/?coin=' + symbol;
     }
 
     async function fetchMarketData() {
