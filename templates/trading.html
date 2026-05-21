@@ -672,16 +672,18 @@
         </div>
 
         <div class="coins-card">
-            <div class="orderbook-title">Top Coins</div>
-            <div class="coin-list" id="coinList"></div>
+            <div class="orderbook-title">🎯 Spot Grid Monitor</div>
+            <div class="coin-list" id="fadakkaList" style="max-height: 500px;">
+                <div style="text-align:center;color:#707A8A;padding:20px;font-size:12px;">Loading Fadakka data...</div>
+            </div>
             <div class="stats-mini">
                 <div class="stat-mini">
                     <div class="stat-mini-label">Your Balance</div>
                     <div class="stat-mini-value" id="userBalance">$0.00</div>
                 </div>
                 <div class="stat-mini">
-                    <div class="stat-mini-label">24h Volume</div>
-                    <div class="stat-mini-value" id="globalVolume">$0</div>
+                    <div class="stat-mini-label">Grids Active</div>
+                    <div class="stat-mini-value" id="activeGridsCount">0</div>
                 </div>
             </div>
         </div>
@@ -1057,50 +1059,45 @@
         document.getElementById('gridUpperPrice').innerHTML = formatCurrency(upper);
     }
 
-    async function loadCoins() {
+    async function loadFadakkaData() {
         try {
-            tokens = await apiCall('/trading/');
-            const container = document.getElementById('coinList');
-            if (container) {
-                container.innerHTML = tokens.slice(0, 10).map(token => {
-                    const change = (Math.random() - 0.5) * 8;
-                    const changeClass = change >= 0 ? 'price-up' : 'price-down';
-                    return `<div class="coin-item" onclick="selectCoin('${token.symbol}')">
-                        <div class="coin-info">
-                            <img src="${getTokenIcon(token.symbol)}" style="width:28px;height:28px;border-radius:50%;" onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
-                            <div>
-                                <div class="coin-symbol">${token.symbol}</div>
-                                <div class="coin-name">${token.name}</div>
-                            </div>
-                        </div>
-                        <div style="text-align:right;">
-                            <div class="coin-price">${formatCurrency(token.current_price)}</div>
-                            <div class="coin-change ${changeClass}">${change >= 0 ? '+' : ''}${Math.abs(change).toFixed(2)}%</div>
-                        </div>
-                    </div>`;
-                }).join('');
+            var res = await apiCall('/trading/fadakka_status/');
+            var container = document.getElementById('fadakkaList');
+            if (!container) return;
+
+            var activeCount = 0;
+            var html = '';
+            for (var i = 0; i < res.length; i++) {
+                var d = res[i];
+                if (d.has_active_grid) activeCount++;
+
+                var triggerBadge = '';
+                if (d.trigger === 'a2') triggerBadge = '<span class="price-down">🔴 a2</span>';
+                else if (d.trigger === 'a1') triggerBadge = '<span style="color:#F0B90B;">🟠 a1</span>';
+                else if (d.trigger === 'a3') triggerBadge = '<span style="color:#0ECB81;">🟡 a3</span>';
+                else triggerBadge = '<span style="color:#707A8A;">—</span>';
+
+                var gridBadge = d.has_active_grid ? '🤖' : '';
+                var discount = d.discount ? d.discount.toFixed(1) + '%' : '';
+
+                html += '<div class="coin-item" onclick="selectCoin(\'' + d.symbol + '\')">' +
+                    '<div class="coin-info">' +
+                        '<img src="' + getTokenIcon(d.symbol) + '" style="width:28px;height:28px;border-radius:50%;" onerror="this.src=\'https://assets.coingecko.com/coins/images/1/small/bitcoin.png\'">' +
+                        '<div>' +
+                            '<div class="coin-symbol">' + d.symbol + ' ' + gridBadge + '</div>' +
+                            '<div class="coin-name">' + triggerBadge + ' ' + discount + '</div>' +
+                        '</div>' +
+                    '</div>' +
+                    '<div style="text-align:right;">' +
+                        '<div class="coin-price">' + formatCurrency(d.current_price) + '</div>' +
+                        '<div style="font-size:9px;color:#707A8A;">k: ' + formatCurrency(d.fadakka_k || 0) + '</div>' +
+                    '</div>' +
+                '</div>';
             }
-            const selectedCoin = localStorage.getItem('selectedCoin');
-            if (selectedCoin) {
-                currentSymbol = selectedCoin;
-                localStorage.removeItem('selectedCoin');
-            } else {
-                const currentToken = tokens.find(t => t.symbol === currentSymbol);
-                if (!currentToken && tokens.length > 0) currentSymbol = tokens[0].symbol;
-            }
-            const currentToken = tokens.find(t => t.symbol === currentSymbol);
-            if (currentToken) {
-                currentPrice = parseFloat(currentToken.current_price);
-                document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-                document.getElementById('currentCoinIcon').src = getTokenIcon(currentSymbol);
-                document.getElementById('symbolName').innerHTML = `${currentSymbol}/USDC`;
-                updateGridRange();
-            }
-            await updateButtonState();
-            startAllBots();
-            setTimeout(() => { addBotIconsToTradingCoins(); addChartBotIcon(); }, 500);
-            await updateChart();
-        } catch (e) { console.error('Error loading coins:', e); }
+            container.innerHTML = html || '<div style="text-align:center;color:#707A8A;padding:20px;">No data</div>';
+            document.getElementById('activeGridsCount').textContent = activeCount;
+
+        } catch(e) { console.error('Fadakka:', e); }
     }
 
     function selectCoin(symbol) {
@@ -1351,7 +1348,8 @@
             currentSymbol = coinParam;
         }
 
-        await loadCoins();
+        tokens = await apiCall('/trading/');
+        await loadFadakkaData();
         await loadUserData();
         renderOrderBook();
         updateButtonState();
@@ -1360,14 +1358,17 @@
             selectCoin(coinParam);
             if (sellParam) {
                 setTimeout(function() {
-                    // sellParam is USDC value, set it as the amount
                     document.getElementById('marketAmount').value = parseFloat(sellParam).toFixed(2);
                 }, 500);
             }
         }
 
         setInterval(function() { renderOrderBook(); }, 3000);
-        setInterval(async function() { await loadCoins(); await loadUserData(); }, 120000);
+        setInterval(async function() {
+            tokens = await apiCall('/trading/');
+            await loadFadakkaData();
+            await loadUserData();
+        }, 120000);
     }
     init();
 </script>

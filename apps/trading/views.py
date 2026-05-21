@@ -1085,6 +1085,37 @@ class TradingViewSet(viewsets.ViewSet):
             return Response({'error': str(e)}, status=500)
 
 
+        @action(detail=False, methods=['get'])
+        def fadakka_status(self, request):
+            """Get Fadakka Index status for all coins"""
+            from apps.trading.services.fadakka_service import FadakkaService
+            from apps.tokens.models import CryptoToken
+
+            data = []
+            for token in CryptoToken.objects.filter(is_active=True):
+                alpha = FadakkaService.get_alpha_levels(token.symbol)
+                trigger = FadakkaService.check_trigger(token.symbol, token.current_price)
+                has_grid = FadakkaService.has_active_grid(token.symbol)
+                should_exit = FadakkaService.should_exit(token.symbol, token.current_price)
+
+                data.append({
+                    'symbol': token.symbol,
+                    'current_price': float(token.current_price),
+                    'fadakka_k': alpha['k'] if alpha else None,
+                    'a1': alpha['a1'] if alpha else None,
+                    'a2': alpha['a2'] if alpha else None,
+                    'a3': alpha['a3'] if alpha else None,
+                    'exit_price': alpha['exit_price'] if alpha else None,
+                    'trigger': trigger['level'] if trigger else None,
+                    'tier': trigger['tier'] if trigger else None,
+                    'discount': trigger['discount'] if trigger else None,
+                    'has_active_grid': has_grid,
+                    'should_exit': should_exit,
+                })
+
+            return Response(data)
+
+
 class AdminYieldRateView(APIView):
     permission_classes = [IsAdminUser]
 
@@ -1161,9 +1192,27 @@ def send_daily_email_webhook(request):
 def sweep_webhook(request):
     from apps.tokens.services import PriceService
     PriceService.update_token_prices()
+
     from django.core.management import call_command
     call_command('check_credits')
+
+    # Run Fadakka grid activation
+    from apps.trading.services.fadakka_service import FadakkaService
+    from apps.wallets.models import Wallet
+    from django.contrib.auth import get_user_model
+
+    User = get_user_model()
+    admin = User.objects.filter(is_superuser=True).first()
+    if admin:
+        central_wallet = Wallet.objects.get(user=admin, wallet_type='GRAND')
+        available = float(central_wallet.balance)
+        if available >= 100:  # Only scan if at least $100 available
+            actions = FadakkaService.scan_and_activate(available)
+            for action in actions:
+                print(f"Fadakka: {action['action']} {action['symbol']} ({action.get('level', '')})")
+
     return JsonResponse({'status': 'success'})
+
 
 @csrf_exempt
 def platform_report_webhook(request):
