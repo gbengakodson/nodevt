@@ -1354,6 +1354,9 @@
         renderOrderBook();
         updateButtonState();
 
+        // Always update the chart for the current symbol
+        await updateChart();
+
         if (coinParam) {
             selectCoin(coinParam);
             if (sellParam) {
