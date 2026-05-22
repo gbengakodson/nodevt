@@ -804,10 +804,18 @@ async function loadPurseCard() {
     for (var i = 0; i < purses.length; i++) {
         var name = purses[i];
         var icon = icons[name] || '💰';
-        html += '<div class="purse-item" onclick="openPurseModal(\'' + name + '\')">' +
-            '<span class="p-icon">' + icon + '</span>' +
-            '<span class="p-name">' + name + '</span>' +
-            '<span class="p-balance" id="pbal_' + name.replace(/\s/g,'') + '">—</span>' +
+        html += '<div class="purse-item" style="flex-direction:column;align-items:stretch;padding:6px 0;">' +
+            '<div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer;" onclick="openPurseModal(\'' + name + '\')">' +
+                '<span class="p-icon">' + icon + '</span>' +
+                '<span class="p-name">' + name + '</span>' +
+                '<span class="p-balance" id="pbal_' + name.replace(/\s/g,'') + '">—</span>' +
+            '</div>' +
+            '<div style="display:flex;align-items:center;gap:4px;margin-top:3px;font-size:9px;">' +
+                '<span style="color:var(--text-secondary);">Auto:</span>' +
+                '<input type="number" id="swp_' + name.replace(/\s/g,'') + '" value="10" min="0" max="100" style="width:36px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:3px;padding:1px 3px;color:var(--text-primary);font-size:8px;text-align:center;">' +
+                '<span style="color:var(--text-secondary);">%</span>' +
+                '<div class="toggle" id="tog_' + name.replace(/\s/g,'') + '" onclick="event.stopPropagation();togglePurseSweep(\'' + name + '\')" style="margin-left:auto;width:30px;height:16px;"></div>' +
+            '</div>' +
         '</div>';
     }
     content.innerHTML = html;
@@ -816,6 +824,7 @@ async function loadPurseCard() {
     // Load balances
         for (var i = 0; i < purses.length; i++) {
             loadPurseBalance(purses[i]);
+            loadPurseSettings(purses[i]);
         }
     }
 
@@ -891,6 +900,25 @@ async function loadPurseCard() {
                 else alert('Network error');
             }, 200);
         }
+    }
+
+    async function loadPurseSettings(name) {
+        try {
+            var res = await apiCall('/trading/purse/?name=' + encodeURIComponent(name));
+            var id = name.replace(/\s/g,'');
+            var swpEl = document.getElementById('swp_' + id);
+            var togEl = document.getElementById('tog_' + id);
+            if (swpEl) swpEl.value = res.sweep_percentage || 10;
+            if (togEl) {
+                if (res.auto_sweep_enabled) togEl.classList.add('active');
+                else togEl.classList.remove('active');
+            }
+        } catch(e) {}
+    }
+
+    async function togglePurseSweep(name) {
+        await apiCall('/trading/purse_toggle/', 'POST', { name: name });
+        loadPurseSettings(name);
     }
 
     // Call on load
