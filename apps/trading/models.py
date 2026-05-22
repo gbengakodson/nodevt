@@ -41,19 +41,6 @@ class GridBot(models.Model):
         level = (self.token.current_price - self.lower_price) / grid_step
         return max(0, min(self.grids, int(level)))
 
-    @property
-    def pnl(self):
-        if self.price_at_creation == 0:
-            return Decimal('0')
-        price_diff = self.token.current_price - self.price_at_creation
-        price_diff_percent = price_diff / self.price_at_creation
-        return price_diff_percent * self.amount
-
-    @property
-    def pnl_percent(self):
-        if self.price_at_creation == 0:
-            return Decimal('0')
-        return ((self.token.current_price - self.price_at_creation) / self.price_at_creation) * 100
 
 
 class MasterGridBot(models.Model):
