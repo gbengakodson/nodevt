@@ -28,10 +28,11 @@ class ReferralService:
 
         return chain
 
+
     @classmethod
     @transaction.atomic
     def distribute_node_fee(cls, user, node_fee, purchase):
-        """Split node fee: 50% to direct referrer, 50% to platform"""
+        """Split node fee: 50% swept to referrer's real wallet, 50% stays in NODE Web3"""
         if node_fee <= 0:
             return []
 
@@ -41,27 +42,49 @@ class ReferralService:
 
         chain = cls.get_referral_chain(user)
 
-        # 50% to direct referrer
+        # 50% to direct referrer - sweep to their real wallet
         if chain:
             referrer = chain[0]['user']
-            earning = ReferralEarning.objects.create(
-                user=referrer, from_user=user, purchase=purchase,
-                level=1, amount=referrer_share
-            )
-            referrer_wallet, _ = Wallet.objects.get_or_create(
-                user=referrer, wallet_type='GRAND', defaults={'balance': 0}
-            )
-            referrer_wallet.balance += referrer_share
-            referrer_wallet.save()
-            Transaction.objects.create(
-                user=referrer, transaction_type='REFERRAL',
-                amount=referrer_share, fee=0, status='COMPLETED',
-                metadata={'from_user': user.email, 'level': 1, 'purchase_id': str(purchase.id)},
-                completed_at=timezone.now()
-            )
-            distributions.append(earning)
 
-        # 50% to platform admin
+            # Get referrer's wallet address
+            from apps.wallets.models import WalletKey
+            try:
+                wallet_key = WalletKey.objects.get(user=referrer)
+                referrer_address = wallet_key.address
+            except WalletKey.DoesNotExist:
+                referrer_address = None
+
+            if referrer_address:
+                # Sweep from NODE Web3 to referrer's wallet
+                from django.conf import settings
+                from apps.trading.views import TradingViewSet
+                sweep_result = TradingViewSet._sweep_from_user_wallet(
+                    settings.CENTRAL_WALLET_ADDRESS,
+                    settings.CENTRAL_WALLET_PRIVATE_KEY,
+                    referrer_address,
+                    referrer_share
+                )
+
+                if sweep_result['success']:
+                    earning = ReferralEarning.objects.create(
+                        user=referrer, from_user=user, purchase=purchase,
+                        level=1, amount=referrer_share
+                    )
+
+                    Transaction.objects.create(
+                        user=referrer, transaction_type='REFERRAL',
+                        amount=referrer_share, fee=0, status='COMPLETED',
+                        tx_hash=sweep_result.get('tx_hash', ''),
+                        metadata={
+                            'from_user': user.email, 'level': 1,
+                            'purchase_id': str(purchase.id),
+                            'to_address': referrer_address
+                        },
+                        completed_at=timezone.now()
+                    )
+                    distributions.append(earning)
+
+        # 50% stays in NODE Web3 - track for admin dashboard
         from django.contrib.auth import get_user_model
         User = get_user_model()
         admin = User.objects.filter(is_superuser=True).first()
@@ -70,11 +93,17 @@ class ReferralService:
                 user=admin, from_user=user, purchase=purchase,
                 level=0, amount=platform_share
             )
-            admin_wallet, _ = Wallet.objects.get_or_create(
-                user=admin, wallet_type='GRAND', defaults={'balance': 0}
+
+            Transaction.objects.create(
+                user=admin, transaction_type='PLATFORM_FEE',
+                amount=platform_share, fee=0, status='COMPLETED',
+                metadata={
+                    'from_user': user.email,
+                    'purchase_id': str(purchase.id),
+                    'source': 'node_fee_share'
+                },
+                completed_at=timezone.now()
             )
-            admin_wallet.balance += platform_share
-            admin_wallet.save()
             distributions.append(earning)
 
         return distributions
