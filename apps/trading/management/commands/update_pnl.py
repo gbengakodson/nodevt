@@ -36,6 +36,16 @@ class Command(BaseCommand):
                 if pnl_percent >= 20:
                     total_return = bot.amount + bot.grid_profit + bot.pnl
 
+                    # Check liquidity
+                    from apps.wallets.services.web3_service import Web3Service
+                    ws = Web3Service()
+                    central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
+
+                    if central_balance < total_return:
+                        self.stdout.write(
+                            f'⚠️ Liquidity gap for {token.symbol} bot ({bot.user.email}): have ${float(central_balance):.2f}, need ${float(total_return):.2f}')
+                        continue  # Skip this bot, try next cycle
+
                     # Sweep to user's wallet
                     from apps.wallets.models import WalletKey, Transaction
                     from apps.trading.views import TradingViewSet
