@@ -611,7 +611,7 @@
         <div class="order-card">
             <div class="order-tabs">
                 <button class="order-tab" data-tab="market" disabled style="opacity:0.4;cursor:not-allowed;">Market Order 🔒</button>
-                <button class="order-tab active" data-tab="grid">Spot Grid Bot</button>
+                <button class="order-tab active" data-tab="grid">NODE Position Tracker</button>
             </div>
 
             <!-- Market Order Panel (Simple Spot Buy/Sell) -->
@@ -627,7 +627,7 @@
                 <div class="form-group">
                     <label class="form-label">Investment Amount (USDC)</label>
                     <input type="number" id="gridAmount" class="form-input" step="10" placeholder="Minimum 10 USDC">
-                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be allocated to the grid strategy</div>
+                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be added to NODE central wallet and will be managed by NODE Master grid API</div>
                 </div>
 
                 <!-- Predefined Grid Parameters (readonly, shown for transparency) -->
@@ -638,23 +638,23 @@
                     </div>
                     <div class="param-row">
                         <span>Number of Grids:</span>
-                        <span>100 (geometric)</span>
+                        <span>100</span>
                     </div>
                     <div class="param-row">
                         <span>Grid Mode:</span>
-                        <span>Arithmetic</span>
+                        <span>Geometric</span>
                     </div>
                     <div class="param-row">
                         <span>Working Mode:</span>
-                        <span>Neutral (Buy first)</span>
+                        <span>Long (Buy first)</span>
                     </div>
                 </div>
 
                 <div class="fee-info">
-                    <i class="fas fa-info-circle"></i> Fee: 10% for grid bot activation (includes yield distribution & referrals)
+                    <i class="fas fa-info-circle"></i> Fee: 10% for grid bot activation
                 </div>
 
-                <button class="btn-buy" id="activateGridBtn">Activate Grid Bot</button>
+                <button class="btn-buy" id="activateGridBtn">Activate</button>
             </div>
         </div>
     </div>
@@ -1050,9 +1050,14 @@
         try {
             const balance = await apiCall('/trading/my_balance/');
             userGrandBalance = parseFloat(balance.grand_balance) || 0;
+            const blockchainBalance = parseFloat(balance.blockchain_balance) || 0;
+
+            // Display real wallet balance
+            document.getElementById('userBalance').textContent = formatCurrency(blockchainBalance);
+
             const buyBtn = document.getElementById('buyBtnMarket');
             const sellBtn = document.getElementById('sellBtnMarket');
-            if (userGrandBalance <= 0) buyBtn?.classList.add('btn-buy-disabled');
+            if (blockchainBalance <= 0) buyBtn?.classList.add('btn-buy-disabled');
             else buyBtn?.classList.remove('btn-buy-disabled');
             const holdings = await apiCall('/trading/my_tokens/');
             const hasToken = holdings.some(h => h.token_symbol === currentSymbol && parseFloat(h.quantity) > 0);
@@ -1128,7 +1133,7 @@
         }
         document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
-        document.getElementById('activateGridBtn').innerHTML = `Activate Grid Bot for ${symbol}`;
+        document.getElementById('activateGridBtn').innerHTML = `Activate Position Tracker for ${symbol}`;
     }
     window.selectCoin = selectCoin;
 
@@ -1243,11 +1248,11 @@
                 await sleep(1000);
 
                 // Step 3: Grid Activated
-                updateLoaderStep(3, '...Grid activated ✅');
+                updateLoaderStep(3, '...Activated ✅');
                 await sleep(1200);
 
                 hideGridLoader();
-                showModal(`Grid bot activated for ${currentSymbol} with $${amount} (10% fee applied). Your grid bot will appear in dashboard.`, 'success');
+                showModal(`Activated for ${currentSymbol} with $${amount} (10% fee applied). Your Position Tracker will appear in dashboard.`, 'success');
                 document.getElementById('gridAmount').value = '';
             } else {
                 hideGridLoader();
@@ -1280,9 +1285,9 @@
         `;
         overlay.innerHTML = `
             <div style="width: 60px; height: 60px; border: 4px solid #2B3139; border-top: 4px solid #F0B90B; border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 24px;"></div>
-            <div id="loaderStep1" style="color: #848E9C; font-size: 16px; font-weight: 600; margin-bottom: 8px; opacity: 0.4;">...attaching Grids</div>
+            <div id="loaderStep1" style="color: #848E9C; font-size: 16px; font-weight: 600; margin-bottom: 8px; opacity: 0.4;">...attaching</div>
             <div id="loaderStep2" style="color: #848E9C; font-size: 16px; font-weight: 600; margin-bottom: 8px; opacity: 0.4;">...setting up</div>
-            <div id="loaderStep3" style="color: #848E9C; font-size: 16px; font-weight: 600; opacity: 0.4;">...Grid activated</div>
+            <div id="loaderStep3" style="color: #848E9C; font-size: 16px; font-weight: 600; opacity: 0.4;">...Activated</div>
         `;
         document.body.appendChild(overlay);
     }

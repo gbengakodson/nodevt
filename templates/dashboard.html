@@ -1011,8 +1011,9 @@
                 checkPensionStatus();
             }
 
+
             // Yield wallet transfer button
-            const btnTransfer = document.getElementById('btnTransferYield');
+            const btnTransfer = document.getElementById('btnWithdrawYield');
             const minRequired = portfolioData ? (userType === 'BUSINESS' ? portfolioData.total_portfolio * 0.03 : portfolioData.min_required_to_transfer) : 0;
             const canTransfer = portfolioData ? (userType === 'BUSINESS' ? (userYieldBalance >= minRequired && userYieldBalance > 0) : portfolioData.can_transfer) : false;
             if (document.getElementById('minRequired')) {
