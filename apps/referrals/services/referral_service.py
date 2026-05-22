@@ -31,71 +31,51 @@ class ReferralService:
     @classmethod
     @transaction.atomic
     def distribute_node_fee(cls, user, node_fee, purchase):
-        """Distribute 100% of node fee to direct referrer only (1 level)"""
+        """Split node fee: 50% to direct referrer, 50% to platform"""
         if node_fee <= 0:
             return []
 
-        chain = cls.get_referral_chain(user)
         distributions = []
+        referrer_share = node_fee * Decimal('0.5')
+        platform_share = node_fee - referrer_share
 
+        chain = cls.get_referral_chain(user)
+
+        # 50% to direct referrer
         if chain:
             referrer = chain[0]['user']
-
             earning = ReferralEarning.objects.create(
-                user=referrer,
-                from_user=user,
-                purchase=purchase,
-                level=1,
-                amount=node_fee
+                user=referrer, from_user=user, purchase=purchase,
+                level=1, amount=referrer_share
             )
-
             referrer_wallet, _ = Wallet.objects.get_or_create(
-                user=referrer,
-                wallet_type='GRAND',
-                defaults={'balance': 0}
+                user=referrer, wallet_type='GRAND', defaults={'balance': 0}
             )
-            referrer_wallet.balance += node_fee
+            referrer_wallet.balance += referrer_share
             referrer_wallet.save()
-
             Transaction.objects.create(
-                user=referrer,
-                transaction_type='REFERRAL',
-                amount=node_fee,
-                fee=0,
-                status='COMPLETED',
-                metadata={
-                    'from_user': user.email,
-                    'level': 1,
-                    'purchase_id': str(purchase.id)
-                },
+                user=referrer, transaction_type='REFERRAL',
+                amount=referrer_share, fee=0, status='COMPLETED',
+                metadata={'from_user': user.email, 'level': 1, 'purchase_id': str(purchase.id)},
                 completed_at=timezone.now()
             )
-
             distributions.append(earning)
-        else:
-            # No referrer — fee goes to platform
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
-            top_user = User.objects.filter(is_superuser=True).first()
 
-            if top_user:
-                earning = ReferralEarning.objects.create(
-                    user=top_user,
-                    from_user=user,
-                    purchase=purchase,
-                    level=0,
-                    amount=node_fee
-                )
-
-                top_wallet, _ = Wallet.objects.get_or_create(
-                    user=top_user,
-                    wallet_type='GRAND',
-                    defaults={'balance': 0}
-                )
-                top_wallet.balance += node_fee
-                top_wallet.save()
-
-                distributions.append(earning)
+        # 50% to platform admin
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        admin = User.objects.filter(is_superuser=True).first()
+        if admin and platform_share > 0:
+            earning = ReferralEarning.objects.create(
+                user=admin, from_user=user, purchase=purchase,
+                level=0, amount=platform_share
+            )
+            admin_wallet, _ = Wallet.objects.get_or_create(
+                user=admin, wallet_type='GRAND', defaults={'balance': 0}
+            )
+            admin_wallet.balance += platform_share
+            admin_wallet.save()
+            distributions.append(earning)
 
         return distributions
 
