@@ -479,16 +479,43 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def close_grid(self, request):
+        """Close Position Tracker and sweep funds to user's real wallet"""
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
 
-        total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0) + (bot.total_yield_earned or 0)
+        # Correct return: investment + uncollected profit + market PNL
+        total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
+        # Check platform liquidity
+        from apps.wallets.services.web3_service import Web3Service
+        ws = Web3Service()
+        central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
 
-        grand_wallet, _ = Wallet.objects.get_or_create(
-            user=request.user, wallet_type='GRAND', defaults={'balance': 0}
+        if central_balance < total_return:
+            return Response({
+                'error': 'Liquidity Gap! Please try again in 24 hours.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get user's wallet address
+        from apps.wallets.models import WalletKey
+        try:
+            wallet_key = WalletKey.objects.get(user=request.user)
+            user_address = wallet_key.address
+        except WalletKey.DoesNotExist:
+            return Response({'error': 'No wallet found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Sweep from NODE Web3 to user's real wallet
+        from django.conf import settings
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            settings.CENTRAL_WALLET_ADDRESS,
+            settings.CENTRAL_WALLET_PRIVATE_KEY,
+            user_address,
+            total_return
         )
-        grand_wallet.balance += total_return
-        grand_wallet.save()
+
+        if not sweep_result['success']:
+            return Response({
+                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
         Transaction.objects.create(
             user=request.user,
@@ -496,13 +523,14 @@ class TradingViewSet(viewsets.ViewSet):
             amount=total_return,
             fee=0,
             status='COMPLETED',
+            tx_hash=sweep_result.get('tx_hash', ''),
             metadata={
                 'grid_bot_id': str(bot.id),
                 'token': bot.token.symbol,
                 'investment': str(bot.amount),
                 'grid_profit': str(bot.grid_profit),
                 'pnl': str(bot.pnl),
-                'yield_earned': str(bot.total_yield_earned)
+                'to_address': user_address
             },
             completed_at=timezone.now()
         )
@@ -513,13 +541,14 @@ class TradingViewSet(viewsets.ViewSet):
         return Response({
             'success': True,
             'total_return': float(total_return),
+            'tx_hash': sweep_result.get('tx_hash', ''),
             'breakdown': {
                 'investment': float(bot.amount),
                 'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl),
-                'yield_earned': float(bot.total_yield_earned)
+                'pnl': float(bot.pnl)
             }
         })
+
 
     @action(detail=False, methods=['post'])
     def auto_close_grid(self, request):
@@ -527,13 +556,50 @@ class TradingViewSet(viewsets.ViewSet):
         bot = GridBot.objects.get(id=bot_id, user=request.user)
         if bot.pnl_percent >= 20:
             total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
-            grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND', defaults={'balance': 0})
-            grand_wallet.balance += total_return
-            grand_wallet.save()
+            # Check platform liquidity
+            from apps.wallets.services.web3_service import Web3Service
+            ws = Web3Service()
+            central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
+
+            if central_balance < total_return:
+                return Response({
+                    'error': 'Liquidity Gap! Please try again in 24 hours.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            from apps.wallets.models import WalletKey
+            try:
+                wallet_key = WalletKey.objects.get(user=request.user)
+                user_address = wallet_key.address
+            except WalletKey.DoesNotExist:
+                return Response({'error': 'No wallet found'}, status=400)
+
+            from django.conf import settings
+            sweep_result = TradingViewSet._sweep_from_user_wallet(
+                settings.CENTRAL_WALLET_ADDRESS,
+                settings.CENTRAL_WALLET_PRIVATE_KEY,
+                user_address,
+                total_return
+            )
+
+            if not sweep_result['success']:
+                return Response({'error': f"Sweep failed: {sweep_result.get('error')}"}, status=400)
+
+            Transaction.objects.create(
+                user=request.user,
+                transaction_type='GRID_CLOSE',
+                amount=total_return, fee=0, status='COMPLETED',
+                tx_hash=sweep_result.get('tx_hash', ''),
+                metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol, 'to_address': user_address},
+                completed_at=timezone.now()
+            )
+
             bot.status = 'COMPLETED'
             bot.save()
-            return Response({'success': True, 'amount': float(total_return)})
+            return Response(
+                {'success': True, 'amount': float(total_return), 'tx_hash': sweep_result.get('tx_hash', '')})
         return Response({'error': 'PNL not reached 20%'}, status=400)
+
+
 
     @action(detail=False, methods=['get'])
     def my_balance(self, request):
