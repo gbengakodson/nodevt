@@ -20,6 +20,7 @@ from apps.wallets.models import Wallet, Transaction
 from apps.trading.models import GridBot
 from apps.core.models import PlatformSetting
 from datetime import timedelta
+from apps.core.notifications import notify_user
 
 
 
@@ -194,6 +195,14 @@ class TradingViewSet(viewsets.ViewSet):
                 created_at=timezone.now(),
                 metadata={'sweep_tx': sweep_result.get('tx_hash', '')}
             )
+            # After: GridBot.objects.create(...)
+            notify_user(
+                request.user,
+                f'🤖 {token.symbol} Position Tracker Activated',
+                f'Your {token.symbol} tracker is live with ${float(amount_after_fee):.2f}. Profits start in 24 hours.',
+                'PORTFOLIO'
+            )
+
 
         # Create purchase record
         purchase = Purchase.objects.create(
@@ -232,6 +241,14 @@ class TradingViewSet(viewsets.ViewSet):
                 'referrals_credited': referral_count
             },
             completed_at=timezone.now()
+        )
+
+        # After: Transaction.objects.create(...)
+        notify_user(
+            request.user,
+            f'💸 Yield Collected',
+            f'${float(profit_amount):.2f} collected from {bot.token.symbol} tracker and sent to your wallet.',
+            'PORTFOLIO'
         )
 
         return Response({
@@ -679,6 +696,15 @@ class TradingViewSet(viewsets.ViewSet):
                     metadata={'to_address': address},
                     completed_at=timezone.now()
                 )
+
+                # Place notification BEFORE the return
+                notify_user(
+                    request.user,
+                    f'📤 Withdrawal Processed',
+                    f'${float(amount):.2f} USDC sent. TX: {sweep_result.get("tx_hash", "")[:20]}...',
+                    'ALERT'
+                )
+
                 return Response(
                     {'success': True, 'tx_id': result.get('tx_hash', ''), 'new_balance': float(grand.balance)})
             else:

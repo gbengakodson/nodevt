@@ -3,6 +3,12 @@ from apps.trading.models import GridBot
 from decimal import Decimal
 from django.utils import timezone
 from django.conf import settings
+from apps.core.notifications import notify_user
+
+
+
+
+
 
 
 class Command(BaseCommand):
@@ -32,6 +38,15 @@ class Command(BaseCommand):
                 bot.save()
                 updated += 1
 
+                # Notify if nearing 20%
+                if 15 <= float(pnl_percent) < 20:
+                    notify_user(
+                        bot.user,
+                        f'📈 {token.symbol} Nearing Auto-Close',
+                        f'Your {token.symbol} tracker is at +{float(pnl_percent):.1f}% PNL. At 20% it will auto-close and return funds to your wallet.',
+                        'INFO'
+                    )
+
                 # Auto-close at 20%+ PNL
                 if pnl_percent >= 20:
                     total_return = bot.amount + bot.grid_profit + bot.pnl
@@ -42,9 +57,14 @@ class Command(BaseCommand):
                     central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
 
                     if central_balance < total_return:
-                        self.stdout.write(
-                            f'⚠️ Liquidity gap for {token.symbol} bot ({bot.user.email}): have ${float(central_balance):.2f}, need ${float(total_return):.2f}')
-                        continue  # Skip this bot, try next cycle
+                        self.stdout.write(f'⚠️ Liquidity gap for {token.symbol} bot ({bot.user.email})')
+                        notify_user(
+                            bot.user,
+                            f'⏳ {token.symbol} Close Pending',
+                            f'Your {token.symbol} tracker reached +{float(pnl_percent):.1f}% PNL but close is delayed due to platform liquidity. Processing within 24 hours.',
+                            'ALERT'
+                        )
+                        continue
 
                     # Sweep to user's wallet
                     from apps.wallets.models import WalletKey, Transaction
@@ -82,10 +102,17 @@ class Command(BaseCommand):
                             bot.status = 'COMPLETED'
                             bot.save()
                             closed += 1
-                            self.stdout.write(
-                                f'🔒 Auto-closed {token.symbol} bot for {bot.user.email} at +{float(pnl_percent):.1f}% PNL')
+
+                            notify_user(
+                                bot.user,
+                                f'🎉 {token.symbol} Auto-Closed at +{float(pnl_percent):.1f}%',
+                                f'${float(total_return):.2f} returned to your wallet. Reactivate anytime to keep earning.',
+                                'PORTFOLIO'
+                            )
+
+                            self.stdout.write(f'🔒 Auto-closed {token.symbol} for {bot.user.email} at +{float(pnl_percent):.1f}%')
                         else:
-                            self.stdout.write(f'⚠️ Sweep failed for auto-close: {sweep_result.get("error")}')
+                            self.stdout.write(f'⚠️ Sweep failed: {sweep_result.get("error")}')
                     except Exception as e:
                         self.stdout.write(f'⚠️ Auto-close error: {e}')
 

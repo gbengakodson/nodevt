@@ -5,6 +5,7 @@ from django.contrib.auth import get_user_model
 from django.conf import settings
 from web3 import Web3
 from datetime import timedelta
+from apps.core.notifications import notify_user
 
 User = get_user_model()
 
@@ -71,6 +72,14 @@ class DepositMonitor:
                 )
                 grand_wallet.balance += deposit_amount
                 grand_wallet.save()
+
+                # After: grand_wallet.save()
+                notify_user(
+                    user,
+                    '✅ Deposit Confirmed',
+                    f'${float(deposit_amount):.2f} USDC deposit detected and credited to your balance.',
+                    'PORTFOLIO'
+                )
 
                 Transaction.objects.create(
                     user=user, transaction_type='DEPOSIT', amount=deposit_amount,

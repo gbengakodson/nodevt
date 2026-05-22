@@ -3,6 +3,7 @@ from django.db import transaction
 from django.utils import timezone
 from apps.referrals.models import ReferralRelationship, ReferralEarning
 from apps.wallets.models import Wallet, Transaction
+from apps.core.notifications import notify_user
 
 
 class ReferralService:
@@ -83,6 +84,14 @@ class ReferralService:
                         completed_at=timezone.now()
                     )
                     distributions.append(earning)
+
+                    # After distributions.append(earning)
+                    notify_user(
+                        referrer,
+                        '🤝 Referral Commission',
+                        f'${float(referrer_share):.2f} earned from a new activation and sent to your wallet.',
+                        'PORTFOLIO'
+                    )
 
         # 50% stays in NODE Web3 - track for admin dashboard
         from django.contrib.auth import get_user_model
