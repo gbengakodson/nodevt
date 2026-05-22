@@ -794,41 +794,33 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['get'])
     def referral_tree(self, request):
+        """Get direct referrals only (1 level)"""
         from apps.referrals.models import ReferralRelationship, ReferralEarning
-        try:
-            levels = []
-            current_users = [request.user]
-            for level_num in range(1, 8):
-                next_users = []
-                level_data = []
-                for user in current_users:
-                    referrals = ReferralRelationship.objects.filter(referrer=user).select_related('referred')
-                    for ref in referrals:
-                        next_users.append(ref.referred)
-                        referred = ref.referred
-                        has_purchased = Purchase.objects.filter(user=referred).exists() or UserTokenBalance.objects.filter(user=referred, quantity__gt=0).exists()
-                        has_grid_bot = GridBot.objects.filter(user=referred).exclude(status='COMPLETED').exists()
-                        earnings = ReferralEarning.objects.filter(user=request.user, from_user=referred).aggregate(total=Sum('amount'))['total'] or 0
-                        is_active = has_purchased or has_grid_bot
-                        level_data.append({
-                            'name': referred.username or (referred.email.split('@')[0] if referred.email else 'User'),
-                            'email': referred.email or '',
-                            'status': "Active" if is_active else "Registered",
-                            'status_icon': "🟢" if is_active else "⚪",
-                            'has_purchased': has_purchased,
-                            'has_grid_bot': has_grid_bot,
-                            'earnings': float(earnings),
-                            'joined_at': referred.date_joined.strftime('%Y-%m-%d') if hasattr(referred, 'date_joined') else 'N/A'
-                        })
-                if level_data:
-                    levels.append({'level': level_num, 'referrals': level_data})
-                current_users = next_users
-                if not current_users:
-                    break
-            return Response({'levels': levels})
-        except Exception as e:
-            print(f"Error in referral_tree: {e}")
-            return Response({'levels': [], 'error': str(e)})
+
+        referrals = ReferralRelationship.objects.filter(
+            referrer=request.user, level=1
+        ).select_related('referred')
+
+        data = []
+        for ref in referrals:
+            referred = ref.referred
+            has_purchased = Purchase.objects.filter(user=referred).exists()
+            has_grid = GridBot.objects.filter(user=referred).exclude(status='COMPLETED').exists()
+            earnings = ReferralEarning.objects.filter(
+                user=request.user, from_user=referred
+            ).aggregate(total=Sum('amount'))['total'] or 0
+
+            data.append({
+                'name': referred.username or (referred.email.split('@')[0] if referred.email else 'User'),
+                'email': referred.email or '',
+                'status': "Active" if (has_purchased or has_grid) else "Registered",
+                'earnings': float(earnings),
+                'joined_at': referred.date_joined.strftime('%Y-%m-%d') if hasattr(referred, 'date_joined') else 'N/A'
+            })
+
+        return Response({'referrals': data, 'total': len(data)})
+
+
 
     @action(detail=False, methods=['get'])
     def referral_earnings(self, request):
@@ -848,6 +840,7 @@ class TradingViewSet(viewsets.ViewSet):
         except Exception as ex:
             print(f"Error in referral_earnings: {ex}")
             return Response([])
+
 
     @action(detail=False, methods=['get'])
     def deposit_address(self, request):
