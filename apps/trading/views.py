@@ -269,8 +269,8 @@ class TradingViewSet(viewsets.ViewSet):
                 'grids': bot.grids,
                 'current_grid_level': bot.current_grid_level,
                 'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl),
-                'pnl_percent': float(bot.pnl_percent),
+                'pnl': float(bot.pnl or bot.pnl),
+                'pnl_percent': float(bot.pnl_percent or bot.pnl_percent),
                 'price_at_creation': float(bot.price_at_creation),
                 'total_yield_earned': float(bot.total_yield_earned) if hasattr(bot, 'total_yield_earned') else 0,
                 'created_at': bot.created_at.isoformat(),
@@ -294,8 +294,8 @@ class TradingViewSet(viewsets.ViewSet):
                 'grids': bot.grids,
                 'current_grid_level': bot.current_grid_level,
                 'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl),
-                'pnl_percent': float(bot.pnl_percent),
+                'pnl': float(bot.pnl or bot.pnl),
+                'pnl_percent': float(bot.pnl_percent or bot.pnl_percent),
                 'price_at_creation': float(bot.price_at_creation),
                 'total_yield_earned': float(bot.total_yield_earned) if hasattr(bot, 'total_yield_earned') else 0,
                 'created_at': bot.created_at.isoformat(),
@@ -1392,11 +1392,13 @@ def sweep_webhook(request):
 
     from django.core.management import call_command
     call_command('check_credits')
+    call_command('update_pnl')
 
     # Run Fadakka grid activation
     from apps.trading.services.fadakka_service import FadakkaService
     from apps.wallets.models import Wallet
     from django.contrib.auth import get_user_model
+
 
     User = get_user_model()
     admin = User.objects.filter(is_superuser=True).first()
