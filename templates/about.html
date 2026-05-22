@@ -1,237 +1,340 @@
 {% extends 'base/base.html' %}
 {% load static %}
 
-{% block title %}About NodeVT - Our Story{% endblock %}
+{% block title %}About NODE | Our Story{% endblock %}
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #F5F6F8;
+        --bg-card: #FFFFFF;
+        --text-primary: #1E2329;
+        --text-secondary: #707A8A;
+        --border: #E2E4E8;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-body) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .about-container { max-width: 720px; margin: 0 auto; padding: 20px 16px; }
+
+    /* Hero */
     .about-hero {
-        background: linear-gradient(135deg, #0B0E11 0%, #1A1C23 100%);
-        color: white;
-        padding: 60px 0;
-        text-align: center;
+        text-align: center; padding: 40px 20px;
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); margin-bottom: 16px;
     }
-    .about-section {
-        padding: 50px 0;
-        border-bottom: 1px solid #E2E4E8;
-    }
+    .about-hero h1 { font-size: 24px; font-weight: 800; color: var(--text-primary); }
+    .about-hero .subtitle { font-size: 14px; color: var(--primary); font-weight: 600; margin-top: 4px; }
+    .about-hero .est { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Founder */
     .founder-card {
-        background: #F8F9FA;
-        border-radius: 16px;
-        padding: 30px;
-        margin-bottom: 30px;
+        text-align: center; padding: 24px;
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); margin-bottom: 16px;
     }
-    .founder-image {
-        width: 150px;
-        height: 150px;
-        background: #F0B90B;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin: 0 auto 20px;
-        font-size: 64px;
-        color: #0B0E11;
-        overflow: hidden;
+    .founder-img {
+        width: 100px; height: 100px; border-radius: 50%;
+        background: var(--primary); margin: 0 auto 12px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 40px; color: #1E2329; overflow: hidden;
     }
-    .founder-image img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
+    .founder-img img { width: 100%; height: 100%; object-fit: cover; }
+    .founder-card h3 { font-size: 16px; font-weight: 700; }
+    .founder-card .role { font-size: 12px; color: var(--primary); font-weight: 600; }
+    .founder-card .exp { font-size: 10px; color: var(--text-secondary); margin-top: 4px; }
+
+    /* Sections */
+    .section {
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); padding: 20px; margin-bottom: 12px;
     }
+    .section h2 { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 14px; }
+    .section h3 { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+    .section p { font-size: 12px; color: var(--text-secondary); line-height: 1.6; }
+    .section .small { font-size: 10px; }
+
+    /* Timeline */
     .timeline-item {
-        border-left: 3px solid #F0B90B;
-        padding-left: 20px;
-        margin-bottom: 25px;
+        border-left: 3px solid var(--primary); padding-left: 16px;
+        margin-bottom: 16px; padding-bottom: 4px;
     }
+    .timeline-item:last-child { margin-bottom: 0; }
     .timeline-year {
-        font-weight: 700;
-        color: #F0B90B;
-        margin-bottom: 5px;
+        font-size: 11px; font-weight: 700; color: var(--primary); margin-bottom: 2px;
     }
-    .problem-card {
-        background: #FEEBEE;
-        border-left: 4px solid #F6465D;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 8px;
+    .timeline-item p { font-size: 11px; }
+
+    /* Problem / Solution Grid */
+    .grid-2 {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
     }
-    .solution-card {
-        background: #E6F9F0;
-        border-left: 4px solid #0ECB81;
-        padding: 20px;
-        margin-bottom: 20px;
-        border-radius: 8px;
+    .card-red {
+        background: #FFF5F5; border-left: 3px solid var(--danger);
+        padding: 12px 14px; border-radius: 6px;
     }
-    .badge-year {
-        background: #F0B90B;
-        color: #0B0E11;
-        padding: 2px 8px;
-        border-radius: 20px;
-        font-size: 11px;
-        font-weight: 600;
+    .card-green {
+        background: #F0FFF4; border-left: 3px solid var(--success);
+        padding: 12px 14px; border-radius: 6px;
+    }
+    .card-red h5, .card-green h5 { font-size: 12px; font-weight: 700; margin-bottom: 4px; }
+    .card-red p, .card-green p { font-size: 10px; color: var(--text-secondary); }
+
+    /* Mission / Vision */
+    .mission-vision {
+        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
+    }
+    .mv-card {
+        padding: 16px; border-radius: 10px; background: #F8F9FA;
+        border: 1px solid var(--border);
+    }
+    .mv-card h3 { font-size: 14px; margin-bottom: 6px; }
+
+    /* Tech Stack */
+    .tech-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px;
+    }
+    .tech-chip {
+        background: #F8F9FA; border: 1px solid var(--border);
+        border-radius: 8px; padding: 12px; text-align: center;
+    }
+    .tech-chip .icon { font-size: 20px; margin-bottom: 4px; }
+    .tech-chip .name { font-size: 11px; font-weight: 600; color: var(--text-primary); }
+    .tech-chip .role { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
+
+    /* Risk */
+    .risk-box {
+        background: #FFF8E1; border: 1px solid #F0B90B;
+        border-radius: 8px; padding: 12px 16px; font-size: 10px;
+        color: #8B6914; margin-bottom: 12px;
+    }
+
+    /* Links */
+    .about-link { color: var(--primary); font-weight: 600; text-decoration: none; }
+    .about-link:hover { text-decoration: underline; }
+
+    @media (max-width: 600px) {
+        .grid-2, .mission-vision, .tech-grid { grid-template-columns: 1fr; }
+        .about-hero h1 { font-size: 20px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="about-hero">
-    <div class="container">
-        <h1 class="display-4 fw-bold mb-3">About NodeVT</h1>
-        <p class="lead">From Forex Trading Floor to Crypto Innovation</p>
-        <p class="small mt-3">Est. 2024 | Built by Traders, for Traders</p>
-    </div>
-</div>
+<div class="about-container">
 
-<div class="container py-4">
-    <!-- Founder Section -->
-    <div class="about-section">
-        <div class="row">
-            <div class="col-lg-8 mx-auto">
-                <div class="founder-card text-center">
-                    <div class="founder-image">
-                        <img src="{% static 'images/founder.jpg' %}" alt="Gbenga Odeyale Kodson" onerror="this.src='https://ui-avatars.com/api/?name=GB&background=F0B90B&color=0B0E11&size=150'">
-                    </div>
-                    <h3>Gbenga Odeyale Kodson</h3>
-                    <p class="text-muted">Founder & Lead Strategy Provider</p>
-                    <p class="small">20+ years experience | Forex & Crypto Trading Expert | DeFi Advocate</p>
-                </div>
-            </div>
+    <!-- Hero -->
+    <div class="about-hero">
+        <h1>About NODE</h1>
+        <p class="subtitle">Automated Crypto Trading, Built for Everyone</p>
+        <p class="est">Est. 2024 | CAC Registered: THRIVALBASE LTD (RC: 1394827)</p>
+    </div>
+
+    <!-- Founder -->
+    <div class="founder-card">
+        <div class="founder-img">
+            <img src="{% static 'images/founder.jpg' %}" alt="Gbenga Odeyale Kodson" onerror="this.style.display='none';this.parentElement.textContent='GK';">
         </div>
+        <h3>Gbenga Odeyale Kodson</h3>
+        <p class="role">Founder & Lead Strategy Manager(B.Sc Mathematics/Statistics, Univeristy Of Port-Harcourt</p>
+        <p class="exp">20+ years in Forex & Crypto | Software Engineer | DeFi Advocate</p>
     </div>
 
-    <!-- The Journey Timeline -->
-    <div class="about-section">
-        <h2 class="text-center mb-4">The Journey</h2>
-        <div class="row justify-content-center">
-            <div class="col-lg-8">
-                <div class="timeline-item">
-                    <div class="timeline-year">2005 - 2010</div>
-                    <p>Started as a freelance strategy manager at Northfinance (later FXpro), specializing in currency speculation and DCA strategy.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2014 - 2018</div>
-                    <p>Joined Litefinance as Port Harcourt branch representative. Sponsored youth training programs through DIF and other platforms across Nigeria.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2017 - till date</div>
-                    <p>Co-founded THRIVALBASE LIMITED(RC No. 1394827), a Nigerian based Startup created in 2017 to promote digital Technology and asset trading in West Africa.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2018</div>
-                    <p>Transitioned from Forex to Cryptocurrency with a mission to promote DeFi over Central Banks.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2020</div>
-                    <p>Joined Binance as lead freelance strategy manager for Nigeria, training traders and researching trading strategies to promote DeFi adoption in Africa.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2022</div>
-                    <p>Visited Limassol, Cyprus (home of FXPRO) to establish strategic partnerships for Crypto adoption and DeFi education.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">2024</div>
-                    <p>Joined Bybit and Binance Square as lead strategy provider, promoting AI for crypto trading and management to mimic dividend systems in global stock markets.</p>
-                </div>
-                <div class="timeline-item">
-                    <div class="timeline-year">Late 2025</div>
-                    <p><strong>NodeVT was born</strong> - Solving real problems faced by traders and investors.</p>
-                </div>
-            </div>
+    <!-- Origin Story / Journey -->
+    <div class="section">
+        <h2>📜 The Journey</h2>
+        <div class="timeline-item">
+            <div class="timeline-year">2005 – 2010</div>
+            <p>Freelance strategy manager at Northfinance (later FXpro), specializing in currency speculation and DCA strategy.</p>
         </div>
-    </div>
-
-    <!-- The Problem -->
-    <div class="about-section">
-        <h2 class="text-center mb-4">The Problems We Saw</h2>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="problem-card">
-                    <h5>📈 High Barriers to Entry</h5>
-                    <p class="small mb-0">Setting up grid bots on crypto exchanges requires technical knowledge and significant capital, putting it beyond reach of amateur traders.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="problem-card">
-                    <h5>👥 Account Management Limitations</h5>
-                    <p class="small mb-0">Lead traders cannot manage multiple client accounts effectively on trading bots.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="problem-card">
-                    <h5>⚙️ No Mass Deployment</h5>
-                    <p class="small mb-0">Impossible for lead traders to deploy trading bots on thousands of individual accounts simultaneously.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="problem-card">
-                    <h5>💰 Profit Sharing Trust Issues</h5>
-                    <p class="small mb-0">After profits are made, clients could default on profit-sharing agreements since all funds are under their control.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="problem-card">
-                    <h5>🛑 Client Interference</h5>
-                    <p class="small mb-0">Amateur traders could disrupt active trading, abort positions, or withdraw funds without the expert trader's consent.</p>
-                </div>
-            </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2014 – 2018</div>
+            <p>Joined Litefinance as Port Harcourt branch representative. Sponsored youth training programs across Nigeria.</p>
         </div>
-    </div>
-
-    <!-- The Solution -->
-    <div class="about-section">
-        <h2 class="text-center mb-4">The NodeVT Solution</h2>
-        <div class="row">
-            <div class="col-md-6">
-                <div class="solution-card">
-                    <h5>🔗 Unified Trading</h5>
-                    <p class="small mb-0">The Node captures users' crypto positions and replicates them on exchange trading bot.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="solution-card">
-                    <h5>💰 Pooled Resources</h5>
-                    <p class="small mb-0">Smaller deposits are combined to activate bots on the central wallet system on BSC Network.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="solution-card">
-                    <h5>🔄 Position Perming</h5>
-                    <p class="small mb-0">Similar crypto positions are grouped and activated together on the bot for efficiency.</p>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <div class="solution-card">
-                    <h5>📊 Transparent Distribution</h5>
-                    <p class="small mb-0">Real results from central wallets on the BNB Chain are transmitted back to Node volatility manager, displaying individual yield based on holdings and market performance.</p>
-                </div>
-            </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2017 – Present</div>
+            <p>Co-founded THRIVALBASE LIMITED (RC: 1394827) to promote digital technology and asset trading in West Africa.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2018</div>
+            <p>Transitioned from Forex to Cryptocurrency — mission: promote DeFi over Central Banks.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2020</div>
+            <p>Joined Binance as lead freelance strategy manager for Nigeria, researching trading strategies for DeFi adoption in Africa.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2022</div>
+            <p>Visited Limassol, Cyprus (home of FXPRO) for strategic partnerships in crypto adoption and DeFi education.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2024</div>
+            <p>Joined Bybit and Binance Square as lead strategy provider, promoting AI for crypto trading.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">Late 2025</div>
+            <p><strong>NODE was born</strong> — solving real problems faced by traders and investors.</p>
         </div>
     </div>
 
     <!-- Mission & Vision -->
-    <div class="about-section">
-        <div class="row">
-            <div class="col-md-6">
-                <div class="p-4" style="background: #F8F9FA; border-radius: 16px; height: 100%;">
-                    <h3 class="mb-3">🎯 Mission</h3>
-                    <p>To democratize algorithmic trading by providing retail investors with transparent, accessible tools that were once only available to institutions, while promoting DeFi adoption across Africa and beyond.</p>
-                </div>
+    <div class="section">
+        <div class="mission-vision">
+            <div class="mv-card">
+                <h3>🎯 Mission</h3>
+                <p class="small">Democratize algorithmic trading by providing retail investors with transparent, accessible tools once only available to institutions — while promoting DeFi adoption across Africa.</p>
             </div>
-            <div class="col-md-6">
-                <div class="p-4" style="background: #F8F9FA; border-radius: 16px; height: 100%;">
-                    <h3 class="mb-3">👁️ Vision</h3>
-                    <p>A future where anyone, anywhere, can participate in financial markets with sophisticated trading tools that mimic dividend systems in global stock markets, giving more power to Decentralized Finance.</p>
-                </div>
+            <div class="mv-card">
+                <h3>👁️ Vision</h3>
+                <p class="small">A future where anyone, anywhere can participate in financial markets with sophisticated trading tools that mimic dividend systems in global stock markets.</p>
             </div>
         </div>
     </div>
 
-    <!-- Risk Disclaimer -->
-    <div class="about-section">
-        <div class="alert alert-warning small">
-            <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading involves substantial risk. Past performance does not guarantee future results. NodeVT provides trading tools and technology, not financial advice. Only invest what you can afford to lose.
+    <!-- How It Works -->
+    <div class="section">
+        <h2>⚙️ How NODE Works</h2>
+        <div class="grid-2">
+            <div class="card-green">
+                <h5>1. Deposit USDC</h5>
+                <p>Fund your personal BSC wallet. As little as $10. You control your keys.</p>
+            </div>
+            <div class="card-green">
+                <h5>2. Activate a Position Tracker</h5>
+                <p>Pick a coin. The bot places 100 buy/sell orders across a price range.</p>
+            </div>
+            <div class="card-green">
+                <h5>3. Earn While You Sleep</h5>
+                <p>Grid bots trade 24/7. Profits from market volatility — automatically.</p>
+            </div>
+            <div class="card-green">
+                <h5>4. Withdraw Anytime</h5>
+                <p>Close your tracker or collect yield. Funds sweep to your wallet.</p>
+            </div>
         </div>
     </div>
+
+    <!-- Problems & Solutions -->
+    <div class="section">
+        <h2>🔍 Why NODE Was Built</h2>
+        <div class="grid-2">
+            <div class="card-red">
+                <h5>📈 High Barriers</h5>
+                <p>Grid bots require technical knowledge and large capital. Out of reach for most.</p>
+            </div>
+            <div class="card-green">
+                <h5>🔗 Unified Trading</h5>
+                <p>NODE captures positions and replicates them on real exchange bots.</p>
+            </div>
+            <div class="card-red">
+                <h5>👥 No Mass Deployment</h5>
+                <p>Lead traders can't deploy bots on thousands of accounts simultaneously.</p>
+            </div>
+            <div class="card-green">
+                <h5>💰 Pooled Resources</h5>
+                <p>Small deposits combine to activate Master Grid Bots on the Exchanges via BSC.</p>
+            </div>
+            <div class="card-red">
+                <h5>🛑 Client Interference</h5>
+                <p>Amateur traders disrupt active trades or withdraw funds early.</p>
+            </div>
+            <div class="card-green">
+                <h5>📊 Transparent Distribution</h5>
+                <p>Real results from central wallets transmitted to NODE. Individual yield based on holdings.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Technology Stack -->
+    <div class="section">
+        <h2>🛠️ Technology Stack</h2>
+        <p class="small" style="margin-bottom:14px;">NODE is built on a modern, production-grade stack designed for security, scalability, and real-time trading.</p>
+
+        <h3 style="margin-top:12px;">Backend</h3>
+        <div class="tech-grid" style="margin-bottom:16px;">
+            <div class="tech-chip"><div class="icon">🐍</div><div class="name">Python / Django</div><div class="role">Core backend framework, REST API, ORM</div></div>
+            <div class="tech-chip"><div class="icon">📊</div><div class="name">Django REST Framework</div><div class="role">API layer, authentication, serializers</div></div>
+            <div class="tech-chip"><div class="icon">🗄️</div><div class="name">PostgreSQL</div><div class="role">Primary database — users, bots, transactions</div></div>
+            <div class="tech-chip"><div class="icon">🔗</div><div class="name">Web3.py</div><div class="role">BSC blockchain interaction, USDC transfers</div></div>
+            <div class="tech-chip"><div class="icon">📈</div><div class="name">Binance API</div><div class="role">Real grid trading, order placement, market data</div></div>
+            <div class="tech-chip"><div class="icon">⚡</div><div class="name">Celery / Cron</div><div class="role">Background tasks — yield, sweeps, PNL updates</div></div>
+        </div>
+
+        <h3 style="margin-top:12px;">Frontend</h3>
+        <div class="tech-grid" style="margin-bottom:16px;">
+            <div class="tech-chip"><div class="icon">🎨</div><div class="name">Vanilla JavaScript</div><div class="role">No heavy frameworks — fast, lightweight</div></div>
+            <div class="tech-chip"><div class="icon">📊</div><div class="name">Chart.js</div><div class="role">Trading charts, grid visualization, journey maps</div></div>
+            <div class="tech-chip"><div class="icon">📱</div><div class="name">Django Templates</div><div class="role">Server-rendered pages with Jinja2</div></div>
+        </div>
+
+        <h3 style="margin-top:12px;">Infrastructure</h3>
+        <div class="tech-grid">
+            <div class="tech-chip"><div class="icon">☁️</div><div class="name">Render</div><div class="role">Cloud hosting — auto-deploy from GitHub</div></div>
+            <div class="tech-chip"><div class="icon">🔒</div><div class="name">AES Encryption</div><div class="role">Wallet private key encryption at rest</div></div>
+            <div class="tech-chip"><div class="icon">🌐</div><div class="name">BSC Network</div><div class="role">Binance Smart Chain — USDC BEP20 transfers</div></div>
+            <div class="tech-chip"><div class="icon">📧</div><div class="name">SMTP / Email</div><div class="role">OTP verification, daily summaries, alerts</div></div>
+            <div class="tech-chip"><div class="icon">🤖</div><div class="name">Gunicorn</div><div class="role">WSGI server for production</div></div>
+            <div class="tech-chip"><div class="icon">🔐</div><div class="name">JWT Auth</div><div class="role">Token-based authentication</div></div>
+        </div>
+    </div>
+
+    <!-- Trust & Transparency -->
+    <div class="section">
+        <h2>🛡️ Trust & Transparency</h2>
+        <p>NODE operates under <strong>THRIVALBASE LTD</strong> (RC: 1394827), a CAC-registered Nigerian company.</p>
+        <p class="small" style="margin-top:8px;">
+            ✅ CAC Registered &nbsp;|&nbsp;
+            ✅ Real Binance Trading &nbsp;|&nbsp;
+            ✅ BSC-Verifiable Transactions &nbsp;|&nbsp;
+            ✅ Public Transparency Page &nbsp;|&nbsp;
+            ✅ Pursuing SEC Robo-Adviser Registration
+        </p>
+        <p class="small" style="margin-top:8px;">
+            Every transaction is on the blockchain. Every trade is real.
+            <a href="/public/" class="about-link">View live platform activity →</a>
+        </p>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="section">
+        <h2>🗺️ Roadmap</h2>
+        <div class="timeline-item">
+            <div class="timeline-year">Q2 2026</div>
+            <p>Consistent Master Grid Bot activation on Binance. Real-time performance on Yield page.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">Q3 2026</div>
+            <p>Dynamic yield rate from actual Master Grid performance. Mobile PWA.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">Q4 2026</div>
+            <p>Multi-exchange support. Android/iOS app. SEC regulatory milestone.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-year">2027</div>
+            <p>AI-powered grid optimization. Institutional partnerships. Full DeFi integration.</p>
+        </div>
+    </div>
+
+    <!-- Contact -->
+    <div class="section">
+        <h2>📞 Contact</h2>
+        <p>Need help or have questions?</p>
+        <p class="small" style="margin-top:6px;">
+            💬 <a href="/chat/" class="about-link">Live Support Chat</a> &nbsp;|&nbsp;
+            📧 nodevt.notify@gmail.com &nbsp;|&nbsp;
+            👥 Join our WhatsApp Community: https://chat.whatsapp.com/J8aaHYO6qQ49Z9kjFKcR4w
+        </p>
+    </div>
+
+    <!-- Risk Disclaimer -->
+    <div class="risk-box">
+        <strong>⚠️ Risk Disclosure:</strong> Cryptocurrency trading involves substantial risk. Past performance does not guarantee future results. NODE provides trading tools and technology, not financial advice. Only invest what you can afford to lose.
+    </div>
+
 </div>
 {% endblock %}
