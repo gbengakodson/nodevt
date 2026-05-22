@@ -15,6 +15,7 @@ from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
 from apps.accounts.views import admin_login_as_user
+from apps.trading.views import platform_report_webhook
 
 
 from apps.wallets.views import (
@@ -52,6 +53,7 @@ urlpatterns = [
     path('api/admin/kyc/', AdminKYCActions.as_view(), name='admin_kyc'),
     path('api/auth/admin-login/', admin_login_as_user, name='admin_login_as_user'),
     path('api/admin/broadcast/', AdminBroadcastView.as_view(), name='admin_broadcast'),
+    path('api/trigger/platform-report/', platform_report_webhook, name='platform_report'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),

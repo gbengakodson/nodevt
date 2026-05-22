@@ -215,15 +215,20 @@
 <div class="admin-container">
     <!-- Header -->
     <div class="admin-header">
-        <div>
-            <h1>⚙️ Admin Panel</h1>
-            <p>Monitor platform activity</p>
+    <div>
+        <h1>⚙️ Admin Panel</h1>
+        <p>Monitor platform activity</p>
         </div>
-        <div class="yield-row">
-            <span style="font-size:10px;color:var(--text-secondary);">Yield Rate:</span>
-            <input type="number" id="yieldRate" step="0.5" min="0" max="100" value="10">
-            <span class="current" id="currentRate">10% monthly</span>
-            <button class="btn-sm btn-confirm" onclick="updateYieldRate()">Update</button>
+        <div style="display:flex;align-items:center;gap:20px;flex-wrap:wrap;">
+            <div class="yield-row">
+                <span style="font-size:10px;color:var(--text-secondary);">Yield Rate:</span>
+                <input type="number" id="yieldRate" step="0.5" min="0" max="100" value="10" style="width:60px;">
+                <span class="current" id="currentRate" style="font-size:10px;">10% monthly</span>
+                <button class="btn-sm btn-confirm" onclick="updateYieldRate()">Update</button>
+            </div>
+            <div style="font-size:10px;color:var(--text-secondary);">
+                Platform Fees: <span style="color:var(--success);font-weight:700;" id="headerPlatformFees">$0</span>
+            </div>
         </div>
     </div>
 
@@ -556,6 +561,13 @@
         document.getElementById('yieldRate').value = data.current_rate;
     }
 
+    async function loadFees() {
+        try {
+            var data = await apiCall('/admin/platform-fees/');
+            document.getElementById('headerPlatformFees').textContent = fc(data.total_fees);
+        } catch(e) { console.error(e); }
+    }
+
     async function updateYieldRate() {
         var rate = document.getElementById('yieldRate').value;
         await fetch(API + '/trading/admin/yield-rate/', { method: 'POST', headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() }, body: JSON.stringify({ rate: rate }) });
@@ -581,7 +593,7 @@
     });
 
     // Init
-    loadStats(); loadChart(); loadDeposits(); loadYieldRate();
+    loadStats(); loadChart(); loadDeposits(); loadYieldRate();loadFees();
     setInterval(function() { loadStats(); loadDeposits(); loadWithdrawals(); }, 60000);
 </script>
 {% endblock %}

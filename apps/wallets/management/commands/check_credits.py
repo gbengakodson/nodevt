@@ -52,8 +52,10 @@ class Command(BaseCommand):
 
         self.stdout.write(self.style.SUCCESS("Done!"))
 
+
+
     def auto_sweep_to_purses(self):
-        """Auto-sweep grid profit to user purses based on schedule"""
+        """Divert configured % of grid profit to user purses as grid earns"""
         swept_count = 0
         now = timezone.now()
 
@@ -66,15 +68,13 @@ class Command(BaseCommand):
             try:
                 user = purse.user
 
-                # Check if it's time to sweep based on schedule
+                # Check sweep schedule
                 should_sweep = False
                 if purse.sweep_schedule == 'daily':
                     should_sweep = True
                 elif purse.sweep_schedule == 'weekly':
-                    # Sweep on Mondays
                     should_sweep = now.weekday() == 0
                 elif purse.sweep_schedule == 'monthly':
-                    # Sweep on 1st of month
                     should_sweep = now.day == 1
 
                 if not should_sweep:
@@ -90,7 +90,7 @@ class Command(BaseCommand):
                     if bot.grid_profit <= 0:
                         continue
 
-                    # Calculate sweep amount
+                    # Calculate sweep amount based on configured %
                     sweep_amount = bot.grid_profit * (Decimal(str(purse.sweep_percentage)) / Decimal('100'))
 
                     if sweep_amount <= 0:
@@ -106,13 +106,15 @@ class Command(BaseCommand):
                 if total_swept > 0:
                     purse.save()
                     swept_count += 1
-                    print(f"  Swept ${total_swept:.4f} to {user.email}'s {purse.name} purse")
+                    print(f"  💰 Swept ${total_swept:.4f} from grid profits to {user.email}'s {purse.name} purse")
 
             except Exception as e:
                 print(f"  Error sweeping purse {purse.name} for {purse.user.email}: {e}")
                 continue
 
         return swept_count
+
+
 
     def process_pension_reinvest(self):
         """Auto-reinvest pension funds every 6 months"""
