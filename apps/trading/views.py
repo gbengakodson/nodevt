@@ -1133,10 +1133,15 @@ class TradingViewSet(viewsets.ViewSet):
             'tx_hash': sweep_result.get('tx_hash', '')
         })
 
-
     @action(detail=False, methods=['post'])
     def pension_activate(self, request):
-        """Activate pension fund on Yield Wallet"""
+        """Activate pension fund with custom lock duration (2-30 years)"""
+        years = int(request.data.get('years', 5))
+        if years < 2:
+            years = 2
+        if years > 30:
+            years = 30
+
         yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
 
         if yield_wallet.pension_fund:
@@ -1144,14 +1149,14 @@ class TradingViewSet(viewsets.ViewSet):
 
         yield_wallet.pension_fund = True
         yield_wallet.lock_enabled = True
-        yield_wallet.locked_until = timezone.now() + timedelta(days=365 * 5)  # 5 years
+        yield_wallet.locked_until = timezone.now() + timedelta(days=365 * years)
         yield_wallet.pension_reinvest_months = 6
-        yield_wallet.pension_reinvest_years = 5
+        yield_wallet.pension_reinvest_years = years
         yield_wallet.save()
 
         return Response({
             'success': True,
-            'message': 'Pension fund activated. Yield Wallet locked. Auto-reinvest every 6 months for 5 years.'
+            'message': f'Pension fund activated. Locked for {years} years. Auto-reinvest every 6 months.'
         })
 
     @action(detail=False, methods=['get'])
