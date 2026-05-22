@@ -13,158 +13,88 @@
         --border: #E2E4E8;
         --success: #0ECB81;
         --danger: #F6465D;
-        --warning: #F0B90B;
     }
 
-    * { box-sizing: border-box; }
-    body { background: var(--bg-body) !important; max-width: 100vw; overflow-x: hidden; }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-body) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
-    .profile-container {
-        max-width: 800px;
-        margin: 0 auto;
-        padding: 16px;
-        width: 100%;
-    }
+    .profile-container { max-width: 640px; margin: 0 auto; padding: 12px; }
 
-    .profile-header {
-        display: flex; align-items: center; gap: 16px;
-        padding: 20px; margin-bottom: 12px;
-        background: var(--bg-card); border-radius: 12px;
-        border: 1px solid var(--border); flex-wrap: wrap;
-    }
-    .avatar-wrap { position: relative; flex-shrink: 0; }
-    .avatar {
-        width: 64px; height: 64px; border-radius: 50%;
-        background: var(--primary); display: flex; align-items: center;
-        justify-content: center; font-size: 24px; font-weight: 700;
-        color: #1E2329; cursor: pointer;
-    }
-    .avatar img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
-    .avatar-change {
-        position: absolute; bottom: -2px; right: -2px;
-        width: 22px; height: 22px; border-radius: 50%;
-        background: var(--primary); border: 2px solid #fff;
-        display: flex; align-items: center; justify-content: center;
-        cursor: pointer; font-size: 10px;
-    }
-    .profile-info { flex: 1; min-width: 150px; }
-    .profile-name { font-size: 16px; font-weight: 700; color: var(--text-primary); }
-    .profile-email { font-size: 11px; color: var(--text-secondary); }
-    .profile-since { font-size: 10px; color: var(--text-secondary); margin-top: 2px; }
-    .btn-logout {
-        padding: 8px 16px; border-radius: 6px; border: 1px solid var(--danger);
-        background: transparent; color: var(--danger); font-weight: 600;
-        font-size: 11px; cursor: pointer;
-    }
-    .btn-logout:hover { background: rgba(246,70,93,0.05); }
-
-    .stats-row {
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 8px; margin-bottom: 12px;
-    }
-    .stat-mini {
+    .top-bar {
+        display: flex; align-items: center; gap: 12px;
         background: var(--bg-card); border-radius: 10px;
-        border: 1px solid var(--border); padding: 14px; text-align: center;
-        cursor: pointer; transition: all 0.15s;
-    }
-    .stat-mini:hover { border-color: var(--primary); }
-    .stat-mini .label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
-    .stat-mini .value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 4px; }
-    .stat-mini .value.green { color: var(--success); }
-
-    .card {
-        background: var(--bg-card); border-radius: 12px;
-        border: 1px solid var(--border); padding: 18px; margin-bottom: 12px;
-    }
-    .card-title {
-        font-size: 13px; font-weight: 700; color: var(--text-primary);
-        margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
-        justify-content: space-between;
-    }
-    .card-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.04);
-        font-size: 12px;
-    }
-    .card-row:last-child { border-bottom: none; }
-    .card-label { color: var(--text-secondary); }
-    .card-value { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 60%; word-break: break-all; }
-
-    .form-input {
-        width: 100%; padding: 10px 12px; border-radius: 6px;
-        background: rgba(0,0,0,0.3);
+        padding: 14px 16px; margin-bottom: 10px;
         border: 1px solid var(--border);
-        color: var(--text-primary);
     }
-    .form-input:focus { outline: none; border-color: var(--primary); background: #fff; }
-    .form-select {
-        width: 100%; padding: 10px 12px; border-radius: 6px;
-        border: 1px solid var(--border); background: #F8F9FA;
-        color: var(--text-primary); font-size: 12px; margin-bottom: 8px;
+    .avatar {
+        width: 44px; height: 44px; border-radius: 50%;
+        background: var(--primary); display: flex; align-items: center;
+        justify-content: center; font-size: 16px; font-weight: 700; color: #1E2329;
+        flex-shrink: 0; cursor: pointer;
+    }
+    .top-info { flex: 1; min-width: 0; }
+    .top-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+    .top-email { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .top-badge { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
+    .badge-ok { background: rgba(14,203,129,0.1); color: var(--success); }
+    .badge-warn { background: rgba(240,185,11,0.1); color: #B8860B; }
+
+    .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .mini-stat {
+        background: var(--bg-card); border-radius: 8px; padding: 10px 14px;
+        border: 1px solid var(--border); cursor: pointer; transition: border 0.15s;
+    }
+    .mini-stat:hover { border-color: var(--primary); }
+    .mini-stat .lbl { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
+    .mini-stat .val { font-size: 16px; font-weight: 700; color: var(--primary); margin-top: 2px; }
+    .mini-stat .val.grn { color: var(--success); }
+
+    .section {
+        background: var(--bg-card); border-radius: 10px;
+        border: 1px solid var(--border); padding: 12px 14px; margin-bottom: 8px;
+    }
+    .section-title {
+        font-size: 10px; font-weight: 700; color: var(--text-secondary);
+        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
+        display: flex; align-items: center; gap: 6px; justify-content: space-between;
+    }
+    .row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 10px; }
+    .row .lbl { color: var(--text-secondary); }
+    .row .val { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 55%; word-break: break-all; font-family: monospace; font-size: 9px; }
+
+    .input-sm {
+        width: 100%; padding: 6px 8px; border-radius: 5px;
+        border: 1px solid var(--border); font-size: 10px; color: var(--text-primary);
+        background: #F8F9FA; margin-bottom: 4px;
+    }
+    .input-sm:focus { outline: none; border-color: var(--primary); }
+    .select-sm {
+        width: 100%; padding: 6px 8px; border-radius: 5px;
+        border: 1px solid var(--border); font-size: 10px; color: var(--text-primary);
+        background: #F8F9FA; margin-bottom: 4px;
     }
 
-    .btn-sm {
-        padding: 7px 16px; border-radius: 6px; font-size: 11px;
+    .btn-xs {
+        padding: 4px 10px; border-radius: 4px; font-size: 9px;
         font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
     }
-    .btn-primary { background: var(--primary); color: #1E2329; }
-    .btn-primary:hover { filter: brightness(1.05); }
+    .btn-yellow { background: var(--primary); color: #1E2329; }
+    .btn-yellow:hover { filter: brightness(1.05); }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-    .btn-danger:hover { background: rgba(246,70,93,0.05); }
-
-    .address-box {
-        background: #F8F9FA; border-radius: 6px;
-        padding: 10px; font-family: monospace; font-size: 11px;
-        text-align: center; word-break: break-all; color: var(--text-primary);
-        border: 1px solid var(--border); margin: 8px 0;
-    }
+    .btn-red { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-red:hover { background: rgba(246,70,93,0.05); }
 
     .toggle {
-        width: 42px; height: 24px; border-radius: 12px;
-        background: #D1D5DB; position: relative; cursor: pointer;
-        transition: all 0.2s; flex-shrink: 0;
+        width: 34px; height: 18px; border-radius: 9px;
+        background: #D1D5DB; position: relative; cursor: pointer; transition: all 0.2s;
     }
     .toggle.active { background: var(--success); }
     .toggle::after {
-        content: ''; width: 20px; height: 20px; border-radius: 50%;
-        background: white; position: absolute; top: 2px; left: 2px;
-        transition: all 0.2s; box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        content: ''; width: 14px; height: 14px; border-radius: 50%;
+        background: #fff; position: absolute; top: 2px; left: 2px; transition: all 0.2s;
     }
-    .toggle.active::after { left: 20px; }
-
-    .ref-code {
-        font-size: 22px; font-weight: 700; color: var(--primary);
-        font-family: monospace; letter-spacing: 2px;
-    }
-    .ref-link {
-        font-size: 11px; color: var(--text-secondary); margin-top: 4px;
-        word-break: break-all;
-    }
-
-    .danger-zone { opacity: 0.5; transition: opacity 0.2s; }
-    .danger-zone:hover { opacity: 1; }
-
-    .qr-img { width: 120px; height: 120px; display: block; margin: 8px auto; background: #fff; padding: 6px; border-radius: 8px; }
-
-    .badge {
-        display: inline-block; padding: 3px 10px; border-radius: 12px;
-        font-size: 10px; font-weight: 600;
-    }
-    .badge-approved { background: rgba(14,203,129,0.1); color: var(--success); }
-    .badge-pending { background: rgba(240,185,11,0.1); color: #B8860B; }
-    .badge-none { background: rgba(132,142,156,0.1); color: var(--text-secondary); }
-
-    .tx-scroll {
-        max-height: 300px; overflow-y: auto;
-        scrollbar-width: thin; scrollbar-color: #D1D5DB transparent;
-    }
-    .tx-row {
-        display: flex; justify-content: space-between; align-items: center;
-        padding: 10px 0; border-bottom: 1px solid #F0F0F0; font-size: 11px;
-    }
-    .tx-row:last-child { border-bottom: none; }
+    .toggle.active::after { left: 18px; }
 
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
@@ -172,17 +102,17 @@
         display: none; align-items: center; justify-content: center;
     }
     .modal-box {
-        background: #fff; border: 1px solid var(--border);
-        border-radius: 12px; max-width: 420px; width: 90%; padding: 24px;
+        background: #fff; border-radius: 10px; max-width: 380px; width: 90%; padding: 20px;
     }
-    .modal-box h3 { font-size: 15px; color: var(--text-primary); margin-bottom: 14px; }
-    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 14px; }
+    .modal-box h3 { font-size: 13px; margin-bottom: 10px; }
+    .modal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
 
-    @media (max-width: 768px) {
-        .profile-container { padding: 8px; }
-        .stats-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
-        .avatar { width: 48px; height: 48px; font-size: 18px; }
-        .card { padding: 14px; }
+    .danger-zone { opacity: 0.4; transition: opacity 0.2s; }
+    .danger-zone:hover { opacity: 1; }
+
+    @media (max-width: 480px) {
+        .profile-container { padding: 6px; }
+        .row-2col { grid-template-columns: 1fr 1fr; gap: 6px; }
     }
 </style>
 {% endblock %}
@@ -190,139 +120,112 @@
 {% block content %}
 <div class="profile-container">
 
-    <!-- Header -->
-    <div class="profile-header">
-        <div class="avatar-wrap">
-            <div class="avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
-                <span id="avatarText">U</span>
-                <img id="avatarImg" style="display:none;">
-            </div>
-            <div class="avatar-change" onclick="document.getElementById('avatarInput').click()">📷</div>
-            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
+    <!-- Top Bar -->
+    <div class="top-bar">
+        <div class="avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
+            <span id="avatarText">U</span>
         </div>
-        <div class="profile-info">
-            <div class="profile-name" id="displayName">Loading...</div>
-            <div class="profile-email" id="displayEmail">Loading...</div>
-            <div class="profile-since" id="displayJoined">Member since —</div>
+        <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
+        <div class="top-info">
+            <div class="top-name" id="displayName">—</div>
+            <div class="top-email" id="displayEmail">—</div>
         </div>
-        <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px;">
-            <span id="kycBadge">—</span>
-            <button class="btn-logout" onclick="logout()">Logout</button>
-        </div>
+        <span id="kycBadge" class="top-badge">—</span>
+        <button class="btn-xs btn-red" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Quick Stats -->
-    <div class="stats-row">
-        <div class="stat-mini"><div class="label">Grand</div><div class="value" id="grandBal">$0</div></div>
-        <div class="stat-mini"><div class="label">Yield</div><div class="value green" id="yieldBal">$0</div></div>
-        <div class="stat-mini" onclick="window.location.href='/portfolio/'"><div class="label">Portfolio</div><div class="value" id="portfolioVal">$0</div></div>
-        <div class="stat-mini" onclick="window.location.href='/referral/'"><div class="label">Referrals</div><div class="value green" id="refEarnings">$0</div></div>
-    </div>
-
-    <!-- Account -->
-    <div class="card">
-        <div class="card-title">👤 Account <button class="btn-sm btn-primary" onclick="saveProfile()">Save</button></div>
-        <div class="card-row">
-            <span class="card-label">Email</span>
-            <input type="email" id="editEmail" class="form-input" style="max-width:60%;margin-bottom:0;opacity:0.7;" readonly>
-        </div>
-        <div style="font-size:9px;color:var(--text-secondary);margin-top:-4px;margin-bottom:8px;">To change your email, contact support via the <a href="/chat/" style="color:var(--primary);">chat page</a>.</div>
-        <div class="card-row"><span class="card-label">Username</span><input type="text" id="editUsername" class="form-input" style="max-width:60%;margin-bottom:0;"></div>
-        <div class="card-row"><span class="card-label">Password</span><button class="btn-sm btn-outline" onclick="openPasswordModal()">Change</button></div>
-    </div>
-
-    <!-- KYC -->
-    <div class="card">
-        <div class="card-title">🛡️ Identity Verification (KYC)</div>
-        <div class="card-row"><span class="card-label">Status</span><span id="kycStatus">—</span></div>
-        <div class="card-row"><span class="card-label">ID Type</span>
-            <select id="kycIdType" class="form-select" style="max-width:50%;margin-bottom:0;">
-                <option value="">Select...</option>
-                <option value="NIN">NIN (Nigeria)</option>
-                <option value="PASSPORT">International Passport</option>
-                <option value="DRIVERS">Driver's License</option>
-                <option value="VOTER">Voter's Card</option>
-                <option value="NATIONAL_ID">National ID</option>
-            </select>
-        </div>
-        <div class="card-row"><span class="card-label">ID Number</span><input type="text" id="kycIdNumber" class="form-input" style="max-width:50%;margin-bottom:0;" placeholder="Enter your ID number"></div>
-        <div class="card-row"><span class="card-label">Nationality</span><input type="text" id="kycNationality" class="form-input" style="max-width:50%;margin-bottom:0;" placeholder="e.g., Nigerian"></div>
-        <div class="card-row"><span class="card-label">Country</span><select id="kycCountry" class="form-select" style="max-width:50%;margin-bottom:0;"><option value="">Select...</option><option value="NG">Nigeria</option><option value="GH">Ghana</option><option value="KE">Kenya</option><option value="ZA">South Africa</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="AE">UAE</option></select></div>
-        <button class="btn-sm btn-primary" onclick="submitKYC()" style="margin-top:10px;">Verify Identity</button>
+    <!-- Stats -->
+    <div class="row-2col">
+        <div class="mini-stat" onclick="window.location.href='/trading/'"><div class="lbl">Wallet</div><div class="val" id="grandBal">$0</div></div>
+        <div class="mini-stat"><div class="lbl">Yield</div><div class="val grn" id="yieldBal">$0</div></div>
+        <div class="mini-stat" onclick="window.location.href='/portfolio/'"><div class="lbl">Portfolio</div><div class="val" id="portfolioVal">$0</div></div>
+        <div class="mini-stat" onclick="window.location.href='/referral/'"><div class="lbl">Referrals</div><div class="val grn" id="refEarnings">$0</div></div>
     </div>
 
     <!-- Wallet -->
-    <div class="card">
-        <div class="card-title">💳 Wallet <button class="btn-sm btn-outline" onclick="copyAddress()">📋 Copy</button></div>
-        <div class="card-row"><span class="card-label">Network</span><span class="card-value">BSC (BEP20)</span></div>
-        <div class="card-row"><span class="card-label">Token</span><span class="card-value">USDC</span></div>
-        <div class="address-box" id="depositAddr">Loading...</div>
-        <img id="qrCode" class="qr-img" src="" alt="QR" style="display:none;">
-        <div style="font-size:10px;color:var(--danger);text-align:center;margin-top:6px;">⚠️ Send only USDC on BEP20.</div>
+    <div class="section">
+        <div class="section-title">💳 Wallet <button class="btn-xs btn-outline" onclick="copyAddress()">Copy</button></div>
+        <div class="row"><span class="lbl">Address</span><span class="val" id="depositAddr">—</span></div>
+        <div class="row"><span class="lbl">Private Key</span><span class="val" id="privateKey" style="cursor:pointer;" onclick="toggleKey()">••••••••••••••••</span></div>
+        <div class="row"><span class="lbl">Network</span><span class="val">BSC (BEP20) · USDC</span></div>
+        <div style="font-size:8px;color:var(--danger);margin-top:4px;">⚠️ Never share your private key. NODE does not store it unencrypted.</div>
     </div>
 
-    <!-- Transaction History -->
-    <div class="card">
-        <div class="card-title">📋 Recent Transactions</div>
-        <div class="tx-scroll" id="txHistory">
-            <div style="text-align:center;color:var(--text-secondary);font-size:11px;padding:20px;">Loading...</div>
-        </div>
+    <!-- Account -->
+    <div class="section">
+        <div class="section-title">👤 Account <button class="btn-xs btn-yellow" onclick="saveProfile()">Save</button></div>
+        <input type="email" id="editEmail" class="input-sm" readonly placeholder="Email">
+        <input type="text" id="editUsername" class="input-sm" placeholder="Username">
+        <button class="btn-xs btn-outline" onclick="openPasswordModal()" style="margin-top:2px;">Change Password</button>
     </div>
 
-    <!-- Notifications -->
-    <div class="card">
-        <div class="card-title">🔔 Notifications</div>
-        <div class="card-row"><span class="card-label">Daily Email Summary</span><div class="toggle active" id="toggleDailyEmail" onclick="toggleNotification('daily_email')"></div></div>
-        <div class="card-row"><span class="card-label">Withdrawal Alerts</span><div class="toggle active" id="toggleWithdrawAlert" onclick="toggleNotification('withdraw_alert')"></div></div>
+    <!-- KYC -->
+    <div class="section">
+        <div class="section-title">🛡️ KYC <span id="kycStatus" style="font-size:9px;">—</span></div>
+        <select id="kycIdType" class="select-sm">
+            <option value="">ID Type</option>
+            <option value="NIN">NIN (Nigeria)</option>
+            <option value="PASSPORT">Passport</option>
+            <option value="DRIVERS">Driver's License</option>
+            <option value="NATIONAL_ID">National ID</option>
+        </select>
+        <input type="text" id="kycIdNumber" class="input-sm" placeholder="ID Number">
+        <input type="text" id="kycNationality" class="input-sm" placeholder="Nationality">
+        <select id="kycCountry" class="select-sm">
+            <option value="">Country</option>
+            <option value="NG">Nigeria</option><option value="GH">Ghana</option><option value="KE">Kenya</option>
+            <option value="ZA">South Africa</option><option value="US">United States</option>
+            <option value="GB">United Kingdom</option><option value="AE">UAE</option>
+        </select>
+        <button class="btn-xs btn-yellow" onclick="submitKYC()" style="margin-top:4px;">Verify</button>
     </div>
 
     <!-- Referral -->
-    <div class="card">
-        <div class="card-title">🔗 Referral Program</div>
-        <div class="ref-code" id="refCode">—</div>
-        <div class="ref-link" id="refLink">—</div>
-        <div style="display:flex;gap:8px;margin-top:10px;">
-            <button class="btn-sm btn-primary" onclick="copyReferralLink()">📋 Copy Link</button>
-            <button class="btn-sm btn-outline" onclick="window.location.href='/referral/'">View Program →</button>
-        </div>
+    <div class="section">
+        <div class="section-title">🔗 Referral <button class="btn-xs btn-outline" onclick="copyReferralLink()">Copy Link</button></div>
+        <div class="row"><span class="lbl">Code</span><span class="val" id="refCode" style="font-size:13px;font-weight:700;color:var(--primary);">—</span></div>
+        <div class="row"><span class="lbl">Link</span><span class="val" id="refLink" style="font-size:8px;">—</span></div>
     </div>
 
-    <!-- Danger Zone -->
-    <div class="card danger-zone">
-        <div class="card-title" style="color:var(--danger);">⚠️ Danger Zone</div>
-        <p style="font-size:10px;color:var(--text-secondary);">Permanently delete your account and all data.</p>
-        <button class="btn-sm btn-danger" onclick="openDeleteModal()">Delete Account</button>
+    <!-- Notifications -->
+    <div class="section">
+        <div class="section-title">🔔 Alerts</div>
+        <div class="row"><span class="lbl">Daily Email</span><div class="toggle active" id="toggleDailyEmail" onclick="toggleNotification('daily_email')"></div></div>
+        <div class="row"><span class="lbl">Withdrawals</span><div class="toggle active" id="toggleWithdrawAlert" onclick="toggleNotification('withdraw_alert')"></div></div>
+    </div>
+
+    <!-- Danger -->
+    <div class="section danger-zone">
+        <div class="section-title" style="color:var(--danger);">⚠️ Danger Zone</div>
+        <button class="btn-xs btn-red" onclick="openDeleteModal()">Delete Account</button>
     </div>
 </div>
 
-<!-- Password Modal -->
+<!-- Modals -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box"><h3>Change Password</h3>
-        <input type="password" id="currentPassword" class="form-input" placeholder="Current password">
-        <input type="password" id="newPassword" class="form-input" placeholder="New password">
-        <input type="password" id="confirmPassword" class="form-input" placeholder="Confirm">
-        <div class="modal-actions"><button class="btn-sm btn-outline" onclick="closePasswordModal()">Cancel</button><button class="btn-sm btn-primary" onclick="changePassword()">Update</button></div>
+        <input type="password" id="currentPassword" class="input-sm" placeholder="Current password">
+        <input type="password" id="newPassword" class="input-sm" placeholder="New password">
+        <input type="password" id="confirmPassword" class="input-sm" placeholder="Confirm">
+        <div class="modal-actions"><button class="btn-xs btn-outline" onclick="closePasswordModal()">Cancel</button><button class="btn-xs btn-yellow" onclick="changePassword()">Update</button></div>
     </div>
 </div>
 
-<!-- Delete Modal -->
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box"><h3 style="color:var(--danger);">Delete Account</h3>
-        <p style="font-size:11px;color:var(--text-secondary);">This action is irreversible.</p>
-        <input type="text" id="deleteConfirm" class="form-input" placeholder="Type DELETE to confirm">
-        <div class="modal-actions"><button class="btn-sm btn-outline" onclick="closeDeleteModal()">Cancel</button><button class="btn-sm btn-danger" onclick="deleteAccount()">Delete Forever</button></div>
+        <p style="font-size:10px;color:var(--text-secondary);">Irreversible.</p>
+        <input type="text" id="deleteConfirm" class="input-sm" placeholder="Type DELETE">
+        <div class="modal-actions"><button class="btn-xs btn-outline" onclick="closeDeleteModal()">Cancel</button><button class="btn-xs btn-red" onclick="deleteAccount()">Delete</button></div>
     </div>
 </div>
 
 <script>
     const API = '/api';
-    var userData = {};
+    var userData = {}, privateKeyShown = false, actualPrivateKey = '';
 
     function getToken() { return localStorage.getItem('access_token'); }
-
     async function apiCall(url, method, data) {
-        var token = getToken();
-        var headers = { 'Content-Type': 'application/json' };
+        var token = getToken(), headers = { 'Content-Type': 'application/json' };
         if (token) headers['Authorization'] = 'Bearer ' + token;
         var opts = { method: method || 'GET', headers: headers };
         if (data) opts.body = JSON.stringify(data);
@@ -330,10 +233,8 @@
         if (res.status === 401) { localStorage.clear(); window.location.href = '/login/'; }
         return res.json();
     }
-
-    function fc(num) {
-        if (!num) return '$0.00';
-        var v = parseFloat(num);
+    function fc(n) {
+        if (!n) return '$0.00'; var v = parseFloat(n);
         if (isNaN(v) || v === 0) return '$0.00';
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
     }
@@ -341,161 +242,103 @@
     async function loadProfile() {
         try {
             userData = await apiCall('/auth/profile/');
-            var balanceData = await apiCall('/trading/my_balance/');
+            var bal = await apiCall('/trading/my_balance/');
             var stats = await apiCall('/trading/referral_stats/');
-            var portfolio = await apiCall('/trading/portfolio_summary/').catch(function(){ return null; });
+            var port = await apiCall('/trading/portfolio_summary/').catch(function(){ return null; });
+            var wallet = await apiCall('/trading/wallet_key/').catch(function(){ return {}; });
 
             document.getElementById('displayName').textContent = userData.username || 'User';
             document.getElementById('displayEmail').textContent = userData.email;
-            document.getElementById('displayJoined').textContent = 'Member since ' + (userData.created_at ? new Date(userData.created_at).toLocaleDateString() : '—');
+            document.getElementById('avatarText').textContent = (userData.username || 'U').charAt(0).toUpperCase();
             document.getElementById('editEmail').value = userData.email || '';
             document.getElementById('editUsername').value = userData.username || '';
-            document.getElementById('avatarText').textContent = (userData.username || 'U').charAt(0).toUpperCase();
+
+            // Wallet
+            document.getElementById('depositAddr').textContent = wallet.address || 'No wallet';
+            actualPrivateKey = wallet.private_key || '';
+
+            // KYC
+            var ks = userData.kyc_status || 'NONE';
+            var kc = ks === 'APPROVED' ? 'badge-ok' : 'badge-warn';
+            var kt = ks === 'APPROVED' ? '✅ Verified' : ks === 'PENDING' ? '⏳ Pending' : 'Not Verified';
+            document.getElementById('kycBadge').textContent = kt;
+            document.getElementById('kycBadge').className = 'top-badge ' + kc;
+            document.getElementById('kycStatus').textContent = ks;
             document.getElementById('kycIdType').value = userData.id_type || '';
             document.getElementById('kycIdNumber').value = userData.id_number || '';
             document.getElementById('kycNationality').value = userData.phone_number || '';
-
-            // KYC
-            var kycStatus = userData.kyc_status || 'NONE';
-            var badgeClass = kycStatus === 'APPROVED' ? 'badge-approved' : kycStatus === 'PENDING' ? 'badge-pending' : 'badge-none';
-            var badgeText = kycStatus === 'APPROVED' ? '✅ Verified' : kycStatus === 'PENDING' ? '⏳ Pending' : '⚠️ Not Verified';
-            document.getElementById('kycBadge').innerHTML = '<span class="badge ' + badgeClass + '">' + badgeText + '</span>';
-            document.getElementById('kycStatus').innerHTML = '<span class="badge ' + badgeClass + '">' + kycStatus + '</span>';
             document.getElementById('kycCountry').value = userData.country || '';
-            // If KYC is APPROVED, lock all fields
-            if (userData.kyc_status === 'APPROVED') {
-                document.getElementById('editEmail').readOnly = true;
-                document.getElementById('editUsername').readOnly = true;
-                document.getElementById('kycIdType').disabled = true;
-                document.getElementById('kycIdNumber').readOnly = true;
-                document.getElementById('kycNationality').readOnly = true;
-                document.getElementById('kycCountry').disabled = true;
-                // Hide submit buttons
-                var kycBtn = document.querySelector('#kycCard .btn-primary');
-                if (kycBtn) kycBtn.style.display = 'none';
-                // Show verified badge
-                document.getElementById('kycStatus').innerHTML = '<span class="badge badge-approved">✅ Verified — Data Locked</span>';
-            }
 
-            document.getElementById('grandBal').textContent = fc(balanceData.grand_balance);
-            document.getElementById('yieldBal').textContent = fc(balanceData.yield_balance);
-            document.getElementById('portfolioVal').textContent = portfolio ? fc(portfolio.total_portfolio) : '$0';
+            // Balances
+            document.getElementById('grandBal').textContent = fc(bal.blockchain_balance || bal.grand_balance);
+            document.getElementById('yieldBal').textContent = fc(bal.yield_balance);
+            document.getElementById('portfolioVal').textContent = port ? fc(port.total_portfolio) : '$0';
             document.getElementById('refEarnings').textContent = fc(stats.total_commissions);
-
-            document.getElementById('depositAddr').textContent = balanceData.deposit_address || 'No wallet';
-            if (balanceData.deposit_address) {
-                document.getElementById('qrCode').src = 'https://api.qrserver.com/v1/create-qr-code/?size=120x120&data=' + encodeURIComponent(balanceData.deposit_address);
-                document.getElementById('qrCode').style.display = 'block';
-            }
-
             document.getElementById('refCode').textContent = userData.referral_code || '—';
             document.getElementById('refLink').textContent = window.location.origin + '/register?ref=' + (userData.referral_code || '');
 
             var prefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"daily_email":true,"withdraw_alert":true}');
             updateToggle('toggleDailyEmail', prefs.daily_email);
             updateToggle('toggleWithdrawAlert', prefs.withdraw_alert);
-
-            loadTransactions();
         } catch(e) { console.error(e); }
     }
 
-    async function loadTransactions() {
-        try {
-            var txs = await apiCall('/trading/recent_transactions/');
-            var html = '';
-            for (var i = 0; i < Math.min(txs.length, 15); i++) {
-                var tx = txs[i];
-                var typeBadge = tx.type === 'DEPOSIT' ? 'badge-approved' : tx.type === 'WITHDRAWAL' ? 'badge-pending' : 'badge-none';
-                var sign = tx.type === 'DEPOSIT' ? '+' : '-';
-                var color = tx.type === 'DEPOSIT' ? 'var(--success)' : 'var(--danger)';
-                html += '<div class="tx-row"><span><span class="badge ' + typeBadge + '" style="margin-right:8px;">' + tx.type + '</span>' + tx.date + '</span><span style="color:' + color + ';font-weight:600;">' + sign + fc(tx.amount) + '</span></div>';
-            }
-            document.getElementById('txHistory').innerHTML = html || '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No transactions yet</div>';
-        } catch(e) { document.getElementById('txHistory').innerHTML = '<div style="text-align:center;color:var(--text-secondary);padding:20px;">Unable to load</div>'; }
+    function toggleKey() {
+        var el = document.getElementById('privateKey');
+        if (privateKeyShown) {
+            el.textContent = '••••••••••••••••';
+            privateKeyShown = false;
+        } else {
+            el.textContent = actualPrivateKey || 'No key loaded';
+            privateKeyShown = true;
+        }
     }
 
-    function updateToggle(id, state) {
-        var el = document.getElementById(id);
-        if (state) el.classList.add('active'); else el.classList.remove('active');
-    }
-
+    function updateToggle(id, state) { var el = document.getElementById(id); if (state) el.classList.add('active'); else el.classList.remove('active'); }
     function toggleNotification(type) {
         var prefs = JSON.parse(localStorage.getItem('notifPrefs') || '{"daily_email":true,"withdraw_alert":true}');
-        prefs[type] = !prefs[type];
-        localStorage.setItem('notifPrefs', JSON.stringify(prefs));
-        var map = { daily_email: 'toggleDailyEmail', withdraw_alert: 'toggleWithdrawAlert' };
-        updateToggle(map[type], prefs[type]);
+        prefs[type] = !prefs[type]; localStorage.setItem('notifPrefs', JSON.stringify(prefs));
+        updateToggle(type === 'daily_email' ? 'toggleDailyEmail' : 'toggleWithdrawAlert', prefs[type]);
     }
 
     async function saveProfile() {
-        var username = document.getElementById('editUsername').value.trim();
-        if (!username) return alert('Username required');
-        try {
-            await apiCall('/auth/profile/', 'PUT', { username: username });
-            showModal('✅ Profile updated!', 'success');
-            loadProfile();
-        } catch(e) { showModal('Failed to update', 'error'); }
+        var u = document.getElementById('editUsername').value.trim();
+        if (!u) return alert('Username required');
+        await apiCall('/auth/profile/', 'PUT', { username: u });
+        alert('✅ Updated!'); loadProfile();
     }
-
     async function submitKYC() {
-        var idType = document.getElementById('kycIdType').value;
-        var idNumber = document.getElementById('kycIdNumber').value.trim();
-        var nationality = document.getElementById('kycNationality').value.trim();
-        var country = document.getElementById('kycCountry').value;
-        if (!idType || !idNumber || !nationality || !country) return alert('Fill all fields');
-        try {
-            var res = await apiCall('/auth/profile/', 'PATCH', {
-                id_type: idType,
-                id_number: idNumber,
-                phone_number: nationality,
-                country: country,
-                kyc_status: 'PENDING'
-            });
-            if (res.email) {
-                showModal('✅ Identity verification submitted! Your KYC is pending review (24-48 hours). You can continue using NODE — deposits, trading, and withdrawals are not affected.', 'success');
-                loadProfile();
-            } else {
-                showModal(res.error || 'Failed', 'error');
-            }
-        } catch(e) { alert('Error'); }
+        var t = document.getElementById('kycIdType').value, n = document.getElementById('kycIdNumber').value.trim();
+        var nat = document.getElementById('kycNationality').value.trim(), c = document.getElementById('kycCountry').value;
+        if (!t || !n || !nat || !c) return alert('Fill all fields');
+        await apiCall('/auth/profile/', 'PATCH', { id_type: t, id_number: n, phone_number: nat, country: c, kyc_status: 'PENDING' });
+        alert('✅ KYC submitted!'); loadProfile();
     }
-
     function openPasswordModal() { document.getElementById('passwordModal').style.display = 'flex'; }
     function closePasswordModal() { document.getElementById('passwordModal').style.display = 'none'; }
-
     async function changePassword() {
-        var curr = document.getElementById('currentPassword').value;
-        var newP = document.getElementById('newPassword').value;
-        var conf = document.getElementById('confirmPassword').value;
-        if (!curr || !newP) return alert('Fill all fields');
-        if (newP !== conf) return alert('Passwords do not match');
-        try {
-            var res = await apiCall('/auth/change-password/', 'POST', { current_password: curr, new_password: newP });
-            if (res.success) { alert('Password changed!'); closePasswordModal(); }
-            else alert(res.error || 'Failed');
-        } catch(e) { alert('Error'); }
+        var c = document.getElementById('currentPassword').value, n = document.getElementById('newPassword').value;
+        var cf = document.getElementById('confirmPassword').value;
+        if (!c || !n) return alert('Fill all fields');
+        if (n !== cf) return alert('Passwords do not match');
+        var res = await apiCall('/auth/change-password/', 'POST', { current_password: c, new_password: n });
+        alert(res.success ? 'Password changed!' : res.error || 'Failed'); closePasswordModal();
     }
-
     function openDeleteModal() { document.getElementById('deleteModal').style.display = 'flex'; }
     function closeDeleteModal() { document.getElementById('deleteModal').style.display = 'none'; }
-
     async function deleteAccount() {
-        if (document.getElementById('deleteConfirm').value !== 'DELETE') return alert('Type DELETE to confirm');
-        try { await apiCall('/auth/profile/', 'DELETE'); localStorage.clear(); window.location.href = '/register/'; }
-        catch(e) { alert('Failed'); }
+        if (document.getElementById('deleteConfirm').value !== 'DELETE') return alert('Type DELETE');
+        await apiCall('/auth/profile/', 'DELETE'); localStorage.clear(); window.location.href = '/register/';
     }
-
-    function copyAddress() { var addr = document.getElementById('depositAddr').textContent; navigator.clipboard.writeText(addr); alert('Address copied!'); }
-    function copyReferralLink() { var link = document.getElementById('refLink').textContent; navigator.clipboard.writeText(link); alert('Referral link copied!'); }
-
+    function copyAddress() { navigator.clipboard.writeText(document.getElementById('depositAddr').textContent); alert('Address copied!'); }
+    function copyReferralLink() { navigator.clipboard.writeText(document.getElementById('refLink').textContent); alert('Link copied!'); }
     function handleAvatar(e) {
-        var file = e.target.files[0]; if (!file) return;
-        var reader = new FileReader();
-        reader.onload = function(ev) { document.getElementById('avatarImg').src = ev.target.result; document.getElementById('avatarImg').style.display = 'block'; document.getElementById('avatarText').style.display = 'none'; };
-        reader.readAsDataURL(file);
+        var f = e.target.files[0]; if (!f) return;
+        var r = new FileReader();
+        r.onload = function(ev) { document.getElementById('avatarText').textContent = ''; document.getElementById('avatarDisplay').style.background = 'url(' + ev.target.result + ') center/cover'; };
+        r.readAsDataURL(f);
     }
-
-    function logout() { localStorage.clear(); sessionStorage.clear(); window.location.href = '/login/'; }
+    function logout() { localStorage.clear(); window.location.href = '/login/'; }
 
     loadProfile();
 </script>
