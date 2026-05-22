@@ -454,28 +454,28 @@
 
         <!-- SURVIVOR: Emergency Purse -->
         <div id="survivorPurse" class="yield-card" style="display:none;">
-            <div class="yield-card-title">🆘 Emergency Fund</div>
+            <div class="yield-card-title">🆘 Reserved Fund</div>
             <div class="yield-balance-row">
-                <span class="yield-balance-label">Emergency Balance</span>
-                <span class="yield-balance-value" id="emergencyBalance">$0.00</span>
+                <span class="yield-balance-label">Balance</span>
+                <span class="yield-balance-value" id="reserveBalance">$0.00</span>
             </div>
             <div style="font-size:10px;color:#707A8A;margin-bottom:8px;">
                 Auto-sweeps grid profit weekly. Withdraw any amount anytime.
             </div>
             <div class="card-row" style="padding:8px 0;">
                 <span class="card-label">Auto-Sweep</span>
-                <div class="toggle" id="toggleEmergencySweep" onclick="togglePurse('Emergency')"></div>
+                <div class="toggle" id="toggleReserveSweep" onclick="togglePurse('Reserve')"></div>
             </div>
             <div class="card-row" style="padding:8px 0;">
                 <span class="card-label">Sweep % of Profit</span>
-                <select id="emergencySweepPct" class="form-select" style="max-width:80px;">
+                <select id="reserveSweepPct" class="form-select" style="max-width:80px;">
                     <option value="10">10%</option>
                     <option value="25">25%</option>
                     <option value="50">50%</option>
                     <option value="100">100%</option>
                 </select>
             </div>
-            <button class="btn-transfer-yield" onclick="withdrawFromPurse('Emergency')" style="margin-top:8px;">💸 Withdraw Emergency Fund</button>
+            <button class="btn-transfer-yield" onclick="withdrawFromPurse('Reserve')" style="margin-top:8px;">💸 Withdraw Emergency Fund</button>
         </div>
 
         <!-- HUSTLER: Business Purses -->
@@ -483,16 +483,16 @@
             <div class="yield-card">
                 <div class="yield-card-title">🏪 Business Reserves</div>
                 <div class="card-row" style="padding:8px 0;">
-                    <span class="card-label">Shop Rent</span>
-                    <span class="card-value" id="purseShopRent">$0.00</span>
+                    <span class="card-label">Housing</span>
+                    <span class="card-value" id="purseOperations">$0.00</span>
                 </div>
                 <div class="card-row" style="padding:8px 0;">
-                    <span class="card-label">Inventory</span>
-                    <span class="card-value" id="purseInventory">$0.00</span>
+                    <span class="card-label">Procurement</span>
+                    <span class="card-value" id="purseSupplyChain">$0.00</span>
                 </div>
                 <div class="card-row" style="padding:8px 0;">
-                    <span class="card-label">Repairs</span>
-                    <span class="card-value" id="purseRepair">$0.00</span>
+                    <span class="card-label">Maintenance</span>
+                    <span class="card-value" id="purseMaintenance">$0.00</span>
                 </div>
                 <div style="font-size:10px;color:#707A8A;margin-top:8px;">Auto-sweeps grid profit weekly to each purse.</div>
                 <button class="btn-transfer-yield" onclick="setupBusinessPurses()" style="margin-top:8px;">⚙️ Configure Business Purses</button>
@@ -515,14 +515,14 @@
                 <div style="font-size:10px;color:#F6465D;margin-top:6px;">⚠️ Irreversible: Creates a new Grid Bot every 6 months from your Yield Wallet.</div>
             </div>
             <div class="yield-card">
-                <div class="yield-card-title">🎯 Goal Purses</div>
+                <div class="yield-card-title">🎯 Goal Wallets</div>
                 <div class="card-row" style="padding:8px 0;">
-                    <span class="card-label">School Fees</span>
-                    <span class="card-value" id="purseSchoolFees">$0.00</span>
+                    <span class="card-label">Education</span>
+                    <span class="card-value" id="purseEducation">$0.00</span>
                 </div>
                 <div class="card-row" style="padding:8px 0;">
-                    <span class="card-label">House Rent</span>
-                    <span class="card-value" id="purseHouseRent">$0.00</span>
+                    <span class="card-label">Housing</span>
+                    <span class="card-value" id="purseHousing">$0.00</span>
                 </div>
                 <div style="font-size:10px;color:#707A8A;margin-top:8px;">School Fees: withdrawable every 3 months. Rent: annually.</div>
                 <button class="btn-transfer-yield" onclick="setupGoalPurses()" style="margin-top:8px;">⚙️ Configure Goal Purses</button>
@@ -877,7 +877,7 @@
             var el = document.getElementById(elId);
             if (!el) {
                 // Try emergency balance
-                el = document.getElementById('emergencyBalance');
+                el = document.getElementById('reserveBalance');
             }
             if (el && res.balance !== undefined) {
                 el.textContent = formatCurrency(res.balance);
@@ -898,7 +898,7 @@
         try {
             var res = await apiCall('/trading/purse/withdraw/', 'POST', { name: name, amount: parseFloat(amount) });
             if (res.success) {
-                showModal('✅ Withdrawn to Grand Balance!', 'success');
+                showModal('✅ Withdrawn to Main Wallet!', 'success');
                 loadDashboard();
             } else {
                 showModal('❌ ' + (res.error || 'Failed'), 'error');
@@ -990,14 +990,14 @@
 
             // SURVIVOR: Load emergency purse
             if (userType === 'MICRO') {
-                loadPurse('Emergency');
+                loadPurse('Reserve');
             }
 
             // HUSTLER: Load business purses + set 3% yield threshold
             if (userType === 'BUSINESS') {
-                loadPurse('Shop Rent');
-                loadPurse('Inventory');
-                loadPurse('Repair');
+                loadPurse('Operations');
+                loadPurse('Supply Chain');
+                loadPurse('Maintenance');
                 var minReqEl = document.getElementById('minRequired');
                 if (minReqEl && portfolioData) {
                     minReqEl.textContent = formatCurrency(portfolioData.total_portfolio * 0.03);
@@ -1006,8 +1006,8 @@
 
             // PROVIDER/DIASPORA: Load goal purses + pension status
             if (userType === 'SALARY' || userType === 'DIASPORA') {
-                loadPurse('School Fees');
-                loadPurse('House Rent');
+                loadPurse('Education');
+                loadPurse('Housing');
                 checkPensionStatus();
             }
 

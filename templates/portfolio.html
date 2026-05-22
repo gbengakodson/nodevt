@@ -857,23 +857,19 @@ async function loadPurseCard() {
     var purses = [];
 
     if (userType === 'MICRO') {
-        title.textContent = '🆘 Emergency Fund';
-        purses = ['Emergency'];
+        title.textContent = '🆘 Reserve';
+        purses = ['Reserve'];
     } else if (userType === 'BUSINESS') {
-        title.textContent = '🏪 Business Purses';
-        purses = ['Shop Rent', 'Inventory', 'Repair'];
+        title.textContent = '🏪 Business';
+        purses = ['Operations', 'Supply Chain', 'Maintenance'];
     } else if (userType === 'SALARY' || userType === 'DIASPORA') {
-        title.textContent = '🎯 Goal Purses';
-        purses = ['School Fees', 'House Rent'];
-    } else {
-        title.textContent = '💰 Purses';
-        content.innerHTML = '<span style="font-size:9px;">Switch profile type to unlock purses</span>';
-        return;
+        title.textContent = '🎯 Goals';
+        purses = ['Education', 'Housing'];
     }
 
     var icons = {
-        'Emergency': '🆘', 'Shop Rent': '🏪', 'Inventory': '📦', 'Repair': '🔧',
-        'School Fees': '🎓', 'House Rent': '🏠'
+        'Reserve': '🆘', 'Operations': '🏪', 'Supply Chain': '📦', 'Maintenance': '🔧',
+        'Education': '🎓', 'Housing': '🏠'
     };
 
     var html = '';
@@ -920,12 +916,12 @@ async function loadPurseCard() {
         document.getElementById('purseWithdrawAmount').value = '';
 
         var hints = {
-            'Emergency': 'Withdraw anytime, any amount',
-            'Shop Rent': 'Withdraw anytime',
-            'Inventory': 'Withdraw anytime',
-            'Repair': 'Withdraw anytime',
-            'School Fees': 'Withdrawable every 3 months',
-            'House Rent': 'Withdrawable once per year'
+            'Reserve': 'Withdraw anytime',
+            'Operations': 'Withdraw anytime',
+            'Supply Chain': 'Withdraw anytime',
+            'Maintenance': 'Withdraw anytime',
+            'Education': 'Withdrawable every 3 months',
+            'Housing': 'Withdrawable once per year'
         };
         document.getElementById('purseModalHint').textContent = hints[name] || 'Withdraw anytime';
 
