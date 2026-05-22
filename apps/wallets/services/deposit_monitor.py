@@ -82,14 +82,13 @@ class DepositMonitor:
                 total_new += deposit_amount
                 print(f"  ✅ Credited ${deposit_amount:.2f} — {tx_hash[:20]}...")
 
-            if total_new > 0:
-                cls._sweep_if_needed(w3, address, total_new, user)
 
             return {'amount': float(total_new), 'deposits': []}
 
         except Exception as e:
             print(f"Error checking deposits for {address}: {e}")
             return {'amount': 0, 'deposits': []}
+
 
     @classmethod
     def _sweep_if_needed(cls, w3, address, amount, user):

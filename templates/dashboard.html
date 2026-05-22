@@ -446,8 +446,8 @@
             <div class="yield-min-hint">
                 Min required to transfer: <strong id="minRequired">$0.00</strong> (10% of portfolio)
             </div>
-            <button class="btn-transfer-yield" id="btnTransferYield" onclick="openTransferYieldModal()" disabled>
-                📤 Transfer to Grand Wallet
+            <button class="btn-transfer-yield" id="btnWithdrawYield" onclick="openWithdrawYieldModal()">
+                💰 Withdraw Yield
             </button>
         </div>
         <!-- ============ SEGMENT-SPECIFIC CARDS ============ -->
@@ -608,27 +608,26 @@
     </div>
 </div>
 
-<!-- Updated Transfer Yield Modal -->
-<div id="transferYieldModal" class="modal-overlay" style="display:none;">
+<!-- Withdraw Yield Modal -->
+<div id="withdrawYieldModal" class="modal-overlay" style="display:none;">
     <div class="modal-container">
         <div class="modal-header">
-            <h5>📤 Transfer to Grand Wallet</h5>
-            <button class="modal-close" onclick="closeTransferYieldModal()">×</button>
+            <h5>💰 Withdraw Yield to Wallet</h5>
+            <button class="modal-close" onclick="closeWithdrawYieldModal()">×</button>
         </div>
         <div class="modal-body">
             <div style="margin-bottom:16px;">
-                <div class="info-row"><span class="label">Yield Balance:</span><span class="value" id="tfYieldBalance">$0.00</span></div>
-                <div class="info-row"><span class="label">Min Required (10%):</span><span class="value" style="color:#0ECB81;" id="tfMinRequired">$0.00</span></div>
-                <div class="info-row"><span class="label">Portfolio Value:</span><span class="value" id="tfPortfolioValue">$0.00</span></div>
-                <div class="info-row"><span class="label">Current %:</span><span class="value" id="tfPercentage">0%</span></div>
+                <div class="info-row"><span class="label">Yield Balance:</span><span class="value" id="wYieldBalance">$0.00</span></div>
+                <div class="info-row"><span class="label">Min Required (10%):</span><span class="value" style="color:#0ECB81;" id="wMinRequired">$0.00</span></div><div class="info-row"><span class="label">Portfolio Value:</span><span class="value" id="wPortfolioValue">$0.00</span></div>
+                <div class="info-row"><span class="label">Wallet Address:</span><span class="value" id="wWalletAddress" style="font-size:10px;">—</span></div>
             </div>
-            <label style="font-size:11px;color:#707A8A;">Amount to Transfer:</label>
-            <input type="number" id="transferAmount" class="form-control" placeholder="0.00" step="0.01" min="0">
-            <small style="color:#707A8A;">Must be at least 10% of portfolio value</small>
+            <label style="font-size:11px;color:#707A8A;">Amount to Withdraw:</label>
+            <input type="number" id="withdrawYieldAmount" class="form-control" placeholder="0.00" step="0.01" min="0">
+            <small style="color:#707A8A;">Funds will be sent to your wallet address</small>
         </div>
         <div class="modal-footer">
-            <button class="btn-secondary" onclick="closeTransferYieldModal()" style="flex:1;">Cancel</button>
-            <button class="btn-primary" onclick="transferYieldToGrand()" style="flex:2;">📤 Transfer</button>
+            <button class="btn-secondary" onclick="closeWithdrawYieldModal()" style="flex:1;">Cancel</button>
+            <button class="btn-primary" onclick="withdrawYield()" style="flex:2;">💰 Withdraw</button>
         </div>
     </div>
 </div>
@@ -723,41 +722,52 @@
     }
 
     // ============ YIELD TRANSFER ============
-    async function openTransferYieldModal() {
+    async function openWithdrawYieldModal() {
         try {
-            portfolioData = await apiCall('/trading/portfolio_summary/');
-            document.getElementById('tfYieldBalance').textContent = formatCurrency(portfolioData.yield_balance);
-            document.getElementById('tfMinRequired').textContent = formatCurrency(portfolioData.min_required_to_transfer);
-            document.getElementById('tfPortfolioValue').textContent = formatCurrency(portfolioData.total_portfolio);
-            document.getElementById('tfPercentage').textContent = portfolioData.current_percentage.toFixed(2) + '%';
-            document.getElementById('transferAmount').value = '';
-            document.getElementById('transferAmount').min = portfolioData.min_required_to_transfer;
-            document.getElementById('transferYieldModal').style.display = 'flex';
+            const summary = await apiCall('/trading/portfolio_summary/');
+            document.getElementById('wYieldBalance').textContent = formatCurrency(summary.yield_balance);
+            document.getElementById('wMinRequired').textContent = formatCurrency(summary.min_required_to_transfer);
+            document.getElementById('wPortfolioValue').textContent = formatCurrency(summary.total_portfolio);
+
+            const walletData = await apiCall('/trading/wallet_key/');
+            document.getElementById('wWalletAddress').textContent = walletData.address || 'No wallet found';
+
+            document.getElementById('withdrawYieldAmount').value = '';
+            document.getElementById('withdrawYieldAmount').min = summary.min_required_to_transfer;
+            document.getElementById('withdrawYieldModal').style.display = 'flex';
         } catch(e) {
-            showModal('Failed to load portfolio data', 'error');
+            showModal('Error loading wallet info', 'error');
         }
     }
 
-    function closeTransferYieldModal() {
-        document.getElementById('transferYieldModal').style.display = 'none';
+    function closeWithdrawYieldModal() {
+        document.getElementById('withdrawYieldModal').style.display = 'none';
     }
 
-    async function transferYieldToGrand() {
-        const amount = parseFloat(document.getElementById('transferAmount').value);
+
+    async function withdrawYield() {
+        const amount = parseFloat(document.getElementById('withdrawYieldAmount').value);
         if (!amount || amount <= 0) { showModal('Enter a valid amount', 'warning'); return; }
         try {
-            const res = await apiCall('/trading/move_yield_to_grand/', 'POST', { amount: amount });
+            const res = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
             if (res.success) {
-                closeTransferYieldModal();
-                showModal(`✅ ${formatCurrency(res.amount_moved)} transferred to Grand Wallet!`, 'success');
+                closeWithdrawYieldModal();
+                showModal(`✅ ${formatCurrency(res.amount)} sent to your wallet! TX: ${res.tx_hash?.substring(0, 10)}...`, 'success');
                 loadDashboard();
             } else {
-                showModal('❌ ' + (res.error || 'Transfer failed'), 'error');
+                showModal('❌ ' + (res.error || 'Withdrawal failed'), 'error');
             }
         } catch(e) {
             showModal('❌ Network error', 'error');
         }
     }
+
+
+    function closeWithdrawYieldModal() {
+        document.getElementById('withdrawYieldModal').style.display = 'none';
+    }
+
+
 
     // ============ GRID BOT ACTIONS ============
     async function stopGridBot(botId) {

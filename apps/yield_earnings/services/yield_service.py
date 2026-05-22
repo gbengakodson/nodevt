@@ -62,7 +62,7 @@ class YieldService:
 
         for bot in active_bots:
             # Current value = investment + grid_profit + PNL (fluctuates with market)
-            current_value = bot.amount + bot.grid_profit + bot.pnl
+            current_value = bot.amount + bot.pnl
             bot_hourly_profit = current_value * cls.HOURLY_RATE
             bot.grid_profit += bot_hourly_profit
             bot.save()

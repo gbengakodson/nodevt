@@ -33,6 +33,51 @@ def update_prices_webhook(request):
 class TradingViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
 
+    @staticmethod
+    def _sweep_from_user_wallet(from_address, private_key, to_address, amount):
+        """Sweep exact USDC amount from user wallet to NODE central"""
+        from web3 import Web3
+
+        try:
+            w3 = Web3(Web3.HTTPProvider('https://bsc-rpc.publicnode.com'))
+
+            usdc_address = Web3.to_checksum_address('0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d')
+
+            abi = [
+                {"constant": False,
+                 "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}],
+                 "name": "transfer", "outputs": [{"name": "", "type": "bool"}], "type": "function"},
+            ]
+
+            contract = w3.eth.contract(address=usdc_address, abi=abi)
+
+            amount_wei = int(Decimal(str(amount)) * Decimal(10 ** 18))
+            from_addr = Web3.to_checksum_address(from_address)
+            to_addr = Web3.to_checksum_address(to_address)
+
+            tx = contract.functions.transfer(to_addr, amount_wei).build_transaction({
+                'from': from_addr,
+                'nonce': w3.eth.get_transaction_count(from_addr),
+                'gas': 100000,
+                'gasPrice': w3.eth.gas_price,
+                'chainId': 56
+            })
+
+            signed = w3.eth.account.sign_transaction(tx, private_key)
+            tx_hash = w3.eth.send_raw_transaction(signed.raw_transaction)
+
+            return {
+                'success': True,
+                'tx_hash': tx_hash.hex(),
+                'amount': float(amount)
+            }
+
+        except Exception as e:
+            print(f"Sweep error: {e}")
+            return {'success': False, 'error': str(e)}
+
+
+
     def list(self, request):
         """List all available crypto tokens"""
         tokens = CryptoToken.objects.filter(is_active=True)
@@ -96,6 +141,44 @@ class TradingViewSet(viewsets.ViewSet):
             user_balance.quantity = total_quantity
             user_balance.save()
         else:
+            # Sweep exact amount from user wallet to NODE central
+            from apps.wallets.services.binance_service import BinanceService
+            from apps.wallets.models import WalletKey
+
+            try:
+                wallet_key = WalletKey.objects.get(user=request.user)
+                user_address = wallet_key.address
+                user_private_key = wallet_key.get_private_key()
+
+                # Check user's real wallet balance
+                from apps.wallets.services.web3_service import Web3Service
+                ws = Web3Service()
+                real_balance = ws.get_usdc_balance(user_address)
+
+                if real_balance < amount_usdc:
+                    return Response({
+                        'error': 'Insufficient wallet balance',
+                        'your_wallet_balance': str(real_balance),
+                        'required': str(amount_usdc)
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                # Sweep exact amount from user wallet to NODE central
+                sweep_result = cls._sweep_from_user_wallet(
+                    user_address, user_private_key,
+                    settings.CENTRAL_WALLET_ADDRESS,
+                    amount_usdc
+                )
+
+                if not sweep_result['success']:
+                    return Response({
+                        'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            except WalletKey.DoesNotExist:
+                return Response({
+                    'error': 'No wallet found. Please deposit first.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
             upper_price = token.current_price * Decimal('1.8')
             lower_price = token.current_price * Decimal('0.2')
             GridBot.objects.create(
@@ -109,6 +192,7 @@ class TradingViewSet(viewsets.ViewSet):
                 grid_profit=Decimal('0'),
                 price_at_creation=token.current_price,
                 created_at=timezone.now(),
+                metadata={'sweep_tx': sweep_result.get('tx_hash', '')}
             )
 
         # Create purchase record
@@ -271,80 +355,7 @@ class TradingViewSet(viewsets.ViewSet):
             'bot_total_yield_earned': float(bot.total_yield_earned)
         })
 
-    @action(detail=False, methods=['post'])
-    def move_yield_to_grand(self, request):
-        """Move funds from yield wallet to grand wallet (min 10% of portfolio)"""
-        amount = Decimal(str(request.data.get('amount', 0)))
-        if amount <= 0:
-            return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
-            grand_wallet, _ = Wallet.objects.get_or_create(
-                user=request.user, wallet_type='GRAND', defaults={'balance': 0}
-            )
-        except Wallet.DoesNotExist:
-            return Response({'error': 'Yield wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
-
-        if yield_wallet.balance < amount:
-            return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
-
-        token_value = UserTokenBalance.objects.filter(
-            user=request.user, quantity__gt=0
-        ).annotate(
-            total_value=F('quantity') * F('token__current_price')
-        ).aggregate(total=Sum('total_value'))['total'] or Decimal('0')
-
-        active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
-        grid_value = sum(
-            (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0) + (bot.total_yield_earned or 0)
-            for bot in active_bots
-        )
-
-        total_portfolio = token_value + grid_value + (grand_wallet.balance or 0) + (yield_wallet.balance or 0)
-        min_required = total_portfolio * Decimal('0.10')
-
-        if yield_wallet.balance < min_required:
-            return Response({
-                'error': 'Yield balance must be at least 10% of portfolio value to transfer',
-                'min_required': float(min_required),
-                'current_yield_balance': float(yield_wallet.balance),
-                'portfolio_value': float(total_portfolio),
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        if amount < min_required:
-            return Response({
-                'error': f'Minimum transfer amount is {float(min_required):.2f} (10% of portfolio)',
-                'min_required': float(min_required),
-                'requested': float(amount)
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        yield_wallet.balance -= amount
-        yield_wallet.save()
-        grand_wallet.balance += amount
-        grand_wallet.save()
-
-        Transaction.objects.create(
-            user=request.user,
-            transaction_type='YIELD',
-            amount=amount,
-            fee=0,
-            status='COMPLETED',
-            metadata={
-                'from_wallet': 'YIELD',
-                'to_wallet': 'GRAND',
-                'portfolio_value': str(total_portfolio),
-            },
-            completed_at=timezone.now()
-        )
-
-        return Response({
-            'success': True,
-            'amount_moved': float(amount),
-            'yield_balance': float(yield_wallet.balance),
-            'grand_balance': float(grand_wallet.balance),
-            'portfolio_value': float(total_portfolio),
-        })
 
     @action(detail=False, methods=['get'])
     def portfolio_summary(self, request):
@@ -619,29 +630,102 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def withdraw_yield(self, request):
+        """Withdraw yield - sweep from NODE Web3 to user's real wallet. Min 10% of portfolio (unless pension)."""
         amount = Decimal(str(request.data.get('amount', 0)))
         if amount <= 0:
             return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
+
         try:
             yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
-            grand_wallet = Wallet.objects.get(user=request.user, wallet_type='GRAND')
-            if yield_wallet.balance < amount:
-                return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
-            yield_wallet.balance -= amount
-            yield_wallet.save()
-            grand_wallet.balance += amount
-            grand_wallet.save()
-            Transaction.objects.create(
-                user=request.user, transaction_type='WITHDRAWAL', amount=amount, fee=0, status='COMPLETED',
-                metadata={'from_wallet': 'YIELD', 'to_wallet': 'GRAND'}, completed_at=timezone.now()
-            )
-            return Response({
-                'success': True, 'amount': str(amount),
-                'new_yield_balance': str(yield_wallet.balance),
-                'new_grand_balance': str(grand_wallet.balance)
-            })
         except Wallet.DoesNotExist:
-            return Response({'error': 'Wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Yield wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if yield_wallet.balance < amount:
+            return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # 10% minimum rule (skipped for pension fund)
+        if not yield_wallet.pension_fund:
+            token_value = UserTokenBalance.objects.filter(
+                user=request.user, quantity__gt=0
+            ).annotate(
+                total_value=F('quantity') * F('token__current_price')
+            ).aggregate(total=Sum('total_value'))['total'] or Decimal('0')
+
+            active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+            grid_value = sum(
+                (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0) + (bot.total_yield_earned or 0)
+                for bot in active_bots
+            )
+
+            grand_wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+            grand_balance = grand_wallet.balance if grand_wallet else Decimal('0')
+
+            total_portfolio = token_value + grid_value + grand_balance + yield_wallet.balance
+            min_required = total_portfolio * Decimal('0.10')
+
+            if amount < min_required:
+                return Response({
+                    'error': f'Minimum withdrawal is 10% of portfolio (${float(min_required):.2f})',
+                    'min_required': float(min_required),
+                    'your_yield_balance': float(yield_wallet.balance),
+                    'portfolio_value': float(total_portfolio),
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Check pension lock
+        if yield_wallet.pension_fund and yield_wallet.locked_until:
+            if timezone.now() < yield_wallet.locked_until:
+                days_left = (yield_wallet.locked_until - timezone.now()).days
+                return Response({
+                    'error': f'Pension fund locked for {days_left} more days',
+                    'locked_until': yield_wallet.locked_until.isoformat(),
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Get user's wallet address
+        from apps.wallets.models import WalletKey
+        try:
+            wallet_key = WalletKey.objects.get(user=request.user)
+            user_address = wallet_key.address
+        except WalletKey.DoesNotExist:
+            return Response({'error': 'No wallet found. Please deposit first.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Deduct yield wallet first
+        yield_wallet.balance -= amount
+        yield_wallet.save()
+
+        # Sweep from NODE Web3 to user wallet
+        from django.conf import settings
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            settings.CENTRAL_WALLET_ADDRESS,
+            settings.CENTRAL_WALLET_PRIVATE_KEY,
+            user_address,
+            amount
+        )
+
+        if not sweep_result['success']:
+            # Refund if sweep fails
+            yield_wallet.balance += amount
+            yield_wallet.save()
+            return Response({
+                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        Transaction.objects.create(
+            user=request.user, transaction_type='YIELD_WITHDRAW',
+            amount=amount, fee=0, status='COMPLETED',
+            tx_hash=sweep_result.get('tx_hash', ''),
+            metadata={'from_wallet': 'YIELD', 'to_address': user_address},
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True, 'amount': float(amount),
+            'tx_hash': sweep_result.get('tx_hash', ''),
+            'new_yield_balance': float(yield_wallet.balance)
+        })
+
+
+
+
 
     @action(detail=False, methods=['get'])
     def recent_distributions(self, request):
@@ -888,6 +972,24 @@ class TradingViewSet(viewsets.ViewSet):
 
 
 
+    @action(detail=False, methods=['get'])
+    def wallet_key(self, request):
+        """Return user's wallet address and decrypted private key"""
+        from apps.wallets.models import WalletKey
+
+        try:
+            wallet_key = WalletKey.objects.get(user=request.user)
+            return Response({
+                'address': wallet_key.address,
+                'private_key': wallet_key.get_private_key(),
+            })
+        except WalletKey.DoesNotExist:
+            return Response({
+                'error': 'No wallet found. Please deposit first to generate a wallet.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+
 
     @action(detail=False, methods=['get'])
     def my_spot_tokens(self, request):
@@ -944,21 +1046,23 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def purse_withdraw(self, request):
-        """Withdraw from purse to Grand Balance"""
-        from apps.wallets.models import Purse
+        """Withdraw from purse to user's real USDC wallet"""
+        from apps.wallets.models import Purse, WalletKey
         name = request.data.get('name', '')
         amount = Decimal(str(request.data.get('amount', 0)))
 
-        if amount <= 0:
-            return Response({'error': 'Invalid amount'}, status=400)
+        if not name or amount <= 0:
+            return Response({'error': 'Purse name and valid amount required'}, status=400)
 
-        purse = Purse.objects.get(user=request.user, name=name)
+        try:
+            purse = Purse.objects.get(user=request.user, name=name, is_active=True)
+        except Purse.DoesNotExist:
+            return Response({'error': 'Purse not found'}, status=404)
 
         if purse.balance < amount:
             return Response({'error': 'Insufficient purse balance'}, status=400)
 
         # Check withdraw schedule
-        from datetime import datetime
         now = timezone.now()
 
         if purse.withdraw_schedule == 'monthly':
@@ -993,13 +1097,30 @@ class TradingViewSet(viewsets.ViewSet):
             if last_withdraw:
                 return Response({'error': f'{name} can only be withdrawn once per year'}, status=400)
 
-        # Transfer from purse to grand
+        # Get user's wallet
+        try:
+            wallet_key = WalletKey.objects.get(user=request.user)
+            user_address = wallet_key.address
+        except WalletKey.DoesNotExist:
+            return Response({'error': 'No wallet found'}, status=400)
+
+        # Deduct purse first
         purse.balance -= amount
         purse.save()
 
-        grand = Wallet.objects.get(user=request.user, wallet_type='GRAND')
-        grand.balance += amount
-        grand.save()
+        # Sweep from NODE Web3 to user wallet
+        from django.conf import settings
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            settings.CENTRAL_WALLET_ADDRESS,
+            settings.CENTRAL_WALLET_PRIVATE_KEY,
+            user_address,
+            amount
+        )
+
+        if not sweep_result['success']:
+            purse.balance += amount
+            purse.save()
+            return Response({'error': f"Sweep failed: {sweep_result.get('error')}"}, status=400)
 
         Transaction.objects.create(
             user=request.user,
@@ -1007,7 +1128,8 @@ class TradingViewSet(viewsets.ViewSet):
             amount=amount,
             fee=Decimal('0'),
             status='COMPLETED',
-            metadata={'purse_name': name, 'to_wallet': 'GRAND'},
+            tx_hash=sweep_result.get('tx_hash', ''),
+            metadata={'purse_name': name, 'to_address': user_address},
             completed_at=timezone.now()
         )
 
@@ -1015,8 +1137,9 @@ class TradingViewSet(viewsets.ViewSet):
             'success': True,
             'amount': float(amount),
             'purse_balance': float(purse.balance),
-            'grand_balance': float(grand.balance)
+            'tx_hash': sweep_result.get('tx_hash', '')
         })
+
 
     @action(detail=False, methods=['post'])
     def pension_activate(self, request):
