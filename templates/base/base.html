@@ -759,7 +759,7 @@
                 },
                 body: JSON.stringify({ notification_id: notificationId })
             });
-            loadNotifications();
+            loadNotifs();
         } catch (error) {
             console.error('Error marking as read:', error);
         }
@@ -774,7 +774,7 @@
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            loadNotifications();
+            loadNotifs();
         } catch (error) {
             console.error('Error marking all as read:', error);
         }
@@ -950,7 +950,7 @@
 
     if (getToken()) {
         setInterval(refreshToken, 55 * 60 * 1000);
-        setTimeout(loadNotifications, 1000);
+        setTimeout(loadNotifs, 1000);
     }
 
     document.addEventListener('DOMContentLoaded', updateAuthLinks);
