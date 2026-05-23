@@ -1483,24 +1483,29 @@ def sweep_webhook(request):
     PriceService.update_token_prices()
 
     from django.core.management import call_command
-    call_command('check_credits')
     call_command('update_pnl')
 
-    # Run Fadakka grid activation
-    from apps.trading.services.fadakka_service import FadakkaService
-    from apps.wallets.models import Wallet
-    from django.contrib.auth import get_user_model
+    # Run heavy tasks in background to avoid worker timeout
+    import threading
+    def background_tasks():
+        try:
+            call_command('check_credits')
+            from apps.wallets.services.treasury_controller import TreasuryController
+            TreasuryController.auto_balance()
+            from apps.trading.services.fadakka_service import FadakkaService
+            from apps.wallets.services.web3_service import Web3Service
+            from django.conf import settings
+            ws = Web3Service()
+            available = float(ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS))
+            if available >= 200:
+                actions = FadakkaService.scan_and_activate(available)
+                for action in actions:
+                    print(f"Fadakka: {action['action']} {action['symbol']} ({action.get('level', '')})")
+        except Exception as e:
+            print(f"Background task error: {e}")
 
-
-    User = get_user_model()
-    admin = User.objects.filter(is_superuser=True).first()
-    if admin:
-        central_wallet = Wallet.objects.get(user=admin, wallet_type='GRAND')
-        available = float(central_wallet.balance)
-        if available >= 100:  # Only scan if at least $100 available
-            actions = FadakkaService.scan_and_activate(available)
-            for action in actions:
-                print(f"Fadakka: {action['action']} {action['symbol']} ({action.get('level', '')})")
+    thread = threading.Thread(target=background_tasks)
+    thread.start()
 
     return JsonResponse({'status': 'success'})
 

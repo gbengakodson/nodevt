@@ -685,7 +685,7 @@
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    function showModal(msg, type) { alert(msg); }
+
 
     // ============ GRID PROFIT COLLECTION ============
     function openCollectProfitModal(botId, profit) {
@@ -783,10 +783,14 @@
     }
 
     async function closeGridBot(botId) {
-        if (!confirm('Close this grid bot and withdraw funds?')) return;
+        if (!confirm('Close this Position Tracker and return funds to your wallet?')) return;
         const result = await apiCall('/trading/close_grid/', 'POST', { bot_id: botId });
-        if (result.success) { showModal(`Closed! ${formatCurrency(result.total_return || result.amount)} returned.`, 'success'); loadDashboard(); }
-        else { showModal('Failed. PNL must be positive.', 'error'); }
+        if (result.success) {
+            showModal(`✅ Closed! ${formatCurrency(result.total_return || result.amount)} returned to your wallet.`, 'success');
+            loadDashboard();
+        } else {
+            showModal('❌ ' + (result.error || 'Close failed. Try again.'), 'error');
+        }
     }
 
     async function fetchYieldRate() {
