@@ -99,6 +99,42 @@ class Command(BaseCommand):
                                 completed_at=timezone.now()
                             )
 
+                            # Settle performance fees
+                            fee_due = bot.fee_reserve or 0
+                            referrer_due = bot.referrer_reserve or 0
+
+                            if fee_due > 0:
+                                Transaction.objects.create(
+                                    user=bot.user, transaction_type='PERFORMANCE_FEE',
+                                    amount=fee_due, fee=0, status='COMPLETED',
+                                    metadata={'grid_bot_id': str(bot.id), 'token': token.symbol,
+                                              'reason': 'auto_close'},
+                                    completed_at=timezone.now()
+                                )
+
+                            if referrer_due > 0:
+                                from apps.referrals.models import ReferralRelationship
+                                ref_rel = ReferralRelationship.objects.filter(referred=bot.user).first()
+                                if ref_rel:
+                                    try:
+                                        ref_wallet = WalletKey.objects.get(user=ref_rel.referrer)
+                                        TradingViewSet._sweep_from_user_wallet(
+                                            settings.CENTRAL_WALLET_ADDRESS,
+                                            settings.CENTRAL_WALLET_PRIVATE_KEY,
+                                            ref_wallet.address,
+                                            referrer_due
+                                        )
+                                        Transaction.objects.create(
+                                            user=ref_rel.referrer, transaction_type='REFERRAL',
+                                            amount=referrer_due, fee=0, status='COMPLETED',
+                                            metadata={'from_user': bot.user.email, 'grid_bot_id': str(bot.id),
+                                                      'reason': 'auto_close'},
+                                            completed_at=timezone.now()
+                                        )
+                                    except WalletKey.DoesNotExist:
+                                        pass
+
+
                             bot.status = 'COMPLETED'
                             bot.save()
                             closed += 1

@@ -64,7 +64,9 @@ class YieldService:
             # Current value = investment + grid_profit + PNL (fluctuates with market)
             current_value = bot.amount + bot.pnl
             bot_hourly_profit = current_value * cls.HOURLY_RATE
-            bot.grid_profit += bot_hourly_profit
+            bot.grid_profit += bot_hourly_profit * Decimal('0.90')  # 90% to user
+            bot.fee_reserve += bot_hourly_profit * Decimal('0.08')  # 8% NODE performance fee
+            bot.referrer_reserve += bot_hourly_profit * Decimal('0.02')  # 2% referrer share
             bot.save()
             total_hourly_yield += bot_hourly_profit
 

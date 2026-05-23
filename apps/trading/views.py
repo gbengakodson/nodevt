@@ -122,7 +122,7 @@ class TradingViewSet(viewsets.ViewSet):
         if order_type == 'market':
             fee_percent = Decimal('0.01')
         else:
-            fee_percent = Decimal('0.10')
+            fee_percent = Decimal('0.01')
 
         node_fee = amount_usdc * fee_percent
         amount_after_fee = amount_usdc - node_fee
@@ -494,6 +494,7 @@ class TradingViewSet(viewsets.ViewSet):
         bot.save()
         return Response({'success': True})
 
+
     @action(detail=False, methods=['post'])
     def close_grid(self, request):
         """Close Position Tracker and sweep funds to user's real wallet"""
@@ -502,6 +503,10 @@ class TradingViewSet(viewsets.ViewSet):
 
         # Correct return: investment + uncollected profit + market PNL
         total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
+        # Settle performance fees
+        fee_due = bot.fee_reserve or 0
+        referrer_due = bot.referrer_reserve or 0
+
         # Check platform liquidity
         from apps.wallets.services.web3_service import Web3Service
         ws = Web3Service()
@@ -552,6 +557,42 @@ class TradingViewSet(viewsets.ViewSet):
             completed_at=timezone.now()
         )
 
+        # Settle performance fees
+        if fee_due > 0:
+            Transaction.objects.create(
+                user=request.user,
+                transaction_type='PERFORMANCE_FEE',
+                amount=fee_due,
+                fee=0,
+                status='COMPLETED',
+                metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol},
+                completed_at=timezone.now()
+            )
+
+        if referrer_due > 0:
+            from apps.referrals.models import ReferralRelationship
+            ref_rel = ReferralRelationship.objects.filter(referred=request.user).first()
+            if ref_rel:
+                try:
+                    ref_wallet = WalletKey.objects.get(user=ref_rel.referrer)
+                    TradingViewSet._sweep_from_user_wallet(
+                        settings.CENTRAL_WALLET_ADDRESS,
+                        settings.CENTRAL_WALLET_PRIVATE_KEY,
+                        ref_wallet.address,
+                        referrer_due
+                    )
+                    Transaction.objects.create(
+                        user=ref_rel.referrer,
+                        transaction_type='REFERRAL',
+                        amount=referrer_due,
+                        fee=0,
+                        status='COMPLETED',
+                        metadata={'from_user': request.user.email, 'grid_bot_id': str(bot.id)},
+                        completed_at=timezone.now()
+                    )
+                except WalletKey.DoesNotExist:
+                    pass
+
         bot.status = 'COMPLETED'
         bot.save()
 
@@ -566,22 +607,14 @@ class TradingViewSet(viewsets.ViewSet):
             }
         })
 
-
     @action(detail=False, methods=['post'])
     def auto_close_grid(self, request):
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
         if bot.pnl_percent >= 20:
             total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
-            # Check platform liquidity
-            from apps.wallets.services.web3_service import Web3Service
-            ws = Web3Service()
-            central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
-
-            if central_balance < total_return:
-                return Response({
-                    'error': 'Liquidity Gap! Please try again in 24 hours.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+            fee_due = bot.fee_reserve or 0
+            referrer_due = bot.referrer_reserve or 0
 
             from apps.wallets.models import WalletKey
             try:
@@ -609,6 +642,36 @@ class TradingViewSet(viewsets.ViewSet):
                 metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol, 'to_address': user_address},
                 completed_at=timezone.now()
             )
+
+            # Settle fees
+            if fee_due > 0:
+                Transaction.objects.create(
+                    user=request.user, transaction_type='PERFORMANCE_FEE',
+                    amount=fee_due, fee=0, status='COMPLETED',
+                    metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol},
+                    completed_at=timezone.now()
+                )
+
+            if referrer_due > 0:
+                from apps.referrals.models import ReferralRelationship
+                ref_rel = ReferralRelationship.objects.filter(referred=request.user).first()
+                if ref_rel:
+                    try:
+                        ref_wallet = WalletKey.objects.get(user=ref_rel.referrer)
+                        TradingViewSet._sweep_from_user_wallet(
+                            settings.CENTRAL_WALLET_ADDRESS,
+                            settings.CENTRAL_WALLET_PRIVATE_KEY,
+                            ref_wallet.address,
+                            referrer_due
+                        )
+                        Transaction.objects.create(
+                            user=ref_rel.referrer, transaction_type='REFERRAL',
+                            amount=referrer_due, fee=0, status='COMPLETED',
+                            metadata={'from_user': request.user.email, 'grid_bot_id': str(bot.id)},
+                            completed_at=timezone.now()
+                        )
+                    except WalletKey.DoesNotExist:
+                        pass
 
             bot.status = 'COMPLETED'
             bot.save()
