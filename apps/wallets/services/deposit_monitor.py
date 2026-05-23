@@ -22,17 +22,31 @@ class DepositMonitor:
 
     @classmethod
     def check_all_users(cls):
-        wallet_keys = WalletKey.objects.select_related('user').all()
+        # Only scan a batch of users per call to avoid timeout
+        # Process 10 users per webhook call, rotate through all users
+        from django.core.cache import cache
+
+        last_index = cache.get('deposit_scan_index', 0)
+        wallet_keys = list(WalletKey.objects.filter(user__is_active=True).select_related('user'))
+
+        if not wallet_keys:
+            return 0
+
+        # Scan 10 users starting from last_index
+        batch = wallet_keys[last_index:last_index + 10]
+        next_index = (last_index + 10) % len(wallet_keys)
+        cache.set('deposit_scan_index', next_index, 3600)
+
         total = 0
-        for wk in wallet_keys:
+        for wk in batch:
             try:
                 result = cls.check_deposits(wk.address, wk.user)
                 if result.get('amount', 0) > 0:
                     total += result['amount']
-                    print(f"Deposit: ${result['amount']:.2f} to {wk.user.email}")
             except Exception as e:
                 print(f"Error checking {wk.user.email}: {e}")
         return total
+
 
     @classmethod
     def check_deposits(cls, address, user):
