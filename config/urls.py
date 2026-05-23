@@ -8,9 +8,8 @@ from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView,AdminBroadcastView
-from apps.wallets.admin_views import PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
+from apps.wallets.admin_views import AdminTreasuryView, AdminKYCActions, PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
 from apps.trading.views import send_daily_email_webhook, sweep_webhook
-from apps.wallets.admin_views import AdminKYCActions
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
@@ -59,6 +58,7 @@ urlpatterns = [
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
     path('api/admin/holders/', AdminHoldersView.as_view(), name='admin_holders'),
     path('api/admin/buy-sell-activity/', AdminBuySellActivityView.as_view(), name='admin_buy_sell'),
+    path('api/admin/treasury/', AdminTreasuryView.as_view(), name='admin_treasury'),
 
     path('api/wallets/', include('apps.wallets.urls')),
 

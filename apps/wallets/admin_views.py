@@ -335,3 +335,41 @@ def anon_email(email):
     return name[:2] + '***' + name[-1] + '@' + domain
 
 
+
+class AdminTreasuryView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        from apps.wallets.services.web3_service import Web3Service
+        from apps.wallets.services.binance_service import BinanceService
+        from apps.wallets.models import Transaction
+        from django.conf import settings
+        from django.db.models import Sum
+        from decimal import Decimal
+
+        ws = Web3Service()
+        web3_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
+
+        bs = BinanceService()
+        binance_balance = bs.get_usdc_balance()
+
+        sweeps = Transaction.objects.filter(
+            transaction_type__in=['SWEEP', 'GRID_CLOSE', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW', 'PERFORMANCE_FEE', 'YIELD_COLLECT', 'REFERRAL']
+        ).order_by('-created_at')[:50]
+
+        total_out = sweeps.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+
+        return Response({
+            'web3_balance': float(web3_balance),
+            'binance_balance': float(binance_balance),
+            'total_sweeps_out': float(total_out),
+            'transactions': [{
+                'date': s.created_at.strftime('%Y-%m-%d %H:%M'),
+                'type': s.transaction_type,
+                'amount': float(s.amount),
+                'user': s.user.email if s.user else 'System',
+                'tx_hash': s.tx_hash or '—'
+            } for s in sweeps]
+        })
+
+

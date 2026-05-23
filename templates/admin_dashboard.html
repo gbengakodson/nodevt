@@ -251,10 +251,49 @@
         </div>
     </div>
 
-    <!-- Charts -->
+    <!-- Treasury Monitor -->
     <div class="card">
-        <div class="card-title">📈 Buy/Sell Activity (7 Days)</div>
-        <div style="height:200px;"><canvas id="buySellChart"></canvas></div>
+        <div class="card-title">📈 Treasury Monitor</div>
+        <div class="tabs" style="margin-bottom:12px;">
+            <button class="tab-btn active" data-ttab="chart">Buy/Sell Chart</button>
+            <button class="tab-btn" data-ttab="web3">Web3 Wallet</button>
+            <button class="tab-btn" data-ttab="binance">Binance Wallet</button>
+        </div>
+
+        <!-- Tab 1: Chart -->
+        <div id="ttab-chart" style="height:200px;">
+            <canvas id="buySellChart"></canvas>
+        </div>
+
+        <!-- Tab 2: Web3 -->
+        <div id="ttab-web3" style="display:none;">
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;">
+                <div class="stat-card green"><div class="label">Web3 Balance</div><div class="value" id="web3Balance">$0</div></div>
+                <div class="stat-card red"><div class="label">Total Outflow</div><div class="value" id="web3Outflow">$0</div></div>
+                <div class="stat-card"><div class="label">Transactions</div><div class="value" id="web3TxCount">0</div></div>
+            </div>
+            <div class="table-wrap">
+                <table class="compact-table">
+                    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>User</th><th>TX</th></tr></thead>
+                    <tbody id="web3TxList"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Tab 3: Binance -->
+        <div id="ttab-binance" style="display:none;">
+            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;">
+                <div class="stat-card green"><div class="label">Binance Balance</div><div class="value" id="binanceBalance">$0</div></div>
+                <div class="stat-card"><div class="label">Master Grids</div><div class="value" id="masterGridCount">0</div></div>
+                <div class="stat-card green"><div class="label">Grid Profit</div><div class="value" id="masterGridProfit">$0</div></div>
+            </div>
+            <div class="table-wrap">
+                <table class="compact-table">
+                    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Symbol</th></tr></thead>
+                    <tbody id="binanceTxList"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- Tabs -->
@@ -407,6 +446,47 @@
                     }
                 }
             });
+        } catch(e) { console.error(e); }
+    }
+
+    // Treasury tab switching
+    document.querySelectorAll('[data-ttab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('[data-ttab]').forEach(function(b) { b.classList.remove('active'); });
+            this.classList.add('active');
+            var tab = this.getAttribute('data-ttab');
+            document.getElementById('ttab-chart').style.display = tab === 'chart' ? 'block' : 'none';
+            document.getElementById('ttab-web3').style.display = tab === 'web3' ? 'block' : 'none';
+            document.getElementById('ttab-binance').style.display = tab === 'binance' ? 'block' : 'none';
+            if (tab === 'chart') loadChart();
+            if (tab === 'web3') loadWeb3Treasury();
+            if (tab === 'binance') loadBinanceTreasury();
+        });
+    });
+
+    async function loadWeb3Treasury() {
+        try {
+            var data = await apiCall('/admin/treasury/');
+            document.getElementById('web3Balance').textContent = fc(data.web3_balance);
+            document.getElementById('web3Outflow').textContent = fc(data.total_sweeps_out);
+            document.getElementById('web3TxCount').textContent = (data.transactions || []).length;
+            document.getElementById('web3TxList').innerHTML = (data.transactions || []).slice(0, 15).map(function(s) {
+                return '<tr><td>' + s.date + '</td><td>' + s.type + '</td><td style="color:' + (s.type.includes('FEE') ? 'var(--success)' : 'var(--danger)') + ';">' + fc(s.amount) + '</td><td>' + s.user + '</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;font-size:9px;">' + (s.tx_hash || '—') + '</td></tr>';
+            }).join('') || '<tr><td colspan="5" style="text-align:center;">No transactions</td></tr>';
+        } catch(e) { console.error(e); }
+    }
+
+    async function loadBinanceTreasury() {
+        try {
+            var data = await apiCall('/admin/treasury/');
+            document.getElementById('binanceBalance').textContent = fc(data.binance_balance);
+
+            // Master grid stats
+            var gridData = await apiCall('/trading/grid_performance/');
+            document.getElementById('masterGridCount').textContent = gridData.stats.active_grids || 0;
+            document.getElementById('masterGridProfit').textContent = fc(gridData.stats.total_profit || 0);
+
+            document.getElementById('binanceTxList').innerHTML = '<tr><td colspan="4" style="text-align:center;">Binance transactions via API</td></tr>';
         } catch(e) { console.error(e); }
     }
 
