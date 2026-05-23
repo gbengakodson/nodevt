@@ -346,6 +346,7 @@ class AdminTreasuryView(APIView):
         from django.conf import settings
         from django.db.models import Sum
         from decimal import Decimal
+        from web3 import Web3
 
         ws = Web3Service()
         web3_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
@@ -353,23 +354,73 @@ class AdminTreasuryView(APIView):
         bs = BinanceService()
         binance_balance = bs.get_usdc_balance()
 
-        sweeps = Transaction.objects.filter(
-            transaction_type__in=['SWEEP', 'GRID_CLOSE', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW', 'PERFORMANCE_FEE', 'YIELD_COLLECT', 'REFERRAL']
-        ).order_by('-created_at')[:50]
+        # Fetch real blockchain transactions
+        blockchain_txs = []
+        try:
+            w3 = Web3(Web3.HTTPProvider('https://bsc-rpc.publicnode.com'))
+            usdc_address = Web3.to_checksum_address('0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d')
+            central = Web3.to_checksum_address(settings.CENTRAL_WALLET_ADDRESS)
 
-        total_out = sweeps.aggregate(s=Sum('amount'))['s'] or Decimal('0')
+            # USDC Transfer event topic
+            transfer_topic = '0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef'
+
+            # Get last 50 blocks (~4 minutes on BSC)
+            latest = w3.eth.block_number
+            from_block = latest - 5000
+
+            # Incoming transfers (to central wallet)
+            to_padded = '0x' + settings.CENTRAL_WALLET_ADDRESS[2:].lower().zfill(64)
+            incoming_logs = w3.eth.get_logs({
+                'fromBlock': from_block,
+                'toBlock': 'latest',
+                'address': usdc_address,
+                'topics': [transfer_topic, None, to_padded]
+            })
+
+            # Outgoing transfers (from central wallet)
+            from_padded = '0x' + settings.CENTRAL_WALLET_ADDRESS[2:].lower().zfill(64)
+            outgoing_logs = w3.eth.get_logs({
+                'fromBlock': from_block,
+                'toBlock': 'latest',
+                'address': usdc_address,
+                'topics': [transfer_topic, from_padded, None]
+            })
+
+            for log in incoming_logs:
+                tx_hash = log['transactionHash'].hex()
+                amount = Decimal(str(int(log['data'].hex(), 16))) / Decimal(10 ** 18)
+                from_addr = '0x' + log['topics'][1].hex()[-40:]
+                blockchain_txs.append({
+                    'date': '—',
+                    'type': 'INCOMING',
+                    'amount': float(amount),
+                    'from': from_addr[:10] + '...',
+                    'tx_hash': tx_hash[:20] + '...',
+                    'direction': 'in'
+                })
+
+            for log in outgoing_logs:
+                tx_hash = log['transactionHash'].hex()
+                amount = Decimal(str(int(log['data'].hex(), 16))) / Decimal(10 ** 18)
+                to_addr = '0x' + log['topics'][2].hex()[-40:]
+                blockchain_txs.append({
+                    'date': '—',
+                    'type': 'OUTGOING',
+                    'amount': float(amount),
+                    'to': to_addr[:10] + '...',
+                    'tx_hash': tx_hash[:20] + '...',
+                    'direction': 'out'
+                })
+        except Exception as e:
+            print(f"Blockchain fetch error: {e}")
 
         return Response({
             'web3_balance': float(web3_balance),
             'binance_balance': float(binance_balance),
-            'total_sweeps_out': float(total_out),
-            'transactions': [{
-                'date': s.created_at.strftime('%Y-%m-%d %H:%M'),
-                'type': s.transaction_type,
-                'amount': float(s.amount),
-                'user': s.user.email if s.user else 'System',
-                'tx_hash': s.tx_hash or '—'
-            } for s in sweeps]
+            'total_sweeps_out': float(Transaction.objects.filter(
+                transaction_type__in=['GRID_CLOSE', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW', 'YIELD_COLLECT', 'REFERRAL']
+            ).aggregate(s=Sum('amount'))['s'] or Decimal('0')),
+            'transactions': blockchain_txs  # Real blockchain transactions
         })
 
 
