@@ -651,7 +651,7 @@
                 </div>
 
                 <div class="fee-info">
-                    <i class="fas fa-info-circle"></i> Fee: 10% for grid bot activation
+                    <i class="fas fa-info-circle"></i> Fee: 1% for grid bot activation
                 </div>
 
                 <button class="btn-buy" id="activateGridBtn">Activate</button>
@@ -1252,7 +1252,7 @@
                 await sleep(1200);
 
                 hideGridLoader();
-                showModal(`Activated for ${currentSymbol} with $${amount} (10% fee applied). Your Position Tracker will appear in dashboard.`, 'success');
+                showModal(`Activated for ${currentSymbol} with $${amount} (1% fee applied). Your Position Tracker will appear in dashboard.`, 'success');
                 document.getElementById('gridAmount').value = '';
             } else {
                 hideGridLoader();
