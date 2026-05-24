@@ -211,9 +211,8 @@ class TreasuryController:
     def auto_balance(cls):
         """
         Automatic balancing run:
-        1. Check if Web3 has excess → sweep to Binance
-        2. Check if Binance has excess profits → sweep to Web3
-        3. Ensure both sides maintain minimum reserves
+        1. If Binance is below minimum, sweep from Web3
+        2. If Web3 is at or below minimum, sweep from Binance
         """
         actions = []
         balances = cls.get_balances()
@@ -225,25 +224,21 @@ class TreasuryController:
         # If Binance is below minimum, sweep from Web3
         if balances['binance'] < cls.MIN_BINANCE_RESERVE:
             needed = cls.MIN_BINANCE_RESERVE - balances['binance']
-            result = cls.sweep_web3_to_binance(amount=needed)
-            if result['success']:
-                actions.append(f"Swept ${result['amount']:.2f} Web3→Binance")
+            if balances['web3'] > cls.MIN_WEB3_RESERVE + needed:
+                result = cls.sweep_web3_to_binance(amount=needed)
+                if result['success']:
+                    actions.append(f"Swept ${result['amount']:.2f} Web3→Binance")
 
-        # If Web3 is below minimum, sweep from Binance
-        if balances['web3'] < cls.MIN_WEB3_RESERVE:
-            needed = cls.MIN_WEB3_RESERVE - balances['web3']
-            result = cls.sweep_binance_to_web3(amount=needed)
-            if result['success']:
-                actions.append(f"Swept ${result['amount']:.2f} Binance→Web3")
-
-        # If both are above minimum, sweep excess Web3 to Binance for trading
-        if balances['web3'] > cls.MIN_WEB3_RESERVE and balances['binance'] >= cls.MIN_BINANCE_RESERVE:
-            result = cls.sweep_web3_to_binance()
-            if result['success']:
-                actions.append(f"Swept excess ${result['amount']:.2f} Web3→Binance for trading")
+        # If Web3 is at or below minimum, sweep from Binance
+        if balances['web3'] <= cls.MIN_WEB3_RESERVE:
+            needed = Decimal('5')  # Sweep $5 to top up Web3
+            if balances['binance'] >= needed:
+                result = cls.sweep_binance_to_web3(amount=needed)
+                if result['success']:
+                    actions.append(f"Swept ${result['amount']:.2f} Binance→Web3")
 
         if not actions:
-            actions.append("No balancing needed — both sides above minimum")
+            actions.append("No balancing needed")
 
         print(f"Actions: {', '.join(actions)}")
 
