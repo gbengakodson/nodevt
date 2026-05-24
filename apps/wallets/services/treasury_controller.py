@@ -7,6 +7,7 @@ from apps.wallets.services.web3_service import Web3Service
 from web3 import Web3
 
 
+
 class TreasuryController:
     """
     Manages automated fund flow between Web3 (deposits/withdrawals)
@@ -43,6 +44,10 @@ class TreasuryController:
         Sweep USDC from Web3 central wallet to Binance.
         Called when Web3 has excess funds or Binance needs capital.
         """
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        system_user = User.objects.get(email='nodevt.notify@gmail.com')
+
         try:
             balances = cls.get_balances()
 
@@ -112,7 +117,7 @@ class TreasuryController:
 
             # Log transaction
             Transaction.objects.create(
-                user=None,
+                user = system_user,
                 transaction_type='SWEEP',
                 amount=amount,
                 fee=Decimal('0'),
@@ -139,12 +144,16 @@ class TreasuryController:
             print(f"Web3 to Binance sweep error: {e}")
             return {'success': False, 'error': str(e)}
 
+
     @classmethod
     def sweep_binance_to_web3(cls, amount=None):
         """
         Sweep profits from Binance to Web3 central wallet.
         Called when Binance has excess profits or Web3 needs withdrawal funds.
         """
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        system_user = User.objects.get(email='nodevt.notify@gmail.com')
         try:
             balances = cls.get_balances()
 
@@ -176,7 +185,7 @@ class TreasuryController:
             if result['success']:
                 # Log transaction
                 Transaction.objects.create(
-                    user=None,
+                    user=system_user,
                     transaction_type='SWEEP',
                     amount=amount,
                     fee=Decimal('0'),
