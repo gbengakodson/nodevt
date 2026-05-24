@@ -47,31 +47,85 @@ class FadakkaService:
             'exit_price': float(k * Decimal('2.0')),
         }
 
+    # 20 Trigger Levels with deviation from K
+    TRIGGER_LEVELS = [
+        {'level': 'L1', 'deviation': -0.20, 'exit_multiplier': 2.0},
+        {'level': 'L2', 'deviation': -0.25, 'exit_multiplier': 2.0},
+        {'level': 'L3', 'deviation': -0.30, 'exit_multiplier': 2.0},
+        {'level': 'L4', 'deviation': -0.35, 'exit_multiplier': 2.0},
+        {'level': 'L5', 'deviation': -0.40, 'exit_multiplier': 2.0},
+        {'level': 'L6', 'deviation': -0.45, 'exit_multiplier': 1.5},
+        {'level': 'L7', 'deviation': -0.50, 'exit_multiplier': 1.5},
+        {'level': 'L8', 'deviation': -0.55, 'exit_multiplier': 1.5},
+        {'level': 'L9', 'deviation': -0.60, 'exit_multiplier': 1.5},
+        {'level': 'L10', 'deviation': -0.65, 'exit_multiplier': 1.5},
+        {'level': 'L11', 'deviation': -0.70, 'exit_multiplier': 1.0},
+        {'level': 'L12', 'deviation': -0.75, 'exit_multiplier': 1.0},
+        {'level': 'L13', 'deviation': -0.80, 'exit_multiplier': 1.0},
+        {'level': 'L14', 'deviation': -0.90, 'exit_multiplier': 1.0},
+        {'level': 'L15', 'deviation': -1.00, 'exit_multiplier': 1.0},
+        {'level': 'L16', 'deviation': -1.20, 'exit_multiplier': 0.5},
+        {'level': 'L17', 'deviation': -1.40, 'exit_multiplier': 0.5},
+        {'level': 'L18', 'deviation': -1.60, 'exit_multiplier': 0.5},
+        {'level': 'L19', 'deviation': -1.80, 'exit_multiplier': 0.5},
+        {'level': 'L20', 'deviation': -2.00, 'exit_multiplier': 0.5},
+    ]
+
     @classmethod
     def check_trigger(cls, symbol, current_price):
-        """Check which alpha level is triggered"""
+        """Check which level is triggered based on deviation from K"""
         k = cls.get_fadakka(symbol)
         if not k or current_price <= 0:
             return None
 
         price = Decimal(str(current_price))
+        deviation = float((price - k) / k)  # e.g., -0.35 means 35% below K
 
-        if price <= k * Decimal('0.33'):
-            return {'tier': 1, 'level': 'a2', 'discount': float((1 - price / k) * 100)}
-        elif price <= k * Decimal('0.5'):
-            return {'tier': 2, 'level': 'a1', 'discount': float((1 - price / k) * 100)}
-        elif price <= k * Decimal('0.7'):
-            return {'tier': 3, 'level': 'a3', 'discount': float((1 - price / k) * 100)}
+        # Find the deepest level triggered
+        triggered_level = None
+        for level in cls.TRIGGER_LEVELS:
+            if deviation <= level['deviation']:
+                triggered_level = level
 
+        if triggered_level:
+            return {
+                'level': triggered_level['level'],
+                'deviation': triggered_level['deviation'],
+                'exit_multiplier': triggered_level['exit_multiplier'],
+                'discount': abs(float(deviation) * 100),
+                'exit_price': float(k * Decimal(str(triggered_level['exit_multiplier'])))
+            }
         return None
 
     @classmethod
     def should_exit(cls, symbol, current_price):
-        """Check if price has reached 2k (exit)"""
+        """Check if price has reached the exit target for this coin's level"""
         k = cls.get_fadakka(symbol)
         if not k:
             return False
-        return Decimal(str(current_price)) >= k * Decimal('2.0')
+
+        # Find active grid for this coin to get its activation level
+        active_grid = MasterGridBot.objects.filter(
+            token__symbol=symbol,
+            status='ACTIVE'
+        ).first()
+
+        if not active_grid:
+            return False
+
+        activation_level = active_grid.metadata.get('fadakka_level', 'L1')
+
+        # Find the exit multiplier for this level
+        exit_multiplier = 2.0  # Default
+        for level in cls.TRIGGER_LEVELS:
+            if level['level'] == activation_level:
+                exit_multiplier = level['exit_multiplier']
+                break
+
+        exit_price = k * Decimal(str(exit_multiplier))
+        return Decimal(str(current_price)) >= exit_price
+
+
 
     @classmethod
     def has_active_grid(cls, symbol):
@@ -89,23 +143,64 @@ class FadakkaService:
     @classmethod
     def scan_and_activate(cls, available_capital):
         """
-        Scan all coins in priority order and activate grids if conditions met.
-        Returns list of actions taken.
+        Scan all coins with expanded rules.
+        Rules:
+        1. Must be at a trigger level (L1-L20)
+        2. Volume > $1M
+        3. Not crashing (-30% in 24h)
+        4. Market cap > $10M
+        5. One coin per level
+        6. Deepest discounts first
+        7. Tiered exits based on level
         """
         from apps.tokens.models import CryptoToken
+        import requests
 
         actions = []
         remaining_capital = Decimal(str(available_capital))
 
-        # Get all active tokens with current prices
         tokens = CryptoToken.objects.filter(is_active=True)
 
-        # Build scan list with trigger info
+        # Fetch market data for expanded rules
+        cg_ids_map = {
+            'BTC': 'bitcoin', 'ETH': 'ethereum', 'BNB': 'binancecoin', 'SOL': 'solana',
+            'XRP': 'ripple', 'ADA': 'cardano', 'DOGE': 'dogecoin', 'AVAX': 'avalanche-2',
+            'DOT': 'polkadot', 'LINK': 'chainlink', 'UNI': 'uniswap', 'LTC': 'litecoin',
+            'NEAR': 'near', 'ATOM': 'cosmos', 'ALGO': 'algorand', 'VET': 'vechain',
+            'FTM': 'fantom', 'EGLD': 'elrond-erd-2', 'THETA': 'theta-token', 'PEPE': 'pepe'
+        }
+
+        market_data = {}
+        try:
+            ids = ','.join(set(cg_ids_map.values()))
+            url = f'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids={ids}&order=market_cap_desc&sparkline=false&price_change_percentage=24h'
+            resp = requests.get(url, timeout=10)
+            for coin in resp.json():
+                symbol = coin['symbol'].upper()
+                for s, cg in cg_ids_map.items():
+                    if cg == coin['id']:
+                        market_data[s] = {
+                            'volume': coin.get('total_volume', 0),
+                            'change_24h': coin.get('price_change_percentage_24h', 0),
+                            'market_cap': coin.get('market_cap', 0)
+                        }
+                        break
+        except Exception as e:
+            print(f"Market data fetch error: {e}")
+
+        # Build scan list
         scan_list = []
         for token in tokens:
             trigger = cls.check_trigger(token.symbol, token.current_price)
             should_exit = cls.should_exit(token.symbol, token.current_price)
             has_grid = cls.has_active_grid(token.symbol)
+
+            level_num = int(trigger['level'].replace('L', '')) if trigger else 99
+
+            mdata = market_data.get(token.symbol, {})
+            volume = mdata.get('volume', 0)
+            change_24h = mdata.get('change_24h', 0)
+            market_cap = mdata.get('market_cap', 0)
 
             scan_list.append({
                 'symbol': token.symbol,
@@ -113,44 +208,74 @@ class FadakkaService:
                 'trigger': trigger,
                 'should_exit': should_exit,
                 'has_grid': has_grid,
+                'level_num': level_num,
                 'min_investment': float(cls.get_min_investment(token.symbol)),
+                'volume': volume,
+                'change_24h': change_24h,
+                'market_cap': market_cap,
             })
 
-        # Step 1: Close grids that hit exit (2k)
+        # Step 1: Close grids that hit exit
         for item in scan_list:
             if item['has_grid'] and item['should_exit']:
                 cls._close_grid(item['symbol'])
                 actions.append({
                     'action': 'CLOSED',
                     'symbol': item['symbol'],
-                    'reason': f'Price reached 2k exit level'
+                    'reason': f"Price reached exit target"
                 })
 
-        # Step 2: Activate new grids in priority order
-        # Sort by tier (1 first, then 2, then 3), then by discount (highest first)
-        candidates = [s for s in scan_list if s['trigger'] and not s['has_grid']]
-        candidates.sort(key=lambda x: (x['trigger']['tier'], -x['trigger']['discount']))
+        # Step 2: Filter candidates by expanded rules
+        candidates = []
+        for s in scan_list:
+            if not s['trigger'] or s['has_grid']:
+                continue
 
+            volume_ok = s['volume'] > 1_000_000
+            not_crashing = s['change_24h'] > -30
+            mcap_ok = s['market_cap'] > 10_000_000
+
+            if volume_ok and not_crashing and mcap_ok:
+                candidates.append(s)
+
+        # Sort by level number (L20 first = deepest discount)
+        candidates.sort(key=lambda x: -x['level_num'])
+
+        # Track which levels are already taken
+        taken_levels = set()
+        for item in scan_list:
+            if item['has_grid'] and item['trigger']:
+                taken_levels.add(item['level_num'])
+
+        # Step 3: One coin per level — activate deepest qualifying first
         for item in candidates:
+            if item['level_num'] in taken_levels:
+                continue
+
             min_invest = Decimal(str(item['min_investment']))
 
             if remaining_capital >= min_invest:
-                success = cls._activate_grid(item['symbol'], item['trigger']['level'])
+                success = cls._activate_grid(
+                    item['symbol'],
+                    item['trigger']['level'],
+                    item['trigger']['exit_multiplier']
+                )
                 if success:
                     remaining_capital -= min_invest
+                    taken_levels.add(item['level_num'])
                     actions.append({
                         'action': 'ACTIVATED',
                         'symbol': item['symbol'],
                         'level': item['trigger']['level'],
-                        'tier': item['trigger']['tier'],
                         'discount': item['trigger']['discount'],
+                        'exit': f"{item['trigger']['exit_multiplier']}K",
                         'remaining_capital': float(remaining_capital)
                     })
 
         return actions
 
     @classmethod
-    def _activate_grid(cls, symbol, level):
+    def _activate_grid(cls, symbol, level, exit_multiplier=2.0):
         """Activate a master grid for a coin on Binance"""
         try:
             from apps.wallets.services.binance_service import BinanceService
@@ -161,7 +286,6 @@ class FadakkaService:
             lower = current_price * Decimal('0.2')
             min_invest = cls.get_min_investment(symbol)
 
-            # Place grid orders on Binance
             bs = BinanceService()
             result = bs.place_grid_orders(
                 symbol=symbol,
@@ -175,7 +299,6 @@ class FadakkaService:
                 print(f"Failed to place Binance orders for {symbol}: {result.get('error')}")
                 return False
 
-            # Create master grid record with Binance order IDs
             MasterGridBot.objects.create(
                 token=token,
                 total_amount=min_invest,
@@ -186,6 +309,7 @@ class FadakkaService:
                 price_at_creation=current_price,
                 metadata={
                     'fadakka_level': level,
+                    'exit_multiplier': exit_multiplier,
                     'fadakka_k': float(cls.get_fadakka(symbol)),
                     'activation_price': float(current_price),
                     'binance_order_ids': result['order_ids'],
@@ -193,7 +317,7 @@ class FadakkaService:
                 }
             )
 
-            print(f"✅ Grid activated: {symbol} at {level} ({result['orders_placed']} orders placed)")
+            print(f"✅ Grid activated: {symbol} at {level} (Exit: {exit_multiplier}K)")
             return True
 
         except Exception as e:
