@@ -1558,8 +1558,9 @@ def sweep_webhook(request):
             from apps.trading.services.fadakka_service import FadakkaService
             from apps.wallets.services.web3_service import Web3Service
             from django.conf import settings
-            ws = Web3Service()
-            available = float(ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS))
+            from apps.wallets.services.binance_service import BinanceService
+            bs = BinanceService()
+            available = float(bs.get_usdc_balance())
             if available >= 200:
                 actions = FadakkaService.scan_and_activate(available)
                 for action in actions:
