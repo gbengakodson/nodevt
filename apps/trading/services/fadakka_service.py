@@ -247,35 +247,101 @@ class FadakkaService:
             if item['has_grid'] and item['trigger']:
                 taken_levels.add(item['level_num'])
 
-        # Step 3: One coin per level — activate deepest qualifying first
-        for item in candidates:
-            if item['level_num'] in taken_levels:
-                continue
+        # Step 3: Allocate capital using tiered half-of-remaining rule
+        allocations, allocation_actions = cls._allocate_capital(
+            remaining_capital, candidates, taken_levels
+        )
 
-            min_invest = Decimal(str(item['min_investment']))
-
-            if remaining_capital >= min_invest:
-                success = cls._activate_grid(
-                    item['symbol'],
-                    item['trigger']['level'],
-                    item['trigger']['exit_multiplier']
-                )
-                if success:
-                    remaining_capital -= min_invest
-                    taken_levels.add(item['level_num'])
-                    actions.append({
-                        'action': 'ACTIVATED',
-                        'symbol': item['symbol'],
-                        'level': item['trigger']['level'],
-                        'discount': item['trigger']['discount'],
-                        'exit': f"{item['trigger']['exit_multiplier']}K",
-                        'remaining_capital': float(remaining_capital)
-                    })
+        for item in allocation_actions:
+            success = cls._activate_grid(
+                item['symbol'],
+                item['level'],
+                amount=item['amount']
+            )
+            if success:
+                actions.append({
+                    'action': 'ACTIVATED',
+                    'symbol': item['symbol'],
+                    'level': item['level'],
+                    'amount': item['amount'],
+                    'tier': item['tier']
+                })
 
         return actions
 
     @classmethod
-    def _activate_grid(cls, symbol, level, exit_multiplier=2.0):
+    def _allocate_capital(cls, available_capital, candidates, taken_levels):
+        """
+        Allocate capital using half-of-remaining rule across tiers.
+        Tier 1 (L1-L5): BTC, ETH, BNB, TRX, SOL — 50% of total
+        Tier 2 (L6-L10): XRP, ADA, UNI, ALGO, LINK — 50% of remaining
+        Tier 3 (L11-L20): Others — 10% of remaining each
+        """
+        TIER1_COINS = {'BTC', 'ETH', 'BNB', 'TRX', 'SOL'}
+        TIER2_COINS = {'XRP', 'ADA', 'UNI', 'ALGO', 'LINK'}
+
+        total_capital = available_capital
+        tier1_reserve = total_capital * Decimal('0.5')
+        remaining_after_t1 = total_capital - tier1_reserve
+        tier2_reserve = remaining_after_t1 * Decimal('0.5')
+        remaining_after_t2 = remaining_after_t1 - tier2_reserve
+
+        allocations = {}
+        actions = []
+
+        # Sort candidates by level (deepest first within each tier)
+        tier1 = [c for c in candidates if c['symbol'] in TIER1_COINS and c['level_num'] <= 5]
+        tier2 = [c for c in candidates if c['symbol'] in TIER2_COINS and 6 <= c['level_num'] <= 10]
+        tier3 = [c for c in candidates if
+                 c['symbol'] not in TIER1_COINS and c['symbol'] not in TIER2_COINS and c['level_num'] >= 11]
+
+        # Tier 1: Half-of-remaining
+        pool = tier1_reserve
+        for item in tier1:
+            if item['level_num'] in taken_levels:
+                continue
+            allocation = pool * Decimal('0.5')
+            min_invest = Decimal(str(item['min_investment']))
+            if allocation >= min_invest and pool >= allocation:
+                allocations[item['symbol']] = allocation
+                pool -= allocation
+                taken_levels.add(item['level_num'])
+                actions.append(
+                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
+                     'tier': 1})
+
+        # Tier 2: Half-of-remaining
+        pool = tier2_reserve
+        for item in tier2:
+            if item['level_num'] in taken_levels:
+                continue
+            allocation = pool * Decimal('0.5')
+            min_invest = Decimal(str(item['min_investment']))
+            if allocation >= min_invest and pool >= allocation:
+                allocations[item['symbol']] = allocation
+                pool -= allocation
+                taken_levels.add(item['level_num'])
+                actions.append(
+                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
+                     'tier': 2})
+
+        # Tier 3: 10% of remaining each
+        for item in tier3:
+            if item['level_num'] in taken_levels:
+                continue
+            allocation = remaining_after_t2 * Decimal('0.1')
+            min_invest = Decimal(str(item['min_investment']))
+            if allocation >= min_invest:
+                allocations[item['symbol']] = allocation
+                taken_levels.add(item['level_num'])
+                actions.append(
+                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
+                     'tier': 3})
+
+        return allocations, actions
+
+    @classmethod
+    def _activate_grid(cls, symbol, level, exit_multiplier=2.0, amount=None):
         """Activate a master grid for a coin on Binance"""
         try:
             from apps.wallets.services.binance_service import BinanceService
@@ -284,14 +350,14 @@ class FadakkaService:
             current_price = token.current_price
             upper = current_price * Decimal('1.8')
             lower = current_price * Decimal('0.2')
-            min_invest = cls.get_min_investment(symbol)
+            invest = Decimal(str(amount)) if amount else cls.get_min_investment(symbol)
 
             bs = BinanceService()
             result = bs.place_grid_orders(
                 symbol=symbol,
                 lower_price=lower,
                 upper_price=upper,
-                total_amount=min_invest,
+                total_amount=invest,
                 grids=100
             )
 
@@ -301,7 +367,7 @@ class FadakkaService:
 
             MasterGridBot.objects.create(
                 token=token,
-                total_amount=min_invest,
+                total_amount=invest,
                 lower_price=lower,
                 upper_price=upper,
                 grids=result['orders_placed'],
@@ -317,7 +383,7 @@ class FadakkaService:
                 }
             )
 
-            print(f"✅ Grid activated: {symbol} at {level} (Exit: {exit_multiplier}K)")
+            print(f"✅ Grid activated: {symbol} at {level} (${float(invest):.2f}, Exit: {exit_multiplier}K)")
             return True
 
         except Exception as e:
