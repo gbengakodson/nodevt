@@ -469,13 +469,11 @@
             var data = await apiCall('/admin/treasury/');
             document.getElementById('web3Balance').textContent = fc(data.web3_balance);
             document.getElementById('web3Outflow').textContent = fc(data.total_sweeps_out);
-            document.getElementById('web3TxCount').textContent = (data.transactions || []).length;
-            document.getElementById('web3TxList').innerHTML = (data.transactions || []).map(function(s) {
-                var color = s.direction === 'in' ? 'var(--success)' : 'var(--danger)';
-                var sign = s.direction === 'in' ? '+' : '-';
-                var addr = s.from || s.to || '—';
-                return '<tr><td>' + (s.date || '—') + '</td><td>' + s.type + '</td><td style="color:' + color + ';">' + sign + fc(s.amount) + '</td><td style="font-size:9px;">' + addr + '</td><td style="max-width:80px;overflow:hidden;text-overflow:ellipsis;font-size:9px;">' + (s.tx_hash || '—') + '</td></tr>';
-            }).join('') || '<tr><td colspan="5" style="text-align:center;">No blockchain transactions in recent blocks</td></tr>';
+            document.getElementById('web3TxCount').textContent = '—';
+            document.getElementById('web3TxList').innerHTML =
+                '<tr><td colspan="5" style="text-align:center;padding:20px;">' +
+                '<a href="https://bscscan.com/token/0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d?a=0x22950A9c1409b0b2D9366C062714EBBBc36d29c8" target="_blank" class="btn-sm btn-confirm" style="display:inline-block;padding:8px 16px;text-decoration:none;">🔗 View All Transactions on BSCScan</a>' +
+                '</td></tr>';
         } catch(e) { console.error(e); }
     }
 
