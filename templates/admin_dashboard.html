@@ -482,12 +482,14 @@
             var data = await apiCall('/admin/treasury/');
             document.getElementById('binanceBalance').textContent = fc(data.binance_balance);
 
-            // Master grid stats
             var gridData = await apiCall('/trading/grid_performance/');
             document.getElementById('masterGridCount').textContent = gridData.stats.active_grids || 0;
             document.getElementById('masterGridProfit').textContent = fc(gridData.stats.total_profit || 0);
 
-            document.getElementById('binanceTxList').innerHTML = '<tr><td colspan="4" style="text-align:center;">Binance transactions via API</td></tr>';
+            document.getElementById('binanceTxList').innerHTML =
+                '<tr><td colspan="4" style="text-align:center;padding:20px;">' +
+                '<a href="https://www.binance.com/en/my/wallet/account/main" target="_blank" class="btn-sm btn-confirm" style="display:inline-block;padding:8px 16px;text-decoration:none;">🔗 View All Transactions on Binance</a>' +
+                '</td></tr>';
         } catch(e) { console.error(e); }
     }
 
