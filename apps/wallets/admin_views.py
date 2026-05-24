@@ -382,11 +382,23 @@ class AdminTreasuryView(APIView):
             transaction_type__in=['GRID_CLOSE', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW', 'YIELD_COLLECT', 'REFERRAL']
         ).aggregate(s=Sum('amount'))['s'] or Decimal('0')
 
+        sweeps = Transaction.objects.filter(
+            transaction_type='SWEEP'
+        ).order_by('-created_at')[:20]
+
+        sweep_data = [{
+            'date': s.created_at.strftime('%Y-%m-%d %H:%M'),
+            'type': 'Web3 → Binance' if s.metadata.get('from') == 'WEB3' else 'Binance → Web3',
+            'amount': float(s.amount),
+            'direction': 'to_binance' if s.metadata.get('from') == 'WEB3' else 'from_binance',
+        } for s in sweeps]
+
         return Response({
             'web3_balance': float(web3_balance),
             'binance_balance': float(binance_balance),
             'total_sweeps_out': float(total_out),
-            'transactions': blockchain_txs
+            'transactions': blockchain_txs,
+            'sweep_transactions': sweep_data
         })
 
 

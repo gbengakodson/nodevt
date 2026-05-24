@@ -486,10 +486,26 @@
             document.getElementById('masterGridCount').textContent = gridData.stats.active_grids || 0;
             document.getElementById('masterGridProfit').textContent = fc(gridData.stats.total_profit || 0);
 
-            document.getElementById('binanceTxList').innerHTML =
-                '<tr><td colspan="4" style="text-align:center;padding:20px;">' +
-                '<a href="https://www.binance.com/en/my/wallet/account/main" target="_blank" class="btn-sm btn-confirm" style="display:inline-block;padding:8px 16px;text-decoration:none;">🔗 View All Transactions on Binance</a>' +
-                '</td></tr>';
+            var html = '';
+
+            // NODE sweep records
+            if (data.sweep_transactions && data.sweep_transactions.length > 0) {
+                html += '<div style="margin-bottom:8px;font-size:10px;color:var(--text-secondary);">Recent Sweeps</div>';
+                html += '<table class="compact-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th></tr></thead><tbody>';
+                data.sweep_transactions.forEach(function(s) {
+                    var color = s.direction === 'to_binance' ? 'var(--success)' : 'var(--danger)';
+                    var sign = s.direction === 'to_binance' ? '→' : '←';
+                    html += '<tr><td>' + s.date + '</td><td>' + s.type + '</td><td style="color:' + color + ';">' + sign + ' ' + fc(s.amount) + '</td></tr>';
+                });
+                html += '</tbody></table>';
+            }
+
+            // Link to Binance
+            html += '<div style="text-align:center;margin-top:12px;">' +
+                '<a href="https://www.binance.com/en/my/wallet/account/main" target="_blank" class="btn-sm btn-confirm" style="display:inline-block;padding:8px 16px;text-decoration:none;">🔗 View Full History on Binance</a>' +
+                '</div>';
+
+            document.getElementById('binanceTxList').innerHTML = '<tr><td colspan="4">' + html + '</td></tr>';
         } catch(e) { console.error(e); }
     }
 
