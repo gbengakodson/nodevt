@@ -20,7 +20,7 @@ class TreasuryController:
     """
 
     # Minimum reserves
-    MIN_BINANCE_RESERVE = Decimal('200')  # Keep at least $200 on Binance for grids
+    MIN_BINANCE_RESERVE = Decimal('0')  # Keep at least $200 on Binance for grids
     MIN_WEB3_RESERVE = Decimal('10')  # Keep at least $50 on Web3 for withdrawals
 
     @classmethod
