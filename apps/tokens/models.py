@@ -101,3 +101,11 @@ class Purchase(models.Model):
         return f"{self.user.email} - {self.token.symbol} - {self.quantity} ({self.order_type})"
 
 
+class WeeklyClose(models.Model):
+    token = models.ForeignKey(CryptoToken, on_delete=models.CASCADE, related_name='weekly_closes')
+    week_end = models.DateField()
+    close_price = models.DecimalField(max_digits=20, decimal_places=8)
+
+    class Meta:
+        unique_together = ['token', 'week_end']
+        ordering = ['week_end']
