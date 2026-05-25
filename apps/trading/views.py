@@ -1564,7 +1564,7 @@ def sweep_webhook(request):
             from apps.wallets.services.binance_service import BinanceService
             bs = BinanceService()
             available = float(bs.get_usdc_balance())
-            if available >= 200:
+            if available >= 100:
                 actions = FadakkaService.scan_and_activate(available)
                 for action in actions:
                     print(f"Fadakka: {action['action']} {action['symbol']} ({action.get('level', '')})")
