@@ -1382,7 +1382,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'a3': alpha['a3'] if alpha else None,
                 'exit_price': alpha['exit_price'] if alpha else None,
                 'trigger': trigger['level'] if trigger else None,
-                'tier': trigger['tier'] if trigger else None,
+                'tier': trigger.get('level', None) if trigger else None,
                 'discount': trigger['discount'] if trigger else None,
                 'has_active_grid': has_grid,
                 'should_exit': should_exit,
