@@ -315,7 +315,8 @@ class FadakkaService:
                         'symbol': item['symbol'],
                         'level': item['trigger']['level'],
                         'amount': float(half_allocation),
-                        'tier': tier_name
+                        'tier': tier_name,
+                        'exit_multiplier': item['trigger']['exit_multiplier'],
                     })
                     taken_levels.add(item['level_num'])
                     pool -= half_allocation
@@ -327,7 +328,8 @@ class FadakkaService:
                         'symbol': item['symbol'],
                         'level': item['trigger']['level'],
                         'amount': float(pool),
-                        'tier': tier_name
+                        'tier': tier_name,
+                        'exit_multiplier': item['trigger']['exit_multiplier'],
                     })
                     taken_levels.add(item['level_num'])
                     pool = Decimal('0')
