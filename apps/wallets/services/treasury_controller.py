@@ -20,8 +20,8 @@ class TreasuryController:
     """
 
     # Minimum reserves
-    MIN_BINANCE_RESERVE = Decimal('0')  # Keep at least $200 on Binance for grids
-    MIN_WEB3_RESERVE = Decimal('10')  # Keep at least $50 on Web3 for withdrawals
+    MIN_BINANCE_RESERVE = Decimal('0')  # Keep nothing, all profits go to web3
+    MIN_WEB3_RESERVE = Decimal('0')  # Keep nothing, all funds go to Binance
 
     @classmethod
     def get_balances(cls):
@@ -210,32 +210,48 @@ class TreasuryController:
     @classmethod
     def auto_balance(cls):
         """
-        Automatic balancing run:
-        1. If Binance is below minimum, sweep from Web3
-        2. If Web3 is at or below minimum, sweep from Binance
+        1. Sweep user deposits from Web3 → Binance
+        2. Harvest grid profits from Binance → Web3 (for withdrawals)
         """
         actions = []
         balances = cls.get_balances()
 
         print(f"\n=== Treasury Auto-Balance ===")
-        print(f"Binance: ${float(balances['binance']):.2f} (min: ${float(cls.MIN_BINANCE_RESERVE)})")
-        print(f"Web3: ${float(balances['web3']):.2f} (min: ${float(cls.MIN_WEB3_RESERVE)})")
+        print(f"Binance: ${float(balances['binance']):.2f}")
+        print(f"Web3: ${float(balances['web3']):.2f}")
 
-        # If Binance is below minimum, sweep from Web3
-        if balances['binance'] < cls.MIN_BINANCE_RESERVE:
-            needed = cls.MIN_BINANCE_RESERVE - balances['binance']
-            if balances['web3'] > cls.MIN_WEB3_RESERVE + needed:
-                result = cls.sweep_web3_to_binance(amount=needed)
-                if result['success']:
-                    actions.append(f"Swept ${result['amount']:.2f} Web3→Binance")
+        # Sweep everything from Web3 to Binance
+        if balances['web3'] > 0:
+            result = cls.sweep_web3_to_binance(amount=balances['web3'])
+            if result['success']:
+                actions.append(f"Deposits swept: ${result['amount']:.2f} Web3→Binance")
 
-        # If Web3 is at or below minimum, sweep from Binance
-        if balances['web3'] <= cls.MIN_WEB3_RESERVE:
-            needed = Decimal('5')  # Sweep $5 to top up Web3
-            if balances['binance'] >= needed:
-                result = cls.sweep_binance_to_web3(amount=needed)
-                if result['success']:
-                    actions.append(f"Swept ${result['amount']:.2f} Binance→Web3")
+        # 2. Harvest profits: Binance → Web3
+        from apps.trading.models import MasterGridBot
+        from apps.wallets.services.binance_service import BinanceService
+
+        bs = BinanceService()
+        total_harvestable = Decimal('0')
+
+        for grid in MasterGridBot.objects.filter(status='ACTIVE'):
+            try:
+                trades = bs.get_filled_grid_orders(grid.token.symbol, start_time=grid.created_at)
+                profit = Decimal(str(trades.get('profit', 0)))
+                already_swept = Decimal(str(grid.metadata.get('profit_swept', 0)))
+                new_profit = profit - already_swept
+
+                if new_profit >= Decimal('10'):
+                    total_harvestable += new_profit
+                    grid.metadata['profit_swept'] = float(profit)
+                    grid.grid_profit = profit
+                    grid.save()
+            except Exception as e:
+                print(f"Profit check error for {grid.token.symbol}: {e}")
+
+        if total_harvestable > 0:
+            result = cls.sweep_binance_to_web3(amount=total_harvestable)
+            if result['success']:
+                actions.append(f"Profits harvested: ${float(total_harvestable):.2f} Binance→Web3")
 
         if not actions:
             actions.append("No balancing needed")
