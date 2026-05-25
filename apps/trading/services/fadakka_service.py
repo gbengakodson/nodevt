@@ -272,73 +272,69 @@ class FadakkaService:
     @classmethod
     def _allocate_capital(cls, available_capital, candidates, taken_levels):
         """
-        Allocate capital using half-of-remaining rule across tiers.
-        Tier 1 (L1-L5): BTC, ETH, BNB, TRX, SOL — 50% of total
-        Tier 2 (L6-L10): XRP, ADA, UNI, ALGO, LINK — 50% of remaining
-        Tier 3 (L11-L20): Others — 10% of remaining each
+        Allocate capital using half-of-remaining rule.
+        Tier 1: BTC, ETH, BNB, TRX, SOL
+        Tier 2: XRP, ADA, UNI, ALGO, LINK
+        Tier 3: All others
+
+        For each coin in tier:
+        - Check 1: 50% of pool >= minimum? Activate with 50%, continue.
+        - Check 2: Entire pool >= minimum? Activate with entire pool, STOP tier.
+        - Neither: Skip coin, pool unchanged.
         """
         TIER1_COINS = {'BTC', 'ETH', 'BNB', 'TRX', 'SOL'}
         TIER2_COINS = {'XRP', 'ADA', 'UNI', 'ALGO', 'LINK'}
 
-        total_capital = available_capital
-        tier1_reserve = total_capital * Decimal('0.5')
-        remaining_after_t1 = total_capital - tier1_reserve
-        tier2_reserve = remaining_after_t1 * Decimal('0.5')
-        remaining_after_t2 = remaining_after_t1 - tier2_reserve
-
-        allocations = {}
+        pool = available_capital
         actions = []
+        taken_levels = set(taken_levels)  # Don't mutate original
 
-        # Sort candidates by level (deepest first within each tier)
-        tier1 = [c for c in candidates if c['symbol'] in TIER1_COINS and c['level_num'] <= 5]
-        tier2 = [c for c in candidates if c['symbol'] in TIER2_COINS and 6 <= c['level_num'] <= 10]
-        tier3 = [c for c in candidates if
-                 c['symbol'] not in TIER1_COINS and c['symbol'] not in TIER2_COINS and c['level_num'] >= 11]
+        tiers = [
+            ('Tier 1', [c for c in candidates if c['symbol'] in TIER1_COINS]),
+            ('Tier 2', [c for c in candidates if c['symbol'] in TIER2_COINS]),
+            ('Tier 3', [c for c in candidates if c['symbol'] not in TIER1_COINS and c['symbol'] not in TIER2_COINS]),
+        ]
 
-        # Tier 1: Half-of-remaining
-        pool = tier1_reserve
-        for item in tier1:
-            if item['level_num'] in taken_levels:
-                continue
-            allocation = pool * Decimal('0.5')
-            min_invest = Decimal(str(item['min_investment']))
-            if allocation >= min_invest and pool >= allocation:
-                allocations[item['symbol']] = allocation
-                pool -= allocation
-                taken_levels.add(item['level_num'])
-                actions.append(
-                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
-                     'tier': 1})
+        for tier_name, tier_candidates in tiers:
+            if pool <= 0:
+                break
 
-        # Tier 2: Half-of-remaining
-        pool = tier2_reserve
-        for item in tier2:
-            if item['level_num'] in taken_levels:
-                continue
-            allocation = pool * Decimal('0.5')
-            min_invest = Decimal(str(item['min_investment']))
-            if allocation >= min_invest and pool >= allocation:
-                allocations[item['symbol']] = allocation
-                pool -= allocation
-                taken_levels.add(item['level_num'])
-                actions.append(
-                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
-                     'tier': 2})
+            for item in tier_candidates:
+                if item['level_num'] in taken_levels:
+                    continue
+                if pool <= 0:
+                    break
 
-        # Tier 3: 10% of remaining each
-        for item in tier3:
-            if item['level_num'] in taken_levels:
-                continue
-            allocation = remaining_after_t2 * Decimal('0.1')
-            min_invest = Decimal(str(item['min_investment']))
-            if allocation >= min_invest:
-                allocations[item['symbol']] = allocation
-                taken_levels.add(item['level_num'])
-                actions.append(
-                    {'symbol': item['symbol'], 'level': item['trigger']['level'], 'amount': float(allocation),
-                     'tier': 3})
+                min_invest = Decimal(str(item['min_investment']))
+                half_allocation = pool * Decimal('0.5')
 
-        return allocations, actions
+                # Check 1: 50% >= minimum?
+                if half_allocation >= min_invest:
+                    actions.append({
+                        'symbol': item['symbol'],
+                        'level': item['trigger']['level'],
+                        'amount': float(half_allocation),
+                        'tier': tier_name
+                    })
+                    taken_levels.add(item['level_num'])
+                    pool -= half_allocation
+                    continue
+
+                # Check 2: Entire pool >= minimum?
+                if pool >= min_invest:
+                    actions.append({
+                        'symbol': item['symbol'],
+                        'level': item['trigger']['level'],
+                        'amount': float(pool),
+                        'tier': tier_name
+                    })
+                    taken_levels.add(item['level_num'])
+                    pool = Decimal('0')
+                    break  # Stop this tier
+
+                # Neither check passed — skip coin
+
+        return actions
 
     @classmethod
     def _activate_grid(cls, symbol, level, exit_multiplier=2.0, amount=None):
