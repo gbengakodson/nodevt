@@ -331,6 +331,11 @@ class FadakkaService:
     @classmethod
     def _activate_grid(cls, symbol, level, exit_multiplier=2.0, amount=None):
         """Activate a master grid with optimized configuration based on capital"""
+        # Prevent duplicate activation
+        if cls.has_active_grid(symbol):
+            print(f"Grid already active for {symbol}, skipping")
+            return False
+
         try:
             from apps.wallets.services.binance_service import BinanceService
 
@@ -362,7 +367,7 @@ class FadakkaService:
 
             lower_price = current_price * (Decimal('1') - lower_pct / Decimal('100'))
             upper_price = current_price * (Decimal('1') + upper_pct / Decimal('100'))
-            exit_price = current_price * Decimal(str(exit_multiplier))
+            exit_price = current_price * Decimal('2.0')
 
             print(
                 f"Optimized Grid: {max_grids} grids, {float(grid_pct):.1f}% each, Range: {float(lower_pct):.1f}%/{float(upper_pct):.1f}%")
