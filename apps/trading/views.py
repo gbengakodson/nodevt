@@ -1548,6 +1548,11 @@ def sweep_webhook(request):
     from django.core.management import call_command
     call_command('update_pnl')
 
+    # Record weekly closes every Sunday
+    from datetime import datetime
+    if datetime.utcnow().weekday() == 6:
+        _record_weekly_closes()
+
     # Run heavy tasks in background to avoid worker timeout
     import threading
     def background_tasks():
@@ -1556,8 +1561,6 @@ def sweep_webhook(request):
             from apps.wallets.services.treasury_controller import TreasuryController
             TreasuryController.auto_balance()
             from apps.trading.services.fadakka_service import FadakkaService
-            from apps.wallets.services.web3_service import Web3Service
-            from django.conf import settings
             from apps.wallets.services.binance_service import BinanceService
             bs = BinanceService()
             available = float(bs.get_usdc_balance())
@@ -1572,6 +1575,28 @@ def sweep_webhook(request):
     thread.start()
 
     return JsonResponse({'status': 'success'})
+
+
+def _record_weekly_closes():
+    """Save Sunday closing prices for all active tokens"""
+    from apps.tokens.models import CryptoToken, WeeklyClose
+    from datetime import date
+
+    today = date.today()
+    tokens = CryptoToken.objects.filter(is_active=True)
+    saved = 0
+
+    for token in tokens:
+        if token.current_price > 0:
+            _, created = WeeklyClose.objects.get_or_create(
+                token=token,
+                week_end=today,
+                defaults={'close_price': token.current_price}
+            )
+            if created:
+                saved += 1
+
+    print(f"📊 Recorded weekly closes for {saved} coins ({today})")
 
 
 @csrf_exempt
