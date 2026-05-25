@@ -248,7 +248,7 @@ class FadakkaService:
                 taken_levels.add(item['level_num'])
 
         # Step 3: Allocate capital using tiered half-of-remaining rule
-        allocations, allocation_actions = cls._allocate_capital(
+        allocation_actions = cls._allocate_capital(
             remaining_capital, candidates, taken_levels
         )
 
