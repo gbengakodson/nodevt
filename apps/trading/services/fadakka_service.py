@@ -99,12 +99,7 @@ class FadakkaService:
 
     @classmethod
     def should_exit(cls, symbol, current_price):
-        """Check if price has reached the exit target for this coin's level"""
-        k = cls.get_fadakka(symbol)
-        if not k:
-            return False
-
-        # Find active grid for this coin to get its activation level
+        """Check if price has reached the exit target"""
         active_grid = MasterGridBot.objects.filter(
             token__symbol=symbol,
             status='ACTIVE'
@@ -113,16 +108,10 @@ class FadakkaService:
         if not active_grid:
             return False
 
-        activation_level = active_grid.metadata.get('fadakka_level', 'L1')
+        exit_price = Decimal(str(active_grid.metadata.get('exit_price', 0)))
+        if exit_price <= 0:
+            return False
 
-        # Find the exit multiplier for this level
-        exit_multiplier = 2.0  # Default
-        for level in cls.TRIGGER_LEVELS:
-            if level['level'] == activation_level:
-                exit_multiplier = level['exit_multiplier']
-                break
-
-        exit_price = k * Decimal(str(exit_multiplier))
         return Decimal(str(current_price)) >= exit_price
 
 
@@ -341,28 +330,49 @@ class FadakkaService:
 
     @classmethod
     def _activate_grid(cls, symbol, level, exit_multiplier=2.0, amount=None):
-        """Activate a master grid for a coin on Binance"""
+        """Activate a master grid with optimized configuration based on capital"""
         try:
             from apps.wallets.services.binance_service import BinanceService
 
             token = CryptoToken.objects.get(symbol=symbol)
             current_price = token.current_price
-            upper = current_price * Decimal('1.8')
-            lower = current_price * Decimal('0.2')
             invest = Decimal(str(amount)) if amount else cls.get_min_investment(symbol)
 
-            # Calculate max grids based on $10 minimum per order
-            max_grids = int(invest / Decimal('10'))
-            if max_grids > 100:
-                max_grids = 100
+            # === OPTIMIZED GRID CONFIGURATION ===
+            # Max grids based on $10 minimum per order, capped at 100
+            max_grids = min(100, int(invest / Decimal('10')))
             if max_grids < 2:
                 max_grids = 2
+
+            # Grid % per level: min of 5% or (200% / grids)
+            grid_pct = min(Decimal('5'), Decimal('200') / Decimal(str(max_grids)))
+
+            # Total range = grids × grid_pct
+            total_range = Decimal(str(max_grids)) * grid_pct
+
+            # Split: 80% lower, 20% upper
+            lower_pct = total_range * Decimal('0.8')
+            upper_pct = total_range * Decimal('0.2')
+
+            # Cap at maximums
+            if lower_pct > Decimal('150'):
+                lower_pct = Decimal('150')
+            if upper_pct > Decimal('50'):
+                upper_pct = Decimal('50')
+
+            lower_price = current_price * (Decimal('1') - lower_pct / Decimal('100'))
+            upper_price = current_price * (Decimal('1') + upper_pct / Decimal('100'))
+            exit_price = current_price * Decimal(str(exit_multiplier))
+
+            print(
+                f"Optimized Grid: {max_grids} grids, {float(grid_pct):.1f}% each, Range: {float(lower_pct):.1f}%/{float(upper_pct):.1f}%")
+            # =====================================
 
             bs = BinanceService()
             result = bs.place_grid_orders(
                 symbol=symbol,
-                lower_price=lower,
-                upper_price=upper,
+                lower_price=lower_price,
+                upper_price=upper_price,
                 total_amount=invest,
                 grids=max_grids
             )
@@ -374,23 +384,29 @@ class FadakkaService:
             MasterGridBot.objects.create(
                 token=token,
                 total_amount=invest,
-                lower_price=lower,
-                upper_price=upper,
+                lower_price=lower_price,
+                upper_price=upper_price,
                 grids=result['orders_placed'],
                 status='ACTIVE',
                 price_at_creation=current_price,
                 metadata={
                     'fadakka_level': level,
                     'exit_multiplier': exit_multiplier,
+                    'exit_price': float(exit_price),
                     'fadakka_k': float(cls.get_fadakka(symbol)),
                     'activation_price': float(current_price),
                     'binance_order_ids': result['order_ids'],
                     'binance_symbol': result['symbol'],
+                    'grid_config': {
+                        'grid_pct': float(grid_pct),
+                        'lower_pct': float(lower_pct),
+                        'upper_pct': float(upper_pct),
+                    }
                 }
             )
 
             print(
-                f"✅ Grid activated: {symbol} at {level} (${float(invest):.2f}, {max_grids} grids, Exit: {exit_multiplier}K)")
+                f"✅ Grid activated: {symbol} at {level} (${float(invest):.2f}, {max_grids} grids, Range: {float(lower_pct):.1f}%/{float(upper_pct):.1f}%, Exit: {exit_multiplier}× entry)")
             return True
 
         except Exception as e:
