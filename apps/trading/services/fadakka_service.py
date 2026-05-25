@@ -256,6 +256,7 @@ class FadakkaService:
             success = cls._activate_grid(
                 item['symbol'],
                 item['level'],
+                exit_multiplier=item.get('exit_multiplier', 2.0),
                 amount=item['amount']
             )
             if success:
@@ -348,13 +349,20 @@ class FadakkaService:
             lower = current_price * Decimal('0.2')
             invest = Decimal(str(amount)) if amount else cls.get_min_investment(symbol)
 
+            # Calculate max grids based on $10 minimum per order
+            max_grids = int(invest / Decimal('10'))
+            if max_grids > 100:
+                max_grids = 100
+            if max_grids < 2:
+                max_grids = 2
+
             bs = BinanceService()
             result = bs.place_grid_orders(
                 symbol=symbol,
                 lower_price=lower,
                 upper_price=upper,
                 total_amount=invest,
-                grids=100
+                grids=max_grids
             )
 
             if not result['success']:
@@ -379,16 +387,13 @@ class FadakkaService:
                 }
             )
 
-            print(f"✅ Grid activated: {symbol} at {level} (${float(invest):.2f}, Exit: {exit_multiplier}K)")
+            print(
+                f"✅ Grid activated: {symbol} at {level} (${float(invest):.2f}, {max_grids} grids, Exit: {exit_multiplier}K)")
             return True
 
         except Exception as e:
             print(f"Error activating grid for {symbol}: {e}")
             return False
-
-
-
-
 
     @classmethod
     def _close_grid(cls, symbol):
@@ -428,7 +433,7 @@ class FadakkaService:
                 grid.metadata['close_trades'] = trade_history.get('total_trades', 0)
                 grid.save()
 
-                print(f"🔒 Closed grid for {symbol}: Profit ${profit:.2f}")
+                print(f"🔒 Closed grid for {symbol}: Profit ${float(profit):.2f}")
 
         except Exception as e:
             print(f"Error closing grid for {symbol}: {e}")
