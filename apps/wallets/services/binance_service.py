@@ -232,36 +232,40 @@ class BinanceService:
             print(f"Trade history error: {e}")
             return {'success': False, 'error': str(e)}
 
-
-
-
-
     def get_usdc_balance(self):
-        """Get USDC BEP20 balance of central wallet on Binance"""
+        """Get USDC + USDT balance of central wallet on Binance"""
         try:
             account = self.client.get_account()
+            total = Decimal('0')
             for balance in account['balances']:
-                if balance['asset'] == 'USDC':
-                    return Decimal(balance['free'])
-            return Decimal('0')
+                if balance['asset'] in ['USDC', 'USDT']:
+                    total += Decimal(balance['free'])
+            return total
         except Exception as e:
             print(f"Error getting Binance balance: {e}")
             return Decimal('0')
 
     def withdraw_usdc(self, to_address, amount, network='BSC'):
-        """
-        Withdraw USDC from Binance to user's external wallet.
-        Basic withdrawal - use withdraw_usdc_safe for production.
-        Returns: {success: bool, tx_id: str, error: str}
-        """
+        """Withdraw USDC/USDT from Binance to user's external wallet."""
         try:
             amount = float(amount)
-
             if amount < 10:
-                return {'success': False, 'error': 'Minimum withdrawal is $10 USDC'}
+                return {'success': False, 'error': 'Minimum withdrawal is $10'}
+
+            # Check which stablecoin has balance
+            account = self.client.get_account()
+            usdc_bal = Decimal('0')
+            usdt_bal = Decimal('0')
+            for b in account['balances']:
+                if b['asset'] == 'USDC':
+                    usdc_bal = Decimal(b['free'])
+                if b['asset'] == 'USDT':
+                    usdt_bal = Decimal(b['free'])
+
+            asset = 'USDT' if usdt_bal >= Decimal(str(amount)) else 'USDC'
 
             result = self.client.withdraw(
-                asset='USDC',
+                asset=asset,
                 address=to_address,
                 amount=amount,
                 network=network,
@@ -273,51 +277,53 @@ class BinanceService:
                 'success': True,
                 'tx_id': result.get('id', ''),
                 'amount': amount,
-                'address': to_address
+                'address': to_address,
+                'asset': asset
             }
-
         except Exception as e:
             print(f"Withdrawal error: {e}")
             return {'success': False, 'error': str(e)}
 
     def withdraw_usdc_safe(self, to_address, amount, user_email):
         """
-        Safe USDC withdrawal with multiple checks and audit logging.
-        Use this for all production withdrawals.
-        Returns: {success: bool, tx_id: str, error: str}
+        Safe USDC/USDT withdrawal with multiple checks and audit logging.
         """
         try:
             amount = float(amount)
 
             # ============ SAFETY CHECKS ============
-
-            # 1. Amount limits
             if amount < 10:
-                return {'success': False, 'error': 'Minimum withdrawal is $10 USDC'}
+                return {'success': False, 'error': 'Minimum withdrawal is $10'}
 
             if amount > 10000:
-                return {'success': False, 'error': 'Maximum withdrawal is $10,000 USDC per transaction'}
+                return {'success': False, 'error': 'Maximum withdrawal is $10,000 per transaction'}
 
-            # 2. Valid BSC address
             if not to_address.startswith('0x') or len(to_address) != 42:
                 return {'success': False, 'error': 'Invalid BSC wallet address'}
 
-            if not Web3.is_address(to_address):
-                return {'success': False, 'error': 'Invalid wallet address format'}
+            # Check which stablecoin to use
+            account = self.client.get_account()
+            usdc_bal = Decimal('0')
+            usdt_bal = Decimal('0')
+            for b in account['balances']:
+                if b['asset'] == 'USDC':
+                    usdc_bal = Decimal(b['free'])
+                if b['asset'] == 'USDT':
+                    usdt_bal = Decimal(b['free'])
 
-            # 3. Check platform liquidity
-            central_balance = self.get_usdc_balance()
-            if central_balance < Decimal(str(amount)):
-                print(f"WARNING: Low platform liquidity. Have ${central_balance:.2f}, need ${amount:.2f}")
+            total_stable = usdc_bal + usdt_bal
+
+            if total_stable < Decimal(str(amount)):
                 return {
                     'success': False,
-                    'error': 'Platform liquidity temporarily insufficient. Please try again later or contact support.'
+                    'error': f'Platform liquidity temporarily insufficient. Available: ${float(total_stable):.2f}, Need: ${amount:.2f}'
                 }
 
-            # ============ PROCESS WITHDRAWAL ============
+            asset = 'USDT' if usdt_bal >= Decimal(str(amount)) else 'USDC'
 
+            # ============ PROCESS WITHDRAWAL ============
             result = self.client.withdraw(
-                asset='USDC',
+                asset=asset,
                 address=to_address,
                 amount=amount,
                 network='BSC',
@@ -327,13 +333,11 @@ class BinanceService:
 
             tx_id = str(result.get('id', ''))
 
-            # ============ AUDIT LOG ============
-
             print(f"""
             ========================================
             WITHDRAWAL PROCESSED
             User: {user_email}
-            Amount: ${amount:.2f} USDC
+            Amount: ${amount:.2f} {asset}
             To: {to_address}
             TX ID: {tx_id}
             Time: {timezone.now()}
@@ -344,32 +348,15 @@ class BinanceService:
                 'success': True,
                 'tx_id': tx_id,
                 'amount': amount,
-                'address': to_address
+                'address': to_address,
+                'asset': asset
             }
 
         except Exception as e:
             error_msg = str(e)
             print(f"WITHDRAWAL ERROR for {user_email}: {error_msg}")
-
-            # Log failed withdrawal for audit
-            try:
-                Transaction.objects.create(
-                    user=None,
-                    transaction_type='WITHDRAWAL',
-                    amount=Decimal(str(amount)),
-                    fee=Decimal('0'),
-                    status='FAILED',
-                    metadata={
-                        'error': error_msg,
-                        'user_email': user_email,
-                        'to_address': to_address,
-                        'attempted_at': str(timezone.now())
-                    }
-                )
-            except:
-                pass
-
             return {'success': False, 'error': 'Withdrawal processing failed. Support team notified.'}
+
 
     def sweep_to_central(self, from_private_key, from_address):
         """
