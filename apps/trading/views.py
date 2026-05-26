@@ -1517,35 +1517,36 @@ class TradingViewSet(viewsets.ViewSet):
             current_price = grid.token.current_price
             holding_value = holding * current_price
 
-            # Calculate PNL from actual trades
-            total_bought = sum(
-                float(t['qty']) * float(t['price'])
-                for t in trades if not t['isBuyer']
-            )
-            total_sold = sum(
-                float(t['qty']) * float(t['price'])
-                for t in trades if t['isBuyer']
-            )
+            # Actual Binance balance = source of truth
+            usdt_free = Decimal('0')
+            usdt_locked = Decimal('0')
+            for b in account['balances']:
+                if b['asset'] == 'USDT':
+                    usdt_free = Decimal(b['free'])
+                    usdt_locked = Decimal(b['locked'])
+                if b['asset'] == 'USDC':
+                    usdt_free += Decimal(b['free'])
+                    usdt_locked += Decimal(b['locked'])
 
-            realized_pnl = total_sold - total_bought
-            cost_of_holdings = total_bought - total_sold
-            unrealized_pnl = float(holding_value) - cost_of_holdings if cost_of_holdings > 0 else 0
-            total_pnl = realized_pnl + unrealized_pnl
+            usdt_total = usdt_free + usdt_locked
+            current_value = usdt_total + holding_value
+            total_pnl = current_value - grid.total_amount
 
             data.append({
                 'symbol': symbol,
                 'pair': pair,
                 'invested': float(grid.total_amount),
                 'current_price': float(current_price),
+                'current_value': float(current_value),
                 'entry_price': float(grid.price_at_creation),
                 'grids': grid.grids,
                 'level': grid.metadata.get('fadakka_level', ''),
                 'exit_price': grid.metadata.get('exit_price', 0),
                 'holding': float(holding),
                 'holding_value': float(holding_value),
-                'realized_pnl': round(realized_pnl, 2),
-                'unrealized_pnl': round(unrealized_pnl, 2),
-                'total_pnl': round(total_pnl, 2),
+                'realized_pnl': 0,
+                'unrealized_pnl': round(float(total_pnl), 2),
+                'total_pnl': round(float(total_pnl), 2),
                 'open_orders': [{
                     'order_id': str(o['orderId']),
                     'price': float(o['price']),

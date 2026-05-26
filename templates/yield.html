@@ -167,12 +167,12 @@
         // === STAT CARDS ===
         document.getElementById('statInvested').textContent = fc(grid.invested);
 
-        var currentValue = grid.invested + grid.total_pnl;
-        var valueChange = grid.invested > 0 ? (grid.total_pnl / grid.invested * 100) : 0;
+        var currentValue = grid.current_value || (grid.invested + grid.total_pnl);
+        var valueChange = grid.invested > 0 ? ((currentValue - grid.invested) / grid.invested * 100) : 0;
         document.getElementById('statValue').textContent = fc(currentValue);
-        document.getElementById('statValue').className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
+        document.getElementById('statValue').className = 'stat-value ' + (currentValue >= grid.invested ? 'green' : 'red');
         document.getElementById('statValueChange').textContent = (valueChange >= 0 ? '+' : '') + valueChange.toFixed(1) + '%';
-        document.getElementById('statValueChange').style.color = grid.total_pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+        document.getElementById('statValueChange').style.color = currentValue >= grid.invested ? 'var(--success)' : 'var(--danger)';
 
         document.getElementById('statPnl').textContent = (grid.total_pnl >= 0 ? '+' : '') + fc(grid.total_pnl);
         document.getElementById('statPnl').className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
