@@ -1524,9 +1524,17 @@ class TradingViewSet(viewsets.ViewSet):
                 float(t['qty']) * float(t['price'])
                 for t in trades if t['isBuyer']
             )
-            total_pnl = float(holding_value) + total_sold - total_bought
+
+            # Calculate realized/unrealized
+            total_bought_qty = sum(float(t['qty']) for t in trades if not t['isBuyer'])
+            total_sold_qty = sum(float(t['qty']) for t in trades if t['isBuyer'])
+            avg_buy = total_bought / total_bought_qty if total_bought_qty > 0 else 0
+            remaining_qty = total_bought_qty - total_sold_qty
+            cost_remaining = remaining_qty * avg_buy
+
             realized_pnl = total_sold - (total_bought - cost_remaining)
             unrealized_pnl = float(holding_value) - cost_remaining
+            total_pnl = realized_pnl + unrealized_pnl
 
             data.append({
                 'symbol': symbol,
