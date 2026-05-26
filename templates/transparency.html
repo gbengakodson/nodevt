@@ -299,18 +299,19 @@
             <span class="live-dot"></span> Binance Live Monitor
             <span style="font-size:10px;color:var(--text-secondary);margin-left:auto;" id="binanceUpdateTime">—</span>
         </div>
-        <div class="bal-row">
-            <div class="bal-item"><div class="blabel">USDC</div><div class="bvalue" id="binanceUSDC">$0.00</div></div>
-            <div class="bal-item"><div class="blabel">USDT</div><div class="bvalue" id="binanceUSDT">$0.00</div></div>
-            <div class="bal-item"><div class="blabel">BNB</div><div class="bvalue" id="binanceBNB">0.0000</div></div>
-            <div class="bal-item"><div class="blabel">Open Orders</div><div class="bvalue" id="binanceOrders">0</div></div>
+        <div class="stats-grid">
+            <div class="stat-card"><div class="stat-label">Active Grids</div><div class="stat-value" id="pubGridCount">0</div></div>
+            <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-value" id="pubInvested">$0</div></div>
+            <div class="stat-card"><div class="stat-label">Current Value</div><div class="stat-value" id="pubValue">$0</div></div>
+            <div class="stat-card"><div class="stat-label">Total PNL</div><div class="stat-value" id="pubPnl">$0</div></div>
         </div>
-        <div style="font-size:9px;color:var(--text-secondary);margin-bottom:8px;">Recent Binance Trades (Last 20)</div>
-        <div class="scroll-trades">
-            <table class="trades-table">
-                <thead><tr><th>Pair</th><th>Side</th><th>Price</th><th>Qty</th><th>Time</th></tr></thead>
-                <tbody id="binanceTrades"><tr><td colspan="5" class="empty-state">Loading Binance data...</td></tr></tbody>
-            </table>
+        <div class="card">
+            <div class="card-title">📊 Live Trade Activity</div>
+            <div class="tabs" style="margin-bottom:10px;">
+                <button class="tab-btn active" data-pubtab="open">Open Orders (<span id="pubOpenCount">0</span>)</button>
+                <button class="tab-btn" data-pubtab="trades">Completed Trades (<span id="pubTradesCount">0</span>)</button>
+            </div>
+            <div class="scroll-table" style="max-height:400px;overflow-y:auto;" id="pubTabContent"></div>
         </div>
     </div>
 
@@ -408,36 +409,85 @@
         } catch(e) { console.error(e); }
     }
 
-    async function loadBinanceData() {
+    async function loadPublicGridData() {
         try {
-            var res = await apiCall('/trading/binance_monitor/');
-            if (res && res.balances) {
-                document.getElementById('binanceUSDC').textContent = '$' + (parseFloat(res.balances.USDC || 0)).toFixed(2);
-                document.getElementById('binanceUSDT').textContent = '$' + (parseFloat(res.balances.USDT || 0)).toFixed(2);
-                document.getElementById('binanceBNB').textContent = parseFloat(res.balances.BNB || 0).toFixed(4);
-                document.getElementById('binanceOrders').textContent = res.open_orders || 0;
+            var data = await apiCall('/trading/master_grid_live/');
+            var grids = data.grids || [];
 
-                var now = new Date();
-                document.getElementById('binanceUpdateTime').textContent = 'Updated ' + now.getHours().toString().padStart(2,'0') + ':' + now.getMinutes().toString().padStart(2,'0') + ':' + now.getSeconds().toString().padStart(2,'0');
+            document.getElementById('pubGridCount').textContent = grids.length;
 
-                var tbody = document.getElementById('binanceTrades');
-                if (res.trades && res.trades.length > 0) {
-                    var html = '';
-                    for (var i = 0; i < Math.min(res.trades.length, 20); i++) {
-                        var t = res.trades[i];
-                        var side = t.isBuyer ? 'Buy' : 'Sell';
-                        var cls = t.isBuyer ? 'buy' : 'sell';
-                        var d = new Date(t.time);
-                        var timeStr = d.getDate().toString().padStart(2,'0') + '/' + (d.getMonth()+1).toString().padStart(2,'0') + ' ' + d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0');
-                        html += '<tr><td>' + t.symbol + '</td><td class="' + cls + '">' + side + '</td><td>$' + parseFloat(t.price).toFixed(4) + '</td><td>' + t.qty + '</td><td>' + timeStr + '</td></tr>';
-                    }
-                    tbody.innerHTML = html;
-                } else {
-                    tbody.innerHTML = '<tr><td colspan="5" class="empty-state">No recent trades</td></tr>';
-                }
-            }
-        } catch(e) { console.error('Binance:', e); }
+            var totalInvested = 0;
+            var totalValue = 0;
+            var allOpenOrders = [];
+            var allTrades = [];
+
+            grids.forEach(function(grid) {
+                totalInvested += grid.invested;
+                totalValue += grid.current_value || (grid.invested + grid.total_pnl);
+
+                grid.open_orders.forEach(function(o) {
+                    o.coin = grid.symbol;
+                    allOpenOrders.push(o);
+                });
+
+                grid.recent_trades.forEach(function(t) {
+                    t.coin = grid.symbol;
+                    allTrades.push(t);
+                });
+            });
+
+            document.getElementById('pubInvested').textContent = fc(totalInvested);
+            document.getElementById('pubValue').textContent = fc(totalValue);
+            var totalPnl = totalValue - totalInvested;
+            var pnlEl = document.getElementById('pubPnl');
+            pnlEl.textContent = (totalPnl >= 0 ? '+' : '') + fc(totalPnl);
+            pnlEl.className = 'stat-value ' + (totalPnl >= 0 ? 'green' : 'red');
+
+            document.getElementById('pubOpenCount').textContent = allOpenOrders.length;
+            document.getElementById('pubTradesCount').textContent = allTrades.length;
+
+            showPubTab('open', allOpenOrders, allTrades);
+        } catch(e) { console.error(e); }
     }
+
+    function showPubTab(tab, openOrders, trades) {
+        document.querySelectorAll('[data-pubtab]').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelector('[data-pubtab="' + tab + '"]').classList.add('active');
+
+        var content = document.getElementById('pubTabContent');
+
+        if (tab === 'open') {
+            // Group by coin, sort by time
+            openOrders.sort(function(a, b) { return b.time - a.time; });
+
+            content.innerHTML = '<table class="data-table"><thead><tr><th>Coin</th><th>Buy Order</th><th></th><th>Sell Order</th><th>Spread</th></tr></thead><tbody>' +
+                openOrders.map(function(o) {
+                    return '<tr><td><strong>' + o.coin + '</strong></td>' +
+                        '<td style="color:var(--success);">' + (o.side === 'BUY' ? 'Buy ' + o.quantity.toFixed(0) + ' @ ' + fc(o.price) : '—') + '</td>' +
+                        '<td style="color:var(--text-secondary);">→</td>' +
+                        '<td style="color:var(--danger);">' + (o.side === 'SELL' ? 'Sell ' + o.quantity.toFixed(0) + ' @ ' + fc(o.price) : '—') + '</td>' +
+                        '<td>—</td></tr>';
+                }).join('') + '</tbody></table>';
+        } else if (tab === 'trades') {
+            trades.sort(function(a, b) { return b.time - a.time; });
+
+            content.innerHTML = '<table class="data-table"><thead><tr><th>Coin</th><th>Time</th><th>Price</th><th>Amount</th><th>Side</th><th>Matched PNL</th></tr></thead><tbody>' +
+                trades.map(function(t) {
+                    var pnlClass = t.matched_pnl >= 0 ? 'buy' : 'sell';
+                    var pnlSign = t.matched_pnl >= 0 ? '+' : '';
+                    return '<tr><td><strong>' + t.coin + '</strong></td><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td><td class="' + pnlClass + '">' + pnlSign + fc(t.matched_pnl) + '</td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+    }
+
+    // Tab switching
+    document.querySelectorAll('[data-pubtab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tab = this.getAttribute('data-pubtab');
+            showPubTab(tab, currentOpenOrders, currentTrades);
+        });
+    });
+
 
 
 
@@ -613,10 +663,10 @@
 
     // Init
     loadStats();
-    loadBinanceData();
+    loadPublicGridData();
     loadDeposits();
     loadChat();
-    setInterval(function() { loadStats(); loadBinanceData(); }, 60000);
+    setInterval(function() { loadStats(); loadPublicGridData(); }, 60000);
     setInterval(loadChat, 15000);
 </script>
 {% endblock %}
