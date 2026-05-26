@@ -30,6 +30,7 @@
     .stat-card { background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); padding: 12px 14px; }
     .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
     .stat-value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+    .stat-sub { font-size: 9px; color: var(--text-secondary); margin-top: 2px; }
     .stat-value.green { color: var(--success); }
     .stat-value.red { color: var(--danger); }
 
@@ -62,45 +63,43 @@
         <span style="color:var(--text-secondary);padding:8px;">Loading grids...</span>
     </div>
 
-    <!-- Stats -->
     <div class="stats-row">
-        <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-value" id="statInvested">$0</div></div>
-        <div class="stat-card"><div class="stat-label">Current Value</div><div class="stat-value" id="statValue">$0</div></div>
-        <div class="stat-card"><div class="stat-label">Total PNL</div><div class="stat-value" id="statPnl">$0</div></div>
-        <div class="stat-card"><div class="stat-label">Open Orders</div><div class="stat-value" id="statOrders">0</div></div>
-    </div>
-
-    <!-- Open Orders -->
-    <div class="card">
-        <div class="card-title">📋 Open Orders</div>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead><tr><th>Price</th><th>Amount</th><th>Total</th><th>Status</th></tr></thead>
-                <tbody id="openOrdersBody"><tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
-            </table>
+        <div class="stat-card">
+            <div class="stat-label">Total Invested</div>
+            <div class="stat-value" id="statInvested">$0</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Current Value</div>
+            <div class="stat-value" id="statValue">$0</div>
+            <div class="stat-sub" id="statValueChange" style="font-size:9px;color:var(--text-secondary);"></div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Total PNL</div>
+            <div class="stat-value" id="statPnl">$0</div>
+            <div class="stat-sub" style="font-size:9px;color:var(--text-secondary);">
+                Real: <span id="statRealized" style="color:var(--success);">$0 (0%)</span> |
+                Unreal: <span id="statUnrealized" style="color:var(--success);">$0 (0%)</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Open Orders</div>
+            <div class="stat-value" id="statOrders">0</div>
+            <div class="stat-sub" style="font-size:9px;color:var(--text-secondary);">
+                Completed: <span id="statCompleted" style="color:var(--success);">0</span>
+            </div>
         </div>
     </div>
 
-    <!-- Order History -->
     <div class="card">
-        <div class="card-title">📜 Order History</div>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Side</th><th>Status</th></tr></thead>
-                <tbody id="orderHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
-            </table>
+        <div class="tabs" style="margin-bottom:10px;">
+            <button class="tab-btn active" data-ytab="open">Open Orders (<span id="openCount">0</span>)</button>
+            <button class="tab-btn" data-ytab="history">Order History (<span id="historyCount">0</span>)</button>
+            <button class="tab-btn" data-ytab="trades">Trade History (<span id="tradesCount">0</span>)</button>
         </div>
-    </div>
 
-    <!-- Trade History -->
-    <div class="card">
-        <div class="card-title">💱 Trade History</div>
-        <div class="table-wrap">
-            <table class="data-table">
-                <thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th></tr></thead>
-                <tbody id="tradeHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
-            </table>
-        </div>
+        <div id="tabStats" style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;"></div>
+
+        <div class="scroll-table" style="max-height:300px;overflow-y:auto;" id="tabContent"></div>
     </div>
 </div>
 
@@ -158,45 +157,89 @@
         var grid = gridData.find(function(g) { return g.symbol === symbol; });
         if (!grid) return;
 
-        // Update tabs
+        // Update bot selector tabs
         document.querySelectorAll('.tab-btn').forEach(function(b) {
             b.classList.toggle('active', b.textContent.includes(symbol));
         });
 
-        // Stats
+        // === STAT CARDS ===
         document.getElementById('statInvested').textContent = fc(grid.invested);
+
         var currentValue = grid.invested + grid.total_pnl;
+        var valueChange = grid.invested > 0 ? (grid.total_pnl / grid.invested * 100) : 0;
         document.getElementById('statValue').textContent = fc(currentValue);
-        var pnlEl = document.getElementById('statPnl');
-        pnlEl.textContent = (grid.total_pnl >= 0 ? '+' : '') + fc(grid.total_pnl);
-        pnlEl.className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
+        document.getElementById('statValue').className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
+        document.getElementById('statValueChange').textContent = (valueChange >= 0 ? '+' : '') + valueChange.toFixed(1) + '%';
+        document.getElementById('statValueChange').style.color = grid.total_pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        document.getElementById('statPnl').textContent = (grid.total_pnl >= 0 ? '+' : '') + fc(grid.total_pnl);
+        document.getElementById('statPnl').className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
+
+        var rPct = grid.invested > 0 ? (grid.realized_pnl / grid.invested * 100) : 0;
+        document.getElementById('statRealized').textContent = (grid.realized_pnl >= 0 ? '+' : '') + fc(grid.realized_pnl) + ' (' + rPct.toFixed(1) + '%)';
+        document.getElementById('statRealized').style.color = grid.realized_pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+
+        var uPct = grid.invested > 0 ? (grid.unrealized_pnl / grid.invested * 100) : 0;
+        document.getElementById('statUnrealized').textContent = (grid.unrealized_pnl >= 0 ? '+' : '') + fc(grid.unrealized_pnl) + ' (' + uPct.toFixed(1) + '%)';
+        document.getElementById('statUnrealized').style.color = grid.unrealized_pnl >= 0 ? 'var(--success)' : 'var(--danger)';
+
         document.getElementById('statOrders').textContent = grid.open_orders.length;
+        var completedCount = grid.order_history.filter(function(o){ return o.status === 'FILLED'; }).length;
+        document.getElementById('statCompleted').textContent = completedCount;
 
-        // Open Orders
-        var ooBody = document.getElementById('openOrdersBody');
-        if (grid.open_orders.length === 0) {
-            ooBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No open orders</td></tr>';
-        } else {
-            ooBody.innerHTML = grid.open_orders.map(function(o) {
-                return '<tr><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td>' + fc(o.total) + '</td><td><span class="new">● Open</span></td></tr>';
-            }).join('');
-        }
+        // === TABBED PANEL ===
+        document.getElementById('openCount').textContent = grid.open_orders.length;
+        document.getElementById('historyCount').textContent = grid.order_history.length;
+        document.getElementById('tradesCount').textContent = grid.recent_trades.length;
 
-        // Order History
-        var ohBody = document.getElementById('orderHistoryBody');
-        ohBody.innerHTML = grid.order_history.map(function(o) {
-            var statusClass = o.status === 'FILLED' ? 'filled' : o.status === 'NEW' ? 'new' : 'canceled';
-            return '<tr><td>' + formatTime(o.time) + '</td><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td class="' + (o.side === 'BUY' ? 'buy' : 'sell') + '">' + o.side + '</td><td><span class="' + statusClass + '">' + o.status + '</span></td></tr>';
-        }).join('');
-
-        // Trade History
-        var thBody = document.getElementById('tradeHistoryBody');
-        thBody.innerHTML = grid.recent_trades.map(function(t) {
-            return '<tr><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td>' + fc(t.total) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td></tr>';
-        }).join('');
+        showYTab('open', grid);
     }
 
+    function showYTab(tab, grid) {
+        document.querySelectorAll('[data-ytab]').forEach(function(b) { b.classList.remove('active'); });
+        document.querySelector('[data-ytab="' + tab + '"]').classList.add('active');
+
+        var stats = document.getElementById('tabStats');
+        var content = document.getElementById('tabContent');
+
+        if (tab === 'open') {
+            stats.innerHTML = grid.open_orders.length + ' open orders';
+            content.innerHTML = grid.open_orders.length === 0
+                ? '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No open orders</div>'
+                : '<table class="data-table"><thead><tr><th>Price</th><th>Amount</th><th>Total</th></tr></thead><tbody>' +
+                    grid.open_orders.map(function(o) {
+                        return '<tr><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td>' + fc(o.total) + '</td></tr>';
+                    }).join('') + '</tbody></table>';
+        } else if (tab === 'history') {
+            var filled = grid.order_history.filter(function(o){ return o.status === 'FILLED'; }).length;
+            var cancelled = grid.order_history.filter(function(o){ return o.status !== 'FILLED'; }).length;
+            stats.innerHTML = grid.order_history.length + ' orders | Filled: ' + filled + ' | Cancelled: ' + cancelled;
+            content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Side</th><th>Status</th></tr></thead><tbody>' +
+                grid.order_history.map(function(o) {
+                    var sc = o.status === 'FILLED' ? 'filled' : 'canceled';
+                    return '<tr><td>' + formatTime(o.time) + '</td><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td class="' + (o.side === 'BUY' ? 'buy' : 'sell') + '">' + o.side + '</td><td><span class="' + sc + '">' + o.status + '</span></td></tr>';
+                }).join('') + '</tbody></table>';
+        } else if (tab === 'trades') {
+            var trades24h = grid.recent_trades.filter(function(t){ return t.time > Date.now() - 86400000; });
+            var profit24h = trades24h.reduce(function(s, t){ return s + (t.side === 'SELL' ? t.total : -t.total); }, 0);
+            stats.innerHTML = grid.recent_trades.length + ' trades | 24h: ' + trades24h.length + ' trades | 24h PNL: ' + fc(profit24h);
+            content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th></tr></thead><tbody>' +
+                grid.recent_trades.map(function(t) {
+                    return '<tr><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td>' + fc(t.total) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td></tr>';
+                }).join('') + '</tbody></table>';
+        }
+    }
+
+
+    document.querySelectorAll('[data-ytab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var tab = this.getAttribute('data-ytab');
+            var grid = gridData.find(function(g) { return g.symbol === currentSymbol; });
+            if (grid) showYTab(tab, grid);
+        });
+    });
+
     loadGridData();
-    setInterval(loadGridData, 15000);  // Refresh every 15 seconds
+    setInterval(loadGridData, 15000);
 </script>
 {% endblock %}
