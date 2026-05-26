@@ -146,10 +146,12 @@
 
             if (!currentSymbol && gridData.length > 0) {
                 selectGrid(gridData[0].symbol);
-            } else {
+            } else if (currentSymbol) {
                 selectGrid(currentSymbol);
             }
-        } catch(e) { console.error(e); }
+        } catch(e) {
+            console.error('Grid data fetch failed, will retry');
+        }
     }
 
     function selectGrid(symbol) {
@@ -240,6 +242,6 @@
     });
 
     loadGridData();
-    setInterval(loadGridData, 15000);
+    setInterval(loadGridData, 60000);
 </script>
 {% endblock %}
