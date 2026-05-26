@@ -1532,6 +1532,31 @@ class TradingViewSet(viewsets.ViewSet):
             current_value = usdt_total + holding_value
             total_pnl = current_value - grid.total_amount
 
+            # Calculate matched PNL per trade (FIFO)
+            buy_queue = []
+            trades_with_pnl = []
+
+            for t in sorted(trades, key=lambda x: x['time']):
+                qty = float(t['qty'])
+                price = float(t['price'])
+                is_buy = not t['isBuyer']
+
+                if is_buy:
+                    buy_queue.append({'qty': qty, 'price': price})
+                    trades_with_pnl.append({**t, 'matched_pnl': 0})
+                else:
+                    sell_qty = qty
+                    pnl = 0
+                    while sell_qty > 0 and buy_queue:
+                        buy = buy_queue[0]
+                        matched = min(sell_qty, buy['qty'])
+                        pnl += matched * (price - buy['price'])
+                        sell_qty -= matched
+                        buy['qty'] -= matched
+                        if buy['qty'] <= 0:
+                            buy_queue.pop(0)
+                    trades_with_pnl.append({**t, 'matched_pnl': round(pnl, 4)})
+
             data.append({
                 'symbol': symbol,
                 'pair': pair,
@@ -1571,7 +1596,8 @@ class TradingViewSet(viewsets.ViewSet):
                     'total': float(t['price']) * float(t['qty']),
                     'side': 'BUY' if not t['isBuyer'] else 'SELL',
                     'time': t['time'],
-                } for t in trades[:20]],
+                    'matched_pnl': t.get('matched_pnl', 0),
+                } for t in trades_with_pnl[:20]],
                 'grid_config': grid.metadata.get('grid_config', {}),
             })
 
