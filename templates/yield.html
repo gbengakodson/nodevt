@@ -1,6 +1,6 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Master Grid Bot Live | NODE {% endblock %}
+{% block title %}Master Grid Live | NODE{% endblock %}
 
 {% block extra_css %}
 <style>
@@ -18,152 +18,96 @@
     * { box-sizing: border-box; }
     body { background: var(--bg-body) !important; }
 
-    .earnings-container {
-        max-width: 1100px;
-        margin: 0 auto;
-        padding: 16px;
-    }
+    .yield-container { max-width: 1200px; margin: 0 auto; padding: 12px; }
 
-    .bot-selector {
-        display: flex; gap: 6px; flex-wrap: wrap;
-        margin-bottom: 14px;
-    }
-    .bot-chip {
-        padding: 7px 14px; border-radius: 6px;
-        border: 1px solid var(--border); background: var(--bg-card);
-        color: var(--text-secondary); font-size: 11px; font-weight: 600;
-        cursor: pointer; transition: all 0.15s;
-    }
-    .bot-chip:hover, .bot-chip.active {
-        border-color: var(--primary); color: var(--primary);
-        background: rgba(240,185,11,0.05);
-    }
+    /* Tabs */
+    .tabs { display: flex; gap: 2px; margin-bottom: 12px; background: rgba(0,0,0,0.3); border-radius: 6px; padding: 3px; width: fit-content; }
+    .tab-btn { background: transparent; border: none; color: var(--text-secondary); padding: 8px 16px; cursor: pointer; font-size: 12px; font-weight: 600; border-radius: 5px; }
+    .tab-btn.active { background: var(--primary); color: #1E2329; }
 
-    .card {
-        background: var(--bg-card); border-radius: 10px;
-        border: 1px solid var(--border); padding: 18px; margin-bottom: 12px;
-    }
-    .card-title {
-        font-size: 12px; font-weight: 700; color: var(--text-primary);
-        margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
-    }
+    /* Stats */
+    .stats-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 12px; }
+    .stat-card { background: var(--bg-card); border-radius: 8px; border: 1px solid var(--border); padding: 12px 14px; }
+    .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; }
+    .stat-value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+    .stat-value.green { color: var(--success); }
+    .stat-value.red { color: var(--danger); }
 
-    .stats-row {
-        display: grid; grid-template-columns: repeat(4, 1fr);
-        gap: 8px; margin-bottom: 12px;
-    }
-    .stat-box {
-        background: var(--bg-card); border-radius: 8px;
-        border: 1px solid var(--border); padding: 12px; text-align: center;
-    }
-    .stat-box .label { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
-    .stat-box .value { font-size: 18px; font-weight: 700; color: var(--primary); margin-top: 3px; }
-    .stat-box .value.green { color: var(--success); }
+    /* Tables */
+    .table-wrap { overflow-x: auto; }
+    .data-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+    .data-table th { padding: 8px 10px; text-align: left; background: rgba(240,185,11,0.04); color: var(--text-secondary); font-size: 10px; font-weight: 700; border-bottom: 1px solid var(--border); }
+    .data-table td { padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.03); color: var(--text-primary); }
+    .data-table tr:hover { background: rgba(240,185,11,0.02); }
+    .buy { color: var(--success); }
+    .sell { color: var(--danger); }
+    .filled { color: var(--success); }
+    .new { color: var(--primary); }
+    .canceled { color: var(--text-secondary); }
 
-    .chart-wrap {
-        position: relative; height: 350px; background: rgba(0,0,0,0.15);
-        border-radius: 8px; overflow: hidden;
-    }
-    .chart-wrap canvas { width: 100%; height: 100%; }
-
-    .legend-row {
-        display: flex; gap: 16px; justify-content: center;
-        margin-top: 8px; font-size: 10px; color: var(--text-secondary);
-    }
-    .legend-dot {
-        display: inline-block; width: 10px; height: 10px; border-radius: 2px;
-        margin-right: 4px; vertical-align: middle;
-    }
-    .legend-dot.green { background: var(--success); }
-    .legend-dot.red { background: var(--danger); }
-    .legend-dot.yellow { background: var(--primary); }
-
-    .trades-table {
-        width: 100%; border-collapse: collapse; font-size: 10px;
-    }
-    .trades-table th {
-        padding: 8px 10px; text-align: left;
-        background: rgba(240,185,11,0.04); color: var(--text-secondary);
-        font-weight: 700; font-size: 9px; text-transform: uppercase;
-        border-bottom: 1px solid var(--border); white-space: nowrap;
-    }
-    .trades-table td {
-        padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,0.03);
-        color: var(--text-primary); white-space: nowrap;
-    }
-    .trades-table tr:hover { background: rgba(240,185,11,0.02); }
-    .trades-table .buy { color: var(--success); font-weight: 500; }
-    .trades-table .sell { color: var(--danger); font-weight: 500; }
-    .trades-table .pending { color: var(--text-secondary); font-style: italic; }
-    .trades-table .filled { color: var(--success); }
-
-    .scroll-table {
-        max-height: 350px; overflow-y: auto;
-        scrollbar-width: thin; scrollbar-color: var(--border) transparent;
-    }
-    .scroll-table::-webkit-scrollbar { width: 4px; }
-    .scroll-table::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
-
-    .empty-state {
-        text-align: center; padding: 40px; color: var(--text-secondary); font-size: 12px;
-    }
+    .card { background: var(--bg-card); border-radius: 10px; border: 1px solid var(--border); padding: 16px; margin-bottom: 10px; }
+    .card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); margin-bottom: 12px; }
 
     @media (max-width: 768px) {
         .stats-row { grid-template-columns: repeat(2, 1fr); }
-        .chart-wrap { height: 250px; }
-        .trades-table th, .trades-table td { padding: 6px 8px; font-size: 9px; }
+        .data-table { font-size: 10px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="earnings-container">
-
+<div class="yield-container">
     <!-- Bot Selector -->
-    <div class="bot-selector" id="botSelector">
-        <span style="color:var(--text-secondary);font-size:11px;">Loading bots...</span>
+    <div class="tabs" id="botSelector">
+        <span style="color:var(--text-secondary);padding:8px;">Loading grids...</span>
     </div>
 
     <!-- Stats -->
     <div class="stats-row">
-        <div class="stat-box"><div class="label">Total Trades</div><div class="value" id="totalTrades">0</div></div>
-        <div class="stat-box"><div class="label">Hours Active</div><div class="value" id="hoursEarning">0</div></div>
-        <div class="stat-box"><div class="label">24h Trades</div><div class="value" id="trades24h">0</div></div>
-        <div class="stat-box"><div class="label">Total Profit</div><div class="value green" id="profit24h">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Total Invested</div><div class="stat-value" id="statInvested">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Current Value</div><div class="stat-value" id="statValue">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Total PNL</div><div class="stat-value" id="statPnl">$0</div></div>
+        <div class="stat-card"><div class="stat-label">Open Orders</div><div class="stat-value" id="statOrders">0</div></div>
     </div>
 
-    <!-- Grid Levels Chart -->
+    <!-- Open Orders -->
     <div class="card">
-        <div class="card-title">📊 Grid Levels — <span id="chartTitle">Select a bot</span></div>
-        <div class="chart-wrap">
-            <canvas id="gridChart"></canvas>
-        </div>
-        <div class="legend-row">
-            <span><span class="legend-dot green"></span> Buy Zone (Below Price)</span>
-            <span><span class="legend-dot yellow"></span> Current Price</span>
-            <span><span class="legend-dot red"></span> Sell Zone (Above Price)</span>
+        <div class="card-title">📋 Open Orders</div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Price</th><th>Amount</th><th>Total</th><th>Status</th></tr></thead>
+                <tbody id="openOrdersBody"><tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
+            </table>
         </div>
     </div>
 
-    <!-- Trade Log -->
+    <!-- Order History -->
     <div class="card">
-        <div class="card-title">📋 Trade Log</div>
-        <div class="scroll-table">
-            <table class="trades-table">
-                <thead><tr><th>Date/Time</th><th>Grid Level</th><th>Type</th><th>Price</th><th>Transaction ID</th><th>Status</th></tr></thead>
-                <tbody id="tradesBody"><tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">Select a bot to view trades</td></tr></tbody>
+        <div class="card-title">📜 Order History</div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Side</th><th>Status</th></tr></thead>
+                <tbody id="orderHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Trade History -->
+    <div class="card">
+        <div class="card-title">💱 Trade History</div>
+        <div class="table-wrap">
+            <table class="data-table">
+                <thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th></tr></thead>
+                <tbody id="tradeHistoryBody"><tr><td colspan="5" style="text-align:center;color:var(--text-secondary);">—</td></tr></tbody>
             </table>
         </div>
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
     const API = '/api';
-    var masterGrids = [];
-    var currentGrid = null;
-    var gridChart = null;
+    var gridData = [];
+    var currentSymbol = '';
 
     function getToken() { return localStorage.getItem('access_token'); }
     async function apiCall(url) {
@@ -172,219 +116,87 @@
         if (res.status === 401) { window.location.href = '/login/'; return {}; }
         return res.json();
     }
+
     function fc(num) {
-        if (!num || isNaN(num) || parseFloat(num) === 0) return '$0.00';
+        if (!num) return '$0.00';
         var v = parseFloat(num);
-        if (Math.abs(v) < 0.01 && v !== 0) return '$' + v.toFixed(8);
+        if (isNaN(v) || v === 0) return '$0.00';
+        if (Math.abs(v) < 0.01) return '$' + v.toFixed(8);
         return '$' + v.toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:4});
     }
 
-    function getTokenIcon(symbol) {
-        const icons = {
-            'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
-            'ETH': 'https://assets.coingecko.com/coins/images/279/small/ethereum.png',
-            'BNB': 'https://assets.coingecko.com/coins/images/825/small/bnb-icon2.png',
-            'SOL': 'https://assets.coingecko.com/coins/images/4128/small/solana.png',
-            'XRP': 'https://assets.coingecko.com/coins/images/44/small/xrp-symbol-white-128.png',
-            'ADA': 'https://assets.coingecko.com/coins/images/975/small/cardano.png',
-            'DOGE': 'https://assets.coingecko.com/coins/images/5/small/dogecoin.png',
-            'DOT': 'https://assets.coingecko.com/coins/images/12171/small/polkadot.png',
-            'LINK': 'https://assets.coingecko.com/coins/images/877/small/chainlink-new-logo.png',
-            'UNI': 'https://assets.coingecko.com/coins/images/12504/small/uni.jpg',
-            'LTC': 'https://assets.coingecko.com/coins/images/2/small/litecoin.png',
-            'NEAR': 'https://assets.coingecko.com/coins/images/10365/small/near.png',
-            'ATOM': 'https://assets.coingecko.com/coins/images/1481/small/cosmos_hub.png',
-            'ALGO': 'https://assets.coingecko.com/coins/images/4380/small/algorand.png',
-            'VET': 'https://assets.coingecko.com/coins/images/1167/small/VeChain.png',
-            'FTM': 'https://assets.coingecko.com/coins/images/4001/small/fantom.png',
-            'EGLD': 'https://assets.coingecko.com/coins/images/12335/small/elrond-egld.png',
-            'THETA': 'https://assets.coingecko.com/coins/images/2538/small/theta-token.png'
-        };
-        return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
+    function formatTime(ts) {
+        var d = new Date(ts);
+        return d.getHours().toString().padStart(2,'0') + ':' + d.getMinutes().toString().padStart(2,'0') + ':' + d.getSeconds().toString().padStart(2,'0');
     }
 
-    async function loadPerformance() {
+    async function loadGridData() {
         try {
-            var data = await apiCall('/trading/grid_performance/');
-            masterGrids = data.grids || [];
-            var stats = data.stats || {};
+            var data = await apiCall('/trading/master_grid_live/');
+            gridData = data.grids || [];
 
-            // Update stats
-            document.getElementById('totalTrades').textContent = stats.total_trades || 0;
-            document.getElementById('hoursEarning').textContent = stats.active_grids || 0;
-            document.getElementById('trades24h').textContent = stats.monthly_yield_rate ? stats.monthly_yield_rate.toFixed(2) + '%' : '0%';
-            document.getElementById('profit24h').textContent = fc(stats.total_profit || 0);
-
-            // Render bot selector
-            var container = document.getElementById('botSelector');
-            if (masterGrids.length === 0) {
-                container.innerHTML = '<span style="color:var(--text-secondary);font-size:11px;">No active master grids</span>';
-                document.getElementById('tradesBody').innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No master grids active. Grids activate when coins hit Fadakka alpha levels.</td></tr>';
-                document.getElementById('chartTitle').textContent = 'Waiting for grid activation';
+            // Bot selector
+            var sel = document.getElementById('botSelector');
+            if (gridData.length === 0) {
+                sel.innerHTML = '<span style="color:var(--text-secondary);padding:8px;">No active Master Grids</span>';
                 return;
             }
+            sel.innerHTML = gridData.map(function(g, i) {
+                return '<button class="tab-btn' + (i === 0 ? ' active' : '') + '" onclick="selectGrid(\'' + g.symbol + '\')">' + g.symbol + ' 🤖</button>';
+            }).join('');
 
-            var html = '';
-            for (var i = 0; i < masterGrids.length; i++) {
-                var g = masterGrids[i];
-                var active = i === 0 ? ' active' : '';
-                html += '<button class="bot-chip' + active + '" data-idx="' + i + '">' +
-                    '<img src="' + getTokenIcon(g.symbol) + '" style="width:16px;height:16px;border-radius:50%;vertical-align:middle;margin-right:4px;">' +
-                    g.symbol + ' 🤖 ' + (g.profit_percent >= 0 ? '+' : '') + g.profit_percent.toFixed(2) + '%' +
-                    '</button>';
+            if (!currentSymbol && gridData.length > 0) {
+                selectGrid(gridData[0].symbol);
+            } else {
+                selectGrid(currentSymbol);
             }
-            container.innerHTML = html;
-
-            document.querySelectorAll('.bot-chip').forEach(function(chip) {
-                chip.addEventListener('click', function() {
-                    document.querySelectorAll('.bot-chip').forEach(function(c) { c.classList.remove('active'); });
-                    this.classList.add('active');
-                    selectGrid(parseInt(this.getAttribute('data-idx')));
-                });
-            });
-
-            selectGrid(0);
-        } catch(e) {
-            console.error('Error loading performance:', e);
-        }
+        } catch(e) { console.error(e); }
     }
 
-    function selectGrid(idx) {
-        currentGrid = masterGrids[idx];
-        if (!currentGrid) return;
-        renderGridChart();
-        renderTrades();
-    }
+    function selectGrid(symbol) {
+        currentSymbol = symbol;
+        var grid = gridData.find(function(g) { return g.symbol === symbol; });
+        if (!grid) return;
 
-    async function renderGridChart() {
-        var ctx = document.getElementById('gridChart').getContext('2d');
-        if (gridChart) gridChart.destroy();
-
-        var lower = currentGrid.lower_price;
-        var upper = currentGrid.upper_price;
-        var grids = currentGrid.grids || 100;
-        var step = (upper - lower) / grids;
-        var currentPrice = currentGrid.current_price;
-
-        document.getElementById('chartTitle').textContent = currentGrid.symbol + ' Master Grid — $' + currentPrice.toFixed(6);
-
-        // Build grid lines
-        var gridLines = [];
-        for (var i = 0; i <= grids; i++) {
-            var price = lower + (step * i);
-            var color = price < currentPrice ? 'rgba(14,203,129,0.5)' : price > currentPrice ? 'rgba(246,70,93,0.5)' : 'rgba(240,185,11,1)';
-            gridLines.push({ price: price, color: color });
-        }
-
-        // Fetch real price data
-        var labels = [];
-        var priceData = [];
-        try {
-            var coinId = currentGrid.symbol.toLowerCase();
-            var url = 'https://api.coingecko.com/api/v3/coins/' +
-                ({'BTC':'bitcoin','ETH':'ethereum','BNB':'binancecoin','SOL':'solana','XRP':'ripple','ADA':'cardano','DOGE':'dogecoin','DOT':'polkadot','LINK':'chainlink','UNI':'uniswap','LTC':'litecoin','NEAR':'near','ATOM':'cosmos','PEPE':'pepe','AVAX':'avalanche-2','ALGO':'algorand','VET':'vechain','FTM':'fantom','THETA':'theta-token','EGLD':'elrond-erd-2'}[currentGrid.symbol] || currentGrid.symbol.toLowerCase()) +
-                '/market_chart?vs_currency=usd&days=2';
-            var response = await fetch(url);
-            var data = await response.json();
-            if (data && data.prices) {
-                for (var i = 0; i < data.prices.length; i++) {
-                    var date = new Date(data.prices[i][0]);
-                    labels.push(date.getHours().toString().padStart(2,'0') + ':' + date.getMinutes().toString().padStart(2,'0'));
-                    priceData.push(data.prices[i][1]);
-                }
-            }
-        } catch(e) {
-            var now = new Date();
-            for (var h = 48; h >= 0; h--) {
-                var d = new Date(now.getTime() - h * 3600000);
-                labels.push(d.getHours() + ':00');
-                priceData.push(currentPrice * (1 + (Math.random() - 0.5) * 0.03));
-            }
-        }
-
-        gridChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: labels,
-                datasets: [{
-                    label: currentGrid.symbol + ' Price',
-                    data: priceData,
-                    borderColor: '#F0B90B',
-                    backgroundColor: 'rgba(240,185,11,0.05)',
-                    borderWidth: 2, fill: true, tension: 0.3, pointRadius: 0, order: 2
-                }]
-            },
-            options: {
-                responsive: true, maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
-                plugins: { legend: { labels: { color: '#848E9C', font: { size: 10 } } } },
-                scales: {
-                    x: { ticks: { color: '#848E9C', font: { size: 8 }, maxTicksLimit: 6 }, grid: { display: false } },
-                    y: { ticks: { color: '#848E9C', font: { size: 9 }, callback: function(v) { return '$' + v.toFixed(6); } }, grid: { color: 'rgba(255,255,255,0.04)' } }
-                }
-            },
-            plugins: [{
-                id: 'gridLines',
-                beforeDraw: function(chart) {
-                    var ctx = chart.ctx, yAxis = chart.scales.y, xAxis = chart.scales.x;
-                    ctx.save();
-                    for (var i = 0; i < gridLines.length; i++) {
-                        var y = yAxis.getPixelForValue(gridLines[i].price);
-                        if (y < yAxis.top || y > yAxis.bottom) continue;
-                        ctx.beginPath();
-                        ctx.strokeStyle = gridLines[i].color;
-                        ctx.lineWidth = i % 10 === 0 ? 1.5 : 0.4;
-                        if (i % 10 !== 0) ctx.setLineDash([3, 5]); else ctx.setLineDash([]);
-                        ctx.moveTo(xAxis.left, y); ctx.lineTo(xAxis.right, y); ctx.stroke();
-                        if (i % 10 === 0) {
-                            ctx.fillStyle = gridLines[i].color.replace('0.5','1');
-                            ctx.font = 'bold 9px monospace';
-                            var text = '$' + gridLines[i].price.toFixed(6);
-                            ctx.fillText(text, xAxis.right - ctx.measureText(text).width - 6, y - 3);
-                        }
-                    }
-                    ctx.restore();
-                }
-            }]
+        // Update tabs
+        document.querySelectorAll('.tab-btn').forEach(function(b) {
+            b.classList.toggle('active', b.textContent.includes(symbol));
         });
-    }
 
-    function renderTrades() {
-        var tbody = document.getElementById('tradesBody');
-        var trades = currentGrid.last_trades || [];
+        // Stats
+        document.getElementById('statInvested').textContent = fc(grid.invested);
+        var currentValue = grid.invested + grid.total_pnl;
+        document.getElementById('statValue').textContent = fc(currentValue);
+        var pnlEl = document.getElementById('statPnl');
+        pnlEl.textContent = (grid.total_pnl >= 0 ? '+' : '') + fc(grid.total_pnl);
+        pnlEl.className = 'stat-value ' + (grid.total_pnl >= 0 ? 'green' : 'red');
+        document.getElementById('statOrders').textContent = grid.open_orders.length;
 
-        if (trades.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;color:var(--text-secondary);">No trades yet — grid waiting for price to hit levels</td></tr>';
-            return;
+        // Open Orders
+        var ooBody = document.getElementById('openOrdersBody');
+        if (grid.open_orders.length === 0) {
+            ooBody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">No open orders</td></tr>';
+        } else {
+            ooBody.innerHTML = grid.open_orders.map(function(o) {
+                return '<tr><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td>' + fc(o.total) + '</td><td><span class="new">● Open</span></td></tr>';
+            }).join('');
         }
 
-        var html = '';
-        for (var i = 0; i < trades.length; i++) {
-            var t = trades[i];
-            var date = new Date(t.time);
-            var timeStr = date.getDate().toString().padStart(2,'0') + '/' +
-                         (date.getMonth()+1).toString().padStart(2,'0') + '/' +
-                         date.getFullYear().toString().slice(2) + ' ' +
-                         date.getHours().toString().padStart(2,'0') + ':' +
-                         date.getMinutes().toString().padStart(2,'0');
-            var isBuy = !t.isBuyer;
-            var type = isBuy ? 'Buy' : 'Sell';
-            var typeClass = isBuy ? 'buy' : 'sell';
-            var txId = (t.orderId || '') + '...';
+        // Order History
+        var ohBody = document.getElementById('orderHistoryBody');
+        ohBody.innerHTML = grid.order_history.map(function(o) {
+            var statusClass = o.status === 'FILLED' ? 'filled' : o.status === 'NEW' ? 'new' : 'canceled';
+            return '<tr><td>' + formatTime(o.time) + '</td><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td class="' + (o.side === 'BUY' ? 'buy' : 'sell') + '">' + o.side + '</td><td><span class="' + statusClass + '">' + o.status + '</span></td></tr>';
+        }).join('');
 
-            html += '<tr>' +
-                '<td>' + timeStr + '</td>' +
-                '<td>—</td>' +
-                '<td class="' + typeClass + '">' + type + '</td>' +
-                '<td>' + fc(t.price) + '</td>' +
-                '<td style="font-family:monospace;font-size:10px;">' + txId + '</td>' +
-                '<td class="filled">Filled</td>' +
-                '</tr>';
-        }
-        tbody.innerHTML = html;
+        // Trade History
+        var thBody = document.getElementById('tradeHistoryBody');
+        thBody.innerHTML = grid.recent_trades.map(function(t) {
+            return '<tr><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td>' + fc(t.total) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td></tr>';
+        }).join('');
     }
 
-    loadPerformance();
-    setInterval(loadPerformance, 60000);
+    loadGridData();
+    setInterval(loadGridData, 15000);  // Refresh every 15 seconds
 </script>
 {% endblock %}

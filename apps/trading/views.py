@@ -1464,6 +1464,113 @@ class TradingViewSet(viewsets.ViewSet):
             }
         })
 
+    @action(detail=False, methods=['get'])
+    def master_grid_live(self, request):
+        """Get live Binance data for active Master Grids"""
+        from apps.trading.models import MasterGridBot
+        from apps.wallets.services.binance_service import BinanceService
+        from decimal import Decimal
+
+        bs = BinanceService()
+        grids = MasterGridBot.objects.filter(status='ACTIVE').select_related('token')
+
+        data = []
+        for grid in grids:
+            symbol = grid.token.symbol
+            pair = bs._get_binance_symbol(symbol)
+            if not pair:
+                continue
+
+            base_asset = pair.replace('USDT', '')
+
+            # Open orders
+            try:
+                open_orders = bs.client.get_open_orders(symbol=pair)
+            except:
+                open_orders = []
+
+            # All orders
+            try:
+                all_orders = bs.client.get_all_orders(symbol=pair, limit=50)
+            except:
+                all_orders = []
+
+            # Trade history
+            try:
+                trades = bs.client.get_my_trades(symbol=pair, limit=50)
+            except:
+                trades = []
+
+            # Current holding
+            holding = Decimal('0')
+            try:
+                account = bs.client.get_account()
+                for b in account['balances']:
+                    if b['asset'] == base_asset:
+                        holding = Decimal(b['free'])
+                        break
+            except:
+                pass
+
+            current_price = grid.token.current_price
+            holding_value = holding * current_price
+
+            # Calculate PNL
+            total_bought = sum(
+                float(t['qty']) * float(t['price'])
+                for t in trades if not t['isBuyer']
+            )
+            total_sold = sum(
+                float(t['qty']) * float(t['price'])
+                for t in trades if t['isBuyer']
+            )
+            realized_pnl = total_sold - total_bought
+            unrealized_pnl = float(holding_value) - (total_bought - total_sold)
+
+            data.append({
+                'symbol': symbol,
+                'pair': pair,
+                'invested': float(grid.total_amount),
+                'current_price': float(current_price),
+                'entry_price': float(grid.price_at_creation),
+                'grids': grid.grids,
+                'level': grid.metadata.get('fadakka_level', ''),
+                'exit_price': grid.metadata.get('exit_price', 0),
+                'holding': float(holding),
+                'holding_value': float(holding_value),
+                'realized_pnl': round(realized_pnl, 2),
+                'unrealized_pnl': round(unrealized_pnl, 2),
+                'total_pnl': round(realized_pnl + unrealized_pnl, 2),
+                'open_orders': [{
+                    'order_id': str(o['orderId']),
+                    'price': float(o['price']),
+                    'quantity': float(o['origQty']),
+                    'total': float(o['price']) * float(o['origQty']),
+                    'side': o['side'],
+                    'status': o['status'],
+                    'time': o.get('time', 0),
+                } for o in open_orders],
+                'order_history': [{
+                    'order_id': str(o['orderId']),
+                    'price': float(o['price']),
+                    'quantity': float(o['origQty']),
+                    'side': o['side'],
+                    'status': o['status'],
+                    'time': o.get('time', 0),
+                } for o in all_orders[:20]],
+                'recent_trades': [{
+                    'id': str(t['id']),
+                    'price': float(t['price']),
+                    'quantity': float(t['qty']),
+                    'total': float(t['price']) * float(t['qty']),
+                    'side': 'BUY' if not t['isBuyer'] else 'SELL',
+                    'time': t['time'],
+                } for t in trades[:20]],
+                'grid_config': grid.metadata.get('grid_config', {}),
+            })
+
+        return Response({'grids': data, 'count': len(data)})
+
 
 
 
