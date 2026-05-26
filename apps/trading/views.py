@@ -1512,67 +1512,67 @@ class TradingViewSet(viewsets.ViewSet):
             except:
                 pass
 
-                current_price = grid.token.current_price
-                holding_value = holding * current_price
+            current_price = grid.token.current_price
+            holding_value = holding * current_price
 
-                # Calculate PNL from actual trades
-                total_bought = sum(
-                    float(t['qty']) * float(t['price'])
-                    for t in trades if not t['isBuyer']
-                )
-                total_sold = sum(
-                    float(t['qty']) * float(t['price'])
-                    for t in trades if t['isBuyer']
-                )
+            # Calculate PNL from actual trades
+            total_bought = sum(
+                float(t['qty']) * float(t['price'])
+                for t in trades if not t['isBuyer']
+            )
+            total_sold = sum(
+                float(t['qty']) * float(t['price'])
+                for t in trades if t['isBuyer']
+            )
 
-                realized_pnl = total_sold - total_bought
-                cost_of_holdings = total_bought - total_sold
-                unrealized_pnl = float(holding_value) - cost_of_holdings if cost_of_holdings > 0 else 0
-                total_pnl = realized_pnl + unrealized_pnl
+            realized_pnl = total_sold - total_bought
+            cost_of_holdings = total_bought - total_sold
+            unrealized_pnl = float(holding_value) - cost_of_holdings if cost_of_holdings > 0 else 0
+            total_pnl = realized_pnl + unrealized_pnl
 
-                data.append({
-                    'symbol': symbol,
-                    'pair': pair,
-                    'invested': float(grid.total_amount),
-                    'current_price': float(current_price),
-                    'entry_price': float(grid.price_at_creation),
-                    'grids': grid.grids,
-                    'level': grid.metadata.get('fadakka_level', ''),
-                    'exit_price': grid.metadata.get('exit_price', 0),
-                    'holding': float(holding),
-                    'holding_value': float(holding_value),
-                    'realized_pnl': round(realized_pnl, 2),
-                    'unrealized_pnl': round(unrealized_pnl, 2),
-                    'total_pnl': round(total_pnl, 2),
-                    'open_orders': [{
-                        'order_id': str(o['orderId']),
-                        'price': float(o['price']),
-                        'quantity': float(o['origQty']),
-                        'total': float(o['price']) * float(o['origQty']),
-                        'side': o['side'],
-                        'status': o['status'],
-                        'time': o.get('time', 0),
-                    } for o in open_orders],
-                    'order_history': [{
-                        'order_id': str(o['orderId']),
-                        'price': float(o['price']),
-                        'quantity': float(o['origQty']),
-                        'side': o['side'],
-                        'status': o['status'],
-                        'time': o.get('time', 0),
-                    } for o in all_orders[:20]],
-                    'recent_trades': [{
-                        'id': str(t['id']),
-                        'price': float(t['price']),
-                        'quantity': float(t['qty']),
-                        'total': float(t['price']) * float(t['qty']),
-                        'side': 'BUY' if not t['isBuyer'] else 'SELL',
-                        'time': t['time'],
-                    } for t in trades[:20]],
-                    'grid_config': grid.metadata.get('grid_config', {}),
-                })
+            data.append({
+                'symbol': symbol,
+                'pair': pair,
+                'invested': float(grid.total_amount),
+                'current_price': float(current_price),
+                'entry_price': float(grid.price_at_creation),
+                'grids': grid.grids,
+                'level': grid.metadata.get('fadakka_level', ''),
+                'exit_price': grid.metadata.get('exit_price', 0),
+                'holding': float(holding),
+                'holding_value': float(holding_value),
+                'realized_pnl': round(realized_pnl, 2),
+                'unrealized_pnl': round(unrealized_pnl, 2),
+                'total_pnl': round(total_pnl, 2),
+                'open_orders': [{
+                    'order_id': str(o['orderId']),
+                    'price': float(o['price']),
+                    'quantity': float(o['origQty']),
+                    'total': float(o['price']) * float(o['origQty']),
+                    'side': o['side'],
+                    'status': o['status'],
+                    'time': o.get('time', 0),
+                } for o in open_orders],
+                'order_history': [{
+                    'order_id': str(o['orderId']),
+                    'price': float(o['price']),
+                    'quantity': float(o['origQty']),
+                    'side': o['side'],
+                    'status': o['status'],
+                    'time': o.get('time', 0),
+                } for o in all_orders[:20]],
+                'recent_trades': [{
+                    'id': str(t['id']),
+                    'price': float(t['price']),
+                    'quantity': float(t['qty']),
+                    'total': float(t['price']) * float(t['qty']),
+                    'side': 'BUY' if not t['isBuyer'] else 'SELL',
+                    'time': t['time'],
+                } for t in trades[:20]],
+                'grid_config': grid.metadata.get('grid_config', {}),
+            })
 
-            return Response({'grids': data, 'count': len(data)})
+        return Response({'grids': data, 'count': len(data)})
 
 
 
