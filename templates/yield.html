@@ -205,13 +205,28 @@
         var content = document.getElementById('tabContent');
 
         if (tab === 'open') {
-            stats.innerHTML = grid.open_orders.length + ' open orders';
-            content.innerHTML = grid.open_orders.length === 0
+            var buys = grid.open_orders.filter(function(o){ return o.side === 'BUY'; }).sort(function(a,b){ return a.price - b.price; });
+            var sells = grid.open_orders.filter(function(o){ return o.side === 'SELL'; }).sort(function(a,b){ return a.price - b.price; });
+            var maxRows = Math.max(buys.length, sells.length);
+
+            stats.innerHTML = buys.length + ' buys | ' + sells.length + ' sells';
+
+            var rows = '';
+            for (var i = 0; i < maxRows; i++) {
+                var buy = buys[i];
+                var sell = sells[i];
+                rows += '<tr>' +
+                    '<td style="color:var(--success);">' + (buy ? 'Buy ' + buy.quantity.toFixed(0) + ' @ ' + fc(buy.price) : '—') + '</td>' +
+                    '<td style="color:var(--text-secondary);">→</td>' +
+                    '<td style="color:var(--danger);">' + (sell ? 'Sell ' + sell.quantity.toFixed(0) + ' @ ' + fc(sell.price) : '—') + '</td>' +
+                    '<td style="color:var(--primary);">' + (buy && sell ? '+' + fc(sell.price - buy.price) : '—') + '</td>' +
+                '</tr>';
+            }
+
+            content.innerHTML = rows.length === 0
                 ? '<div style="text-align:center;color:var(--text-secondary);padding:20px;">No open orders</div>'
-                : '<table class="data-table"><thead><tr><th>Price</th><th>Amount</th><th>Total</th></tr></thead><tbody>' +
-                    grid.open_orders.map(function(o) {
-                        return '<tr><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td>' + fc(o.total) + '</td></tr>';
-                    }).join('') + '</tbody></table>';
+                : '<table class="data-table"><thead><tr><th>Buy Order</th><th></th><th>Sell Order</th><th>Spread</th></tr></thead><tbody>' + rows + '</tbody></table>';
+
         } else if (tab === 'history') {
             var filled = grid.order_history.filter(function(o){ return o.status === 'FILLED'; }).length;
             var cancelled = grid.order_history.filter(function(o){ return o.status !== 'FILLED' && o.status !== 'NEW'; }).length;
@@ -221,9 +236,9 @@
                     var sc = o.status === 'FILLED' ? 'filled' : o.status === 'NEW' ? 'new' : 'canceled';
                     return '<tr><td>' + formatTime(o.time) + '</td><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td class="' + (o.side === 'BUY' ? 'buy' : 'sell') + '">' + o.side + '</td><td><span class="' + sc + '">' + o.status + '</span></td></tr>';
                 }).join('') + '</tbody></table>';
+
         } else if (tab === 'trades') {
             var trades24h = grid.recent_trades.filter(function(t){ return t.time > Date.now() - 86400000; });
-            var profit24h = trades24h.reduce(function(s, t){ return s + (t.side === 'SELL' ? t.total : -t.total); }, 0);
             var totalMatchedPnl = grid.recent_trades.reduce(function(s, t){ return s + (t.matched_pnl || 0); }, 0);
             stats.innerHTML = grid.recent_trades.length + ' trades | 24h: ' + trades24h.length + ' trades | Matched PNL: ' + fc(totalMatchedPnl);
             content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th><th>Matched PNL</th></tr></thead><tbody>' +
