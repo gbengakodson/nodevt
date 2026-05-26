@@ -676,11 +676,13 @@
     setInterval(loadFeed, 15000);
 
     // Init
-    loadStats();
-    loadPublicGridData();
-    loadDeposits();
-    loadChat();
-    setInterval(function() { loadStats(); loadPublicGridData(); }, 60000);
-    setInterval(loadChat, 15000);
+    document.addEventListener('DOMContentLoaded', function() {
+        loadStats();
+        loadPublicGridData();
+        loadDeposits();
+        loadFeed();
+        setInterval(function() { loadStats(); loadPublicGridData(); }, 60000);
+        setInterval(loadFeed, 15000);
+    });
 </script>
 {% endblock %}
