@@ -1497,7 +1497,9 @@ class TradingViewSet(viewsets.ViewSet):
 
             # Trade history
             try:
-                trades = bs.client.get_my_trades(symbol=pair, limit=50)
+                all_trades = bs.client.get_my_trades(symbol=pair, limit=50)
+                grid_start = int(grid.created_at.timestamp() * 1000)
+                trades = [t for t in all_trades if t['time'] >= grid_start]
             except:
                 trades = []
 
