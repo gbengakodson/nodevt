@@ -1537,9 +1537,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'exit_price': grid.metadata.get('exit_price', 0),
                 'holding': float(holding),
                 'holding_value': float(holding_value),
-                'realized_pnl': round(realized_pnl, 2),
-                'unrealized_pnl': round(unrealized_pnl, 2),
-                'total_pnl': round(realized_pnl + unrealized_pnl, 2),
+                'total_pnl': round(float(holding_value) + total_sold - total_bought, 2),
                 'open_orders': [{
                     'order_id': str(o['orderId']),
                     'price': float(o['price']),
