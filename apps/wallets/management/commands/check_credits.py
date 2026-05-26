@@ -43,7 +43,7 @@ class Command(BaseCommand):
         # Step 4: Sweep to central wallet
         self.stdout.write("Step 4: Sweeping to central wallet...")
         from django.core.management import call_command
-        call_command('sweep_to_central')
+        #call_command('sweep_to_central')
 
         # Step 5: Pension auto-reinvest
         self.stdout.write("Step 5: Checking pension reinvestments...")
