@@ -1525,6 +1525,8 @@ class TradingViewSet(viewsets.ViewSet):
                 for t in trades if t['isBuyer']
             )
             total_pnl = float(holding_value) + total_sold - total_bought
+            realized_pnl = total_sold - (total_bought - cost_remaining)
+            unrealized_pnl = float(holding_value) - cost_remaining
 
             data.append({
                 'symbol': symbol,
@@ -1538,6 +1540,8 @@ class TradingViewSet(viewsets.ViewSet):
                 'holding': float(holding),
                 'holding_value': float(holding_value),
                 'total_pnl': round(float(holding_value) + total_sold - total_bought, 2),
+                'realized_pnl': round(realized_pnl, 2),
+                'unrealized_pnl': round(unrealized_pnl, 2),
                 'open_orders': [{
                     'order_id': str(o['orderId']),
                     'price': float(o['price']),
