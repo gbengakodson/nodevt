@@ -214,20 +214,23 @@
                     }).join('') + '</tbody></table>';
         } else if (tab === 'history') {
             var filled = grid.order_history.filter(function(o){ return o.status === 'FILLED'; }).length;
-            var cancelled = grid.order_history.filter(function(o){ return o.status !== 'FILLED'; }).length;
+            var cancelled = grid.order_history.filter(function(o){ return o.status !== 'FILLED' && o.status !== 'NEW'; }).length;
             stats.innerHTML = grid.order_history.length + ' orders | Filled: ' + filled + ' | Cancelled: ' + cancelled;
             content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Side</th><th>Status</th></tr></thead><tbody>' +
                 grid.order_history.map(function(o) {
-                    var sc = o.status === 'FILLED' ? 'filled' : 'canceled';
+                    var sc = o.status === 'FILLED' ? 'filled' : o.status === 'NEW' ? 'new' : 'canceled';
                     return '<tr><td>' + formatTime(o.time) + '</td><td>' + fc(o.price) + '</td><td>' + o.quantity.toFixed(2) + '</td><td class="' + (o.side === 'BUY' ? 'buy' : 'sell') + '">' + o.side + '</td><td><span class="' + sc + '">' + o.status + '</span></td></tr>';
                 }).join('') + '</tbody></table>';
         } else if (tab === 'trades') {
             var trades24h = grid.recent_trades.filter(function(t){ return t.time > Date.now() - 86400000; });
             var profit24h = trades24h.reduce(function(s, t){ return s + (t.side === 'SELL' ? t.total : -t.total); }, 0);
-            stats.innerHTML = grid.recent_trades.length + ' trades | 24h: ' + trades24h.length + ' trades | 24h PNL: ' + fc(profit24h);
-            content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th></tr></thead><tbody>' +
+            var totalMatchedPnl = grid.recent_trades.reduce(function(s, t){ return s + (t.matched_pnl || 0); }, 0);
+            stats.innerHTML = grid.recent_trades.length + ' trades | 24h: ' + trades24h.length + ' trades | Matched PNL: ' + fc(totalMatchedPnl);
+            content.innerHTML = '<table class="data-table"><thead><tr><th>Time</th><th>Price</th><th>Amount</th><th>Total</th><th>Side</th><th>Matched PNL</th></tr></thead><tbody>' +
                 grid.recent_trades.map(function(t) {
-                    return '<tr><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td>' + fc(t.total) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td></tr>';
+                    var pnlClass = t.matched_pnl >= 0 ? 'buy' : 'sell';
+                    var pnlSign = t.matched_pnl >= 0 ? '+' : '';
+                    return '<tr><td>' + formatTime(t.time) + '</td><td>' + fc(t.price) + '</td><td>' + t.quantity.toFixed(2) + '</td><td>' + fc(t.total) + '</td><td class="' + (t.side === 'BUY' ? 'buy' : 'sell') + '">' + t.side + '</td><td class="' + pnlClass + '">' + pnlSign + fc(t.matched_pnl) + '</td></tr>';
                 }).join('') + '</tbody></table>';
         }
     }
