@@ -1524,8 +1524,7 @@ class TradingViewSet(viewsets.ViewSet):
                 float(t['qty']) * float(t['price'])
                 for t in trades if t['isBuyer']
             )
-            realized_pnl = total_sold - total_bought
-            unrealized_pnl = float(holding_value) - (total_bought - total_sold)
+            total_pnl = float(holding_value) + total_sold - total_bought
 
             data.append({
                 'symbol': symbol,
