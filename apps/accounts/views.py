@@ -1,13 +1,14 @@
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from .models import User
+from .models import User, ExchangeAPIConnection
 from django.contrib.auth import authenticate
 from .serializers import RegisterSerializer, LoginSerializer, UserSerializer
 from apps.accounts.services.otp_service import OTPService
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
+
 
 import logging
 
@@ -211,4 +212,89 @@ def admin_login_as_user(request):
         'username': user.username
     })
 
+
+
+
+class ExchangeConnectionViewSet(viewsets.ViewSet):
+    permission_classes = [IsAuthenticated]
+
+    @action(detail=False, methods=['get'])
+    def list_connections(self, request):
+        """List user's exchange connections"""
+        connections = ExchangeAPIConnection.objects.filter(user=request.user)
+        data = [{
+            'id': str(c.id),
+            'exchange': c.exchange,
+            'label': c.label,
+            'is_active': c.is_active,
+            'min_capital': float(c.min_capital),
+            'fee_per_trade': float(c.fee_per_trade),
+            'created_at': c.created_at.isoformat(),
+        } for c in connections]
+        return Response(data)
+
+    @action(detail=False, methods=['post'])
+    def connect_exchange(self, request):
+        """Connect a new exchange API"""
+        exchange = request.data.get('exchange')
+        api_key = request.data.get('api_key')
+        api_secret = request.data.get('api_secret')
+        label = request.data.get('label', '')
+        min_capital = request.data.get('min_capital', 1000)
+
+        if not exchange or not api_key or not api_secret:
+            return Response({'error': 'Exchange, API key, and secret required'}, status=400)
+
+        if exchange not in dict(ExchangeAPIConnection.EXCHANGE_CHOICES):
+            return Response({'error': 'Invalid exchange'}, status=400)
+
+        conn = ExchangeAPIConnection.objects.create(
+            user=request.user,
+            exchange=exchange,
+            label=label,
+            min_capital=min_capital,
+        )
+        conn.set_api_key(api_key)
+        conn.set_api_secret(api_secret)
+        conn.save()
+
+        # Test connection
+        test = conn.test_connection()
+
+        return Response({
+            'success': test['success'],
+            'id': str(conn.id),
+            'message': 'Connected' if test['success'] else f"Stored but test failed: {test.get('error', '')}",
+        })
+
+    @action(detail=False, methods=['post'])
+    def disconnect_exchange(self, request):
+        """Disconnect an exchange"""
+        conn_id = request.data.get('connection_id')
+        try:
+            conn = ExchangeAPIConnection.objects.get(id=conn_id, user=request.user)
+            conn.is_active = False
+            conn.save()
+            return Response({'success': True})
+        except ExchangeAPIConnection.DoesNotExist:
+            return Response({'error': 'Connection not found'}, status=404)
+
+    @action(detail=False, methods=['get'])
+    def exchange_balance(self, request):
+        """Get balance from connected exchange"""
+        conn_id = request.GET.get('connection_id')
+        try:
+            conn = ExchangeAPIConnection.objects.get(id=conn_id, user=request.user, is_active=True)
+            client = conn.get_client()
+            if conn.exchange == 'BINANCE' and client:
+                account = client.get_account()
+                balances = {}
+                for b in account['balances']:
+                    free = float(b['free'])
+                    if free > 0:
+                        balances[b['asset']] = free
+                return Response({'exchange': conn.exchange, 'balances': balances})
+            return Response({'error': 'Exchange not supported yet'}, status=400)
+        except ExchangeAPIConnection.DoesNotExist:
+            return Response({'error': 'Connection not found'}, status=404)
 

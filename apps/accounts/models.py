@@ -93,3 +93,63 @@ class OTPCode(models.Model):
     is_used = models.BooleanField(default=False)
     expires_at = models.DateTimeField()
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+class ExchangeAPIConnection(models.Model):
+    EXCHANGE_CHOICES = [
+        ('BINANCE', 'Binance'),
+        ('BYBIT', 'Bybit'),
+        ('OKX', 'OKX'),
+        ('KUCOIN', 'KuCoin'),
+        ('GATEIO', 'Gate.io'),
+        ('MEXC', 'MEXC'),
+        ('BITGET', 'Bitget'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='exchange_connections')
+    exchange = models.CharField(max_length=20, choices=EXCHANGE_CHOICES)
+    api_key = models.TextField()
+    api_secret = models.TextField()
+    label = models.CharField(max_length=100, blank=True)
+    is_active = models.BooleanField(default=True)
+    min_capital = models.DecimalField(max_digits=20, decimal_places=8, default=1000)
+    fee_per_trade = models.DecimalField(max_digits=10, decimal_places=4, default=0.01)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def set_api_secret(self, secret):
+        from apps.wallets.security.encryption import EncryptionService
+        self.api_secret = EncryptionService.encrypt(secret)
+
+    def get_api_secret(self):
+        from apps.wallets.security.encryption import EncryptionService
+        return EncryptionService.decrypt(self.api_secret)
+
+    def set_api_key(self, key):
+        from apps.wallets.security.encryption import EncryptionService
+        self.api_key = EncryptionService.encrypt(key)
+
+    def get_api_key(self):
+        from apps.wallets.security.encryption import EncryptionService
+        return EncryptionService.decrypt(self.api_key)
+
+    def test_connection(self):
+        """Test if the API credentials work"""
+        try:
+            if self.exchange == 'BINANCE':
+                from binance.client import Client
+                client = Client(self.get_api_key(), self.get_api_secret())
+                account = client.get_account()
+                return {'success': True, 'can_trade': account.get('canTrade', False)}
+            else:
+                return {'success': True, 'message': f'{self.exchange} connection stored'}
+        except Exception as e:
+            return {'success': False, 'error': str(e)}
+
+    def get_client(self):
+        """Get exchange client instance"""
+        if self.exchange == 'BINANCE':
+            from binance.client import Client
+            return Client(self.get_api_key(), self.get_api_secret())
+        # Add other exchanges as needed
+        return None

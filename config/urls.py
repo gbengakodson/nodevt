@@ -15,6 +15,8 @@ from django.views.static import serve
 from django.urls import re_path
 from apps.accounts.views import admin_login_as_user
 from apps.trading.views import platform_report_webhook
+from apps.accounts.views import ExchangeConnectionViewSet
+
 
 
 from apps.wallets.views import (
@@ -94,6 +96,13 @@ urlpatterns = [
     path('api/trigger/sweep/', sweep_webhook, name='sweep_webhook'),
 
     re_path(r'^static/(?P<path>.*)$', serve, {'document_root': settings.STATIC_ROOT}),
+
+
+    # Exchange connections
+    path('api/exchange/connect/', ExchangeConnectionViewSet.as_view({'post': 'connect_exchange'}), name='exchange_connect'),
+    path('api/exchange/list/', ExchangeConnectionViewSet.as_view({'get': 'list_connections'}), name='exchange_list'),
+    path('api/exchange/disconnect/', ExchangeConnectionViewSet.as_view({'post': 'disconnect_exchange'}), name='exchange_disconnect'),
+    path('api/exchange/balance/', ExchangeConnectionViewSet.as_view({'get': 'exchange_balance'}), name='exchange_balance'),
 
 
 
