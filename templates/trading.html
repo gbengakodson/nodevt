@@ -1492,12 +1492,12 @@
         });
     });
 
-    document.querySelectorAll('.order-tab').forEach(btn => {
+   document.querySelectorAll('.order-tab').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tab = this.getAttribute('data-tab');
-            document.getElementById('marketPanel').style.display = tab === 'market' ? 'block' : 'none';
+            document.getElementById('exchangePanel').style.display = tab === 'market' ? 'block' : 'none';
             document.getElementById('gridPanel').style.display = tab === 'grid' ? 'block' : 'none';
             if (tab === 'grid') updateGridRange();
         });
