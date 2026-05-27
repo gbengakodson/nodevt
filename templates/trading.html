@@ -619,22 +619,17 @@
 
         <div class="order-card">
             <div class="order-tabs">
-                <button class="order-tab" data-tab="market">External Exchange</button>
-                <button class="order-tab active" data-tab="grid">NODE Position Tracker</button>
+                <button class="order-tab" data-tab="market">🔗 External Exchange</button>
+                <button class="order-tab active" data-tab="grid">🤖 NODE Position Tracker</button>
             </div>
 
             <!-- External Exchange Connection Panel -->
-            <div class="card" id="exchangePanel" style="margin-top:10px;">
-                <div class="card-title" style="display:flex;justify-content:space-between;align-items:center;">
-                    <span>🔗 External Exchange</span>
-                    <span style="font-size:10px;color:var(--text-secondary);">Connect your exchange account</span>
-                </div>
-
+            <div id="exchangePanel" class="order-form" style="display: none;">
                 <!-- Connection Status -->
                 <div id="exchangeStatus" style="margin-bottom:12px;">
                     <div style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(14,203,129,0.05);border:1px solid rgba(14,203,129,0.2);border-radius:8px;">
-                        <div style="width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite;"></div>
-                        <span style="font-size:11px;color:var(--success);">No exchange connected</span>
+                        <div style="width:8px;height:8px;border-radius:50%;background:var(--text-secondary);"></div>
+                        <span style="font-size:11px;color:var(--text-secondary);">No exchange connected</span>
                     </div>
                 </div>
 
@@ -644,40 +639,38 @@
                         <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">Select Exchange</label>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;" id="exchangeSelector">
                             <button class="ex-btn active" data-ex="BINANCE" onclick="selectExchange('BINANCE')">
-                                <span style="font-size:18px;">🔶</span> Binance
+                                <span style="font-size:16px;">🔶</span> Binance
                             </button>
                             <button class="ex-btn" data-ex="BYBIT" onclick="selectExchange('BYBIT')">
-                                <span style="font-size:18px;">🔷</span> Bybit
+                                <span style="font-size:16px;">🔷</span> Bybit
                             </button>
                             <button class="ex-btn" data-ex="OKX" onclick="selectExchange('OKX')">
-                                <span style="font-size:18px;">⭕</span> OKX
+                                <span style="font-size:16px;">⭕</span> OKX
                             </button>
                             <button class="ex-btn" data-ex="KUCOIN" onclick="selectExchange('KUCOIN')">
-                                <span style="font-size:18px;">🟢</span> KuCoin
+                                <span style="font-size:16px;">🟢</span> KuCoin
                             </button>
                             <button class="ex-btn" data-ex="MEXC" onclick="selectExchange('MEXC')">
-                                <span style="font-size:18px;">🔵</span> MEXC
+                                <span style="font-size:16px;">🔵</span> MEXC
                             </button>
                             <button class="ex-btn" data-ex="GATEIO" onclick="selectExchange('GATEIO')">
-                                <span style="font-size:18px;">🟣</span> Gate.io
+                                <span style="font-size:16px;">🟣</span> Gate.io
                             </button>
                             <button class="ex-btn" data-ex="BITGET" onclick="selectExchange('BITGET')">
-                                <span style="font-size:18px;">🟠</span> Bitget
+                                <span style="font-size:16px;">🟠</span> Bitget
                             </button>
                         </div>
                     </div>
 
-                    <div style="display:flex;gap:8px;margin-bottom:10px;">
-                        <div style="flex:1;">
-                            <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">API Key</label>
-                            <input type="text" id="apiKey" class="form-input" placeholder="Enter your API key" style="font-size:11px;">
-                        </div>
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">API Key</label>
+                        <input type="text" id="apiKey" class="form-input" placeholder="Enter your API key" style="font-size:11px;">
                     </div>
                     <div style="margin-bottom:10px;">
                         <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">API Secret</label>
                         <input type="password" id="apiSecret" class="form-input" placeholder="Enter your API secret" style="font-size:11px;">
                     </div>
-                    <div style="display:flex;gap:8px;margin-bottom:10px;">
+                    <div style="display:flex;gap:8px;margin-bottom:12px;">
                         <div style="flex:1;">
                             <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">Label (Optional)</label>
                             <input type="text" id="apiLabel" class="form-input" placeholder="My Trading Bot" style="font-size:11px;">
@@ -688,24 +681,23 @@
                         </div>
                     </div>
 
-                    <button class="btn-primary" onclick="connectExchange()" style="width:100%;padding:12px;font-size:12px;font-weight:700;border-radius:8px;background:var(--primary);color:#1E2329;border:none;cursor:pointer;transition:all 0.2s;">
+                    <button class="btn-buy" onclick="connectExchange()" style="width:100%;">
                         🔗 Connect Exchange
                     </button>
                 </div>
 
                 <!-- Connected Exchanges List -->
-                <div id="connectedExchanges" style="display:none;margin-top:8px;"></div>
+                <div id="connectedExchanges" style="display:none;margin-top:12px;"></div>
             </div>
 
-            <!-- Spot Grid Bot Panel -->
+            <!-- NODE Position Tracker Panel -->
             <div id="gridPanel" class="order-form" style="display: block;">
                 <div class="form-group">
                     <label class="form-label">Investment Amount (USDC)</label>
                     <input type="number" id="gridAmount" class="form-input" step="10" placeholder="Minimum 10 USDC">
-                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be added to NODE central wallet and will be managed by NODE Master grid API</div>
+                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be added to NODE central wallet and managed by NODE Master Grid API</div>
                 </div>
 
-                <!-- Predefined Grid Parameters (readonly, shown for transparency) -->
                 <div class="grid-params-preview">
                     <div class="param-row">
                         <span>Price Range:</span>
@@ -726,7 +718,7 @@
                 </div>
 
                 <div class="fee-info">
-                    <i class="fas fa-info-circle"></i> Fee: 1% for grid bot activation
+                    <i class="fas fa-info-circle"></i> Fee: 1% for Position Tracker activation
                 </div>
 
                 <button class="btn-buy" id="activateGridBtn">Activate</button>
