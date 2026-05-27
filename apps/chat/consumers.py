@@ -1,9 +1,7 @@
 import json
 from channels.generic.websocket import AsyncWebsocketConsumer
 from channels.db import database_sync_to_async
-from django.contrib.auth import get_user_model
 
-User = get_user_model()
 
 class ChatConsumer(AsyncWebsocketConsumer):
     async def connect(self):
@@ -25,10 +23,8 @@ class ChatConsumer(AsyncWebsocketConsumer):
         if not message:
             return
 
-        # Save to database
         msg = await self.save_message(message)
 
-        # Send to user
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -39,7 +35,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        # Notify admins
         if not self.user.is_staff:
             await self.notify_admins(message)
 
@@ -61,7 +56,9 @@ class ChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def notify_admins(self, message):
+        from django.contrib.auth import get_user_model
         from apps.chatbot.models import UserNotification
+        User = get_user_model()
         admins = User.objects.filter(is_staff=True)
         for admin in admins:
             UserNotification.objects.create(
@@ -70,7 +67,6 @@ class ChatConsumer(AsyncWebsocketConsumer):
                 message=f'{self.user.email}: {message[:100]}',
                 notification_type='ALERT'
             )
-
 
 
 class AdminChatConsumer(AsyncWebsocketConsumer):
@@ -94,10 +90,8 @@ class AdminChatConsumer(AsyncWebsocketConsumer):
         if not message or not target_user_id:
             return
 
-        # Save as admin reply
         msg = await self.save_admin_reply(target_user_id, message)
 
-        # Send to admin group
         await self.channel_layer.group_send(
             self.room_group_name,
             {
@@ -108,7 +102,6 @@ class AdminChatConsumer(AsyncWebsocketConsumer):
             }
         )
 
-        # Send to user
         await self.channel_layer.group_send(
             f"chat_{target_user_id}",
             {
@@ -128,8 +121,8 @@ class AdminChatConsumer(AsyncWebsocketConsumer):
 
     @database_sync_to_async
     def save_admin_reply(self, user_id, message):
-        from .models import ChatMessage
         from django.contrib.auth import get_user_model
+        from .models import ChatMessage
         User = get_user_model()
         user = User.objects.get(id=user_id)
         return ChatMessage.objects.create(
