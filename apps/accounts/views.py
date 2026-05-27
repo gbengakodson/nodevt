@@ -8,7 +8,8 @@ from apps.accounts.services.otp_service import OTPService
 from rest_framework.permissions import IsAuthenticated, IsAdminUser, AllowAny
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
-import timezone, Decimal
+from django.utils import timezone
+from decimal import Decimal
 
 
 import logging
