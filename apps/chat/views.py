@@ -43,14 +43,25 @@ class SendMessageView(APIView):
             is_admin_reply=request.user.is_staff
         )
 
+        # Alert admins about new support message
+        if not request.user.is_staff:
+            from apps.chatbot.models import UserNotification
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                UserNotification.objects.create(
+                    user=admin,
+                    title='💬 New Support Message',
+                    message=f'{request.user.email}: {message[:100]}',
+                    notification_type='ALERT'
+                )
+
         return Response({
             'success': True,
             'message_id': str(chat_message.id),
             'time': chat_message.created_at.strftime('%H:%M')
         })
-
-
-from .models import TransparencyChatMessage
 
 
 class TransparencyChatView(APIView):
