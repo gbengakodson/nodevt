@@ -94,7 +94,7 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def buy(self, request):
-        """Buy crypto tokens - Market Order (1% fee) or Grid Bot (10% fee)"""
+        """Activate Position Tracker - sweeps from user wallet to NODE central"""
         serializer = PurchaseSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -105,80 +105,80 @@ class TradingViewSet(viewsets.ViewSet):
 
         token = get_object_or_404(CryptoToken, id=token_id, is_active=True)
 
-        grand_wallet, _ = Wallet.objects.get_or_create(
-            user=request.user,
-            wallet_type='GRAND',
-            defaults={'balance': 0}
-        )
-
-        if grand_wallet.balance < amount_usdc:
-            return Response({
-                'error': 'Insufficient balance',
-                'your_balance': str(grand_wallet.balance),
-                'required': str(amount_usdc)
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Fee calculation
-        if order_type == 'market':
-            fee_percent = Decimal('0.01')
-        else:
-            fee_percent = Decimal('0.01')
-
+        # Fee: 1% upfront for all order types
+        fee_percent = Decimal('0.01')
         node_fee = amount_usdc * fee_percent
         amount_after_fee = amount_usdc - node_fee
-        token_quantity = amount_after_fee / token.current_price
-
-        grand_wallet.balance -= amount_usdc
-        grand_wallet.save()
 
         if order_type == 'market':
+            # Market order: check Grand Balance
+            grand_wallet, _ = Wallet.objects.get_or_create(
+                user=request.user,
+                wallet_type='GRAND',
+                defaults={'balance': 0}
+            )
+
+            if grand_wallet.balance < amount_usdc:
+                return Response({
+                    'error': 'Insufficient balance',
+                    'your_balance': str(grand_wallet.balance),
+                    'required': str(amount_usdc)
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            token_quantity = amount_after_fee / token.current_price
+
+            grand_wallet.balance -= amount_usdc
+            grand_wallet.save()
+
             user_balance, _ = request.user.token_balances.get_or_create(
                 token=token,
                 defaults={'quantity': 0, 'average_buy_price': 0}
             )
             total_quantity = user_balance.quantity + token_quantity
-            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (token_quantity * token.current_price)
+            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
+                        token_quantity * token.current_price)
             user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
             user_balance.quantity = total_quantity
             user_balance.save()
+
         else:
-            # Sweep exact amount from user wallet to NODE central
-            from apps.wallets.services.binance_service import BinanceService
+            # Position Tracker: sweep from user's real wallet
             from apps.wallets.models import WalletKey
+            from apps.wallets.services.web3_service import Web3Service
 
             try:
                 wallet_key = WalletKey.objects.get(user=request.user)
                 user_address = wallet_key.address
-                user_private_key = wallet_key.get_private_key()
-
-                # Check user's real wallet balance
-                from apps.wallets.services.web3_service import Web3Service
-                ws = Web3Service()
-                real_balance = ws.get_usdc_balance(user_address)
-
-                if real_balance < amount_usdc:
-                    return Response({
-                        'error': 'Insufficient wallet balance',
-                        'your_wallet_balance': str(real_balance),
-                        'required': str(amount_usdc)
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
-                # Sweep exact amount from user wallet to NODE central
-                sweep_result = cls._sweep_from_user_wallet(
-                    user_address, user_private_key,
-                    settings.CENTRAL_WALLET_ADDRESS,
-                    amount_usdc
-                )
-
-                if not sweep_result['success']:
-                    return Response({
-                        'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-                    }, status=status.HTTP_400_BAD_REQUEST)
-
             except WalletKey.DoesNotExist:
                 return Response({
                     'error': 'No wallet found. Please deposit first.'
                 }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check user's real on-chain wallet balance
+            ws = Web3Service()
+            real_balance = ws.get_usdc_balance(user_address)
+
+            if real_balance < amount_usdc:
+                return Response({
+                    'error': 'Insufficient wallet balance',
+                    'your_wallet_balance': str(real_balance),
+                    'required': str(amount_usdc)
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Sweep exact amount from user wallet to NODE central
+            user_private_key = wallet_key.get_private_key()
+            sweep_result = TradingViewSet._sweep_from_user_wallet(
+                user_address, user_private_key,
+                settings.CENTRAL_WALLET_ADDRESS,
+                amount_usdc
+            )
+
+            if not sweep_result['success']:
+                return Response({
+                    'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            token_quantity = amount_after_fee / token.current_price
 
             upper_price = token.current_price * Decimal('1.8')
             lower_price = token.current_price * Decimal('0.2')
@@ -195,14 +195,13 @@ class TradingViewSet(viewsets.ViewSet):
                 created_at=timezone.now(),
                 metadata={'sweep_tx': sweep_result.get('tx_hash', '')}
             )
-            # After: GridBot.objects.create(...)
+
             notify_user(
                 request.user,
                 f'🤖 {token.symbol} Position Tracker Activated',
                 f'Your {token.symbol} tracker is live with ${float(amount_after_fee):.2f}. Profits start in 24 hours.',
                 'PORTFOLIO'
             )
-
 
         # Create purchase record
         purchase = Purchase.objects.create(
@@ -215,7 +214,7 @@ class TradingViewSet(viewsets.ViewSet):
             order_type=order_type.upper()
         )
 
-        # Distribute node fee to referrals (only for grid bot orders)
+        # Distribute node fee to referrals (only for Position Tracker)
         referral_count = 0
         if order_type == 'grid':
             from apps.referrals.services.referral_service import ReferralService
@@ -243,17 +242,9 @@ class TradingViewSet(viewsets.ViewSet):
             completed_at=timezone.now()
         )
 
-        # After: Transaction.objects.create(...)
-        notify_user(
-            request.user,
-            f'💸 Yield Collected',
-            f'${float(profit_amount):.2f} collected from {bot.token.symbol} tracker and sent to your wallet.',
-            'PORTFOLIO'
-        )
-
         return Response({
             'success': True,
-            'message': f'Successfully {"purchased" if order_type == "market" else "activated grid bot for"} {token.symbol}',
+            'message': f'Successfully {"purchased" if order_type == "market" else "activated Position Tracker for"} {token.symbol}',
             'purchase': {
                 'token': token.symbol,
                 'quantity': str(token_quantity),
@@ -266,8 +257,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'total_fee': str(node_fee),
                 'referrers_count': referral_count,
                 'distributed': referral_count > 0
-            } if order_type == 'grid' else None,
-            'grand_balance': str(grand_wallet.balance)
+            } if order_type == 'grid' else None
         })
 
     @action(detail=False, methods=['get'])
