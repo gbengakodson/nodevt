@@ -103,6 +103,7 @@ urlpatterns = [
     path('api/exchange/list/', ExchangeConnectionViewSet.as_view({'get': 'list_connections'}), name='exchange_list'),
     path('api/exchange/disconnect/', ExchangeConnectionViewSet.as_view({'post': 'disconnect_exchange'}), name='exchange_disconnect'),
     path('api/exchange/balance/', ExchangeConnectionViewSet.as_view({'get': 'exchange_balance'}), name='exchange_balance'),
+    path('api/exchange/fadakka-activate/', ExchangeConnectionViewSet.as_view({'post': 'activate_fadakka_external'}), name='exchange_fadakka'),
 
 
 
