@@ -394,9 +394,14 @@
             for (var i = 0; i < res.length; i++) {
                 var msg = res[i];
                 var isAdmin = msg.is_admin;
+                var name = isAdmin ? 'NODE Support' : 'You';
                 html += '<div class="msg-row ' + (isAdmin ? 'admin' : 'user') + '">' +
                     (isAdmin ? '<div class="msg-avatar admin">👨‍💼</div>' : '') +
-                    '<div><div class="msg-bubble">' + escHtml(msg.message) + '</div><div class="msg-time">' + (msg.time || msg.date || '') + '</div></div>' +
+                    '<div>' +
+                        '<div style="font-size:9px;color:var(--text-secondary);margin-bottom:2px;">' + name + '</div>' +
+                        '<div class="msg-bubble">' + escHtml(msg.message) + '</div>' +
+                        '<div class="msg-time">' + (msg.date || msg.time || '') + '</div>' +
+                    '</div>' +
                     (!isAdmin ? '<div class="msg-avatar user">👤</div>' : '') +
                 '</div>';
             }
