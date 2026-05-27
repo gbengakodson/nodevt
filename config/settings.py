@@ -155,6 +155,9 @@ YIELD_PERCENTAGE = 10  # 10% monthly yield
 DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
 
 
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+
 # Binance API Configuration
 BINANCE_API_KEY = os.environ.get('BINANCE_API_KEY', '')
 BINANCE_API_SECRET = os.environ.get('BINANCE_API_SECRET', '')
