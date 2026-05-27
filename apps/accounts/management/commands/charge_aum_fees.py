@@ -22,9 +22,10 @@ class Command(BaseCommand):
             from apps.trading.models import GridBot
             grids = GridBot.objects.filter(
                 user=conn.user,
-                status='ACTIVE',
-                metadata__connection_id=str(conn.id)
+                status='ACTIVE'
             )
+            # Filter by connection_id in Python
+            grids = [g for g in grids if g.metadata.get('connection_id') == str(conn.id)]
 
             total_aum = sum(g.amount for g in grids)
             conn.aum_amount = total_aum
@@ -129,9 +130,10 @@ class Command(BaseCommand):
 
         grids = GridBot.objects.filter(
             user=conn.user,
-            status='ACTIVE',
-            metadata__connection_id=str(conn.id)
+            status='ACTIVE'
         )
+        # Filter by connection_id in Python
+        grids = [g for g in grids if g.metadata.get('connection_id') == str(conn.id)]
 
         client = conn.get_client()
         if not client:
