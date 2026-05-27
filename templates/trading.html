@@ -1400,14 +1400,18 @@
         } catch(e) { console.error(e); }
 
         var gridForm = document.getElementById('exchangeGridForm');
-        if (connections.length > 0) {
+        if (gridForm && connections.length > 0) {
             gridForm.style.display = 'block';
-            // Populate connection selector
             var sel = document.getElementById('activeConnection');
-            sel.innerHTML = connections.map(function(c) {
-                return '<option value="' + c.id + '">' + c.label + ' (' + c.exchange + ')</option>';
-            }).join('');
-            document.getElementById('externalMinCapital').textContent = connections[0].min_capital;
+            if (sel) {
+                sel.innerHTML = connections.map(function(c) {
+                    return '<option value="' + c.id + '">' + c.label + ' (' + c.exchange + ')</option>';
+                }).join('');
+            }
+            var minCapEl = document.getElementById('externalMinCapital');
+            if (minCapEl) {
+                minCapEl.textContent = connections[0].min_capital;
+            }
         }
     }
 
