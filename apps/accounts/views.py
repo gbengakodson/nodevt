@@ -264,6 +264,10 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
         # Test connection
         test = conn.test_connection()
 
+        if not test['success']:
+            conn.is_active = False  # Mark inactive if verification failed
+            conn.save()
+
         return Response({
             'success': test['success'],
             'id': str(conn.id),

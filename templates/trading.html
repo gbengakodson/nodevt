@@ -709,7 +709,7 @@
                     </div>
 
                     <button class="btn-buy" onclick="activateFadakkaExternal()" style="width:100%;">
-                        🚀 Start Fadakka Auto-Trading
+                        🚀 Start NODE.
                     </button>
                 </div>
             </div>
@@ -1372,6 +1372,7 @@
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             });
             var connections = await res.json();
+            connections = connections.filter(function(c) { return c.is_active !== false; });
 
             var container = document.getElementById('connectedExchanges');
             var statusEl = document.getElementById('exchangeStatus');
@@ -1426,6 +1427,56 @@
             body: JSON.stringify({ connection_id: id })
         });
         loadExchangeConnections();
+    }
+
+    async function activateFadakkaExternal() {
+        var connectionId = document.getElementById('activeConnection').value;
+        var amount = document.getElementById('externalAmount').value;
+
+        if (!connectionId || !amount || parseFloat(amount) < 1000) {
+            showModal('Please select a connection and enter at least $1,000', 'error');
+            return;
+        }
+
+        var btn = document.querySelector('#exchangeGridForm .btn-buy');
+        btn.textContent = '⏳ Scanning markets...';
+        btn.disabled = true;
+
+        try {
+            var res = await fetch('/api/exchange/fadakka-activate/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken()
+                },
+                body: JSON.stringify({
+                    connection_id: connectionId,
+                    amount: parseFloat(amount)
+                })
+            });
+            var data = await res.json();
+
+            if (data.success) {
+                var msg = '✅ Fadakka activated on ' + data.exchange + '!\n\n';
+                msg += data.grids_activated + ' grid(s) deployed.\n';
+                if (data.actions && data.actions.length > 0) {
+                    data.actions.forEach(function(a) {
+                        msg += '• ' + a.symbol + ' at ' + a.level + ' (' + a.grids + ' grids)\n';
+                    });
+                } else {
+                    msg += 'No coins met Fadakka criteria yet. Will auto-activate when discounts appear.';
+                }
+                showModal(msg, 'success');
+                loadDashboard();
+            } else {
+                showModal('❌ ' + (data.error || 'Activation failed'), 'error');
+            }
+        } catch(e) {
+            showModal('❌ Network error', 'error');
+        }
+
+        btn.textContent = '🚀 Start Fadakka Auto-Trading';
+        btn.disabled = false;
     }
 
     // Load on init
