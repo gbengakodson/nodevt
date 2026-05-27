@@ -681,7 +681,7 @@
                         </div>
                     </div>
 
-                    <button class="btn-buy" onclick="connectExchange()" style="width:100%;">
+                    <button class="btn-buy" id="btnConnectExchange" onclick="connectExchange()" style="width:100%;">
                         🔗 Connect Exchange
                     </button>
                 </div>
@@ -1329,7 +1329,7 @@
             return;
         }
 
-        var btn = document.querySelector('#exchangeForm .btn-primary');
+        var btn = document.querySelector('#exchangeForm .btn-buy');
         btn.textContent = '⏳ Connecting...';
         btn.disabled = true;
 
