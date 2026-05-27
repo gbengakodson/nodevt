@@ -1356,7 +1356,7 @@
                 document.getElementById('apiSecret').value = '';
                 loadExchangeConnections();
             } else {
-                showModal('❌ ' + (data.message || 'Connection failed. Check your API keys.'), 'error');
+                showModal('⚠️ Keys saved but verification failed.\n\n' + (data.message || 'Check your API key and secret. Ensure trading is enabled.'), 'warning');
             }
         } catch(e) {
             showModal('❌ Network error', 'error');
