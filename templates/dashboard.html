@@ -396,7 +396,7 @@
         <div class="row g-3 mb-4">
             <div class="col-md-3 col-6">
                 <div class="stat-card">
-                    <div class="stat-label">Grand Balance</div>
+                    <div class="stat-label">Wallet  Balance</div>
                     <div class="stat-value gold" id="grandBalance">$0</div>
                 </div>
             </div>
@@ -953,7 +953,7 @@
             try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
 
             const balance = await apiCall('/trading/my_balance/');
-            userGrandBalance = parseFloat(balance.grand_balance) || 0;
+            userGrandBalance = parseFloat(balance.blockchain_balance) || 0;  // Changed from grand_balance
             userYieldBalance = parseFloat(balance.yield_balance) || 0;
 
             document.getElementById('grandBalance').textContent = formatCurrency(userGrandBalance);

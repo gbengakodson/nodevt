@@ -701,7 +701,7 @@ class TradingViewSet(viewsets.ViewSet):
                 print(f"Error getting blockchain balance: {e}")
 
         return Response({
-            'grand_balance': str(grand_wallet.balance),
+            'grand_balance': str(blockchain_balance),  # Mirror wallet balance
             'yield_balance': str(yield_wallet.balance),
             'blockchain_balance': str(blockchain_balance),
             'deposit_address': deposit_address,
