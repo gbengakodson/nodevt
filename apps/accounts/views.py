@@ -10,6 +10,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from decimal import Decimal
+from django.http import JsonResponse
 
 
 import logging
@@ -511,3 +512,9 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
             'actions': actions
         })
 
+
+
+def charge_aum_fees_webhook(request):
+    from django.core.management import call_command
+    call_command('charge_aum_fees')
+    return JsonResponse({'status': 'success'})

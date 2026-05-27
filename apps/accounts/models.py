@@ -116,6 +116,12 @@ class ExchangeAPIConnection(models.Model):
     min_capital = models.DecimalField(max_digits=20, decimal_places=8, default=1000)
     fee_per_trade = models.DecimalField(max_digits=10, decimal_places=4, default=0.01)
     created_at = models.DateTimeField(auto_now_add=True)
+    # Add to ExchangeAPIConnection model
+    aum_amount = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    monthly_fee = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    fee_last_charged = models.DateTimeField(null=True, blank=True)
+    grids_paused = models.BooleanField(default=False)
+    warning_sent_at = models.DateTimeField(null=True, blank=True)  # When first warning was sent
 
     def set_api_secret(self, secret):
         from apps.wallets.security.encryption import EncryptionService
