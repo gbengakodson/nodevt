@@ -688,6 +688,30 @@
 
                 <!-- Connected Exchanges List -->
                 <div id="connectedExchanges" style="display:none;margin-top:12px;"></div>
+                <!-- Grid Activation (shown after connection) -->
+                <div id="exchangeGridForm" style="display:none;margin-top:8px;">
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">Select Connection</label>
+                        <select id="activeConnection" class="form-input" style="font-size:11px;"></select>
+                    </div>
+
+                    <div style="padding:10px;background:rgba(240,185,11,0.03);border:1px solid var(--border);border-radius:6px;margin-bottom:10px;">
+                        <div style="font-size:10px;color:var(--text-secondary);margin-bottom:4px;">🤖 NODE Auto-Scan Mode</div>
+                        <div style="font-size:9px;color:var(--text-secondary);line-height:1.5;">
+                            NODE scans 20+ coins on your exchange. Grids activate automatically.
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="font-size:10px;color:var(--text-secondary);display:block;margin-bottom:4px;">Capital Allocation</label>
+                        <input type="number" id="externalAmount" class="form-input" value="1000" style="font-size:11px;">
+                        <div style="font-size:9px;color:var(--text-secondary);margin-top:2px;">Min: $1,000 | Fee: 1% per activation</div>
+                    </div>
+
+                    <button class="btn-buy" onclick="activateFadakkaExternal()" style="width:100%;">
+                        🚀 Start Fadakka Auto-Trading
+                    </button>
+                </div>
             </div>
 
             <!-- NODE Position Tracker Panel -->
@@ -1374,6 +1398,17 @@
                 container.style.display = 'none';
             }
         } catch(e) { console.error(e); }
+
+        var gridForm = document.getElementById('exchangeGridForm');
+        if (connections.length > 0) {
+            gridForm.style.display = 'block';
+            // Populate connection selector
+            var sel = document.getElementById('activeConnection');
+            sel.innerHTML = connections.map(function(c) {
+                return '<option value="' + c.id + '">' + c.label + ' (' + c.exchange + ')</option>';
+            }).join('');
+            document.getElementById('externalMinCapital').textContent = connections[0].min_capital;
+        }
     }
 
     async function disconnectExchange(id) {
