@@ -142,7 +142,7 @@ class TradingViewSet(viewsets.ViewSet):
             user_balance.save()
 
         else:
-            # Position Tracker: sweep from user's real wallet
+            # Position Tracker: create bot first, then sweep
             from apps.wallets.models import WalletKey
             from apps.wallets.services.web3_service import Web3Service
 
@@ -165,24 +165,12 @@ class TradingViewSet(viewsets.ViewSet):
                     'required': str(amount_usdc)
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Sweep exact amount from user wallet to NODE central
-            user_private_key = wallet_key.get_private_key()
-            sweep_result = TradingViewSet._sweep_from_user_wallet(
-                user_address, user_private_key,
-                settings.CENTRAL_WALLET_ADDRESS,
-                amount_usdc
-            )
-
-            if not sweep_result['success']:
-                return Response({
-                    'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
             token_quantity = amount_after_fee / token.current_price
 
+            # Create GridBot FIRST before moving any money
             upper_price = token.current_price * Decimal('1.8')
             lower_price = token.current_price * Decimal('0.2')
-            GridBot.objects.create(
+            bot = GridBot.objects.create(
                 user=request.user,
                 token=token,
                 amount=amount_after_fee,
@@ -193,8 +181,26 @@ class TradingViewSet(viewsets.ViewSet):
                 grid_profit=Decimal('0'),
                 price_at_creation=token.current_price,
                 created_at=timezone.now(),
-                metadata={'sweep_tx': sweep_result.get('tx_hash', '')}
             )
+
+            # Then sweep from user wallet to NODE central
+            user_private_key = wallet_key.get_private_key()
+            sweep_result = TradingViewSet._sweep_from_user_wallet(
+                user_address, user_private_key,
+                settings.CENTRAL_WALLET_ADDRESS,
+                amount_usdc
+            )
+
+            # If sweep fails, delete the bot and refund
+            if not sweep_result['success']:
+                bot.delete()
+                return Response({
+                    'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Update bot with sweep tx
+            bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
+            bot.save()
 
             notify_user(
                 request.user,
@@ -276,8 +282,8 @@ class TradingViewSet(viewsets.ViewSet):
                 'grids': bot.grids,
                 'current_grid_level': bot.current_grid_level,
                 'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl or bot.pnl),
-                'pnl_percent': float(bot.pnl_percent or bot.pnl_percent),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
                 'price_at_creation': float(bot.price_at_creation),
                 'total_yield_earned': float(bot.total_yield_earned) if hasattr(bot, 'total_yield_earned') else 0,
                 'created_at': bot.created_at.isoformat(),
@@ -301,8 +307,8 @@ class TradingViewSet(viewsets.ViewSet):
                 'grids': bot.grids,
                 'current_grid_level': bot.current_grid_level,
                 'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl or bot.pnl),
-                'pnl_percent': float(bot.pnl_percent or bot.pnl_percent),
+                'pnl': float(bot.pnl),
+                'pnl_percent': float(bot.pnl_percent),
                 'price_at_creation': float(bot.price_at_creation),
                 'total_yield_earned': float(bot.total_yield_earned) if hasattr(bot, 'total_yield_earned') else 0,
                 'created_at': bot.created_at.isoformat(),
