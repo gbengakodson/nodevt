@@ -296,36 +296,34 @@
 </div>
 
 <script>
-    var socket = null;
+    var lastMessageId = null;
     var faqs = []; // FAQ data same as before, keep your existing FAQ array
 
-    function connectWebSocket() {
-        var token = localStorage.getItem('access_token');
-        var wsUrl = (location.protocol === 'https:' ? 'wss://' : 'ws://') + location.host + '/ws/chat/';
-        socket = new WebSocket(wsUrl);
+    async function loadMessages() {
+        try {
+            var res = await fetch('/api/chat/messages/', {
+                headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+            });
+            if (!res.ok) return;
+            var data = await res.json();
 
-        socket.onopen = function() {
-            console.log('🟢 Connected to support');
-        };
+            if (!data || data.length === 0) return;
 
-        socket.onmessage = function(event) {
-            var data = JSON.parse(event.data);
-            appendMessage(data.message, data.is_admin, data.time);
-        };
+            var container = document.getElementById('chatMessages');
+            var isNew = !lastMessageId || (data.length > 0 && data[data.length - 1].id !== lastMessageId);
 
-        socket.onclose = function() {
-            console.log('🔴 Disconnected, reconnecting...');
-            setTimeout(connectWebSocket, 3000);
-        };
-
-        socket.onerror = function(err) {
-            console.error('WebSocket error:', err);
-        };
+            if (isNew) {
+                container.innerHTML = '';
+                data.forEach(function(msg) {
+                    appendMessage(msg.message, msg.is_admin, msg.time || msg.date);
+                });
+                lastMessageId = data[data.length - 1].id;
+            }
+        } catch(e) {}
     }
 
     function appendMessage(message, isAdmin, time) {
         var container = document.getElementById('chatMessages');
-        // Remove empty state
         if (container.querySelector('div[style]')) {
             container.innerHTML = '';
         }
@@ -347,11 +345,22 @@
     function sendMessage() {
         var input = document.getElementById('messageInput');
         var msg = input.value.trim();
-        if (!msg || !socket || socket.readyState !== WebSocket.OPEN) return;
+        if (!msg) return;
 
-        socket.send(JSON.stringify({ message: msg }));
-        input.value = '';
-        input.style.height = '40px';
+        fetch('/api/chat/send/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + localStorage.getItem('access_token')
+            },
+            body: JSON.stringify({ message: msg })
+        }).then(function(res) {
+            if (res.ok) {
+                input.value = '';
+                input.style.height = '40px';
+                loadMessages();
+            }
+        });
     }
 
     function escHtml(text) {
@@ -375,7 +384,8 @@
     });
 
     // Init
-    connectWebSocket();
+    loadMessages();
+    setInterval(loadMessages, 2000);  // Poll every 2 seconds
     // Render FAQ list — keep your existing FAQ rendering code
 </script>
 {% endblock %}
