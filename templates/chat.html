@@ -449,9 +449,9 @@
                         }).join('');
                         if (selectedTargetUser && keys.includes(selectedTargetUser)) {
                             sel.value = selectedTargetUser;
-                        sel.onchange = function() {
+                        sel.addEventListener('change', function() {
                             selectedTargetUser = this.value;
-                        };
+                        });
                         }
                     }
                 } else {
