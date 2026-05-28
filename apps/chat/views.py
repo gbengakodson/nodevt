@@ -11,18 +11,19 @@ class ChatMessagesView(APIView):
 
     def get(self, request):
         if request.user.is_staff:
-            messages = ChatMessage.objects.all().order_by('-created_at')[:50]
+            messages = ChatMessage.objects.all().order_by('-created_at')[:100]
         else:
             messages = ChatMessage.objects.filter(user=request.user).order_by('-created_at')[:50]
 
         data = []
-        for msg in reversed(messages):  # Show oldest first
+        for msg in reversed(messages):
             data.append({
                 'id': str(msg.id),
                 'message': msg.message,
                 'is_admin': msg.is_admin_reply,
                 'time': msg.created_at.strftime('%H:%M'),
-                'date': msg.created_at.strftime('%Y-%m-%d %H:%M')
+                'date': msg.created_at.strftime('%Y-%m-%d %H:%M'),
+                'user_email': msg.user.email
             })
 
         return Response(data)
