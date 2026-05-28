@@ -383,13 +383,6 @@
         { icon: '🌍', q: 'What is NODE\'s mission?', a: 'To democratize algorithmic trading. To give everyday people access to sophisticated trading tools that were once only available to hedge funds. To help 20 million Africans build wealth through automated dollar-denominated investing.' }
     ];
 
-    // Check admin status
-    fetch('/api/auth/profile/', {
-        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
-    }).then(function(r) { return r.json(); }).then(function(profile) {
-        isAdmin = profile.is_staff || false;
-    }).catch(function() {});
-
     function renderFAQ() {
         var html = '';
         for (var i = 0; i < faqs.length; i++) {
@@ -432,27 +425,36 @@
                 lastMessageId = data[data.length - 1].id;
             }
 
-            // Build admin dropdown — only for staff
-            if (isAdmin) {
-                var userMap = {};
-                data.forEach(function(m) {
-                    if (m.user_id && m.user_email && !m.is_admin) {
-                        userMap[m.user_id] = m.user_email;
-                    }
+            // Check admin status and build dropdown
+            try {
+                var profileRes = await fetch('/api/auth/profile/', {
+                    headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
                 });
-                var keys = Object.keys(userMap);
-                if (keys.length > 0) {
-                    document.getElementById('adminReplyBar').style.display = 'block';
-                    var sel = document.getElementById('targetUserSelect');
-                    sel.innerHTML = keys.map(function(id) {
-                        var selected = (id === selectedTargetUser) ? ' selected' : '';
-                        return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
-                    }).join('');
-                    if (selectedTargetUser && keys.includes(selectedTargetUser)) {
-                        sel.value = selectedTargetUser;
+                var profile = await profileRes.json();
+
+                if (profile.is_staff) {
+                    var userMap = {};
+                    data.forEach(function(m) {
+                        if (m.user_id && m.user_email && !m.is_admin) {
+                            userMap[m.user_id] = m.user_email;
+                        }
+                    });
+                    var keys = Object.keys(userMap);
+                    if (keys.length > 0) {
+                        document.getElementById('adminReplyBar').style.display = 'block';
+                        var sel = document.getElementById('targetUserSelect');
+                        sel.innerHTML = keys.map(function(id) {
+                            var selected = (id === selectedTargetUser) ? ' selected' : '';
+                            return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
+                        }).join('');
+                        if (selectedTargetUser && keys.includes(selectedTargetUser)) {
+                            sel.value = selectedTargetUser;
+                        }
                     }
+                } else {
+                    document.getElementById('adminReplyBar').style.display = 'none';
                 }
-            }
+            } catch(e) {}
         } catch(e) {}
     }
 
@@ -482,7 +484,7 @@
 
         var body = { message: msg };
         var targetSelect = document.getElementById('targetUserSelect');
-        if (isAdmin && targetSelect && targetSelect.value) {
+        if (targetSelect && targetSelect.value) {
             body.target_user_id = targetSelect.value;
             selectedTargetUser = targetSelect.value;
         }
