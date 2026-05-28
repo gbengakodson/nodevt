@@ -23,55 +23,57 @@ class ChatMessagesView(APIView):
                 'is_admin': msg.is_admin_reply,
                 'time': msg.created_at.strftime('%H:%M'),
                 'date': msg.created_at.strftime('%Y-%m-%d %H:%M'),
-                'user_email': msg.user.email
+                'user_email': msg.user.email,
+                'user_id': str(msg.user.id)
             })
 
         return Response(data)
 
 
-def post(self, request):
-    message = request.data.get('message', '').strip()
-    target_user_id = request.data.get('target_user_id', None)
+class SendMessageView(APIView):
+    permission_classes = [IsAuthenticated]
 
-    if not message:
-        return Response({'error': 'Message cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
+    def post(self, request):
+        message = request.data.get('message', '').strip()
+        target_user_id = request.data.get('target_user_id', None)
 
-    # If admin is replying to a specific user
-    if request.user.is_staff and target_user_id:
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        target_user = User.objects.get(id=target_user_id)
-        chat_message = ChatMessage.objects.create(
-            user=target_user,  # Store under target user so they can see it
-            message=message,
-            is_admin_reply=True
-        )
-    else:
-        chat_message = ChatMessage.objects.create(
-            user=request.user,
-            message=message,
-            is_admin_reply=request.user.is_staff
-        )
+        if not message:
+            return Response({'error': 'Message cannot be empty'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Alert admins about new support message
-    if not request.user.is_staff:
-        from apps.chatbot.models import UserNotification
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        admins = User.objects.filter(is_staff=True)
-        for admin in admins:
-            UserNotification.objects.create(
-                user=admin,
-                title='💬 New Support Message',
-                message=f'{request.user.email}: {message[:100]}',
-                notification_type='ALERT'
+        if request.user.is_staff and target_user_id:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            target_user = User.objects.get(id=target_user_id)
+            chat_message = ChatMessage.objects.create(
+                user=target_user,
+                message=message,
+                is_admin_reply=True
+            )
+        else:
+            chat_message = ChatMessage.objects.create(
+                user=request.user,
+                message=message,
+                is_admin_reply=request.user.is_staff
             )
 
-    return Response({
-        'success': True,
-        'message_id': str(chat_message.id),
-        'time': chat_message.created_at.strftime('%H:%M')
-    })
+        if not request.user.is_staff:
+            from apps.chatbot.models import UserNotification
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admins = User.objects.filter(is_staff=True)
+            for admin in admins:
+                UserNotification.objects.create(
+                    user=admin,
+                    title='💬 New Support Message',
+                    message=f'{request.user.email}: {message[:100]}',
+                    notification_type='ALERT'
+                )
+
+        return Response({
+            'success': True,
+            'message_id': str(chat_message.id),
+            'time': chat_message.created_at.strftime('%H:%M')
+        })
 
 
 class TransparencyChatView(APIView):
