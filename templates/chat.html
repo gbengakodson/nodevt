@@ -443,12 +443,15 @@
                     if (keys.length > 0) {
                         document.getElementById('adminReplyBar').style.display = 'block';
                         var sel = document.getElementById('targetUserSelect');
-                        sel.innerHTML = keys.map(function(id) {
+                        sel.innerHTML = '<option value="">-- Select user to reply --</option>' + keys.map(function(id) {
                             var selected = (id === selectedTargetUser) ? ' selected' : '';
                             return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
                         }).join('');
                         if (selectedTargetUser && keys.includes(selectedTargetUser)) {
                             sel.value = selectedTargetUser;
+                        sel.onchange = function() {
+                            selectedTargetUser = this.value;
+                        };
                         }
                     }
                 } else {
@@ -483,10 +486,8 @@
         if (!msg) return;
 
         var body = { message: msg };
-        var targetSelect = document.getElementById('targetUserSelect');
-        if (targetSelect && targetSelect.value) {
-            body.target_user_id = targetSelect.value;
-            selectedTargetUser = targetSelect.value;
+        if (selectedTargetUser) {
+            body.target_user_id = selectedTargetUser;
         }
 
         fetch('/api/chat/send/', {
