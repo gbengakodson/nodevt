@@ -443,16 +443,21 @@
                     if (keys.length > 0) {
                         document.getElementById('adminReplyBar').style.display = 'block';
                         var sel = document.getElementById('targetUserSelect');
-                        sel.innerHTML = '<option value="">-- Select user to reply --</option>' + keys.map(function(id) {
-                            var selected = (id === selectedTargetUser) ? ' selected' : '';
-                            return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
-                        }).join('');
-                        if (selectedTargetUser && keys.includes(selectedTargetUser)) {
-                            sel.value = selectedTargetUser;
-                        sel.addEventListener('change', function() {
-                            selectedTargetUser = this.value;
-                        });
+                        var newKeys = keys.join(',');
+                        var currentKeys = sel.getAttribute('data-keys') || '';
+                        if (newKeys !== currentKeys) {
+                            sel.setAttribute('data-keys', newKeys);
+                            sel.innerHTML = '<option value="">-- Select user --</option>' + keys.map(function(id) {
+                                var selected = (id === selectedTargetUser) ? ' selected' : '';
+                                return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
+                            }).join('');
                         }
+                        if (selectedTargetUser) {
+                            sel.value = selectedTargetUser;
+                        }
+                        sel.onchange = function() {
+                            selectedTargetUser = this.value;
+                        };
                     }
                 } else {
                     document.getElementById('adminReplyBar').style.display = 'none';
