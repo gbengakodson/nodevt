@@ -4,13 +4,14 @@ from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from .models import DepositRequest, WithdrawalRequest
 from django.db.models import Sum, Count, Avg, F
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from apps.wallets.models import Wallet
 from decimal import Decimal
 from apps.tokens.models import CryptoToken, UserTokenBalance, Purchase
 import logging
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 
@@ -449,8 +450,9 @@ class AdminChatMessagesView(APIView):
 
     def get(self, request):
         # Get all messages grouped by user
-        from django.contrib.auth.models import User
         from django.db.models import Count, Max
+
+
 
         users_with_messages = User.objects.filter(
             chat_messages__isnull=False
@@ -477,7 +479,7 @@ class AdminChatMessagesView(APIView):
         return Response(result)
 
     def get_conversation(self, request, user_id):
-        from django.contrib.auth.models import User
+
         user = User.objects.get(id=user_id)
         messages = ChatMessage.objects.filter(user=user).order_by('created_at')
 
@@ -495,7 +497,7 @@ class AdminChatMessagesView(APIView):
         return Response({'user_email': user.email, 'messages': data})
 
     def post(self, request, user_id):
-        from django.contrib.auth.models import User
+
         user = User.objects.get(id=user_id)
         reply_message = request.data.get('message')
 
