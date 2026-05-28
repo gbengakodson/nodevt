@@ -29,437 +29,284 @@
         }
     </script>
     <style>
-    * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-    }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
 
-    body {
-        background: #F0F2F5;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
-        font-size: 13px;
-        color: #1E2329;
-        line-height: 1.4;
-    }
-
-    .navbar {
-        position: sticky;
-        top: 0;
-        z-index: 1030;
-        background: #ffffff;
-        border-bottom: 1px solid #E2E4E8;
-        padding: 0.75rem 1rem;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
-    }
-
-    .navbar-brand {
-        font-weight: 600;
-        font-size: 1.1rem;
-        color: #F0B90B !important;
-        text-decoration: none;
-    }
-
-    .nav-link {
-        font-size: 13px;
-        color: #5e6673 !important;
-        padding: 0.5rem 1rem !important;
-        transition: color 0.2s;
-        text-decoration: none;
-        cursor: pointer;
-    }
-
-    .nav-link:hover, .nav-link.active {
-        color: #F0B90B !important;
-    }
-
-    /* Live Clock - More visible */
-    .live-clock {
-        font-family: 'Courier New', monospace;
-        font-size: 14px;
-        background: #F0B90B;
-        padding: 6px 12px;
-        border-radius: 20px;
-        color: #0B0E11;
-        margin-right: 10px;
-        font-weight: 700;
-        border: none;
-        box-shadow: 0 1px 2px rgba(0,0,0,0.1);
-    }
-
-    /* Mobile */
-    @media (max-width: 768px) {
-        .live-clock {
-            font-size: 11px;
-            padding: 4px 10px;
-            font-weight: 700;
-            background: #F0B90B;
-            color: #0B0E11;
-        }
-    }
-
-    /* Mobile Footer Bar */
-    .mobile-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #1A1C23;
-        border-top: 1px solid #F0B90B;
-        display: none;
-        justify-content: space-around;
-        align-items: center;
-        padding: 8px 12px;
-        z-index: 1000;
-    }
-
-    .mobile-footer-item {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        cursor: pointer;
-        color: #8A8F9E;
-        transition: all 0.2s;
-        font-size: 10px;
-        position: relative;
-    }
-
-    .mobile-footer-item i {
-        font-size: 20px;
-    }
-
-    .mobile-footer-item.active {
-        color: #F0B90B;
-    }
-
-    .mobile-badge {
-        position: absolute;
-        top: -8px;
-        right: -8px;
-        background: #F6465D;
-        color: white;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        font-size: 9px;
-        display: none;
-        align-items: center;
-        justify-content: center;
-    }
-
-    /* Marquee Footer - Clean version */
-    .marquee-footer {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        background: #1A1C23;
-        color: #F0B90B;
-        padding: 8px 0;
-        overflow: hidden;
-        white-space: nowrap;
-        border-top: 1px solid rgba(240,185,11,0.2);
-        font-size: 12px;
-        z-index: 999;
-    }
-
-    .marquee-content {
-        display: inline-block;
-        animation: marquee 60s linear infinite;
-        white-space: nowrap;
-        padding-left: 20px;
-    }
-    .marquee-content span {
-        display: inline-block;
-        padding-right: 100px;
-    }
-
-    .marquee-footer:hover .marquee-content {
-        animation-play-state: paused;
-    }
-
-    @keyframes marquee {
-        0% { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
-    }
-
-    /* Adjust for mobile footer */
-    @media (max-width: 768px) {
-        .marquee-footer {
-            bottom: 50px;
-        }
-    }
-
-    /* Add padding to body */
-    body {
-        padding-bottom: 35px;
-    }
-
-    @media (max-width: 768px) {
         body {
-            padding-bottom: 85px;
+            background: #F0F2F5;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            font-size: 13px;
+            color: #1E2329;
+            line-height: 1.4;
+            padding-top: 56px;
+            padding-bottom: 35px;
         }
-    }
 
-    /* Notification Panel */
-    .notification-panel {
-        position: fixed;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
-        width: 380px;
-        max-height: 450px;
-        background: #1E2329;
-        border: 1px solid #2B3139;
-        border-radius: 12px;
-        box-shadow: 0 8px 32px rgba(0,0,0,0.5);
-        z-index: 10001;
-        overflow: hidden;
-    }
+        /* Fixed Navbar */
+        .navbar {
+            position: fixed; top: 0; left: 0; right: 0; z-index: 1030;
+            background: #1A1C23;
+            border-bottom: 1px solid rgba(240,185,11,0.15);
+            padding: 0 16px; height: 56px;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .navbar-brand {
+            display: flex; align-items: center; gap: 8px;
+            text-decoration: none; flex-shrink: 0;
+        }
 
-    .notif-item {
-        padding: 12px 14px;
-        border-bottom: 1px solid rgba(255,255,255,0.04);
-        cursor: pointer;
-        transition: background 0.15s;
-    }
-    .notif-item:hover { background: rgba(240,185,11,0.03); }
-    .notif-item.unread { background: rgba(240,185,11,0.06); }
-    .notif-item .n-title { font-weight: 600; font-size: 11px; color: #EAECEF; }
-    .notif-item .n-body { font-size: 10px; color: #848E9C; margin-top: 3px; }
-    .notif-item .n-time { font-size: 9px; color: #5E6673; margin-top: 2px; }
+        /* Desktop Nav Items */
+        .desktop-nav { display: flex; align-items: center; gap: 4px; }
+        .nav-item {
+            display: flex; align-items: center; gap: 6px;
+            padding: 8px 12px; border-radius: 8px;
+            color: #8A8F9E; text-decoration: none;
+            font-size: 12px; font-weight: 500;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .nav-item:hover, .nav-item.active { color: #F0B90B; background: rgba(240,185,11,0.06); }
+        .nav-item i { font-size: 14px; }
 
-    /* Responsive */
-    @media (max-width: 768px) {
-        .live-clock { font-size: 9px; padding: 4px 8px; }
-        .mobile-footer { display: flex; }
-        .notification-panel { width: 90%; left: 5%; transform: translate(0, -50%); }
-    }
+        /* Menu Button */
+        .menu-btn {
+            background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);
+            color: #fff; width: 36px; height: 36px; border-radius: 8px;
+            cursor: pointer; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .menu-btn:hover { background: rgba(240,185,11,0.1); border-color: #F0B90B; }
 
-    @media (min-width: 769px) and (max-width: 1024px) {
+        /* Slide-out Menu */
+        .menu-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); z-index: 1040; display: none;
+        }
+        .menu-overlay.show { display: block; }
+        .menu-panel {
+            position: fixed; top: 0; right: -320px; width: 300px; height: 100%;
+            background: #1A1C23; z-index: 1050;
+            transition: right 0.3s ease;
+            display: flex; flex-direction: column;
+            box-shadow: -4px 0 20px rgba(0,0,0,0.3);
+        }
+        .menu-panel.show { right: 0; }
+        .menu-header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 16px 20px; border-bottom: 1px solid rgba(255,255,255,0.06);
+            color: #fff; font-weight: 600; font-size: 14px;
+        }
+        .menu-body { flex: 1; overflow-y: auto; padding: 12px; }
+        .menu-item {
+            display: flex; align-items: center; gap: 10px;
+            padding: 12px 16px; border-radius: 10px;
+            color: #8A8F9E; text-decoration: none;
+            font-size: 13px; transition: all 0.2s;
+        }
+        .menu-item:hover { background: rgba(240,185,11,0.06); color: #F0B90B; }
+        .menu-item i { width: 20px; text-align: center; }
+        .menu-divider { height: 1px; background: rgba(255,255,255,0.06); margin: 8px 0; }
+
+        /* Live Clock */
+        .live-clock {
+            font-family: 'Courier New', monospace; font-size: 12px;
+            background: rgba(240,185,11,0.1); color: #F0B90B;
+            padding: 6px 12px; border-radius: 20px; font-weight: 600;
+        }
+
+        /* Mobile Footer */
         .mobile-footer {
-            display: none;
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1A1C23; border-top: 1px solid #F0B90B;
+            display: none; justify-content: space-around;
+            align-items: center; padding: 8px 12px; z-index: 1000;
         }
-    }
-    .footer {
-        background: #F8F9FA;
-        border-top: 1px solid #E2E4E8;
-        padding: 40px 0 20px;
-        margin-top: 40px;
-    }
+        .mobile-footer-item {
+            display: flex; flex-direction: column; align-items: center; gap: 4px;
+            cursor: pointer; color: #8A8F9E; font-size: 10px;
+            transition: all 0.2s; position: relative;
+        }
+        .mobile-footer-item i { font-size: 20px; }
+        .mobile-footer-item.active { color: #F0B90B; }
+        .mobile-badge {
+            position: absolute; top: -8px; right: -8px;
+            background: #F6465D; color: white; border-radius: 50%;
+            width: 16px; height: 16px; font-size: 9px;
+            display: none; align-items: center; justify-content: center;
+        }
 
-    .footer a.text-muted:hover {
-        color: #F0B90B !important;
-    }
+        /* Marquee Footer */
+        .marquee-footer {
+            position: fixed; bottom: 0; left: 0; right: 0;
+            background: #1A1C23; color: #F0B90B;
+            padding: 8px 0; overflow: hidden; white-space: nowrap;
+            border-top: 1px solid rgba(240,185,11,0.2);
+            font-size: 12px; z-index: 999;
+        }
+        .marquee-content {
+            display: inline-block; animation: marquee 60s linear infinite;
+            white-space: nowrap; padding-left: 20px;
+        }
+        .marquee-content span { display: inline-block; padding-right: 100px; }
+        .marquee-footer:hover .marquee-content { animation-play-state: paused; }
+        @keyframes marquee {
+            0% { transform: translateX(100%); }
+            100% { transform: translateX(-100%); }
+        }
 
-    /* Custom Modal Styles */
-    .custom-modal {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        z-index: 10000;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
+        /* Notification Panel */
+        .notification-panel {
+            position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            width: 380px; max-height: 450px;
+            background: #1E2329; border: 1px solid #2B3139;
+            border-radius: 12px; box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+            z-index: 10001; overflow: hidden;
+        }
+        .notif-item {
+            padding: 12px 14px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            cursor: pointer; transition: background 0.15s;
+        }
+        .notif-item:hover { background: rgba(240,185,11,0.03); }
+        .notif-item.unread { background: rgba(240,185,11,0.06); }
+        .notif-item .n-title { font-weight: 600; font-size: 11px; color: #EAECEF; }
+        .notif-item .n-body { font-size: 10px; color: #848E9C; margin-top: 3px; }
+        .notif-item .n-time { font-size: 9px; color: #5E6673; margin-top: 2px; }
 
-    .custom-modal-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.5);
-        backdrop-filter: blur(4px);
-    }
+        /* Modal */
         .modal-overlay {
-        position: fixed;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        background: rgba(0, 0, 0, 0.75);
-        z-index: 9999;
-        display: none;
-        align-items: center;
-        justify-content: center;
-    }
-    .modal-box {
-        background: #1E2329;
-        border: 1px solid #2B3139;
-        border-radius: 12px;
-        padding: 20px;
-        max-width: 450px;
-        width: 90%;
-        max-height: 80vh;
-        overflow-y: auto;
-    }
-    .modal-box h3 {
-        font-size: 15px;
-        color: #EAECEF;
-        margin-bottom: 14px;
-    }
-
-    .custom-modal-container {
-        position: relative;
-        background: white;
-        border-radius: 16px;
-        width: 90%;
-        max-width: 400px;
-        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
-        animation: modalFadeIn 0.3s ease;
-    }
-
-    @keyframes modalFadeIn {
-        from {
-            opacity: 0;
-            transform: scale(0.9);
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.75); z-index: 9999;
+            display: none; align-items: center; justify-content: center;
         }
-        to {
-            opacity: 1;
-            transform: scale(1);
+        .modal-box {
+            background: #1E2329; border: 1px solid #2B3139;
+            border-radius: 12px; padding: 20px;
+            max-width: 450px; width: 90%; max-height: 80vh; overflow-y: auto;
         }
-    }
+        .modal-box h3 { font-size: 15px; color: #EAECEF; margin-bottom: 14px; }
 
-    .custom-modal-header {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 20px 20px 0 20px;
-        border-bottom: 1px solid #E2E4E8;
-    }
+        .custom-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            z-index: 10000; display: flex; align-items: center; justify-content: center;
+        }
+        .custom-modal-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);
+        }
+        .custom-modal-container {
+            position: relative; background: white; border-radius: 16px;
+            width: 90%; max-width: 400px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            animation: modalFadeIn 0.3s ease;
+        }
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .custom-modal-header {
+            display: flex; align-items: center; gap: 12px;
+            padding: 20px 20px 0 20px; border-bottom: 1px solid #E2E4E8;
+        }
+        .custom-modal-icon {
+            width: 40px; height: 40px; background: #F0B90B; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center; font-size: 20px;
+        }
+        .custom-modal-header h3 { flex: 1; margin: 0; font-size: 18px; font-weight: 600; color: #1E2329; }
+        .custom-modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #8A8F9E; }
+        .custom-modal-close:hover { color: #F6465D; }
+        .custom-modal-body { padding: 20px; }
+        .custom-modal-body p { margin: 0; font-size: 14px; color: #5E6673; line-height: 1.5; }
+        .custom-modal-footer { padding: 16px 20px 20px 20px; text-align: center; }
+        .custom-modal-btn {
+            background: #F0B90B; color: #0B0E11; border: none;
+            padding: 10px 24px; border-radius: 8px; font-size: 14px;
+            font-weight: 600; cursor: pointer;
+        }
+        .custom-modal-btn:hover { background: #E0A800; }
 
-    .custom-modal-icon {
-        width: 40px;
-        height: 40px;
-        background: #F0B90B;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 20px;
-    }
+        /* Chat Window */
+        #simpleChatWindow {
+            position: fixed; bottom: 70px; left: 10px; right: 10px;
+            width: auto; height: 450px;
+            background: white; border-radius: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            z-index: 10000; flex-direction: column; overflow: hidden;
+        }
 
-    .custom-modal-header h3 {
-        flex: 1;
-        margin: 0;
-        font-size: 18px;
-        font-weight: 600;
-        color: #1E2329;
-    }
+        /* Footer */
+        .footer { background: #F8F9FA; border-top: 1px solid #E2E4E8; padding: 40px 0 20px; margin-top: 40px; }
+        .footer a.text-muted:hover { color: #F0B90B !important; }
 
-    .custom-modal-close {
-        background: none;
-        border: none;
-        font-size: 24px;
-        cursor: pointer;
-        color: #8A8F9E;
-        transition: color 0.2s;
-    }
+        /* Responsive */
+        @media (max-width: 768px) {
+            .desktop-nav { display: none !important; }
+            .support-link { display: none !important; }
+            .menu-btn { display: flex; }
+            .live-clock { font-size: 11px; padding: 4px 10px; }
+            .mobile-footer { display: flex; }
+            body { padding-bottom: 85px; }
+            .marquee-footer { bottom: 50px; }
+            .notification-panel { width: 90%; left: 5%; transform: translate(0, -50%); }
+            .footer { display: none; }
+        }
 
-    .custom-modal-close:hover {
-        color: #F6465D;
-    }
-
-    .custom-modal-body {
-        padding: 20px;
-    }
-
-    .custom-modal-body p {
-        margin: 0;
-        font-size: 14px;
-        color: #5E6673;
-        line-height: 1.5;
-    }
-
-    .custom-modal-footer {
-        padding: 16px 20px 20px 20px;
-        text-align: center;
-    }
-
-    .custom-modal-btn {
-        background: #F0B90B;
-        color: #0B0E11;
-        border: none;
-        padding: 10px 24px;
-        border-radius: 8px;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-    }
-
-    .custom-modal-btn:hover {
-        background: #E0A800;
-        transform: translateY(-1px);
-    }
-
-    /* Success Modal */
-    .custom-modal.success .custom-modal-icon {
-        background: #0ECB81;
-    }
-
-    /* Error Modal */
-    .custom-modal.error .custom-modal-icon {
-        background: #F6465D;
-    }
-
-    /* Warning Modal */
-    .custom-modal.warning .custom-modal-icon {
-        background: #F0B90B;
-    }
-
-    /* Info Modal */
-    .custom-modal.info .custom-modal-icon {
-        background: #F0B90B;
-    }
+        @media (min-width: 769px) {
+            .menu-btn { display: none; }
+            .menu-panel { display: none; }
+            .mobile-footer { display: none; }
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg">
-        <div class="container-fluid px-3">
-            <a class="navbar-brand" href="/coins/" style="padding: 0;">
-               {% include 'base/logo.html' %}
-            </a>
+    <nav class="navbar" style="position:fixed;top:0;left:0;right:0;z-index:1030;background:#1A1C23;border-bottom:1px solid rgba(240,185,11,0.15);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;">
+        <!-- Logo -->
+        <a class="navbar-brand" href="/coins/" style="display:flex;align-items:center;gap:8px;text-decoration:none;flex-shrink:0;">
+            {% include 'base/logo.html' %}
+        </a>
 
-            <div class="d-flex align-items-center">
-                <div class="live-clock" id="liveClock">--:--:--</div>
-                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
-                    <i class="fas fa-bars" style="color: #1E2329;"></i>
-                </button>
-            </div>
+        <!-- Desktop Nav -->
+        <div class="desktop-nav" style="display:flex;align-items:center;gap:4px;">
+            <a href="/dashboard/" class="nav-item"><i class="fas fa-chart-pie"></i><span>Dashboard</span></a>
+            <a href="/trading/" class="nav-item"><i class="fas fa-exchange-alt"></i><span>Trading</span></a>
+            <a href="/portfolio/" class="nav-item"><i class="fas fa-briefcase"></i><span>Portfolio</span></a>
+            <a href="/yield/" class="nav-item"><i class="fas fa-chart-line"></i><span>Yield</span></a>
+            <a href="/referral/" class="nav-item"><i class="fas fa-users"></i><span>Affiliate</span></a>
+            <a href="/transparency/" class="nav-item"><i class="fas fa-search"></i><span>Public</span></a>
+            <a href="/profile/" class="nav-item"><i class="fas fa-user-circle"></i><span>Profile</span></a>
+            <a href="/chat/" class="nav-item support-link"><i class="fas fa-headset"></i><span>Support</span></a>
+        </div>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="/dashboard/"><i class="fas fa-chart-line me-1"></i>Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/coins/"><i class="fas fa-coins me-1"></i>Coins</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/trading/"><i class="fas fa-exchange-alt me-1"></i>Trading</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/portfolio/"><i class="fas fa-wallet me-1"></i>Portfolio</a></li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-chart-line me-1"></i>Ledger</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/yield/">Master Grid Performance</a></li>
-                            <li><a class="dropdown-item" href="/referral/">Affiliate Program</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle" href="#" data-bs-toggle="dropdown"><i class="fas fa-money-bill-wave me-1"></i>Wallet</a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="/deposit/">Deposit USDC</a></li>
-                            <li><a class="dropdown-item" href="/withdraw/">Withdraw USDC</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item"><a class="nav-link" href="/profile/"><i class="fas fa-user me-1"></i>Profile</a></li>
-                    <li class="nav-item"><a class="nav-link" href="/chat/"><i class="fas fa-headset me-1"></i>Support</a></li>
-                    <li class="nav-item" id="authLinks"></li>
-                </ul>
-            </div>
+        <!-- Right actions -->
+        <div style="display:flex;align-items:center;gap:10px;">
+            <div class="live-clock" id="liveClock" style="font-family:monospace;font-size:12px;background:rgba(240,185,11,0.1);color:#F0B90B;padding:6px 12px;border-radius:20px;font-weight:600;">--:--:--</div>
+            <button class="menu-btn" onclick="toggleMenu()" aria-label="Menu">
+                <i class="fas fa-bars"></i>
+            </button>
         </div>
     </nav>
+
+    <!-- Slide-out Menu Modal -->
+    <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
+    <div class="menu-panel" id="menuPanel">
+        <div class="menu-header">
+            <span>Menu</span>
+            <button onclick="toggleMenu()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <div class="menu-body">
+            <a href="/dashboard/" class="menu-item"><i class="fas fa-chart-pie"></i> Dashboard</a>
+            <a href="/trading/" class="menu-item"><i class="fas fa-exchange-alt"></i> Trading</a>
+            <a href="/portfolio/" class="menu-item"><i class="fas fa-briefcase"></i> Portfolio</a>
+            <a href="/yield/" class="menu-item"><i class="fas fa-chart-line"></i> Yield</a>
+            <a href="/referral/" class="menu-item"><i class="fas fa-users"></i> Affiliate</a>
+            <a href="/transparency/" class="menu-item"><i class="fas fa-search"></i> Public</a>
+            <div class="menu-divider"></div>
+            <a href="/profile/" class="menu-item"><i class="fas fa-user-circle"></i> Profile</a>
+            <a href="/chat/" class="menu-item"><i class="fas fa-headset"></i> Support</a>
+            <a href="/about/" class="menu-item"><i class="fas fa-info-circle"></i> About</a>
+            <div class="menu-divider"></div>
+            <a href="#" onclick="logout();return false;" class="menu-item" style="color:#F6465D;"><i class="fas fa-sign-out-alt"></i> Logout</a>
+        </div>
+    </div>
 
     <main class="container-fluid px-3 py-3">
         <div class="loading">
@@ -533,17 +380,17 @@
             <span id="mobileBadge" class="mobile-badge">0</span>
             <span>Alerts</span>
         </div>
-        <div class="mobile-footer-item" onclick="toggleSimpleChat()">
-            <i class="fas fa-robot"></i>
+        <div class="mobile-footer-item" onclick="toggleSupportChat()">
+            <i class="fas fa-headset"></i>
             <span>Support</span>
         </div>
         <div class="mobile-footer-item" onclick="window.location.href='/dashboard/'">
             <i class="fas fa-chart-line"></i>
-            <span>Portfolio</span>
+            <span>DashBoard</span>
         </div>
         <div class="mobile-footer-item" onclick="window.location.href='/transparency/'">
             <i class="fas fa-eye"></i>
-            <span>Chat</span>
+            <span>Public</span>
         </div>
     </div>
     
@@ -555,29 +402,14 @@
         </div>
     </div>
 
-    <!-- Simple Chat Window for Mobile -->
-    <div id="simpleChatWindow" style="display: none; position: fixed; bottom: 70px; left: 10px; right: 10px; width: auto; height: 450px; background: white; border-radius: 16px; box-shadow: 0 4px 20px rgba(0,0,0,0.2); z-index: 10000; flex-direction: column; overflow: hidden;">
-        <div style="background: #F0B90B; padding: 12px 16px; font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
-            <span>🤖 Crypto Assistant</span>
-            <button onclick="closeSimpleChat()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #0B0E11;">×</button>
-        </div>
-        <div id="simpleChatMessages" style="flex: 1; overflow-y: auto; padding: 12px; background: #F8F9FA;">
-            <div class="chat-message bot" style="margin-bottom: 10px;">
-                <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
-                    👋 Hi! I'm your crypto assistant. Ask me anything about trading, deposits, referrals, or yield!
-                </div>
-            </div>
-        </div>
-        <div style="padding: 12px; border-top: 1px solid #E2E4E8; display: flex; gap: 8px; background: white;">
-            <input type="text" id="simpleChatInput" placeholder="Type your question..." style="flex: 1; padding: 10px 14px; border: 1px solid #E2E4E8; border-radius: 25px; outline: none; font-size: 14px;">
-            <button onclick="sendSimpleMessage()" style="background: #F0B90B; border: none; padding: 10px 20px; border-radius: 25px; cursor: pointer; font-weight: 600;">Send</button>
-        </div>
-    </div>
 
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script>
+
+        var supportSelectedUser = null;
+
     // ============ LOADING FUNCTIONS ============
     function showLoading() {
         const loader = document.querySelector('.loading');
@@ -612,6 +444,10 @@
     setInterval(updateLiveClock, 100);
     updateLiveClock();
     // ============ END LIVE CLOCK ============
+    function toggleMenu() {
+        document.getElementById('menuPanel').classList.toggle('show');
+        document.getElementById('menuOverlay').classList.toggle('show');
+    }
 
     // ============ STATIC MARQUEE ============
     const allMarqueeMessages = [
@@ -825,71 +661,88 @@
     // ============ END PROFESSIONAL MODAL FUNCTIONS ============
 
     // ============ CHATBOT FUNCTIONS ============
-    function toggleSimpleChat() {
-        const chatWindow = document.getElementById('simpleChatWindow');
-        if (chatWindow) {
-            chatWindow.style.display = chatWindow.style.display === 'none' ? 'flex' : 'none';
+
+
+    function toggleSupportChat() {
+        var modal = document.getElementById('supportChatModal');
+        if (modal.style.display === 'flex') {
+            closeSupportChat();
+        } else {
+            modal.style.display = 'flex';
+            loadSupportMessages();
+            supportMsgInterval = setInterval(loadSupportMessages, 2000);
         }
     }
 
-    function closeSimpleChat() {
-        const chatWindow = document.getElementById('simpleChatWindow');
-        if (chatWindow) {
-            chatWindow.style.display = 'none';
-        }
+    function closeSupportChat() {
+        document.getElementById('supportChatModal').style.display = 'none';
+        clearInterval(supportMsgInterval);
     }
 
-    async function sendSimpleMessage() {
-        const input = document.getElementById('simpleChatInput');
-        const message = input.value.trim();
-        if (!message) return;
-
-        const messagesDiv = document.getElementById('simpleChatMessages');
-
-        messagesDiv.innerHTML += `
-            <div style="text-align: right; margin-bottom: 10px;">
-                <div style="display: inline-block; background: #F0B90B; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #0B0E11;">
-                    ${escapeHtml(message)}
-                </div>
-            </div>
-        `;
-        input.value = '';
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
-        const typingId = 'typing_' + Date.now();
-        messagesDiv.innerHTML += `<div id="${typingId}" style="margin-bottom: 10px;"><div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; color: #707A8A;">Typing...</div></div>`;
-        messagesDiv.scrollTop = messagesDiv.scrollHeight;
-
+    async function loadSupportMessages() {
         try {
-            const response = await fetch('/api/chatbot/message/', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
-                },
-                body: JSON.stringify({ message: message })
+            var res = await fetch('/api/chat/messages/', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
             });
-            const data = await response.json();
+            if (!res.ok) return;
+            var data = await res.json();
+            if (!data || data.length === 0) return;
 
-            document.getElementById(typingId)?.remove();
-            messagesDiv.innerHTML += `
-                <div style="margin-bottom: 10px;">
-                    <div style="display: inline-block; background: white; padding: 10px 14px; border-radius: 18px; max-width: 80%; color: #1E2329;">
-                        ${escapeHtml(data.response)}
-                    </div>
-                </div>
-            `;
-            messagesDiv.scrollTop = messagesDiv.scrollHeight;
-        } catch (error) {
-            document.getElementById(typingId)?.remove();
-            messagesDiv.innerHTML += `
-                <div style="margin-bottom: 10px;">
-                    <div style="display: inline-block; background: #FEEBEE; padding: 10px 14px; border-radius: 18px; color: #F6465D;">
-                        Sorry, something went wrong. Please try again.
-                    </div>
-                </div>
-            `;
-        }
+            var container = document.getElementById('supportChatMessages');
+            container.innerHTML = '';
+
+            data.forEach(function(msg) {
+                var isAdmin = msg.is_admin;
+                container.innerHTML +=
+                    '<div style="display:flex;gap:8px;margin-bottom:10px;' + (isAdmin ? '' : 'flex-direction:row-reverse;') + '">' +
+                    '<div style="width:28px;height:28px;border-radius:50%;background:' + (isAdmin ? '#F0B90B' : '#0ECB81') + ';display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;">' + (isAdmin ? '👨‍💼' : '👤') + '</div>' +
+                    '<div><div style="font-size:9px;color:#848E9C;margin-bottom:2px;">' + (isAdmin ? 'Support' : 'You') + '</div>' +
+                    '<div style="padding:8px 12px;border-radius:12px;font-size:11px;max-width:250px;' + (isAdmin ? 'background:rgba(240,185,11,0.1);color:#EAECEF;' : 'background:#F0B90B;color:#1E2329;') + '">' + msg.message + '</div></div></div>';
+            });
+            container.scrollTop = container.scrollHeight;
+
+            // Admin dropdown
+            var profileRes = await fetch('/api/auth/profile/', {
+                headers: { 'Authorization': 'Bearer ' + getToken() }
+            });
+            var profile = await profileRes.json();
+
+            if (profile.is_staff) {
+                var users = [...new Set(data.filter(function(m) { return !m.is_admin; }).map(function(m) { return { id: m.user_id, email: m.user_email }; }))];
+                if (users.length > 0) {
+                    document.getElementById('supportAdminBar').style.display = 'block';
+                    var sel = document.getElementById('supportTargetUser');
+                    sel.innerHTML = '<option value="">-- Select user --</option>' + users.map(function(u) {
+                        return '<option value="' + u.id + '">' + u.email + '</option>';
+                    }).join('');
+                    if (supportSelectedUser) sel.value = supportSelectedUser;
+                    sel.onchange = function() { supportSelectedUser = this.value; };
+                }
+            }
+        } catch(e) {}
+    }
+
+    function sendSupportMessage() {
+        var input = document.getElementById('supportMsgInput');
+        var msg = input.value.trim();
+        if (!msg) return;
+
+        var body = { message: msg };
+        if (supportSelectedUser) body.target_user_id = supportSelectedUser;
+
+        fetch('/api/chat/send/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + getToken()
+            },
+            body: JSON.stringify(body)
+        }).then(function(res) {
+            if (res.ok) {
+                input.value = '';
+                loadSupportMessages();
+            }
+        });
     }
     // ============ END CHATBOT FUNCTIONS ============
 
@@ -987,6 +840,31 @@
             <div class="custom-modal-footer">
                 <button class="custom-modal-btn" onclick="closeModal()">OK</button>
             </div>
+        </div>
+    </div>
+    <!-- Support Chat Modal -->
+    <div id="supportChatModal" style="display:none;position:fixed;bottom:0;left:0;right:0;top:56px;z-index:10000;flex-direction:column;background:#0B0E11;">
+        <div style="background:#1A1C23;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(240,185,11,0.15);">
+            <div style="display:flex;align-items:center;gap:8px;">
+                <div class="status-dot"></div>
+                <span style="color:#fff;font-weight:600;font-size:13px;">NODE Support</span>
+            </div>
+            <button onclick="closeSupportChat()" style="background:none;border:none;color:#fff;font-size:20px;cursor:pointer;">×</button>
+        </div>
+        <div id="supportChatMessages" style="flex:1;overflow-y:auto;padding:12px;">
+            <div style="text-align:center;color:#848E9C;padding:40px;font-size:12px;">
+                👋 Welcome to NODE Support<br>
+                <span style="font-size:10px;">Ask us anything — we reply instantly</span>
+            </div>
+        </div>
+        <div id="supportAdminBar" style="display:none;padding:8px 12px;border-top:1px solid rgba(255,255,255,0.06);background:rgba(240,185,11,0.03);">
+            <select id="supportTargetUser" style="width:100%;padding:6px;background:#1A1C23;border:1px solid #2B3139;border-radius:6px;color:#fff;font-size:11px;">
+                <option value="">-- Select user --</option>
+            </select>
+        </div>
+        <div style="padding:10px 12px;border-top:1px solid rgba(255,255,255,0.06);display:flex;gap:8px;">
+            <input type="text" id="supportMsgInput" placeholder="Type your message..." style="flex:1;padding:10px 14px;border-radius:20px;border:1px solid #2B3139;background:rgba(255,255,255,0.04);color:#fff;font-size:12px;outline:none;">
+            <button onclick="sendSupportMessage()" style="width:40px;height:40px;border-radius:50%;border:none;background:#F0B90B;color:#1E2329;font-size:16px;cursor:pointer;">➤</button>
         </div>
     </div>
 </body>
