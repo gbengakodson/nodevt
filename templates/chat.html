@@ -304,6 +304,8 @@
 
 <script>
     var lastMessageId = null;
+    var selectedTargetUser = null;
+    var isAdmin = false;
     var faqs = [
         // === GETTING STARTED ===
         { icon: '🤖', q: 'What is NODE exactly?', a: 'NODE is an automated crypto grid trading platform. You deposit USDC, activate a Position Tracker, and the bot automatically buys low and sells high within a price range — 24/7. You earn variable profits from market volatility. No manual trading. No chart-watching. No experience needed.' },
@@ -381,6 +383,13 @@
         { icon: '🌍', q: 'What is NODE\'s mission?', a: 'To democratize algorithmic trading. To give everyday people access to sophisticated trading tools that were once only available to hedge funds. To help 20 million Africans build wealth through automated dollar-denominated investing.' }
     ];
 
+    // Check admin status
+    fetch('/api/auth/profile/', {
+        headers: { 'Authorization': 'Bearer ' + localStorage.getItem('access_token') }
+    }).then(function(r) { return r.json(); }).then(function(profile) {
+        isAdmin = profile.is_staff || false;
+    }).catch(function() {});
+
     function renderFAQ() {
         var html = '';
         for (var i = 0; i < faqs.length; i++) {
@@ -390,6 +399,19 @@
     }
     renderFAQ();
 
+    function openFaq(index) {
+        var faq = faqs[index];
+        var modal = document.createElement('div');
+        modal.style.cssText = 'position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.8);z-index:10000;display:flex;align-items:center;justify-content:center;';
+        modal.onclick = function(e) { if (e.target === modal) modal.remove(); };
+        modal.innerHTML = '<div style="background:var(--bg-card);border:1px solid var(--border);border-radius:14px;max-width:500px;width:90%;max-height:80vh;overflow-y:auto;padding:24px;">' +
+            '<h3 style="font-size:16px;color:var(--primary);margin-bottom:12px;">' + faq.icon + ' ' + faq.q + '</h3>' +
+            '<p style="font-size:13px;color:var(--text-primary);line-height:1.7;">' + faq.a.replace(/\n/g, '<br><br>') + '</p>' +
+            '<button onclick="this.parentElement.parentElement.remove()" style="margin-top:16px;padding:10px 24px;border-radius:8px;border:1px solid var(--primary);background:transparent;color:var(--primary);cursor:pointer;width:100%;font-weight:600;">Close</button>' +
+        '</div>';
+        document.body.appendChild(modal);
+    }
+
     async function loadMessages() {
         try {
             var res = await fetch('/api/chat/messages/', {
@@ -397,7 +419,6 @@
             });
             if (!res.ok) return;
             var data = await res.json();
-
             if (!data || data.length === 0) return;
 
             var container = document.getElementById('chatMessages');
@@ -411,20 +432,26 @@
                 lastMessageId = data[data.length - 1].id;
             }
 
-            // Build admin reply dropdown
-            var userMap = {};
-            data.forEach(function(m) {
-                if (m.user_id && m.user_email) {
-                    userMap[m.user_id] = m.user_email;
+            // Build admin dropdown — only for staff
+            if (isAdmin) {
+                var userMap = {};
+                data.forEach(function(m) {
+                    if (m.user_id && m.user_email && !m.is_admin) {
+                        userMap[m.user_id] = m.user_email;
+                    }
+                });
+                var keys = Object.keys(userMap);
+                if (keys.length > 0) {
+                    document.getElementById('adminReplyBar').style.display = 'block';
+                    var sel = document.getElementById('targetUserSelect');
+                    sel.innerHTML = keys.map(function(id) {
+                        var selected = (id === selectedTargetUser) ? ' selected' : '';
+                        return '<option value="' + id + '"' + selected + '>' + userMap[id] + '</option>';
+                    }).join('');
+                    if (selectedTargetUser && keys.includes(selectedTargetUser)) {
+                        sel.value = selectedTargetUser;
+                    }
                 }
-            });
-            var keys = Object.keys(userMap);
-            if (keys.length > 0) {
-                document.getElementById('adminReplyBar').style.display = 'block';
-                var sel = document.getElementById('targetUserSelect');
-                sel.innerHTML = keys.map(function(id) {
-                    return '<option value="' + id + '">' + userMap[id] + '</option>';
-                }).join('');
             }
         } catch(e) {}
     }
@@ -434,7 +461,6 @@
         if (container.querySelector('div[style]')) {
             container.innerHTML = '';
         }
-
         var sender = isAdmin ? 'NODE Support' : (userEmail || 'You');
         var wrapper = document.createElement('div');
         wrapper.className = 'msg-wrapper ' + (isAdmin ? 'admin' : 'user');
@@ -445,7 +471,6 @@
                 '<div class="msg-bubble">' + escHtml(message) + '</div>' +
                 '<div class="msg-time">' + (time || '') + '</div>' +
             '</div>';
-
         container.appendChild(wrapper);
         container.scrollTop = container.scrollHeight;
     }
@@ -457,8 +482,9 @@
 
         var body = { message: msg };
         var targetSelect = document.getElementById('targetUserSelect');
-        if (targetSelect && targetSelect.value) {
+        if (isAdmin && targetSelect && targetSelect.value) {
             body.target_user_id = targetSelect.value;
+            selectedTargetUser = targetSelect.value;
         }
 
         fetch('/api/chat/send/', {
