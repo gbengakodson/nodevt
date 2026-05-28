@@ -11,9 +11,9 @@ class RegisterSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['id', 'email', 'username', 'wallet_address', 'referral_code',
+        fields = ['id', 'email', 'username', 'password', 'password2', 'wallet_address', 'referral_code',
                   'created_at', 'kyc_status', 'phone_number', 'country',
-                  'id_type', 'id_number', 'is_verified', 'date_verified', 'user_type', 'is_staff']
+                  'id_type', 'id_number', 'is_verified', 'date_verified', 'user_type']
         extra_kwargs = {
             'password': {'write_only': True},
             'user_type': {'required': False, 'default': 'MICRO'}
