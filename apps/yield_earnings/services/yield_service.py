@@ -61,7 +61,12 @@ class YieldService:
         total_hourly_yield = Decimal('0')
 
         for bot in active_bots:
-            # Current value = investment + grid_profit + PNL (fluctuates with market)
+            # 24-hour delay before profits start
+            hours_since_creation = (timezone.now() - bot.created_at).total_seconds() / 3600
+            if hours_since_creation < 24:
+                continue
+
+            # Current value = investment + PNL (no compounding)
             current_value = bot.amount + bot.pnl
             bot_hourly_profit = current_value * cls.HOURLY_RATE
             bot.grid_profit += bot_hourly_profit * Decimal('0.90')  # 90% to user
