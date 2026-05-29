@@ -29,9 +29,10 @@ class BinanceService:
             return f'{symbol}USDT'
         return None
 
-    def place_grid_orders(self, symbol, lower_price, upper_price, total_amount, grids=100):
+    def place_grid_buys(self, symbol, lower_price, upper_price, total_amount, grids=100):
         """
-        Place buy limit orders across the grid range on Binance.
+        Place buy limit orders across the grid range.
+        Only places BUY orders. Sells are placed after buys fill.
         Returns: {success: bool, orders_placed: int, order_ids: list, error: str}
         """
         try:
@@ -39,7 +40,6 @@ class BinanceService:
             if not binance_symbol:
                 return {'success': False, 'error': f'No Binance pair for {symbol}'}
 
-            # Get symbol info for lot size and tick size
             info = self.client.get_symbol_info(binance_symbol)
             lot_filter = next(f for f in info['filters'] if f['filterType'] == 'LOT_SIZE')
             price_filter = next(f for f in info['filters'] if f['filterType'] == 'PRICE_FILTER')
@@ -48,10 +48,7 @@ class BinanceService:
             step_size = float(lot_filter['stepSize'])
             tick_size = float(price_filter['tickSize'])
 
-            # Calculate grid step
             grid_step = (float(upper_price) - float(lower_price)) / grids
-
-            # Amount per order
             amount_per_order = float(total_amount) / grids
 
             order_ids = []
@@ -59,15 +56,10 @@ class BinanceService:
 
             for i in range(grids):
                 price = float(lower_price) + (i * grid_step)
-
-                # Round price to tick size
                 price = round(price / tick_size) * tick_size
                 price = round(price, 8)
 
-                # Calculate quantity
-                quantity = amount_per_order / price
-
-                # Round quantity to step size
+                quantity = amount_per_order / price if price > 0 else 0
                 quantity = round(quantity / step_size) * step_size
                 quantity = round(quantity, 8)
 
@@ -77,9 +69,9 @@ class BinanceService:
                 try:
                     order = self.client.create_order(
                         symbol=binance_symbol,
-                        side=SIDE_BUY,
-                        type=ORDER_TYPE_LIMIT,
-                        timeInForce=TIME_IN_FORCE_GTC,
+                        side='BUY',
+                        type='LIMIT',
+                        timeInForce='GTC',
                         quantity=quantity,
                         price=str(price)
                     )
@@ -91,7 +83,7 @@ class BinanceService:
                         time.sleep(0.1)
 
                 except Exception as e:
-                    print(f"Order {i} failed at ${price:.4f}: {e}")
+                    print(f"Buy order {i} failed at ${price:.4f}: {e}")
                     continue
 
             return {
@@ -103,8 +95,49 @@ class BinanceService:
             }
 
         except Exception as e:
-            print(f"Grid order placement error: {e}")
+            print(f"Grid buy placement error: {e}")
             return {'success': False, 'error': str(e)}
+
+    def place_sell_for_buy(self, symbol, buy_price, buy_quantity, spread_pct=1.5):
+        """
+        Place a sell order to pair with a filled buy.
+        Sell price = buy_price + spread%
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return None
+
+            info = self.client.get_symbol_info(binance_symbol)
+            price_filter = next(f for f in info['filters'] if f['filterType'] == 'PRICE_FILTER')
+            lot_filter = next(f for f in info['filters'] if f['filterType'] == 'LOT_SIZE')
+
+            tick_size = float(price_filter['tickSize'])
+            step_size = float(lot_filter['stepSize'])
+
+            sell_price = buy_price * (1 + spread_pct / 100)
+            sell_price = round(sell_price / tick_size) * tick_size
+            sell_price = round(sell_price, 8)
+
+            sell_qty = round(float(buy_quantity) / step_size) * step_size
+            sell_qty = round(sell_qty, 8)
+
+            order = self.client.create_order(
+                symbol=binance_symbol,
+                side='SELL',
+                type='LIMIT',
+                timeInForce='GTC',
+                quantity=sell_qty,
+                price=str(sell_price)
+            )
+
+            print(
+                f"📈 Placed sell: {sell_qty} @ ${sell_price:.6f} (bought at ${float(buy_price):.6f}, spread {spread_pct}%)")
+            return str(order['orderId'])
+
+        except Exception as e:
+            print(f"Sell placement error: {e}")
+            return None
 
 
 

@@ -374,10 +374,11 @@ class FadakkaService:
             # =====================================
 
             bs = BinanceService()
-            result = bs.place_grid_orders(
+            # Use new buy-only method
+            result = bs.place_grid_buys(
                 symbol=symbol,
-                lower_price=lower_price,
-                upper_price=upper_price,
+                lower_price=lower,
+                upper_price=upper,
                 total_amount=invest,
                 grids=max_grids
             )
@@ -402,6 +403,7 @@ class FadakkaService:
                     'activation_price': float(current_price),
                     'binance_order_ids': result['order_ids'],
                     'binance_symbol': result['symbol'],
+                    'spread_pct': 1.5,
                     'grid_config': {
                         'grid_pct': float(grid_pct),
                         'lower_pct': float(lower_pct),
