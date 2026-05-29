@@ -18,7 +18,7 @@ from apps.trading.views import platform_report_webhook
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
 from apps.trading.views import TradingViewSet
-from apps.chat.views import TransparencyChatView
+from apps.chat.views import TransparencyLikeView
 
 
 
@@ -112,6 +112,6 @@ urlpatterns = [
     path('api/trigger/charge-aum-fees/', charge_aum_fees_webhook, name='charge_aum_fees'),
 
     path('api/public/grid-live/', TradingViewSet.as_view({'get': 'public_grid_live'}), name='public_grid_live'),
-    path('transparency/like/', TransparencyChatView.as_view({'post': 'like'}), name='transparency_like'),
+    path('transparency/like/', TransparencyLikeView.as_view(), name='transparency_like'),
 
 ]

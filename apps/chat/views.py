@@ -163,3 +163,21 @@ class TransparencyChatView(APIView):
             return Response({'likes': post.likes.count()})
         except TransparencyChatMessage.DoesNotExist:
             return Response({'error': 'Post not found'}, status=404)
+
+
+class TransparencyLikeView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        post_id = request.data.get('post_id')
+        if not request.user.is_authenticated:
+            return Response({'error': 'Login required'}, status=401)
+        try:
+            post = TransparencyChatMessage.objects.get(id=post_id)
+            if request.user in post.likes.all():
+                post.likes.remove(request.user)
+            else:
+                post.likes.add(request.user)
+            return Response({'likes': post.likes.count()})
+        except TransparencyChatMessage.DoesNotExist:
+            return Response({'error': 'Post not found'}, status=404)
