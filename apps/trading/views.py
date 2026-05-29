@@ -1599,6 +1599,11 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response({'grids': data, 'count': len(data)})
 
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    def public_grid_live(self, request):
+        """Public version of master grid live data - no auth required"""
+        return self.master_grid_live(request)
+
 
 
 
@@ -1752,7 +1757,3 @@ def platform_report_webhook(request):
     send_daily_platform_report()
     return JsonResponse({'status': 'success'})
 
-@action(detail=False, methods=['get'], permission_classes=[AllowAny])
-def public_grid_live(self, request):
-    """Public version of master grid live data - no auth required"""
-    return self.master_grid_live(request)

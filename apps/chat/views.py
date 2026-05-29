@@ -5,6 +5,7 @@ from rest_framework.permissions import IsAuthenticated
 from .models import ChatMessage
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
+from .models import ChatMessage, TransparencyChatMessage
 
 
 class ChatMessagesView(APIView):
