@@ -76,6 +76,34 @@ class SendMessageView(APIView):
         })
 
 
+class ReviewView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from .models import Review
+        reviews = Review.objects.filter(is_approved=True).order_by('-created_at')[:20]
+        data = [{
+            'id': str(r.id),
+            'username': r.user.username or r.user.email.split('@')[0],
+            'rating': r.rating,
+            'message': r.message,
+            'time': r.created_at.strftime('%b %d')
+        } for r in reviews]
+        return Response(data)
+
+    def post(self, request):
+        from .models import Review
+        if not request.user.is_authenticated:
+            return Response({'error': 'Login required'}, status=401)
+        rating = int(request.data.get('rating', 5))
+        message = request.data.get('message', '').strip()
+        if not message:
+            return Response({'error': 'Message required'}, status=400)
+        Review.objects.create(user=request.user, rating=rating, message=message)
+        return Response({'success': True})
+
+
+
 class TransparencyChatView(APIView):
     permission_classes = [AllowAny]
 
@@ -87,7 +115,8 @@ class TransparencyChatView(APIView):
             'message': msg.message,
             'created_at': msg.created_at.isoformat(),
             'is_admin': msg.user.is_staff,
-            'parent_id': str(msg.parent_id) if msg.parent_id else None
+            'parent_id': str(msg.parent_id) if msg.parent_id else None,
+            'likes': msg.likes.count()
         } for msg in messages]
         return Response(data)
 
@@ -118,3 +147,18 @@ class TransparencyChatView(APIView):
         )
 
         return Response({'success': True, 'id': str(chat_msg.id)})
+
+    @action(detail=False, methods=['post'])
+    def like(self, request):
+        post_id = request.data.get('post_id')
+        if not request.user.is_authenticated:
+            return Response({'error': 'Login required'}, status=401)
+        try:
+            post = TransparencyChatMessage.objects.get(id=post_id)
+            if request.user in post.likes.all():
+                post.likes.remove(request.user)
+            else:
+                post.likes.add(request.user)
+            return Response({'likes': post.likes.count()})
+        except TransparencyChatMessage.DoesNotExist:
+            return Response({'error': 'Post not found'}, status=404)

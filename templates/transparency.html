@@ -389,7 +389,7 @@
         var msg = document.getElementById('reviewInput').value.trim();
         if (!msg || reviewRating === 0) return;
         try {
-            await fetch('/api/transparency/reviews/', {
+            await fetch('/api/chat/reviews/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
                 body: JSON.stringify({ rating: reviewRating, message: msg })
@@ -403,7 +403,7 @@
 
     async function loadReviews() {
         try {
-            var reviews = await fetch('/api/transparency/reviews/').then(r => r.json());
+            var reviews = await fetch('/api/chat/reviews/').then(r => r.json());
             document.getElementById('reviewCount').textContent = reviews.length + ' reviews';
             var container = document.getElementById('reviewsList');
             container.innerHTML = reviews.length === 0 ? '<div class="empty-state">No reviews yet</div>' :
@@ -418,7 +418,7 @@
         var msg = document.getElementById('feedPostInput').value.trim();
         if (!msg) return;
         try {
-            await fetch('/api/transparency/feed/', {
+            await fetch('/api/chat/transparency/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
                 body: JSON.stringify({ message: msg })
@@ -430,18 +430,18 @@
 
     async function loadFeed() {
         try {
-            var posts = await fetch('/api/transparency/feed/').then(r => r.json());
+            var posts = await fetch('/api/chat/transparency/').then(r => r.json());
             var container = document.getElementById('feedPosts');
             container.innerHTML = posts.length === 0 ? '<div class="empty-state">No posts yet</div>' :
                 posts.map(function(p) {
-                    return '<div class="feed-post"><div class="post-header"><div class="post-avatar">👤</div><div><div class="post-username">' + (p.username || 'User') + '</div><div class="post-time">' + (p.time || '') + '</div></div></div><div class="post-body">' + p.message + '</div><div class="post-actions"><button class="post-action" onclick="likePost(\'' + p.id + '\')">👍 <span>' + (p.likes || 0) + '</span></button></div></div>';
+                    return '<div class="feed-post"><div class="post-header"><div class="post-avatar">👤</div><div><div class="post-username">' + (p.username || 'User') + '</div><div class="post-time">' + (p.created_at || '') + '</div></div></div><div class="post-body">' + p.message + '</div><div class="post-actions"><button class="post-action" onclick="likePost(\'' + p.id + '\')">👍 <span>' + (p.likes || 0) + '</span></button></div></div>';
                 }).join('');
         } catch(e) {}
     }
 
     async function likePost(id) {
         try {
-            await fetch('/api/transparency/feed/like/', {
+            await fetch('/api/chat/transparency/like/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
                 body: JSON.stringify({ post_id: id })
