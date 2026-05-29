@@ -356,15 +356,15 @@
             document.querySelectorAll('[data-tab]').forEach(function(b) { b.classList.remove('active'); });
             this.classList.add('active');
             var tab = this.getAttribute('data-tab');
-            if (tab === 'deposits') loadHistory('/admin/deposits/', 'deposits');
-            if (tab === 'withdrawals') loadHistory('/admin/withdrawals/', 'withdrawals');
-            if (tab === 'holders') loadHistory('/admin/holders/', 'holders');
+            if (tab === 'deposits') loadHistory('/public/deposits/', 'deposits');
+            if (tab === 'withdrawals') loadHistory('/public/withdrawals/', 'withdrawals');
+            if (tab === 'holders') loadHistory('/public/holders/', 'holders');
         });
     });
 
     async function loadHistory(url, type) {
         try {
-            var data = await fetch('/api' + url, { headers: { 'Authorization': 'Bearer ' + getToken() } }).then(r => r.json());
+            var data = await fetch('/api/public/grid-live/').then(r => r.json());
             var container = document.getElementById('historyContent');
             if (type === 'holders') {
                 container.innerHTML = '<table class="data-table"><thead><tr><th>User</th><th>Token</th><th>Value</th><th>PNL</th></tr></thead><tbody>' +

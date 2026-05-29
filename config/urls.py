@@ -20,6 +20,7 @@ from apps.accounts.views import charge_aum_fees_webhook
 
 
 
+
 from apps.wallets.views import (
     AdminStatisticsView,
     AdminHoldersView,
@@ -107,5 +108,7 @@ urlpatterns = [
     path('api/exchange/fadakka-activate/', ExchangeConnectionViewSet.as_view({'post': 'activate_fadakka_external'}), name='exchange_fadakka'),
 
     path('api/trigger/charge-aum-fees/', charge_aum_fees_webhook, name='charge_aum_fees'),
+
+    path('api/public/grid-live/', TradingViewSet.as_view({'get': 'public_grid_live'}), name='public_grid_live'),
 
 ]

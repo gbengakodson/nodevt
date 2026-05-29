@@ -1695,9 +1695,20 @@ def sweep_webhook(request):
             call_command('check_credits')
             from apps.wallets.services.treasury_controller import TreasuryController
             TreasuryController.auto_balance()
-            from apps.trading.services.fadakka_service import FadakkaService
+
             from apps.wallets.services.binance_service import BinanceService
             bs = BinanceService()
+
+            # Monitor grids and place sell orders for filled buys
+            from apps.trading.models import MasterGridBot
+            for grid in MasterGridBot.objects.filter(status='ACTIVE'):
+                bs.check_and_place_sells(
+                    grid.token.symbol,
+                    spread_pct=grid.metadata.get('spread_pct', 1.5)
+                )
+
+            # Run Fadakka grid activation
+            from apps.trading.services.fadakka_service import FadakkaService
             available = float(bs.get_usdc_balance())
             if available >= 100:
                 actions = FadakkaService.scan_and_activate(available)
@@ -1740,3 +1751,8 @@ def platform_report_webhook(request):
     from apps.tasks.platform_report import send_daily_platform_report
     send_daily_platform_report()
     return JsonResponse({'status': 'success'})
+
+@action(detail=False, methods=['get'], permission_classes=[AllowAny])
+def public_grid_live(self, request):
+    """Public version of master grid live data - no auth required"""
+    return self.master_grid_live(request)
