@@ -18,6 +18,7 @@ from apps.trading.views import platform_report_webhook
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
 from apps.trading.views import TradingViewSet
+from apps.chat.views import TransparencyChatView
 
 
 
