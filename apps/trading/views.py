@@ -1599,7 +1599,7 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response({'grids': data, 'count': len(data)})
 
-    @action(detail=False, methods=['get'], permission_classes=[AllowAny])
+    @action(detail=False, methods=['get'], permission_classes=[AllowAny], authentication_classes=[])
     def public_grid_live(self, request):
         """Public version of master grid live data - no auth required"""
         return self.master_grid_live(request)
