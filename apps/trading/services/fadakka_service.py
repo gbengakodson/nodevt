@@ -377,8 +377,8 @@ class FadakkaService:
             # Use new buy-only method
             result = bs.place_grid_buys(
                 symbol=symbol,
-                lower_price=lower,
-                upper_price=upper,
+                lower_price=lower_price,
+                upper_price=upper_price,
                 total_amount=invest,
                 grids=max_grids
             )
