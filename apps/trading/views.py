@@ -94,122 +94,84 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def buy(self, request):
-        """Activate Position Tracker - sweeps from user wallet to NODE central"""
+        """Activate a Position Tracker — 10% management fee, sweeps from user wallet"""
         serializer = PurchaseSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
         token_id = serializer.validated_data['token_id']
         amount_usdc = serializer.validated_data['amount_usdc']
-        order_type = request.data.get('order_type', 'market').lower()
 
         token = get_object_or_404(CryptoToken, id=token_id, is_active=True)
 
-        # Fee: 1% upfront for all order types
-        fee_percent = Decimal('0.01')
+        # 10% management fee
+        fee_percent = Decimal('0.10')
         node_fee = amount_usdc * fee_percent
         amount_after_fee = amount_usdc - node_fee
+        token_quantity = amount_after_fee / token.current_price
 
-        if order_type == 'market':
-            # Market order: check Grand Balance
-            grand_wallet, _ = Wallet.objects.get_or_create(
-                user=request.user,
-                wallet_type='GRAND',
-                defaults={'balance': 0}
-            )
+        # Sweep from user wallet to NODE central
+        from apps.wallets.models import WalletKey
+        from apps.wallets.services.web3_service import Web3Service
 
-            if grand_wallet.balance < amount_usdc:
-                return Response({
-                    'error': 'Insufficient balance',
-                    'your_balance': str(grand_wallet.balance),
-                    'required': str(amount_usdc)
-                }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            wallet_key = WalletKey.objects.get(user=request.user)
+            user_address = wallet_key.address
+        except WalletKey.DoesNotExist:
+            return Response({
+                'error': 'No wallet found. Please deposit first.'
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-            token_quantity = amount_after_fee / token.current_price
+        ws = Web3Service()
+        real_balance = ws.get_usdc_balance(user_address)
+        if real_balance < amount_usdc:
+            return Response({
+                'error': 'Insufficient wallet balance',
+                'your_wallet_balance': str(real_balance),
+                'required': str(amount_usdc)
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-            grand_wallet.balance -= amount_usdc
-            grand_wallet.save()
+        # Create GridBot BEFORE sweep
+        upper_price = token.current_price * Decimal('1.8')
+        lower_price = token.current_price * Decimal('0.2')
+        bot = GridBot.objects.create(
+            user=request.user,
+            token=token,
+            amount=amount_after_fee,
+            lower_price=lower_price,
+            upper_price=upper_price,
+            grids=100,
+            status='ACTIVE',
+            grid_profit=Decimal('0'),
+            price_at_creation=token.current_price,
+            created_at=timezone.now(),
+        )
 
-            user_balance, _ = request.user.token_balances.get_or_create(
-                token=token,
-                defaults={'quantity': 0, 'average_buy_price': 0}
-            )
-            total_quantity = user_balance.quantity + token_quantity
-            total_cost = (user_balance.quantity * user_balance.average_buy_price) + (
-                        token_quantity * token.current_price)
-            user_balance.average_buy_price = total_cost / total_quantity if total_quantity > 0 else 0
-            user_balance.quantity = total_quantity
-            user_balance.save()
+        # Sweep
+        user_private_key = wallet_key.get_private_key()
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            user_address, user_private_key,
+            settings.CENTRAL_WALLET_ADDRESS,
+            amount_usdc
+        )
 
-        else:
-            # Position Tracker: create bot first, then sweep
-            from apps.wallets.models import WalletKey
-            from apps.wallets.services.web3_service import Web3Service
+        if not sweep_result['success']:
+            bot.delete()
+            return Response({
+                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
+            }, status=status.HTTP_400_BAD_REQUEST)
 
-            try:
-                wallet_key = WalletKey.objects.get(user=request.user)
-                user_address = wallet_key.address
-            except WalletKey.DoesNotExist:
-                return Response({
-                    'error': 'No wallet found. Please deposit first.'
-                }, status=status.HTTP_400_BAD_REQUEST)
+        bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
+        bot.save()
 
-            # Check user's real on-chain wallet balance
-            ws = Web3Service()
-            real_balance = ws.get_usdc_balance(user_address)
+        notify_user(
+            request.user,
+            f'🤖 {token.symbol} Position Tracker Activated',
+            f'Your {token.symbol} tracker is live with ${float(amount_after_fee):.2f}. Profits start in 24 hours.',
+            'PORTFOLIO'
+        )
 
-            if real_balance < amount_usdc:
-                return Response({
-                    'error': 'Insufficient wallet balance',
-                    'your_wallet_balance': str(real_balance),
-                    'required': str(amount_usdc)
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            token_quantity = amount_after_fee / token.current_price
-
-            # Create GridBot FIRST before moving any money
-            upper_price = token.current_price * Decimal('1.8')
-            lower_price = token.current_price * Decimal('0.2')
-            bot = GridBot.objects.create(
-                user=request.user,
-                token=token,
-                amount=amount_after_fee,
-                lower_price=lower_price,
-                upper_price=upper_price,
-                grids=100,
-                status='ACTIVE',
-                grid_profit=Decimal('0'),
-                price_at_creation=token.current_price,
-                created_at=timezone.now(),
-            )
-
-            # Then sweep from user wallet to NODE central
-            user_private_key = wallet_key.get_private_key()
-            sweep_result = TradingViewSet._sweep_from_user_wallet(
-                user_address, user_private_key,
-                settings.CENTRAL_WALLET_ADDRESS,
-                amount_usdc
-            )
-
-            # If sweep fails, delete the bot and refund
-            if not sweep_result['success']:
-                bot.delete()
-                return Response({
-                    'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-            # Update bot with sweep tx
-            bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
-            bot.save()
-
-            notify_user(
-                request.user,
-                f'🤖 {token.symbol} Position Tracker Activated',
-                f'Your {token.symbol} tracker is live with ${float(amount_after_fee):.2f}. Profits start in 24 hours.',
-                'PORTFOLIO'
-            )
-
-        # Create purchase record
+        # Purchase record
         purchase = Purchase.objects.create(
             user=request.user,
             token=token,
@@ -217,18 +179,17 @@ class TradingViewSet(viewsets.ViewSet):
             price_per_token=token.current_price,
             total_amount=amount_after_fee,
             node_fee=node_fee,
-            order_type=order_type.upper()
+            order_type='GRID'
         )
 
-        # Distribute node fee to referrals (only for Position Tracker)
+        # Distribute node fee to referrals (3 levels, half-of-remaining)
         referral_count = 0
-        if order_type == 'grid':
-            from apps.referrals.services.referral_service import ReferralService
-            try:
-                distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
-                referral_count = len(distributions) if distributions else 0
-            except Exception as e:
-                print(f"Error distributing referral fees: {e}")
+        from apps.referrals.services.referral_service import ReferralService
+        try:
+            distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
+            referral_count = len(distributions) if distributions else 0
+        except Exception as e:
+            print(f"Error distributing referral fees: {e}")
 
         Transaction.objects.create(
             user=request.user,
@@ -242,7 +203,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'quantity': str(token_quantity),
                 'price': str(token.current_price),
                 'node_fee': str(node_fee),
-                'order_type': order_type,
+                'order_type': 'GRID',
                 'referrals_credited': referral_count
             },
             completed_at=timezone.now()
@@ -250,21 +211,22 @@ class TradingViewSet(viewsets.ViewSet):
 
         return Response({
             'success': True,
-            'message': f'Successfully {"purchased" if order_type == "market" else "activated Position Tracker for"} {token.symbol}',
+            'message': f'Position Tracker activated for {token.symbol}',
             'purchase': {
                 'token': token.symbol,
                 'quantity': str(token_quantity),
                 'price_per_token': str(token.current_price),
                 'total_amount': str(amount_after_fee),
                 'node_fee': str(node_fee),
-                'order_type': order_type
+                'order_type': 'GRID'
             },
             'referral_commission': {
                 'total_fee': str(node_fee),
                 'referrers_count': referral_count,
                 'distributed': referral_count > 0
-            } if order_type == 'grid' else None
+            } if referral_count > 0 else None
         })
+
 
     @action(detail=False, methods=['get'])
     def my_grids(self, request):
@@ -501,7 +463,7 @@ class TradingViewSet(viewsets.ViewSet):
         total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
         # Settle performance fees
         fee_due = bot.fee_reserve or 0
-        referrer_due = bot.referrer_reserve or 0
+
 
         # Check platform liquidity
         from apps.wallets.services.web3_service import Web3Service
@@ -565,30 +527,6 @@ class TradingViewSet(viewsets.ViewSet):
                 completed_at=timezone.now()
             )
 
-        if referrer_due > 0:
-            from apps.referrals.models import ReferralRelationship
-            ref_rel = ReferralRelationship.objects.filter(referred=request.user).first()
-            if ref_rel:
-                try:
-                    ref_wallet = WalletKey.objects.get(user=ref_rel.referrer)
-                    TradingViewSet._sweep_from_user_wallet(
-                        settings.CENTRAL_WALLET_ADDRESS,
-                        settings.CENTRAL_WALLET_PRIVATE_KEY,
-                        ref_wallet.address,
-                        referrer_due
-                    )
-                    Transaction.objects.create(
-                        user=ref_rel.referrer,
-                        transaction_type='REFERRAL',
-                        amount=referrer_due,
-                        fee=0,
-                        status='COMPLETED',
-                        metadata={'from_user': request.user.email, 'grid_bot_id': str(bot.id)},
-                        completed_at=timezone.now()
-                    )
-                except WalletKey.DoesNotExist:
-                    pass
-
         bot.status = 'COMPLETED'
         bot.save()
 
@@ -610,7 +548,7 @@ class TradingViewSet(viewsets.ViewSet):
         if bot.pnl_percent >= 20:
             total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
             fee_due = bot.fee_reserve or 0
-            referrer_due = bot.referrer_reserve or 0
+
 
             from apps.wallets.models import WalletKey
             try:
@@ -647,27 +585,6 @@ class TradingViewSet(viewsets.ViewSet):
                     metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol},
                     completed_at=timezone.now()
                 )
-
-            if referrer_due > 0:
-                from apps.referrals.models import ReferralRelationship
-                ref_rel = ReferralRelationship.objects.filter(referred=request.user).first()
-                if ref_rel:
-                    try:
-                        ref_wallet = WalletKey.objects.get(user=ref_rel.referrer)
-                        TradingViewSet._sweep_from_user_wallet(
-                            settings.CENTRAL_WALLET_ADDRESS,
-                            settings.CENTRAL_WALLET_PRIVATE_KEY,
-                            ref_wallet.address,
-                            referrer_due
-                        )
-                        Transaction.objects.create(
-                            user=ref_rel.referrer, transaction_type='REFERRAL',
-                            amount=referrer_due, fee=0, status='COMPLETED',
-                            metadata={'from_user': request.user.email, 'grid_bot_id': str(bot.id)},
-                            completed_at=timezone.now()
-                        )
-                    except WalletKey.DoesNotExist:
-                        pass
 
             bot.status = 'COMPLETED'
             bot.save()

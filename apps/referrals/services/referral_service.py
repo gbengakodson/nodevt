@@ -9,7 +9,7 @@ from apps.core.notifications import notify_user
 class ReferralService:
 
     @classmethod
-    def get_referral_chain(cls, user, max_depth=1):
+    def get_referral_chain(cls, user, max_depth=3):
         """Get referral chain from bottom (buyer) up to top (7 generations)"""
         chain = []
         current_user = user
@@ -29,91 +29,81 @@ class ReferralService:
 
         return chain
 
-
     @classmethod
     @transaction.atomic
     def distribute_node_fee(cls, user, node_fee, purchase):
-        """Split node fee: 50% swept to referrer's real wallet, 50% stays in NODE Web3"""
+        """Split 10% management fee across up to 3 referral levels using half-of-remaining rule.
+        Remainder goes to platform admin."""
         if node_fee <= 0:
             return []
 
         distributions = []
-        referrer_share = node_fee * Decimal('0.5')
-        platform_share = node_fee - referrer_share
+        remaining = node_fee
+        chain = cls.get_referral_chain(user, max_depth=3)
 
-        chain = cls.get_referral_chain(user)
+        for level_info in chain[:3]:
+            share = remaining * Decimal('0.5')
+            if share <= 0:
+                break
 
-        # 50% to direct referrer - sweep to their real wallet
-        if chain:
-            referrer = chain[0]['user']
+            referrer = level_info['user']
 
-            # Get referrer's wallet address
+            # Sweep to referrer's real wallet
             from apps.wallets.models import WalletKey
+            from apps.trading.views import TradingViewSet
+            from django.conf import settings
+
             try:
                 wallet_key = WalletKey.objects.get(user=referrer)
-                referrer_address = wallet_key.address
-            except WalletKey.DoesNotExist:
-                referrer_address = None
-
-            if referrer_address:
-                # Sweep from NODE Web3 to referrer's wallet
-                from django.conf import settings
-                from apps.trading.views import TradingViewSet
                 sweep_result = TradingViewSet._sweep_from_user_wallet(
                     settings.CENTRAL_WALLET_ADDRESS,
                     settings.CENTRAL_WALLET_PRIVATE_KEY,
-                    referrer_address,
-                    referrer_share
+                    wallet_key.address,
+                    share
                 )
-
-                if sweep_result['success']:
+                if sweep_result.get('success'):
+                    # Record earning only if sweep succeeded
                     earning = ReferralEarning.objects.create(
-                        user=referrer, from_user=user, purchase=purchase,
-                        level=1, amount=referrer_share
+                        user=referrer,
+                        from_user=user,
+                        purchase=purchase,
+                        level=level_info['level'],
+                        amount=share
                     )
-
                     Transaction.objects.create(
-                        user=referrer, transaction_type='REFERRAL',
-                        amount=referrer_share, fee=0, status='COMPLETED',
+                        user=referrer,
+                        transaction_type='REFERRAL',
+                        amount=share,
+                        fee=0,
+                        status='COMPLETED',
                         tx_hash=sweep_result.get('tx_hash', ''),
                         metadata={
-                            'from_user': user.email, 'level': 1,
-                            'purchase_id': str(purchase.id),
-                            'to_address': referrer_address
+                            'from_user': user.email,
+                            'level': level_info['level'],
+                            'purchase_id': str(purchase.id)
                         },
                         completed_at=timezone.now()
                     )
                     distributions.append(earning)
+            except WalletKey.DoesNotExist:
+                pass  # Skip if referrer has no wallet yet
 
-                    # After distributions.append(earning)
-                    notify_user(
-                        referrer,
-                        '🤝 Referral Commission',
-                        f'${float(referrer_share):.2f} earned from a new activation and sent to your wallet.',
-                        'PORTFOLIO'
-                    )
+            remaining -= share
 
-        # 50% stays in NODE Web3 - track for admin dashboard
-        from django.contrib.auth import get_user_model
-        User = get_user_model()
-        admin = User.objects.filter(is_superuser=True).first()
-        if admin and platform_share > 0:
-            earning = ReferralEarning.objects.create(
-                user=admin, from_user=user, purchase=purchase,
-                level=0, amount=platform_share
-            )
-
-            Transaction.objects.create(
-                user=admin, transaction_type='PLATFORM_FEE',
-                amount=platform_share, fee=0, status='COMPLETED',
-                metadata={
-                    'from_user': user.email,
-                    'purchase_id': str(purchase.id),
-                    'source': 'node_fee_share'
-                },
-                completed_at=timezone.now()
-            )
-            distributions.append(earning)
+        # Remainder goes to platform admin
+        if remaining > 0:
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admin = User.objects.filter(is_superuser=True).first()
+            if admin:
+                earning = ReferralEarning.objects.create(
+                    user=admin,
+                    from_user=user,
+                    purchase=purchase,
+                    level=0,
+                    amount=remaining
+                )
+                distributions.append(earning)
 
         return distributions
 

@@ -944,7 +944,7 @@
     <!-- Header -->
     <div class="referral-header">
         <h1>🚀 Affiliate Program</h1>
-        <p>Earn up to 20% of the performance fee from your referrals</p>
+        <p>Earn up to $20 recurrent bonus from our Affiliate program</p>
         <div class="referral-link-box">
             <div class="referral-link" id="referralLink" onclick="this.select()">Loading...</div>
             <button class="copy-btn">📋 Copy</button>
@@ -994,7 +994,7 @@
         <!-- Referral Tree -->
         <div class="info-card">
             <div class="info-title">👥 Your Referrals</div>
-            <div class="scrollable-section" id="directReferralsContainer">
+            <div class="scrollable-section" id="referralTreeContainer">
                 <div class="empty-state"><p>Loading...</p></div>
             </div>
         </div>
@@ -1154,20 +1154,22 @@
         container.innerHTML = html;
     }
 
-    function displayDirectReferrals(refs) {
+    function displayReferralTree(treeData) {
         var container = document.getElementById('directReferralsContainer');
-        if (!refs || !refs.length) {
-            container.innerHTML = '<div class="empty-state"><p>No referrals yet. Share your link!</p></div>';
+        if (!treeData || !treeData.levels || !treeData.levels.length) {
+            container.innerHTML = '<div class="empty-state"><p>No referral tree yet</p></div>';
             return;
         }
-        var html = '<div class="table-wrapper"><table class="compact-table"><thead><tr><th>User</th><th>Joined</th><th>Status</th><th>Earned</th></tr></thead><tbody>';
-        for (var i = 0; i < refs.length; i++) {
-            var r = refs[i];
-            var status = r.is_active ? 'Active' : 'Registered';
-            var cls = r.is_active ? 'status-active' : 'status-inactive';
-            html += '<tr><td>' + esc(r.name || r.email) + '</td><td>' + formatDate(r.joined_at) + '</td><td><span class="status-badge ' + cls + '">' + status + '</span></td><td class="price-up">' + formatCurrency(r.earnings) + '</td></tr>';
+        var html = '';
+        for (var i = 0; i < treeData.levels.length; i++) {
+            var level = treeData.levels[i];
+            html += '<div class="tree-level"><div class="tree-level-header">📊 Level ' + level.level + ' (' + level.referrals.length + ')</div><div class="tree-referrals">';
+            for (var j = 0; j < level.referrals.length; j++) {
+                var ref = level.referrals[j];
+                html += '<div class="tree-chip" title="' + esc(ref.email) + '">' + (ref.status_icon || '👤') + ' ' + esc(ref.name) + ' <span class="tree-chip-amount">' + formatCurrency(ref.earnings) + '</span></div>';
+            }
+            html += '</div></div>';
         }
-        html += '</tbody></table></div>';
         container.innerHTML = html;
     }
 
@@ -1182,7 +1184,6 @@
 
             // Stats
             var stats = await apiCall('/trading/referral_stats/');
-            console.log('Stats:', stats);
             document.getElementById('totalReferrals').textContent = stats.total_referrals || 0;
             document.getElementById('activeReferrals').textContent = stats.active_referrals || 0;
             document.getElementById('totalCommissions').textContent = formatCurrency(stats.total_commissions);
@@ -1191,7 +1192,6 @@
             // Referrals list
             try {
                 var refs = await apiCall('/trading/referrals_list/');
-                console.log('Referrals list:', refs);
                 allReferralsData = Array.isArray(refs) ? refs : [];
                 displayReferrals();
             } catch(e) {
@@ -1221,19 +1221,17 @@
                 }
             }
 
-            // Direct referrals
+            // Referral Tree (3 levels)
             try {
-                var refs = await apiCall('/trading/referrals_list/');
-                allReferralsData = Array.isArray(refs) ? refs : [];
-                displayReferrals();
-                displayDirectReferrals(allReferralsData);
+                var treeData = await apiCall('/trading/referral_tree/');
+                displayReferralTree(treeData);
             } catch(e) {
-                displayReferrals();
+                document.getElementById('directReferralsContainer').innerHTML =
+                    '<div class="empty-state"><p>Tree unavailable</p></div>';
             }
 
             // Earnings
             var earnings = await apiCall('/trading/referral_earnings/');
-            console.log('Earnings:', earnings);
             var earnContainer = document.getElementById('earningsContainer');
 
             if (!earnings || !earnings.length) {
