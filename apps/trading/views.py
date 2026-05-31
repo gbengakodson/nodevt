@@ -461,8 +461,7 @@ class TradingViewSet(viewsets.ViewSet):
 
         # Correct return: investment + uncollected profit + market PNL
         total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
-        # Settle performance fees
-        fee_due = bot.fee_reserve or 0
+
 
 
         # Check platform liquidity
@@ -515,18 +514,6 @@ class TradingViewSet(viewsets.ViewSet):
             completed_at=timezone.now()
         )
 
-        # Settle performance fees
-        if fee_due > 0:
-            Transaction.objects.create(
-                user=request.user,
-                transaction_type='PERFORMANCE_FEE',
-                amount=fee_due,
-                fee=0,
-                status='COMPLETED',
-                metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol},
-                completed_at=timezone.now()
-            )
-
         bot.status = 'COMPLETED'
         bot.save()
 
@@ -547,7 +534,7 @@ class TradingViewSet(viewsets.ViewSet):
         bot = GridBot.objects.get(id=bot_id, user=request.user)
         if bot.pnl_percent >= 20:
             total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
-            fee_due = bot.fee_reserve or 0
+
 
 
             from apps.wallets.models import WalletKey
@@ -576,15 +563,6 @@ class TradingViewSet(viewsets.ViewSet):
                 metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol, 'to_address': user_address},
                 completed_at=timezone.now()
             )
-
-            # Settle fees
-            if fee_due > 0:
-                Transaction.objects.create(
-                    user=request.user, transaction_type='PERFORMANCE_FEE',
-                    amount=fee_due, fee=0, status='COMPLETED',
-                    metadata={'grid_bot_id': str(bot.id), 'token': bot.token.symbol},
-                    completed_at=timezone.now()
-                )
 
             bot.status = 'COMPLETED'
             bot.save()

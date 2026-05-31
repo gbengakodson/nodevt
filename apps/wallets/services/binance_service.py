@@ -98,6 +98,69 @@ class BinanceService:
             print(f"Grid buy placement error: {e}")
             return {'success': False, 'error': str(e)}
 
+    def check_and_place_sells(self, symbol, spread_pct=1.5):
+        """
+        Check for recently filled buy orders and place corresponding sell orders.
+        Returns: {success: bool, sells_placed: int}
+        """
+        try:
+            binance_symbol = self._get_binance_symbol(symbol)
+            if not binance_symbol:
+                return {'success': False, 'error': f'No Binance pair for {symbol}'}
+
+            # Get recent filled orders
+            from apps.trading.models import MasterGridBot
+            grid = MasterGridBot.objects.filter(
+                token__symbol=symbol,
+                status='ACTIVE'
+            ).first()
+
+            if not grid:
+                return {'success': False, 'error': 'No active grid'}
+
+            placed_order_ids = grid.metadata.get('binance_order_ids', [])
+            paired_buys = grid.metadata.get('paired_buys', [])
+
+            sells_placed = 0
+
+            # Check each buy order
+            for order_id in placed_order_ids:
+                if order_id in paired_buys:
+                    continue  # Already paired
+
+                try:
+                    order = self.client.get_order(
+                        symbol=binance_symbol,
+                        orderId=order_id
+                    )
+
+                    if order['status'] == 'FILLED':
+                        # Place corresponding sell at spread
+                        sell_id = self.place_sell_for_buy(
+                            symbol=symbol,
+                            buy_price=float(order['price']),
+                            buy_quantity=float(order['executedQty']),
+                            spread_pct=spread_pct
+                        )
+
+                        if sell_id:
+                            paired_buys.append(order_id)
+                            sells_placed += 1
+
+                except Exception as e:
+                    print(f"Error checking order {order_id}: {e}")
+
+            # Update metadata
+            grid.metadata['paired_buys'] = paired_buys
+            grid.save()
+
+            return {'success': True, 'sells_placed': sells_placed}
+
+        except Exception as e:
+            print(f"Sell monitor error: {e}")
+            return {'success': False, 'error': str(e)}
+
+
     def place_sell_for_buy(self, symbol, buy_price, buy_quantity, spread_pct=1.5):
         """
         Place a sell order to pair with a filled buy.

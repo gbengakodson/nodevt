@@ -23,8 +23,7 @@ class GridBot(models.Model):
     pnl = models.DecimalField(max_digits=20, decimal_places=8, default=0)
     pnl_percent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_yield_earned = models.DecimalField(max_digits=20, decimal_places=8, default=0)  # NEW
-    fee_reserve = models.DecimalField(max_digits=20, decimal_places=8, default=0)  # NODE's 8% performance fee
-    referrer_reserve = models.DecimalField(max_digits=20, decimal_places=8, default=0)  # Referrer's 2%
+
 
     # ADD THESE FIELDS
     price_at_creation = models.DecimalField(max_digits=20, decimal_places=8, default=0)

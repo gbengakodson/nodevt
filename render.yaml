@@ -36,3 +36,8 @@ services:
     name: evening-notifications
     schedule: "0 19 * * *"  # 7 PM daily
     command: python manage.py send_daily_notifications --time-slot evening
+
+  - type: cron
+    name: audit-grid-profits
+    schedule: "0 0 * * *"  # Midnight daily
+    command: python manage.py audit_grid_profits

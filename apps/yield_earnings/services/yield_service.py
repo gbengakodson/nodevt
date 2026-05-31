@@ -69,15 +69,21 @@ class YieldService:
             # Current value = investment + PNL (no compounding)
             current_value = bot.amount + bot.pnl
             bot_hourly_profit = current_value * cls.HOURLY_RATE
-            bot.grid_profit += bot_hourly_profit * Decimal('0.90')  # 90% to user
-            bot.fee_reserve += bot_hourly_profit * Decimal('0.08')  # 8% NODE performance fee
-            bot.referrer_reserve += bot_hourly_profit * Decimal('0.02')  # 2% referrer share
+            bot.grid_profit += bot_hourly_profit  # 100% to user
             bot.save()
             total_hourly_yield += bot_hourly_profit
 
-        # Yield only updates grid_profit on bots.
-        # Users must click "Collect" on dashboard to move profit to Yield Wallet.
-        # This prevents double-crediting the yield wallet.
+        # Create ONE transaction for the hourly guard
+        if total_hourly_yield > 0:
+            Transaction.objects.create(
+                user=user,
+                transaction_type='YIELD',
+                amount=total_hourly_yield,
+                fee=0,
+                status='COMPLETED',
+                metadata={'source': 'hourly_credit'},
+                completed_at=timezone.now()
+            )
 
         return total_hourly_yield
 
