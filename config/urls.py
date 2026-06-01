@@ -6,19 +6,17 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from apps.wallets.views import AdminSendEmailView
 from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
-from apps.trading.views import yield_rate_view, send_daily_email_webhook
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView,AdminBroadcastView
 from apps.wallets.admin_views import AdminTreasuryView, AdminKYCActions, PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
-from apps.trading.views import send_daily_email_webhook, sweep_webhook
+from apps.trading.views import send_daily_email_webhook, sweep_webhook, audit_profits_webhook, TradingViewSet, platform_report_webhook, yield_rate_view, send_daily_email_webhook
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
 from apps.accounts.views import admin_login_as_user
-from apps.trading.views import platform_report_webhook
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
-from apps.trading.views import TradingViewSet
 from apps.chat.views import TransparencyLikeView
+
 
 
 
@@ -113,5 +111,6 @@ urlpatterns = [
 
     path('api/public/grid-live/', TradingViewSet.as_view({'get': 'public_grid_live'}), name='public_grid_live'),
     path('transparency/like/', TransparencyLikeView.as_view(), name='transparency_like'),
+    path('api/trigger/audit-profits/', audit_profits_webhook, name='audit_profits'),
 
 ]

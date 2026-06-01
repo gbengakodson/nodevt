@@ -1652,3 +1652,8 @@ def platform_report_webhook(request):
     send_daily_platform_report()
     return JsonResponse({'status': 'success'})
 
+def audit_profits_webhook(request):
+    from django.core.management import call_command
+    call_command('audit_grid_profits')
+    return JsonResponse({'status': 'success'})
+
