@@ -613,6 +613,16 @@ class TrendlyExchangeView(APIView):
         exchange.is_used = True
         exchange.save()
 
+        # Check NODE Web3 balance
+        from apps.wallets.services.web3_service import Web3Service
+        ws = Web3Service()
+        central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
+
+        if central_balance < exchange.amount:
+            return Response({
+                'error': f'Insufficient platform liquidity. Available: ${float(central_balance):.2f}'
+            }, status=400)
+
         # Execute transfer from NODE Web3 to destination wallet
         from django.conf import settings
         sweep_result = TradingViewSet._sweep_from_user_wallet(
