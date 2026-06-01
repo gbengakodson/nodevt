@@ -10,6 +10,7 @@ from decimal import Decimal
 from apps.tokens.models import CryptoToken, UserTokenBalance, Purchase
 import logging
 
+
 logger = logging.getLogger(__name__)
 User = get_user_model()
 
@@ -278,7 +279,8 @@ class AdminStatisticsView(APIView):
             'most_held_token': most_held_token,
             'total_volume': float(total_volume),
             'avg_hold_time': avg_hold_time,
-            'turnover_rate': turnover_rate
+            'turnover_rate': turnover_rate,
+            'total_users': User.objects.filter(is_active=True).count(),
         })
 
 
