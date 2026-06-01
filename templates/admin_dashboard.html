@@ -234,7 +234,7 @@
 
     <!-- Stats -->
     <div class="stats-grid">
-        <div class="stat-card"><div class="label">Token Buys</div><div class="value" id="totalBuys">0</div></div>
+        <div class="stat-card"><div class="label">Total Users</div><div class="value" id="totalUsers">0</div></div>
         <div class="stat-card green"><div class="label">Platform Balance</div><div class="value" id="totalSolds">$0</div></div>
         <div class="stat-card"><div class="label">Tokens Held</div><div class="value" id="totalTokensHeld">$0</div></div>
         <div class="stat-card green"><div class="label">Yield Generated</div><div class="value" id="totalYield">$0</div></div>
@@ -442,7 +442,7 @@
     async function loadStats() {
         try {
             var s = await apiCall('/admin/statistics/');
-            document.getElementById('totalBuys').textContent = s.total_buys || 0;
+            document.getElementById('totalUsers').textContent = s.total_users || 0;
             document.getElementById('totalSolds').textContent = fc(s.platform_usdc_balance);
             document.getElementById('totalTokensHeld').textContent = fc(s.total_tokens_held);
             document.getElementById('totalYield').textContent = fc(s.total_yield);
