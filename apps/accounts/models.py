@@ -11,6 +11,7 @@ class User(AbstractUser):
     email = models.EmailField(unique=True)
     wallet_address = models.CharField(max_length=100, blank=True, null=True)
     referral_code = models.CharField(max_length=5, unique=True, blank=True, null=True)
+
     referrer = models.ForeignKey(
         'self',
         on_delete=models.SET_NULL,
@@ -64,6 +65,8 @@ class User(AbstractUser):
         ('REFERRAL', 'Referral Builder'),
         ('DIASPORA', 'Diaspora Nigerian'),
     ])
+    profile_picture = models.URLField(blank=True, null=True)
+    profile_caption = models.TextField(max_length=200, blank=True, null=True)
 
     def save(self, *args, **kwargs):
         if not self.referral_code:
