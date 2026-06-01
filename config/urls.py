@@ -16,7 +16,8 @@ from apps.accounts.views import admin_login_as_user
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
 from apps.chat.views import TransparencyLikeView
-from apps.accounts.views import TrendlyExchangeView
+from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView
+
 
 
 
@@ -116,5 +117,7 @@ urlpatterns = [
     path('transparency/like/', TransparencyLikeView.as_view(), name='transparency_like'),
     path('api/trigger/audit-profits/', audit_profits_webhook, name='audit_profits'),
     path('api/exchange/trendly/', TrendlyExchangeView.as_view(), name='trendly_exchange'),
+
+    path('api/referrer-profile/', ReferrerProfileView.as_view(), name='referrer_profile'),
 
 ]

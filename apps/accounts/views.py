@@ -646,3 +646,30 @@ class TrendlyExchangeView(APIView):
             return Response({
                 'error': f"Transfer failed: {sweep_result.get('error', 'Unknown')}"
             }, status=500)
+
+
+class ReferrerProfileView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        code = request.GET.get('ref', '').strip()
+        if not code:
+            return Response({'error': 'Referral code required'}, status=400)
+
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+
+        try:
+            referrer = User.objects.get(referral_code=code)
+            return Response({
+                'name': referrer.username or referrer.email.split('@')[0],
+                'picture': referrer.profile_picture or '',
+                'caption': referrer.profile_caption or 'Join me on NODE — automated grid trading that works while you sleep. Start with just $10.',
+                'referral_code': referrer.referral_code
+            })
+        except User.DoesNotExist:
+            return Response({
+                'picture': '',
+                'caption': 'Automated crypto grid trading. Start with $10. Your money works 24/7.',
+                'name': 'NODE'
+            })

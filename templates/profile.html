@@ -1,221 +1,307 @@
 {% extends 'base/base.html' %}
 
-{% block title %}Profile | NODE {% endblock %}
+{% block title %}Profile | NODE{% endblock %}
 
 {% block extra_css %}
 <style>
     :root {
         --primary: #F0B90B;
-        --bg-body: #F5F6F8;
-        --bg-card: #FFFFFF;
-        --text-primary: #1E2329;
-        --text-secondary: #707A8A;
-        --border: #E2E4E8;
+        --bg-dark: #0B0E11;
+        --bg-card: #1A1C23;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
         --success: #0ECB81;
         --danger: #F6465D;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { background: var(--bg-body) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    body { background: var(--bg-dark) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
 
-    .profile-container { max-width: 640px; margin: 0 auto; padding: 12px; }
+    .profile-page {
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 24px 16px;
+    }
 
-    .top-bar {
-        display: flex; align-items: center; gap: 12px;
-        background: var(--bg-card); border-radius: 10px;
-        padding: 14px 16px; margin-bottom: 10px;
+    /* ========== HERO HEADER ========== */
+    .hero-card {
+        background: var(--bg-card);
+        border-radius: 16px;
         border: 1px solid var(--border);
+        padding: 30px;
+        display: flex;
+        gap: 24px;
+        align-items: center;
+        margin-bottom: 20px;
+        position: relative;
+        overflow: hidden;
     }
-    .avatar {
-        width: 44px; height: 44px; border-radius: 50%;
-        background: var(--primary); display: flex; align-items: center;
-        justify-content: center; font-size: 16px; font-weight: 700; color: #1E2329;
-        flex-shrink: 0; cursor: pointer;
-    }
-    .top-info { flex: 1; min-width: 0; }
-    .top-name { font-size: 13px; font-weight: 700; color: var(--text-primary); }
-    .top-email { font-size: 10px; color: var(--text-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .top-badge { font-size: 9px; padding: 2px 8px; border-radius: 10px; font-weight: 600; }
-    .badge-ok { background: rgba(14,203,129,0.1); color: var(--success); }
-    .badge-warn { background: rgba(240,185,11,0.1); color: #B8860B; }
-
-    .row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
-    .mini-stat {
-        background: var(--bg-card); border-radius: 8px; padding: 10px 14px;
-        border: 1px solid var(--border); cursor: pointer; transition: border 0.15s;
-    }
-    .mini-stat:hover { border-color: var(--primary); }
-    .mini-stat .lbl { font-size: 9px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.3px; }
-    .mini-stat .val { font-size: 16px; font-weight: 700; color: var(--primary); margin-top: 2px; }
-    .mini-stat .val.grn { color: var(--success); }
-
-    .section {
-        background: var(--bg-card); border-radius: 10px;
-        border: 1px solid var(--border); padding: 12px 14px; margin-bottom: 8px;
-    }
-    .section-title {
-        font-size: 10px; font-weight: 700; color: var(--text-secondary);
-        text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
-        display: flex; align-items: center; gap: 6px; justify-content: space-between;
-    }
-    .row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; font-size: 10px; }
-    .row .lbl { color: var(--text-secondary); }
-    .row .val { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 55%; word-break: break-all; font-family: monospace; font-size: 9px; }
-
-    .input-sm {
-        width: 100%; padding: 6px 8px; border-radius: 5px;
-        border: 1px solid var(--border); font-size: 10px; color: var(--text-primary);
-        background: #F8F9FA; margin-bottom: 4px;
-    }
-    .input-sm:focus { outline: none; border-color: var(--primary); }
-    .select-sm {
-        width: 100%; padding: 6px 8px; border-radius: 5px;
-        border: 1px solid var(--border); font-size: 10px; color: var(--text-primary);
-        background: #F8F9FA; margin-bottom: 4px;
+    .hero-card::before {
+        content: '';
+        position: absolute;
+        top: -30%; right: -10%;
+        width: 200px; height: 200px;
+        background: radial-gradient(circle, rgba(240,185,11,0.06) 0%, transparent 70%);
     }
 
-    .btn-xs {
-        padding: 4px 10px; border-radius: 4px; font-size: 9px;
-        font-weight: 600; cursor: pointer; border: none; transition: all 0.15s;
+    .hero-avatar-wrap {
+        position: relative;
+        flex-shrink: 0;
     }
-    .btn-yellow { background: var(--primary); color: #1E2329; }
-    .btn-yellow:hover { filter: brightness(1.05); }
+    .hero-avatar {
+        width: 90px; height: 90px; border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #FCD535);
+        display: flex; align-items: center; justify-content: center;
+        font-size: 36px; font-weight: 700; color: #0B0E11;
+        cursor: pointer; transition: transform 0.2s;
+        overflow: hidden;
+    }
+    .hero-avatar:hover { transform: scale(1.05); }
+    .hero-avatar img { width: 100%; height: 100%; object-fit: cover; }
+    .hero-avatar-edit {
+        position: absolute; bottom: 0; right: 0;
+        width: 28px; height: 28px; border-radius: 50%;
+        background: var(--primary); border: 2px solid var(--bg-card);
+        display: flex; align-items: center; justify-content: center;
+        cursor: pointer; font-size: 12px; color: #0B0E11;
+    }
+
+    .hero-info { flex: 1; min-width: 0; position: relative; z-index: 1; }
+    .hero-name { font-size: 20px; font-weight: 700; color: var(--text-primary); }
+    .hero-email { font-size: 12px; color: var(--text-secondary); margin-top: 2px; }
+    .hero-caption-input {
+        width: 100%; margin-top: 10px;
+        padding: 8px 12px; border-radius: 8px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
+        color: var(--text-primary); font-size: 12px;
+        resize: none; font-family: inherit;
+    }
+    .hero-caption-input:focus { outline: none; border-color: var(--primary); }
+    .hero-actions { display: flex; gap: 8px; margin-top: 10px; }
+    .hero-badge {
+        display: inline-block; padding: 3px 10px; border-radius: 12px;
+        font-size: 10px; font-weight: 600;
+    }
+    .badge-verified { background: rgba(14,203,129,0.1); color: var(--success); }
+    .badge-pending { background: rgba(240,185,11,0.1); color: #B8860B; }
+
+    /* ========== STATS BAR ========== */
+    .stats-bar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 10px;
+        margin-bottom: 20px;
+    }
+    .stat-item {
+        background: var(--bg-card); border-radius: 12px;
+        border: 1px solid var(--border); padding: 16px;
+        text-align: center; cursor: pointer; transition: border 0.2s;
+    }
+    .stat-item:hover { border-color: var(--primary); }
+    .stat-label { font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 20px; font-weight: 700; color: var(--primary); margin-top: 4px; }
+    .stat-value.green { color: var(--success); }
+
+    /* ========== TWO-COLUMN GRID ========== */
+    .profile-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+    }
+
+    .panel {
+        background: var(--bg-card); border-radius: 14px;
+        border: 1px solid var(--border); padding: 18px;
+    }
+    .panel-title {
+        font-size: 11px; font-weight: 700; color: var(--text-secondary);
+        text-transform: uppercase; letter-spacing: 0.5px;
+        margin-bottom: 14px; display: flex; align-items: center; gap: 8px;
+    }
+    .panel-row {
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 6px 0; font-size: 11px;
+    }
+    .panel-row .lbl { color: var(--text-secondary); }
+    .panel-row .val { color: var(--text-primary); font-weight: 500; text-align: right; max-width: 55%; word-break: break-all; font-family: monospace; font-size: 10px; cursor: pointer; }
+
+    .input-field {
+        width: 100%; padding: 8px 10px; border-radius: 6px;
+        border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+        color: var(--text-primary); font-size: 11px; margin-bottom: 8px;
+    }
+    .input-field:focus { outline: none; border-color: var(--primary); }
+    .select-field {
+        width: 100%; padding: 8px 10px; border-radius: 6px;
+        border: 1px solid var(--border); background: rgba(255,255,255,0.03);
+        color: var(--text-primary); font-size: 11px; margin-bottom: 8px;
+    }
+
+    .btn-sm {
+        padding: 6px 14px; border-radius: 6px; font-size: 10px;
+        font-weight: 600; cursor: pointer; border: none; transition: all 0.2s;
+    }
+    .btn-primary { background: var(--primary); color: #0B0E11; }
+    .btn-primary:hover { filter: brightness(1.05); }
     .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-secondary); }
     .btn-outline:hover { border-color: var(--primary); color: var(--primary); }
-    .btn-red { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
-    .btn-red:hover { background: rgba(246,70,93,0.05); }
+    .btn-danger { background: transparent; border: 1px solid var(--danger); color: var(--danger); }
+    .btn-danger:hover { background: rgba(246,70,93,0.05); }
 
-    .toggle {
-        width: 34px; height: 18px; border-radius: 9px;
-        background: #D1D5DB; position: relative; cursor: pointer; transition: all 0.2s;
+    .toggle-sm {
+        width: 36px; height: 20px; border-radius: 10px;
+        background: #3B3F48; position: relative; cursor: pointer; transition: all 0.2s;
     }
-    .toggle.active { background: var(--success); }
-    .toggle::after {
-        content: ''; width: 14px; height: 14px; border-radius: 50%;
+    .toggle-sm.active { background: var(--success); }
+    .toggle-sm::after {
+        content: ''; width: 16px; height: 16px; border-radius: 50%;
         background: #fff; position: absolute; top: 2px; left: 2px; transition: all 0.2s;
     }
-    .toggle.active::after { left: 18px; }
+    .toggle-sm.active::after { left: 18px; }
 
     .modal-overlay {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.5); z-index: 1000;
+        background: rgba(0,0,0,0.7); z-index: 1000;
         display: none; align-items: center; justify-content: center;
     }
     .modal-box {
-        background: #fff; border-radius: 10px; max-width: 380px; width: 90%; padding: 20px;
+        background: var(--bg-card); border: 1px solid var(--border);
+        border-radius: 12px; max-width: 380px; width: 90%; padding: 20px;
     }
-    .modal-box h3 { font-size: 13px; margin-bottom: 10px; }
-    .modal-actions { display: flex; gap: 6px; justify-content: flex-end; margin-top: 10px; }
+    .modal-box h3 { font-size: 13px; color: var(--text-primary); margin-bottom: 12px; }
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 12px; }
 
-    .danger-zone { opacity: 0.4; transition: opacity 0.2s; }
+    .danger-zone { opacity: 0.5; transition: opacity 0.2s; }
     .danger-zone:hover { opacity: 1; }
 
-    @media (max-width: 480px) {
-        .profile-container { padding: 6px; }
-        .row-2col { grid-template-columns: 1fr 1fr; gap: 6px; }
+    @media (max-width: 700px) {
+        .profile-grid { grid-template-columns: 1fr; }
+        .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        .hero-card { flex-direction: column; text-align: center; padding: 20px; }
+        .hero-avatar { width: 70px; height: 70px; font-size: 28px; }
     }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="profile-container">
+<div class="profile-page">
 
-    <!-- Top Bar -->
-    <div class="top-bar">
-        <div class="avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
-            <span id="avatarText">U</span>
+    <!-- HERO HEADER -->
+    <div class="hero-card">
+        <div class="hero-avatar-wrap">
+            <div class="hero-avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
+                <span id="avatarText">U</span>
+                <img id="avatarImg" style="display:none;">
+            </div>
+            <div class="hero-avatar-edit" onclick="document.getElementById('avatarInput').click()">📷</div>
+            <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
         </div>
-        <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
-        <div class="top-info">
-            <div class="top-name" id="displayName">—</div>
-            <div class="top-email" id="displayEmail">—</div>
+        <div class="hero-info">
+            <div class="hero-name" id="displayName">—</div>
+            <div class="hero-email" id="displayEmail">—</div>
+            <input type="text" id="profileCaption" class="hero-caption-input" placeholder="Your caption — shared with people you invite" maxlength="200">
+            <div class="hero-actions">
+                <button class="btn-sm btn-primary" onclick="saveProfile()">💾 Save</button>
+                <span id="kycBadge" class="hero-badge">—</span>
+            </div>
         </div>
-        <span id="kycBadge" class="top-badge">—</span>
-        <button class="btn-xs btn-red" onclick="logout()">Logout</button>
+        <button class="btn-sm btn-danger" onclick="logout()">Logout</button>
     </div>
 
-    <!-- Stats -->
-    <div class="row-2col">
-        <div class="mini-stat" onclick="window.location.href='/trading/'"><div class="lbl">Wallet</div><div class="val" id="grandBal">$0</div></div>
-        <div class="mini-stat"><div class="lbl">Yield</div><div class="val grn" id="yieldBal">$0</div></div>
-        <div class="mini-stat" onclick="window.location.href='/portfolio/'"><div class="lbl">Portfolio</div><div class="val" id="portfolioVal">$0</div></div>
-        <div class="mini-stat" onclick="window.location.href='/referral/'"><div class="lbl">Referrals</div><div class="val grn" id="refEarnings">$0</div></div>
+    <!-- STATS BAR -->
+    <div class="stats-bar">
+        <div class="stat-item" onclick="window.location.href='/trading/'">
+            <div class="stat-label">Wallet</div>
+            <div class="stat-value" id="grandBal">$0</div>
+        </div>
+        <div class="stat-item">
+            <div class="stat-label">Yield</div>
+            <div class="stat-value green" id="yieldBal">$0</div>
+        </div>
+        <div class="stat-item" onclick="window.location.href='/portfolio/'">
+            <div class="stat-label">Portfolio</div>
+            <div class="stat-value" id="portfolioVal">$0</div>
+        </div>
+        <div class="stat-item" onclick="window.location.href='/referral/'">
+            <div class="stat-label">Referrals</div>
+            <div class="stat-value green" id="refEarnings">$0</div>
+        </div>
     </div>
 
-    <!-- Wallet -->
-    <div class="section">
-        <div class="section-title">💳 Wallet <button class="btn-xs btn-outline" onclick="copyAddress()">Copy</button></div>
-        <div class="row"><span class="lbl">Address</span><span class="val" id="depositAddr">—</span></div>
-        <div class="row"><span class="lbl">Private Key</span><span class="val" id="privateKey" style="cursor:pointer;" onclick="toggleKey()">••••••••••••••••</span></div>
-        <div class="row"><span class="lbl">Network</span><span class="val">BSC (BEP20) · USDC</span></div>
-        <div style="font-size:8px;color:var(--danger);margin-top:4px;">⚠️ Never share your private key. NODE does not store it unencrypted.</div>
-    </div>
+    <!-- TWO-COLUMN GRID -->
+    <div class="profile-grid">
 
-    <!-- Account -->
-    <div class="section">
-        <div class="section-title">👤 Account <button class="btn-xs btn-yellow" onclick="saveProfile()">Save</button></div>
-        <input type="email" id="editEmail" class="input-sm" readonly placeholder="Email">
-        <input type="text" id="editUsername" class="input-sm" placeholder="Username">
-        <button class="btn-xs btn-outline" onclick="openPasswordModal()" style="margin-top:2px;">Change Password</button>
-    </div>
+        <!-- WALLET + ACCOUNT -->
+        <div class="panel">
+            <div class="panel-title">💳 Wallet</div>
+            <div class="panel-row"><span class="lbl">Address</span><span class="val" id="depositAddr" onclick="copyAddress()">—</span></div>
+            <div class="panel-row"><span class="lbl">Private Key</span><span class="val" id="privateKey" onclick="toggleKey()">••••••••••••••••</span></div>
+            <div class="panel-row"><span class="lbl">Network</span><span class="val">BSC (BEP20) · USDC</span></div>
 
-    <!-- KYC -->
-    <div class="section">
-        <div class="section-title">🛡️ KYC <span id="kycStatus" style="font-size:9px;">—</span></div>
-        <select id="kycIdType" class="select-sm">
-            <option value="">ID Type</option>
-            <option value="NIN">NIN (Nigeria)</option>
-            <option value="PASSPORT">Passport</option>
-            <option value="DRIVERS">Driver's License</option>
-            <option value="NATIONAL_ID">National ID</option>
-        </select>
-        <input type="text" id="kycIdNumber" class="input-sm" placeholder="ID Number">
-        <input type="text" id="kycNationality" class="input-sm" placeholder="Nationality">
-        <select id="kycCountry" class="select-sm">
-            <option value="">Country</option>
-            <option value="NG">Nigeria</option><option value="GH">Ghana</option><option value="KE">Kenya</option>
-            <option value="ZA">South Africa</option><option value="US">United States</option>
-            <option value="GB">United Kingdom</option><option value="AE">UAE</option>
-        </select>
-        <button class="btn-xs btn-yellow" onclick="submitKYC()" style="margin-top:4px;">Verify</button>
-    </div>
+            <div class="panel-title" style="margin-top:18px;">👤 Account</div>
+            <input type="text" id="editUsername" class="input-field" placeholder="Username">
+            <input type="email" id="editEmail" class="input-field" readonly placeholder="Email">
+            <button class="btn-sm btn-outline" onclick="openPasswordModal()">Change Password</button>
+        </div>
 
-    <!-- Referral -->
-    <div class="section">
-        <div class="section-title">🔗 Referral <button class="btn-xs btn-outline" onclick="copyReferralLink()">Copy Link</button></div>
-        <div class="row"><span class="lbl">Code</span><span class="val" id="refCode" style="font-size:13px;font-weight:700;color:var(--primary);">—</span></div>
-        <div class="row"><span class="lbl">Link</span><span class="val" id="refLink" style="font-size:8px;">—</span></div>
-    </div>
+        <!-- KYC + REFERRAL -->
+        <div class="panel">
+            <div class="panel-title">🛡️ KYC <span id="kycStatus" style="font-size:9px;font-weight:400;">—</span></div>
+            <select id="kycIdType" class="select-field">
+                <option value="">ID Type</option>
+                <option value="NIN">NIN (Nigeria)</option>
+                <option value="PASSPORT">Passport</option>
+                <option value="DRIVERS">Driver's License</option>
+                <option value="NATIONAL_ID">National ID</option>
+            </select>
+            <input type="text" id="kycIdNumber" class="input-field" placeholder="ID Number">
+            <input type="text" id="kycNationality" class="input-field" placeholder="Nationality">
+            <select id="kycCountry" class="select-field">
+                <option value="">Country</option>
+                <option value="NG">Nigeria</option><option value="GH">Ghana</option><option value="KE">Kenya</option>
+                <option value="ZA">South Africa</option><option value="US">United States</option>
+                <option value="GB">United Kingdom</option><option value="AE">UAE</option>
+            </select>
+            <button class="btn-sm btn-primary" onclick="submitKYC()" style="margin-top:4px;">Verify Identity</button>
 
-    <!-- Notifications -->
-    <div class="section">
-        <div class="section-title">🔔 Alerts</div>
-        <div class="row"><span class="lbl">Daily Email</span><div class="toggle active" id="toggleDailyEmail" onclick="toggleNotification('daily_email')"></div></div>
-        <div class="row"><span class="lbl">Withdrawals</span><div class="toggle active" id="toggleWithdrawAlert" onclick="toggleNotification('withdraw_alert')"></div></div>
-    </div>
+            <div class="panel-title" style="margin-top:18px;">🔗 Referral</div>
+            <div class="panel-row"><span class="lbl">Code</span><span class="val" style="font-size:14px;font-weight:700;color:var(--primary);" id="refCode">—</span></div>
+            <div class="panel-row"><span class="lbl">Link</span><span class="val" id="refLink" style="font-size:9px;">—</span></div>
+            <button class="btn-sm btn-outline" onclick="copyReferralLink()" style="margin-top:8px;">📋 Copy Link</button>
+        </div>
 
-    <!-- Danger -->
-    <div class="section danger-zone">
-        <div class="section-title" style="color:var(--danger);">⚠️ Danger Zone</div>
-        <button class="btn-xs btn-red" onclick="openDeleteModal()">Delete Account</button>
+        <!-- NOTIFICATIONS + DANGER -->
+        <div class="panel">
+            <div class="panel-title">🔔 Alerts</div>
+            <div class="panel-row"><span class="lbl">Daily Email</span><div class="toggle-sm active" id="toggleDailyEmail" onclick="toggleNotification('daily_email')"></div></div>
+            <div class="panel-row"><span class="lbl">Withdrawals</span><div class="toggle-sm active" id="toggleWithdrawAlert" onclick="toggleNotification('withdraw_alert')"></div></div>
+        </div>
+
+        <div class="panel danger-zone">
+            <div class="panel-title" style="color:var(--danger);">⚠️ Danger Zone</div>
+            <p style="font-size:10px;color:var(--text-secondary);margin-bottom:8px;">Permanently delete your account and all data.</p>
+            <button class="btn-sm btn-danger" onclick="openDeleteModal()">Delete Account</button>
+        </div>
     </div>
 </div>
 
-<!-- Modals -->
+<!-- MODALS -->
 <div class="modal-overlay" id="passwordModal">
     <div class="modal-box"><h3>Change Password</h3>
-        <input type="password" id="currentPassword" class="input-sm" placeholder="Current password">
-        <input type="password" id="newPassword" class="input-sm" placeholder="New password">
-        <input type="password" id="confirmPassword" class="input-sm" placeholder="Confirm">
-        <div class="modal-actions"><button class="btn-xs btn-outline" onclick="closePasswordModal()">Cancel</button><button class="btn-xs btn-yellow" onclick="changePassword()">Update</button></div>
+        <input type="password" id="currentPassword" class="input-field" placeholder="Current password">
+        <input type="password" id="newPassword" class="input-field" placeholder="New password">
+        <input type="password" id="confirmPassword" class="input-field" placeholder="Confirm">
+        <div class="modal-actions"><button class="btn-sm btn-outline" onclick="closePasswordModal()">Cancel</button><button class="btn-sm btn-primary" onclick="changePassword()">Update</button></div>
     </div>
 </div>
 
 <div class="modal-overlay" id="deleteModal">
     <div class="modal-box"><h3 style="color:var(--danger);">Delete Account</h3>
         <p style="font-size:10px;color:var(--text-secondary);">Irreversible.</p>
-        <input type="text" id="deleteConfirm" class="input-sm" placeholder="Type DELETE">
-        <div class="modal-actions"><button class="btn-xs btn-outline" onclick="closeDeleteModal()">Cancel</button><button class="btn-xs btn-red" onclick="deleteAccount()">Delete</button></div>
+        <input type="text" id="deleteConfirm" class="input-field" placeholder="Type DELETE">
+        <div class="modal-actions"><button class="btn-sm btn-outline" onclick="closeDeleteModal()">Cancel</button><button class="btn-sm btn-danger" onclick="deleteAccount()">Delete</button></div>
     </div>
 </div>
 
@@ -252,24 +338,29 @@
             document.getElementById('avatarText').textContent = (userData.username || 'U').charAt(0).toUpperCase();
             document.getElementById('editEmail').value = userData.email || '';
             document.getElementById('editUsername').value = userData.username || '';
+            document.getElementById('profileCaption').value = userData.profile_caption || '';
 
-            // Wallet
+            // Avatar
+            if (userData.profile_picture) {
+                document.getElementById('avatarImg').src = userData.profile_picture;
+                document.getElementById('avatarImg').style.display = 'block';
+                document.getElementById('avatarText').style.display = 'none';
+            }
+
             document.getElementById('depositAddr').textContent = wallet.address || 'No wallet';
             actualPrivateKey = wallet.private_key || '';
 
-            // KYC
             var ks = userData.kyc_status || 'NONE';
-            var kc = ks === 'APPROVED' ? 'badge-ok' : 'badge-warn';
+            var kc = ks === 'APPROVED' ? 'badge-verified' : 'badge-pending';
             var kt = ks === 'APPROVED' ? '✅ Verified' : ks === 'PENDING' ? '⏳ Pending' : 'Not Verified';
             document.getElementById('kycBadge').textContent = kt;
-            document.getElementById('kycBadge').className = 'top-badge ' + kc;
+            document.getElementById('kycBadge').className = 'hero-badge ' + kc;
             document.getElementById('kycStatus').textContent = ks;
             document.getElementById('kycIdType').value = userData.id_type || '';
             document.getElementById('kycIdNumber').value = userData.id_number || '';
             document.getElementById('kycNationality').value = userData.phone_number || '';
             document.getElementById('kycCountry').value = userData.country || '';
 
-            // Balances
             document.getElementById('grandBal').textContent = fc(bal.blockchain_balance || bal.grand_balance);
             document.getElementById('yieldBal').textContent = fc(bal.yield_balance);
             document.getElementById('portfolioVal').textContent = port ? fc(port.total_portfolio) : '$0';
@@ -285,13 +376,8 @@
 
     function toggleKey() {
         var el = document.getElementById('privateKey');
-        if (privateKeyShown) {
-            el.textContent = '••••••••••••••••';
-            privateKeyShown = false;
-        } else {
-            el.textContent = actualPrivateKey || 'No key loaded';
-            privateKeyShown = true;
-        }
+        if (privateKeyShown) { el.textContent = '••••••••••••••••'; privateKeyShown = false; }
+        else { el.textContent = actualPrivateKey || 'No key loaded'; privateKeyShown = true; }
     }
 
     function updateToggle(id, state) { var el = document.getElementById(id); if (state) el.classList.add('active'); else el.classList.remove('active'); }
@@ -303,9 +389,10 @@
 
     async function saveProfile() {
         var u = document.getElementById('editUsername').value.trim();
+        var c = document.getElementById('profileCaption').value.trim();
         if (!u) return alert('Username required');
-        await apiCall('/auth/profile/', 'PUT', { username: u });
-        alert('✅ Updated!'); loadProfile();
+        await apiCall('/auth/profile/', 'PUT', { username: u, profile_caption: c });
+        alert('✅ Profile updated!'); loadProfile();
     }
     async function submitKYC() {
         var t = document.getElementById('kycIdType').value, n = document.getElementById('kycIdNumber').value.trim();
@@ -335,7 +422,11 @@
     function handleAvatar(e) {
         var f = e.target.files[0]; if (!f) return;
         var r = new FileReader();
-        r.onload = function(ev) { document.getElementById('avatarText').textContent = ''; document.getElementById('avatarDisplay').style.background = 'url(' + ev.target.result + ') center/cover'; };
+        r.onload = function(ev) {
+            document.getElementById('avatarImg').src = ev.target.result;
+            document.getElementById('avatarImg').style.display = 'block';
+            document.getElementById('avatarText').style.display = 'none';
+        };
         r.readAsDataURL(f);
     }
     function logout() { localStorage.clear(); window.location.href = '/login/'; }

@@ -61,4 +61,5 @@ class UserSerializer(serializers.ModelSerializer):
         model = User
         fields = ['id', 'email', 'username', 'wallet_address', 'referral_code',
                   'created_at', 'kyc_status', 'phone_number', 'country',
-                  'id_type', 'id_number', 'is_verified', 'date_verified', 'user_type', 'is_staff']
+                  'id_type', 'id_number', 'is_verified', 'date_verified', 'user_type', 'is_staff',
+                  'profile_picture', 'profile_caption']

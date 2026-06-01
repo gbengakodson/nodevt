@@ -1,89 +1,506 @@
 {% extends 'base/base.html' %}
+{% load static %}
 
-{% block title %}Register | NODE 2.0{% endblock %}
+{% block title %}Join NODE{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #F0B90B;
+        --bg-dark: #0B0E11;
+        --bg-card: #1A1C23;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body { background: var(--bg-dark) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+
+    .register-layout {
+        display: grid;
+        grid-template-columns: 1fr 480px;
+        min-height: 100vh;
+    }
+
+    /* === LEFT: Referrer Hero === */
+    .referrer-hero {
+        background: linear-gradient(160deg, #0F1119 0%, #1A1C23 100%);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        padding: 60px 40px;
+        position: relative;
+        overflow: hidden;
+        animation: fadeIn 0.8s ease;
+    }
+
+    .referrer-hero::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle at 30% 40%, rgba(240,185,11,0.04) 0%, transparent 60%);
+        animation: float 20s ease-in-out infinite;
+    }
+
+    @keyframes float {
+        0%, 100% { transform: translate(0, 0); }
+        50% { transform: translate(-20px, -20px); }
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hero-content {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+        max-width: 500px;
+    }
+
+    .hero-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, var(--primary), #FCD535);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        font-weight: 700;
+        color: #0B0E11;
+        margin: 0 auto 24px;
+        box-shadow: 0 8px 32px rgba(240,185,11,0.2);
+        overflow: hidden;
+        animation: pulse 3s ease-in-out infinite;
+    }
+
+    .hero-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+
+    @keyframes pulse {
+        0%, 100% { box-shadow: 0 8px 32px rgba(240,185,11,0.2); }
+        50% { box-shadow: 0 8px 48px rgba(240,185,11,0.4); }
+    }
+
+    .hero-name {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+    }
+
+    .hero-caption {
+        font-size: 16px;
+        color: var(--text-secondary);
+        line-height: 1.7;
+        font-style: italic;
+        position: relative;
+        padding: 0 20px;
+    }
+
+    .hero-caption::before,
+    .hero-caption::after {
+        content: '"';
+        font-size: 40px;
+        color: var(--primary);
+        position: absolute;
+        opacity: 0.3;
+    }
+
+    .hero-caption::before { top: -20px; left: 0; }
+    .hero-caption::after { bottom: -30px; right: 0; }
+
+    .hero-badge {
+        display: inline-block;
+        margin-top: 24px;
+        padding: 6px 16px;
+        border-radius: 20px;
+        background: rgba(240,185,11,0.1);
+        border: 1px solid rgba(240,185,11,0.2);
+        font-size: 11px;
+        color: var(--primary);
+    }
+
+    /* === RIGHT: Registration Form === */
+    .form-panel {
+        background: var(--bg-card);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 60px 48px;
+        border-left: 1px solid var(--border);
+        overflow-y: auto;
+        animation: slideIn 0.6s ease;
+    }
+
+    @keyframes slideIn {
+        from { opacity: 0; transform: translateX(40px); }
+        to { opacity: 1; transform: translateX(0); }
+    }
+
+    .form-header {
+        margin-bottom: 32px;
+    }
+
+    .form-header h2 {
+        font-size: 24px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 6px;
+    }
+
+    .form-header p {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .form-group {
+        margin-bottom: 18px;
+    }
+
+    .form-label {
+        display: block;
+        font-size: 11px;
+        font-weight: 600;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 6px;
+    }
+
+    .form-input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
+        color: var(--text-primary);
+        font-size: 13px;
+        transition: all 0.2s;
+    }
+
+    .form-input:focus {
+        outline: none;
+        border-color: var(--primary);
+        background: rgba(240,185,11,0.03);
+    }
+
+    .form-select {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: rgba(255,255,255,0.03);
+        color: var(--text-primary);
+        font-size: 13px;
+        appearance: none;
+        cursor: pointer;
+    }
+
+    .btn-register {
+        width: 100%;
+        padding: 14px;
+        border-radius: 12px;
+        border: none;
+        background: var(--primary);
+        color: #0B0E11;
+        font-size: 14px;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        margin-top: 8px;
+    }
+
+    .btn-register:hover {
+        background: #E0A800;
+        transform: translateY(-1px);
+    }
+
+    .btn-register:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none;
+    }
+
+    .form-footer {
+        text-align: center;
+        margin-top: 20px;
+        font-size: 12px;
+        color: var(--text-secondary);
+    }
+
+    .form-footer a {
+        color: var(--primary);
+        text-decoration: none;
+        font-weight: 600;
+    }
+
+    .form-footer a:hover { text-decoration: underline; }
+
+    .checkbox-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        font-size: 11px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+
+    .checkbox-row input { margin-top: 2px; }
+
+    .checkbox-row a { color: var(--primary); text-decoration: none; }
+
+    .loading-spinner {
+        display: inline-block;
+        width: 16px;
+        height: 16px;
+        border: 2px solid rgba(255,255,255,0.2);
+        border-top-color: #0B0E11;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+        margin-right: 6px;
+        vertical-align: middle;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+
+    .referral-code-display {
+        display: inline-block;
+        background: rgba(240,185,11,0.1);
+        border: 1px solid rgba(240,185,11,0.2);
+        padding: 4px 10px;
+        border-radius: 6px;
+        font-size: 11px;
+        color: var(--primary);
+        font-weight: 600;
+        margin-left: 6px;
+    }
+
+    /* Mobile Tabs */
+    .mobile-tabs { display: none; }
+
+    @media (max-width: 860px) {
+        .register-layout {
+            grid-template-columns: 1fr;
+            min-height: auto;
+        }
+
+        .referrer-hero {
+            padding: 40px 20px;
+            min-height: auto;
+        }
+
+        .hero-avatar {
+            width: 70px;
+            height: 70px;
+            font-size: 30px;
+            margin-bottom: 16px;
+        }
+
+        .hero-name { font-size: 18px; }
+        .hero-caption { font-size: 14px; }
+
+        .form-panel {
+            padding: 30px 20px;
+            border-left: none;
+        }
+
+        .mobile-tabs {
+            display: flex;
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 56px;
+            z-index: 10;
+        }
+
+        .mobile-tab {
+            flex: 1;
+            padding: 14px;
+            text-align: center;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            border-bottom: 2px solid transparent;
+        }
+
+        .mobile-tab.active {
+            color: var(--primary);
+            border-bottom-color: var(--primary);
+        }
+
+        .referrer-hero.mobile-hide { display: none; }
+        .form-panel.mobile-hide { display: none; }
+    }
+</style>
+{% endblock %}
 
 {% block content %}
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6 col-lg-5">
-            <div class="card">
-                <div class="card-header bg-white text-center py-3">
-                    <h4 class="mb-0">Create Account</h4>
-                    <p class="text-muted small mt-1">Join NODE to start trading</p>
-                </div>
-                <div class="card-body p-4">
-                    <form id="registerForm">
-                        {% csrf_token %}
-                        <div class="mb-3">
-                            <label class="form-label">Username</label>
-                            <input type="text" id="username" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Email</label>
-                            <input type="email" id="email" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Password</label>
-                            <input type="password" id="password" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Confirm Password</label>
-                            <input type="password" id="password2" class="form-control" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Referral Code (Optional)</label>
-                            <input type="text" id="referralCode" class="form-control" placeholder="Enter code if you have one">
-                            <div class="form-text small">If you were invited by someone, enter their referral code here.</div>
-                        </div>
-                        <div class="mb-3 form-check">
-                            <input type="checkbox" id="termsCheck" class="form-check-input" required>
-                            <label class="form-check-label small">
-                                I agree to the <a href="/terms/" target="_blank">Terms of Service</a> and
-                                <a href="/privacy/" target="_blank">Privacy Policy</a>
-                            </label>
-                        </div>
-                        <div class="form-group">
-                            <label class="form-label">I am a...</label>
-                            <select id="userType" class="form-input" required>
-                                <option value="">Select your profile</option>
-                                <option value="MICRO">Micro-Investor (Student, Corper, Small Starter)</option>
-                                <option value="SALARY">Salary Earner (9-5 Worker, Professional)</option>
-                                <option value="BUSINESS">Business Owner / High-Net-Worth</option>
-                                <option value="REFERRAL">Referral Builder (I want to earn by sharing)</option>
-                                <option value="DIASPORA">Diaspora Nigerian (Living Abroad)</option>
-                            </select>
-                            <div class="input-hint">This helps us personalize your experience</div>
-                        </div>
-                        <button type="submit" class="btn btn-primary w-100 py-2" style="background: #F0B90B; border: none; color: #0B0E11;">
-                            Register
-                        </button>
-                    </form>
 
-                    <div class="text-center mt-3">
-                        <small class="text-muted">Already have an account? <a href="/login/">Login here</a></small>
-                    </div>
-                </div>
+<!-- Mobile Tabs -->
+<div class="mobile-tabs">
+    <button class="mobile-tab active" onclick="switchMobileTab('hero')">👤 Invitation</button>
+    <button class="mobile-tab" onclick="switchMobileTab('form')">📝 Register</button>
+</div>
+
+<div class="register-layout">
+    <!-- LEFT: Referrer Hero -->
+    <div class="referrer-hero" id="referrerHero">
+        <div class="hero-content">
+            <div class="hero-avatar" id="heroAvatar">N</div>
+            <div class="hero-name" id="heroName">Welcome to NODE</div>
+            <div class="hero-caption" id="heroCaption">
+                Automated crypto grid trading. Start with $10. Your money works 24/7.
+            </div>
+            <div class="hero-badge" id="heroBadge" style="display:none;">
+                Invited by <span id="heroReferrerName"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- RIGHT: Registration Form -->
+    <div class="form-panel" id="registerForm">
+        <div class="form-header">
+            <h2>Create Your Account</h2>
+            <p>Start your journey with NODE — automated trading, real profits.</p>
+        </div>
+
+        <form id="registerFormInner" onsubmit="handleRegister(event)">
+            {% csrf_token %}
+
+            <div class="form-group">
+                <label class="form-label">Username</label>
+                <input type="text" id="username" class="form-input" required placeholder="Choose a username">
             </div>
 
-            <div class="text-center mt-3">
-                <small class="text-muted">
-                    By registering, you confirm that you understand the risks of cryptocurrency trading.
-                </small>
+            <div class="form-group">
+                <label class="form-label">Email</label>
+                <input type="email" id="email" class="form-input" required placeholder="your@email.com">
             </div>
+
+            <div class="form-group">
+                <label class="form-label">Password</label>
+                <input type="password" id="password" class="form-input" required placeholder="Min 8 characters">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">Confirm Password</label>
+                <input type="password" id="password2" class="form-input" required placeholder="Re-enter password">
+            </div>
+
+            <div class="form-group" id="referralGroup">
+                <label class="form-label">
+                    Referral Code
+                    <span id="referralCodeDisplay" class="referral-code-display" style="display:none;"></span>
+                </label>
+                <input type="text" id="referralCode" class="form-input" placeholder="Enter code if invited">
+            </div>
+
+            <div class="form-group">
+                <label class="form-label">I am a...</label>
+                <select id="userType" class="form-select" required>
+                    <option value="">Select your profile</option>
+                    <option value="MICRO">Micro-Investor (Student, Corper, Small Starter)</option>
+                    <option value="SALARY">Salary Earner (9-5 Worker, Professional)</option>
+                    <option value="BUSINESS">Business Owner / High-Net-Worth</option>
+                    <option value="REFERRAL">Referral Builder (I want to earn by sharing)</option>
+                    <option value="DIASPORA">Diaspora Nigerian (Living Abroad)</option>
+                </select>
+            </div>
+
+            <div class="checkbox-row">
+                <input type="checkbox" id="termsCheck" required>
+                <label for="termsCheck">I agree to the <a href="/terms/" target="_blank">Terms of Service</a> and <a href="/privacy/" target="_blank">Privacy Policy</a></label>
+            </div>
+
+            <button type="submit" class="btn-register" id="btnRegister">Create Account</button>
+        </form>
+
+        <div class="form-footer">
+            Already have an account? <a href="/login/">Sign in</a>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('registerForm').addEventListener('submit', async function(e) {
+    // ============ MOBILE TAB SWITCH ============
+    function switchMobileTab(tab) {
+        document.querySelectorAll('.mobile-tab').forEach(function(b, i) {
+            b.classList.toggle('active', (tab === 'hero' && i === 0) || (tab === 'form' && i === 1));
+        });
+        document.getElementById('referrerHero').classList.toggle('mobile-hide', tab !== 'hero');
+        document.getElementById('registerForm').classList.toggle('mobile-hide', tab !== 'form');
+    }
+
+    // ============ LOAD REFERRER PROFILE ============
+    async function loadReferrerProfile() {
+        var params = new URLSearchParams(window.location.search);
+        var refCode = params.get('ref');
+
+        if (!refCode) {
+            // Check sessionStorage for previously captured code
+            refCode = sessionStorage.getItem('referral_code');
+        }
+
+        if (refCode) {
+            document.getElementById('referralCode').value = refCode;
+            document.getElementById('referralCodeDisplay').textContent = refCode;
+            document.getElementById('referralCodeDisplay').style.display = 'inline-block';
+            sessionStorage.setItem('referral_code', refCode);
+
+            try {
+                var res = await fetch('/api/referrer-profile/?ref=' + refCode);
+                var profile = await res.json();
+
+                if (profile.name) {
+                    document.getElementById('heroName').textContent = profile.name;
+                    document.getElementById('heroCaption').textContent = profile.caption;
+
+                    if (profile.picture) {
+                        document.getElementById('heroAvatar').innerHTML = '<img src="' + profile.picture + '" alt="' + profile.name + '">';
+                    } else {
+                        document.getElementById('heroAvatar').textContent = profile.name.charAt(0).toUpperCase();
+                    }
+
+                    document.getElementById('heroReferrerName').textContent = profile.name;
+                    document.getElementById('heroBadge').style.display = 'inline-block';
+                }
+            } catch(e) {
+                console.log('Could not load referrer profile');
+            }
+        }
+    }
+
+    // ============ REGISTRATION ============
+    async function handleRegister(e) {
         e.preventDefault();
 
-        const username = document.getElementById('username').value;
-        const email = document.getElementById('email').value;
-        const password = document.getElementById('password').value;
-        const password2 = document.getElementById('password2').value;
-        const referralCode = document.getElementById('referralCode').value;
-        const termsCheck = document.getElementById('termsCheck').checked;
+        var btn = document.getElementById('btnRegister');
+        var username = document.getElementById('username').value.trim();
+        var email = document.getElementById('email').value.trim();
+        var password = document.getElementById('password').value;
+        var password2 = document.getElementById('password2').value;
+        var referralCode = document.getElementById('referralCode').value.trim();
+        var userType = document.getElementById('userType').value;
+        var termsCheck = document.getElementById('termsCheck').checked;
 
         if (!termsCheck) {
             showModal('Please agree to the Terms of Service', 'warning');
@@ -95,31 +512,53 @@
             return;
         }
 
-        const data = { username, email, password, password2, user_type: document.getElementById("userType").value };
+        if (password.length < 8) {
+            showModal('Password must be at least 8 characters', 'warning');
+            return;
+        }
+
+        btn.disabled = true;
+        btn.innerHTML = '<span class="loading-spinner"></span> Creating account...';
+
+        var data = {
+            username: username,
+            email: email,
+            password: password,
+            password2: password2,
+            user_type: userType
+        };
+
         if (referralCode) {
             data.referral_code = referralCode;
+            sessionStorage.setItem('referral_code', referralCode);
         }
 
         try {
-            const response = await fetch('/api/auth/register/', {
+            var res = await fetch('/api/auth/register/', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
             });
 
-            const result = await response.json();
+            var result = await res.json();
 
-            if (response.ok) {
+            if (res.ok) {
                 localStorage.setItem('access_token', result.access);
                 localStorage.setItem('refresh_token', result.refresh);
                 window.location.href = '/dashboard/';
             } else {
-                const errors = Object.values(result).flat().join('\n');
+                var errors = Object.values(result).flat().join('\n');
                 showModal('Registration failed: ' + errors, 'error');
             }
-        } catch (error) {
-            showModal('Registration failed. Please try again.', 'error');
+        } catch(e) {
+            showModal('Network error. Please try again.', 'error');
         }
-    });
+
+        btn.disabled = false;
+        btn.innerHTML = 'Create Account';
+    }
+
+    // Init
+    loadReferrerProfile();
 </script>
 {% endblock %}
