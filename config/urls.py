@@ -119,5 +119,6 @@ urlpatterns = [
     path('api/exchange/trendly/', TrendlyExchangeView.as_view(), name='trendly_exchange'),
 
     path('api/referrer-profile/', ReferrerProfileView.as_view(), name='referrer_profile'),
+    path('whitepaper/', TemplateView.as_view(template_name='whitepaper.html'), name='whitepaper'),
 
 ]

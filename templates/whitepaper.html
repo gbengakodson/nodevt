@@ -1,0 +1,314 @@
+{% extends 'base/base.html' %}
+{% load static %}
+
+{% block title %}White Paper | NODE{% endblock %}
+
+{% block extra_css %}
+<style>
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #F5F6F8;
+        --bg-card: #FFFFFF;
+        --text-primary: #1E2329;
+        --text-secondary: #707A8A;
+        --border: #E2E4E8;
+        --success: #0ECB81;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: var(--bg-body) !important; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Georgia, serif; }
+
+    .wp-container {
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 40px 24px 80px;
+    }
+
+    .wp-hero {
+        text-align: center;
+        padding: 60px 0 40px;
+        border-bottom: 2px solid var(--primary);
+        margin-bottom: 40px;
+    }
+    .wp-hero h1 {
+        font-size: 36px;
+        font-weight: 800;
+        color: var(--text-primary);
+        letter-spacing: -0.5px;
+        margin-bottom: 12px;
+    }
+    .wp-hero .subtitle {
+        font-size: 18px;
+        color: var(--primary);
+        font-weight: 600;
+        margin-bottom: 8px;
+    }
+    .wp-hero .meta {
+        font-size: 13px;
+        color: var(--text-secondary);
+    }
+
+    .wp-toc {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 24px 30px;
+        margin-bottom: 40px;
+    }
+    .wp-toc h2 {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 16px;
+        color: var(--text-primary);
+    }
+    .wp-toc ol {
+        padding-left: 20px;
+        font-size: 13px;
+        color: var(--text-secondary);
+        line-height: 2;
+    }
+    .wp-toc ol li a {
+        color: var(--text-primary);
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .wp-toc ol li a:hover {
+        color: var(--primary);
+    }
+
+    .wp-section {
+        margin-bottom: 40px;
+    }
+    .wp-section h2 {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin-bottom: 16px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid var(--border);
+    }
+    .wp-section h3 {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--text-primary);
+        margin: 20px 0 10px;
+    }
+    .wp-section p {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin-bottom: 14px;
+    }
+    .wp-section ul, .wp-section ol {
+        font-size: 14px;
+        color: var(--text-secondary);
+        line-height: 1.8;
+        margin: 10px 0 14px 24px;
+    }
+    .wp-section table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 16px 0;
+        font-size: 12px;
+    }
+    .wp-section table th {
+        background: #F8F9FA;
+        padding: 10px 14px;
+        text-align: left;
+        font-weight: 700;
+        color: var(--text-primary);
+        border-bottom: 2px solid var(--border);
+    }
+    .wp-section table td {
+        padding: 10px 14px;
+        border-bottom: 1px solid #F0F0F0;
+        color: var(--text-secondary);
+    }
+
+    .wp-download {
+        text-align: center;
+        margin-top: 40px;
+        padding: 30px;
+        background: var(--bg-card);
+        border: 2px solid var(--primary);
+        border-radius: 12px;
+    }
+    .wp-download h3 {
+        font-size: 18px;
+        color: var(--text-primary);
+        margin-bottom: 8px;
+    }
+    .wp-download p {
+        font-size: 12px;
+        color: var(--text-secondary);
+        margin-bottom: 16px;
+    }
+    .btn-download {
+        display: inline-block;
+        padding: 12px 30px;
+        background: var(--primary);
+        color: #1E2329;
+        border-radius: 8px;
+        font-weight: 700;
+        text-decoration: none;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    .btn-download:hover {
+        background: #E0A800;
+    }
+
+    @media (max-width: 600px) {
+        .wp-hero h1 { font-size: 26px; }
+        .wp-section h2 { font-size: 18px; }
+        .wp-section p { font-size: 13px; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="wp-container">
+
+    <!-- Hero -->
+    <div class="wp-hero">
+        <h1>NODE: Democratized Algorithmic Trading Infrastructure</h1>
+        <p class="subtitle">Technical White Paper v2.0 — June 2026</p>
+        <p class="meta">Operated by THRIVALBASE LTD (RC: 1394827) • Pursuing SEC Registration as a Digital Robo-Advisor</p>
+    </div>
+
+    <!-- Table of Contents -->
+    <div class="wp-toc">
+        <h2>Table of Contents</h2>
+        <ol>
+            <li><a href="#executive-summary">Executive Summary</a></li>
+            <li><a href="#market-context">Market Context & Opportunity</a></li>
+            <li><a href="#fadakka">The Fadakka Algorithm</a></li>
+            <li><a href="#architecture">Platform Architecture</a></li>
+            <li><a href="#product">Product Offering</a></li>
+            <li><a href="#transparency">Transparency & Trust</a></li>
+            <li><a href="#fees">Fee Structure</a></li>
+            <li><a href="#risk">Risk Management</a></li>
+            <li><a href="#roadmap">Roadmap</a></li>
+            <li><a href="#conclusion">Conclusion</a></li>
+        </ol>
+    </div>
+
+    <!-- Executive Summary -->
+    <div class="wp-section" id="executive-summary">
+        <h2>1. Executive Summary</h2>
+        <p>The global algorithmic trading market is projected to exceed $30 billion by 2030, yet access to sophisticated trading infrastructure remains concentrated among institutional investors and high-net-worth individuals. NODE bridges this gap by providing retail investors—particularly in emerging markets—with access to automated, fair-value-based grid trading strategies historically reserved for quantitative hedge funds.</p>
+        <p>NODE operates as a hybrid robo-advisor and pooled trading platform, deploying a proprietary algorithm called <strong>Fadakka</strong> that scans 20+ cryptocurrencies, calculates their fair value using a 99-week exponential moving average, and only activates capital when markets offer statistically significant discounts. This disciplined, value-oriented approach differentiates NODE from conventional grid bots that trade blindly at any price.</p>
+        <p>Starting with a minimum deposit of $10 USDC, users activate Position Trackers that participate in NODE's Master Grid Bot on Binance. The platform has processed over 8,800 on-chain transactions, maintains 21 active Position Trackers representing $11,586 in deployed capital, and operates with full transparency through a publicly verifiable Binance wallet.</p>
+    </div>
+
+    <!-- Market Context -->
+    <div class="wp-section" id="market-context">
+        <h2>2. Market Context & Opportunity</h2>
+        <h3>2.1 The Algorithmic Trading Landscape</h3>
+        <p>Algorithmic trading accounts for over 70% of U.S. equity volume and is rapidly expanding into cryptocurrency markets. However, the infrastructure required typically requires millions in capital and specialized engineering talent, creating a structural barrier for retail investors.</p>
+        <h3>2.2 The African Retail Investment Gap</h3>
+        <p>Africa represents one of the world's fastest-growing consumer markets, yet financial inclusion remains critically low. Key challenges include currency devaluation, limited investment options, high barriers to entry, and trust deficits.</p>
+        <h3>2.3 NODE's Market Position</h3>
+        <table>
+            <tr><th>Challenge</th><th>NODE Solution</th></tr>
+            <tr><td>Currency devaluation</td><td>USDC-denominated investments preserve dollar value</td></tr>
+            <tr><td>Limited options</td><td>Automated grid trading targets variable monthly returns</td></tr>
+            <tr><td>High barriers</td><td>$10 minimum entry point</td></tr>
+            <tr><td>Trust deficit</td><td>Public Exchange wallet, on-chain verification, CAC registration</td></tr>
+        </table>
+    </div>
+
+    <!-- Fadakka Algorithm -->
+    <div class="wp-section" id="fadakka">
+        <h2>3. The Fadakka Algorithm</h2>
+        <h3>3.1 Fair Value Calculation</h3>
+        <p>The Fadakka Index (K) is the 99-week Exponential Moving Average (EMA) of weekly closing prices, representing the equilibrium price around which markets oscillate.</p>
+        <h3>3.2 20-Level Trigger System</h3>
+        <p>NODE employs a granular, 20-level trigger framework spanning deviations from -20% to -200% of fair value, with tiered exit multipliers.</p>
+        <h3>3.3 Historical Validation: The Bitcoin Case</h3>
+        <p>In late 2025, Bitcoin surged past $120,000. NODE's Fadakka model calculated BTC's fair value at $85,000 and remained in cash throughout the rally. It only activated grids after the correction, buying at deep discounts. This algorithmic patience is the core value proposition.</p>
+    </div>
+
+    <!-- Platform Architecture -->
+    <div class="wp-section" id="architecture">
+        <h2>4. Platform Architecture</h2>
+        <h3>4.1 System Overview</h3>
+        <p>NODE operates a two-layer architecture: Master Grid Bot (execution) and Position Tracker (accounting).</p>
+        <h3>4.2 Technology Stack</h3>
+        <table>
+            <tr><th>Component</th><th>Technology</th></tr>
+            <tr><td>Backend</td><td>Python / Django 5.2</td></tr>
+            <tr><td>Database</td><td>PostgreSQL</td></tr>
+            <tr><td>Blockchain</td><td>Web3.py (BSC Network)</td></tr>
+            <tr><td>Exchange</td><td>Binance API v3</td></tr>
+            <tr><td>Infrastructure</td><td>Render (PaaS)</td></tr>
+            <tr><td>Frontend</td><td>Vanilla JavaScript + Chart.js</td></tr>
+        </table>
+    </div>
+
+    <!-- Product Offering -->
+    <div class="wp-section" id="product">
+        <h2>5. Product Offering</h2>
+        <h3>5.1 Position Trackers</h3>
+        <p>Users activate Position Trackers by depositing USDC to their personal BSC wallet. Minimum investment: $10 USDC. Hourly yield credited after 24-hour initialization period. 10% management fee on activation; no performance fees — users keep 100% of profits.</p>
+        <h3>5.2 Affiliate Program</h3>
+        <table>
+            <tr><th>Level</th><th>Share of 10% Management Fee</th></tr>
+            <tr><td>Level 1 (Direct)</td><td>50%</td></tr>
+            <tr><td>Level 2</td><td>25%</td></tr>
+            <tr><td>Level 3</td><td>12.5%</td></tr>
+        </table>
+    </div>
+
+    <!-- Transparency -->
+    <div class="wp-section" id="transparency">
+        <h2>6. Transparency & Trust</h2>
+        <p>NODE operates on a foundation of radical transparency: public Exchange wallet, individual user wallets with accessible private keys, CAC registration (THRIVALBASE LTD, RC: 1394827), and active pursuit of SEC Nigeria registration under the Digital Robo-Advisor framework.</p>
+    </div>
+
+    <!-- Fee Structure -->
+    <div class="wp-section" id="fees">
+        <h2>7. Fee Structure</h2>
+        <table>
+            <tr><th>Fee Type</th><th>Rate</th><th>When Applied</th></tr>
+            <tr><td>Management Fee</td><td>10% of capital</td><td>On Position Tracker activation</td></tr>
+            <tr><td>Performance Fee</td><td>0%</td><td>Never — users keep 100% of profits</td></tr>
+            <tr><td>Withdrawal Fee</td><td>0%</td><td>Free withdrawals</td></tr>
+            <tr><td>Deposit Fee</td><td>0%</td><td>Free deposits</td></tr>
+            <tr><td>Monthly Subscription</td><td>$0</td><td>No recurring charges</td></tr>
+        </table>
+    </div>
+
+    <!-- Risk Management -->
+    <div class="wp-section" id="risk">
+        <h2>8. Risk Management</h2>
+        <p>Built-in protections include: Fadakka only activates below fair value, tiered allocation enforces diversification, crash filter excludes -30% daily drops, volume filter requires $1M+ daily volume, market cap minimum of $10M, grid range covers -80% from entry price, and tiered exit targets based on discount depth.</p>
+    </div>
+
+    <!-- Roadmap -->
+    <div class="wp-section" id="roadmap">
+        <h2>9. Roadmap</h2>
+        <table>
+            <tr><th>Phase</th><th>Timeline</th><th>Milestones</th></tr>
+            <tr><td>Phase 1 (Complete)</td><td>Q1-Q2 2026</td><td>Fadakka deployed, Master Grid live, Position Trackers, transparency page</td></tr>
+            <tr><td>Phase 2 (In Progress)</td><td>Q3 2026</td><td>External exchange integration, Trendly fiat on-ramp, SEC application</td></tr>
+            <tr><td>Phase 3</td><td>Q4 2026</td><td>Multi-exchange expansion, dynamic yield rate, native mobile apps</td></tr>
+            <tr><td>Phase 4</td><td>2027</td><td>Institutional partnerships, full SEC registration, 100K+ users</td></tr>
+        </table>
+    </div>
+
+    <!-- Conclusion -->
+    <div class="wp-section" id="conclusion">
+        <h2>10. Conclusion</h2>
+        <p>NODE represents a convergence of sophisticated quantitative finance and accessible retail investment infrastructure. The Fadakka algorithm's demonstrated ability to avoid overvalued market conditions validates the mathematical foundation of the platform. With a CAC-registered operating company, a clear regulatory pathway, and a growing user base, NODE is positioned to become the leading automated trading platform for African retail investors.</p>
+    </div>
+
+    <!-- Download -->
+    <div class="wp-download">
+        <h3>📄 Download the Full White Paper</h3>
+        <p>PDF version available for offline reading and sharing.</p>
+        <a href="#" class="btn-download" onclick="window.print(); return false;">🖨️ Print / Save as PDF</a>
+    </div>
+
+</div>
+{% endblock %}
