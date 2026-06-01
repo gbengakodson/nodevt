@@ -16,6 +16,7 @@ import random
 from datetime import timedelta
 from django.conf import settings
 from apps.trading.views import TradingViewSet
+from .models import ExchangeRequest
 
 
 import logging
@@ -535,6 +536,7 @@ from django.utils import timezone
 from datetime import timedelta
 from django.conf import settings
 from apps.trading.views import TradingViewSet
+
 
 
 class TrendlyExchangeView(APIView):
