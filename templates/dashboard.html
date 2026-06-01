@@ -1070,7 +1070,7 @@
                             <div class="price-info">
                                 <div class="param-row"><span>Price at Creation:</span><span>${formatCurrency(bot.price_at_creation)}</span></div>
                                 <div class="param-row"><span>Current Price:</span><span>${formatCurrency(currentPrice)}</span></div>
-                                <div class="param-row"><span>Created:</span><span>${new Date(bot.created_at).toLocaleDateString()}</span></div>
+                                <div class="param-row"><span>Created:</span><span>${(() => { const days = Math.floor((Date.now() - new Date(bot.created_at).getTime()) / (1000 * 60 * 60 * 24)); return days + ' days ago'; })()}</span></div>
                             </div>
                             <div class="holding-stats">
                                 <div class="stat-item"><label>Investment</label><span>${formatCurrency(bot.amount)}</span></div>
