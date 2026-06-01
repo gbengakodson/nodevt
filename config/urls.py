@@ -16,6 +16,9 @@ from apps.accounts.views import admin_login_as_user
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
 from apps.chat.views import TransparencyLikeView
+from apps.accounts.views import TrendlyExchangeView
+
+
 
 
 
@@ -112,5 +115,6 @@ urlpatterns = [
     path('api/public/grid-live/', TradingViewSet.as_view({'get': 'public_grid_live'}), name='public_grid_live'),
     path('transparency/like/', TransparencyLikeView.as_view(), name='transparency_like'),
     path('api/trigger/audit-profits/', audit_profits_webhook, name='audit_profits'),
+    path('api/exchange/trendly/', TrendlyExchangeView.as_view(), name='trendly_exchange'),
 
 ]

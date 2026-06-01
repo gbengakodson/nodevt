@@ -159,3 +159,27 @@ class ExchangeAPIConnection(models.Model):
             return Client(self.get_api_key(), self.get_api_secret())
         # Add other exchanges as needed
         return None
+
+
+class ExchangeRequest(models.Model):
+    DIRECTION_CHOICES = [
+        ('BUY', 'Buy Crypto (Naira → Crypto)'),
+        ('SELL', 'Sell Crypto (Crypto → Naira)'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    email = models.EmailField()  # User's email (may not be a NODE user)
+    amount = models.DecimalField(max_digits=20, decimal_places=8)  # USDC/USDT amount
+    destination_wallet = models.CharField(max_length=42)  # External wallet address
+    direction = models.CharField(max_length=4, choices=DIRECTION_CHOICES)
+    pin_hash = models.CharField(max_length=64)  # Hashed PIN
+    pin_expiry = models.DateTimeField()
+    is_used = models.BooleanField(default=False)
+    is_processed = models.BooleanField(default=False)
+    tx_hash = models.CharField(max_length=66, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    class Meta:
+        ordering = ['-created_at']

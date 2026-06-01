@@ -11,6 +11,11 @@ from rest_framework_simplejwt.tokens import RefreshToken
 from django.utils import timezone
 from decimal import Decimal
 from django.http import JsonResponse
+import hashlib
+import random
+from datetime import timedelta
+from django.conf import settings
+from apps.trading.views import TradingViewSet
 
 
 import logging
@@ -522,3 +527,110 @@ def charge_aum_fees_webhook(request):
     from django.core.management import call_command
     call_command('charge_aum_fees')
     return JsonResponse({'status': 'success'})
+
+
+import hashlib
+import random
+from django.utils import timezone
+from datetime import timedelta
+from django.conf import settings
+from apps.trading.views import TradingViewSet
+
+
+class TrendlyExchangeView(APIView):
+    """API for Trendly exchange integration"""
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        action = request.data.get('action')
+
+        if action == 'request':
+            return self._request_pin(request)
+        elif action == 'confirm':
+            return self._confirm_and_transfer(request)
+        return Response({'error': 'Invalid action'}, status=400)
+
+    def _request_pin(self, request):
+        """Generate PIN for a new exchange"""
+        email = request.data.get('email', '').strip()
+        amount = request.data.get('amount')
+        direction = request.data.get('direction', 'BUY')
+        destination_wallet = request.data.get('destination_wallet', '')
+
+        if not email or not amount or not destination_wallet:
+            return Response({'error': 'Email, amount, and wallet required'}, status=400)
+
+        # Generate 6-digit PIN
+        pin = str(random.randint(100000, 999999))
+        pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+        expiry = timezone.now() + timedelta(minutes=10)
+
+        # Look up user if exists
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
+        user = User.objects.filter(email=email).first()
+
+        exchange = ExchangeRequest.objects.create(
+            user=user,
+            email=email,
+            amount=Decimal(str(amount)),
+            destination_wallet=destination_wallet,
+            direction=direction,
+            pin_hash=pin_hash,
+            pin_expiry=expiry
+        )
+
+        # Return PIN to Trendly (they will share with user or use internally)
+        return Response({
+            'request_id': str(exchange.id),
+            'pin': pin,
+            'expires_in': 600  # 10 minutes
+        })
+
+    def _confirm_and_transfer(self, request):
+        """Verify PIN and execute the crypto transfer"""
+        request_id = request.data.get('request_id')
+        pin = request.data.get('pin', '')
+
+        try:
+            exchange = ExchangeRequest.objects.get(id=request_id)
+        except ExchangeRequest.DoesNotExist:
+            return Response({'error': 'Request not found'}, status=404)
+
+        if exchange.is_used:
+            return Response({'error': 'PIN already used'}, status=400)
+
+        if timezone.now() > exchange.pin_expiry:
+            return Response({'error': 'PIN expired'}, status=400)
+
+        pin_hash = hashlib.sha256(pin.encode()).hexdigest()
+        if pin_hash != exchange.pin_hash:
+            return Response({'error': 'Invalid PIN'}, status=400)
+
+        # Mark PIN as used
+        exchange.is_used = True
+        exchange.save()
+
+        # Execute transfer from NODE Web3 to destination wallet
+        from django.conf import settings
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            settings.CENTRAL_WALLET_ADDRESS,
+            settings.CENTRAL_WALLET_PRIVATE_KEY,
+            exchange.destination_wallet,
+            exchange.amount
+        )
+
+        if sweep_result['success']:
+            exchange.is_processed = True
+            exchange.tx_hash = sweep_result.get('tx_hash', '')
+            exchange.processed_at = timezone.now()
+            exchange.save()
+            return Response({
+                'success': True,
+                'tx_hash': sweep_result.get('tx_hash', ''),
+                'amount': float(exchange.amount)
+            })
+        else:
+            return Response({
+                'error': f"Transfer failed: {sweep_result.get('error', 'Unknown')}"
+            }, status=500)
