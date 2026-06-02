@@ -18,6 +18,7 @@ from apps.accounts.views import charge_aum_fees_webhook
 from apps.chat.views import TransparencyLikeView
 from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView, ProfilePictureUploadView
 from django.conf.urls.static import static
+from django.views.static import serve
 
 
 
@@ -129,5 +130,6 @@ urlpatterns = [
 
 ]
 
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
