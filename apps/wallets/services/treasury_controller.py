@@ -21,7 +21,7 @@ class TreasuryController:
 
     # Minimum reserves
     MIN_BINANCE_RESERVE = Decimal('0')  # Keep nothing, all profits go to web3
-    MIN_WEB3_RESERVE = Decimal('15')  # Keep nothing, all funds go to Binance
+    MIN_WEB3_RESERVE = Decimal('500')  # Keep nothing, all funds go to Binance
 
     @classmethod
     def get_balances(cls):
