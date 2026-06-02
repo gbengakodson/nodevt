@@ -158,6 +158,10 @@ class UserProfileView(APIView):
             user.id_type = data['id_type']
         if 'id_number' in data:
             user.id_number = data['id_number']
+        if 'profile_picture' in data:
+            user.profile_picture = data['profile_picture']
+        if 'profile_caption' in data:
+            user.profile_caption = data['profile_caption']
 
         user.save()
         serializer = UserSerializer(user)
@@ -673,3 +677,37 @@ class ReferrerProfileView(APIView):
                 'caption': 'Automated crypto grid trading. Start with $10. Your money works 24/7.',
                 'name': 'NODE'
             })
+
+
+from django.conf import settings
+from django.core.files.storage import default_storage
+from django.core.files.base import ContentFile
+import os
+import uuid
+
+
+class ProfilePictureUploadView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        file = request.FILES.get('image')
+        if not file:
+            return Response({'error': 'No image provided'}, status=400)
+
+        # Validate file type
+        if not file.content_type.startswith('image/'):
+            return Response({'error': 'File must be an image'}, status=400)
+
+        # Generate unique filename
+        ext = file.name.split('.')[-1]
+        filename = f"profile_{request.user.id}_{uuid.uuid4().hex[:8]}.{ext}"
+
+        # Save to media/profiles/
+        path = default_storage.save(f'profiles/{filename}', ContentFile(file.read()))
+        url = settings.MEDIA_URL + path
+
+        # Update user's profile_picture
+        request.user.profile_picture = url
+        request.user.save()
+
+        return Response({'url': url})

@@ -16,7 +16,9 @@ from apps.accounts.views import admin_login_as_user
 from apps.accounts.views import ExchangeConnectionViewSet
 from apps.accounts.views import charge_aum_fees_webhook
 from apps.chat.views import TransparencyLikeView
-from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView
+from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView, ProfilePictureUploadView
+from django.conf.urls.static import static
+
 
 
 
@@ -121,4 +123,11 @@ urlpatterns = [
     path('api/referrer-profile/', ReferrerProfileView.as_view(), name='referrer_profile'),
     path('whitepaper/', TemplateView.as_view(template_name='whitepaper.html'), name='whitepaper'),
 
+
+
+    path('api/profile/upload-picture/', ProfilePictureUploadView.as_view(), name='profile_upload_picture'),
+
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
