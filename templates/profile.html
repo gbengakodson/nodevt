@@ -390,9 +390,25 @@
     async function saveProfile() {
         var u = document.getElementById('editUsername').value.trim();
         var c = document.getElementById('profileCaption').value.trim();
-        if (!u) return alert('Username required');
-        await apiCall('/auth/profile/', 'PUT', { username: u, profile_caption: c });
-        alert('✅ Profile updated!'); loadProfile();
+        if (!u) {
+            showModal('Username is required.', 'warning');
+            return;
+        }
+
+        try {
+            var res = await apiCall('/auth/profile/', 'PUT', {
+                username: u,
+                profile_caption: c
+            });
+
+            // Update UI immediately with the response data (no full reload)
+            document.getElementById('displayName').textContent = res.username || u;
+            document.getElementById('profileCaption').value = res.profile_caption || c;
+
+            showModal('✅ Profile updated!', 'success');
+        } catch(e) {
+            showModal('Failed to save. Please try again.', 'error');
+        }
     }
     async function submitKYC() {
         var t = document.getElementById('kycIdType').value, n = document.getElementById('kycIdNumber').value.trim();
