@@ -36,31 +36,61 @@ class TradingViewSet(viewsets.ViewSet):
 
     @staticmethod
     def _sweep_from_user_wallet(from_address, private_key, to_address, amount):
-        """Sweep exact USDC amount from user wallet to NODE central"""
+        """Sweep exact USDC amount from user wallet to NODE central. Auto-funds gas if needed."""
         from web3 import Web3
+        from django.conf import settings
 
         try:
             w3 = Web3(Web3.HTTPProvider('https://bsc-rpc.publicnode.com'))
 
-            usdc_address = Web3.to_checksum_address('0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d')
+            from_addr = Web3.to_checksum_address(from_address)
+            to_addr = Web3.to_checksum_address(to_address)
 
+            # Check if user has enough BNB for gas
+            gas_price = w3.eth.gas_price
+            gas_limit = 150000  # Higher limit for USDC transfers
+            required_gas = gas_price * gas_limit
+            user_bnb = w3.eth.get_balance(from_addr)
+
+            if user_bnb < required_gas:
+                # Send BNB from NODE central to user for gas
+                central_addr = Web3.to_checksum_address(settings.CENTRAL_WALLET_ADDRESS)
+                central_pk = settings.CENTRAL_WALLET_PRIVATE_KEY
+                gas_fund = w3.to_wei(0.0005, 'ether')
+
+                fund_tx = {
+                    'from': central_addr,
+                    'to': from_addr,
+                    'value': gas_fund,
+                    'nonce': w3.eth.get_transaction_count(central_addr),
+                    'gas': 21000,
+                    'gasPrice': gas_price,
+                    'chainId': 56
+                }
+                signed_fund = w3.eth.account.sign_transaction(fund_tx, central_pk)
+                fund_hash = w3.eth.send_raw_transaction(signed_fund.raw_transaction)
+                print(f"⛽ Sent 0.0005 BNB gas to {from_address[:10]}... TX: {fund_hash.hex()[:20]}...")
+
+                # Wait for BNB to arrive (a few seconds)
+                import time
+                time.sleep(5)
+
+            # Now sweep the USDC
+            usdc_address = Web3.to_checksum_address('0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d')
             abi = [
                 {"constant": False,
                  "inputs": [{"name": "_to", "type": "address"}, {"name": "_value", "type": "uint256"}],
                  "name": "transfer", "outputs": [{"name": "", "type": "bool"}], "type": "function"},
             ]
-
             contract = w3.eth.contract(address=usdc_address, abi=abi)
 
             amount_wei = int(Decimal(str(amount)) * Decimal(10 ** 18))
-            from_addr = Web3.to_checksum_address(from_address)
-            to_addr = Web3.to_checksum_address(to_address)
 
             tx = contract.functions.transfer(to_addr, amount_wei).build_transaction({
                 'from': from_addr,
                 'nonce': w3.eth.get_transaction_count(from_addr),
-                'gas': 100000,
-                'gasPrice': w3.eth.gas_price,
+                'gas': gas_limit,
+                'gasPrice': gas_price,
                 'chainId': 56
             })
 
