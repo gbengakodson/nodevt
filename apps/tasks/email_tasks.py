@@ -12,6 +12,10 @@ def send_daily_email_to_all_users():
     from apps.wallets.models import Wallet, Purse
     from apps.tokens.models import UserTokenBalance
     from apps.trading.models import GridBot
+    from django.utils import timezone
+    from datetime import timedelta
+    from django.db.models import Sum
+    from decimal import Decimal
 
     users = User.objects.filter(is_active=True)
     sent_count = 0
@@ -23,56 +27,72 @@ def send_daily_email_to_all_users():
             grand_balance = grand.balance if grand else Decimal('0')
             yield_balance = yield_w.balance if yield_w else Decimal('0')
 
+            # Days since joining
+            days_active = (timezone.now() - user.date_joined).days
+
+            # Total invested capital (all bots: active + stopped)
+            active_bots = GridBot.objects.filter(user=user, status='ACTIVE')
+            stopped_bots = GridBot.objects.filter(user=user, status='STOPPED')
+            total_invested = sum(b.amount for b in active_bots) + sum(b.amount for b in stopped_bots)
+
+            # Income today (yield earned in last 24 hours)
+            yesterday = timezone.now() - timedelta(days=1)
+            income_today = Transaction.objects.filter(
+                user=user, transaction_type='YIELD', created_at__gte=yesterday
+            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+
+            # Current grid value
+            grid_value = sum((b.amount + b.grid_profit + b.pnl) for b in active_bots) or Decimal('0')
+
+            # Spot holdings value
             spot_value = Decimal('0')
             for b in UserTokenBalance.objects.filter(user=user, quantity__gt=0):
                 spot_value += b.quantity * b.token.current_price
 
-            active_bots = GridBot.objects.filter(user=user, status='ACTIVE')
-            grid_value = sum((b.amount + b.grid_profit + b.pnl for b in active_bots), Decimal('0'))
-            grid_profit = sum((b.grid_profit for b in active_bots), Decimal('0'))
-            total = spot_value + grid_value + grand_balance + yield_balance
+            # External wallet automation balance (capital deployed on connected exchanges)
+            external_bots = active_bots.exclude(metadata__connection_id=None)
+            external_balance = sum(b.amount for b in external_bots) if external_bots.exists() else Decimal('0')
 
-            # Get purses
+            # Networth
+            networth = spot_value + grid_value + grand_balance + yield_balance
+
+            # Purses section with fixed format
             purses = Purse.objects.filter(user=user)
-            purse_lines = ''
-            purse_suggestions = ''
-
             if purses.exists():
-                # Group purses by type
-                purse_groups = {
-                    'Emergency': '🆘 Emergency Fund',
-                    'Shop Rent': '🏪 Business Account',
-                    'Inventory': '📦 Business Account',
-                    'Repair': '🔧 Business Account',
-                    'School Fees': '🎓 Goal Account',
-                    'House Rent': '🏠 Goal Account',
-                }
+                emergency = sum(p.balance for p in purses if p.name == 'Reserve')
+                education = sum(p.balance for p in purses if p.name == 'Education')
+                house_rent = sum(p.balance for p in purses if p.name == 'Housing')
+                business = sum(p.balance for p in purses if p.name in ['Operations', 'Supply Chain', 'Maintenance'])
 
-                shown = {}
-                for p in purses:
-                    group_name = purse_groups.get(p.name, '💰 Other')
-                    if group_name not in shown:
-                        purse_lines += f'\n{group_name}:\n'
-                        shown[group_name] = True
-                    purse_lines += f'  {p.name}: ${float(p.balance):,.2f}\n'
+                purse_lines = (
+                    f'\n🆘 Emergency Fund: ${float(emergency):,.2f}\n'
+                    f'🎓 Education: ${float(education):,.2f}\n'
+                    f'🏠 House Rent: ${float(house_rent):,.2f}\n'
+                    f'💰 Business: ${float(business):,.2f}'
+                )
 
-                # Add Pension Fund for SALARY and DIASPORA
+                # Pension status
                 user_type = user.user_type or 'MICRO'
                 if user_type in ['SALARY', 'DIASPORA']:
                     yw = Wallet.objects.filter(user=user, wallet_type='YIELD').first()
                     if yw and yw.pension_fund:
-                        purse_lines += '\n🏦 Pension Fund: Active — Auto-reinvests every 6 months\n'
+                        pension_bal = yw.balance if yw else Decimal('0')
+                        purse_lines += f'\n🏦 Pension Fund: ${float(pension_bal):,.2f} (Active)'
                     else:
-                        purse_lines += '\n🏦 Pension Fund: Available — Activate on your Dashboard\n'
+                        purse_lines += '\n🏦 Pension Fund: $0.00 (Available — Activate on Dashboard)'
+                else:
+                    purse_lines += '\n🏦 Pension Fund: $0.00 (Not applicable for your plan)'
 
-                suggestions = {
-                    'MICRO': '💡 Your Emergency Fund auto-sweeps weekly from grid profits. Withdraw anytime, any amount.',
-                    'BUSINESS': '💡 Your Business Account auto-sweeps weekly. Protect your business capital.',
-                    'SALARY': '💡 Your Goal Account helps you save for what matters. Pension Fund builds your retirement.',
-                    'DIASPORA': '💡 Your Goal Account builds your return home. Pension Fund secures your future.',
-                    'REFERRAL': '💡 Share your referral link to earn commissions. Your network builds your wealth.'
-                }
-                purse_suggestions = '\n' + suggestions.get(user_type, '') + '\n'
+                purse_suggestions = '\n💡 Your Reserve Account helps you save for what matters. Pension Fund builds your retirement.\n'
+            else:
+                purse_lines = (
+                    '\n🆘 Emergency Fund: $0.00\n'
+                    '🎓 Education: $0.00\n'
+                    '🏠 House Rent: $0.00\n'
+                    '💰 Business: $0.00\n'
+                    '🏦 Pension Fund: $0.00\n'
+                )
+                purse_suggestions = '\n💡 Your Reserve Account helps you save for what matters. Pension Fund builds your retirement.\n'
 
             # Live clock
             now = datetime.now()
@@ -81,25 +101,37 @@ def send_daily_email_to_all_users():
             subject = f"Daily Portfolio Update - {timezone.now().strftime('%b %d, %Y')}"
             message = f"""Hello {user.username or user.email},
 
-Here's your daily portfolio summary:
+{days_active} days have passed, ${float(total_invested):,.2f} has been working for you.
+Your income today is ${float(income_today):,.2f}.
+Your current Networth is ${float(networth):,.2f}.
 
-💰 Grand Balance: ${grand_balance:,.2f}
-💎 Yield Balance: ${yield_balance:,.2f}
-📦 Spot Holdings: ${spot_value:,.2f}
-🤖 Grid Bots: ${grid_value:,.2f}
+Here is the breakdown:
+
+           A.  INCOME
+
+💰 Wallet Balance: ${float(grand_balance):,.2f}
+💎 Yield Balance: ${float(yield_balance):,.2f}
+🤖 Position Tracker (active): ${float(grid_value):,.2f}
+🔗 External wallet automation balance: ${float(external_balance):,.2f}
 ━━━━━━━━━━━━━━━━━
-📊 Total Portfolio: ${total:,.2f}
+📊 Total Portfolio: ${float(networth):,.2f}
+
+
+      B.  RESERVED FUNDS
 {purse_lines}
-Active Grid Bots: {active_bots.count()}
-Grid Profit Available: ${grid_profit:,.2f}
 {purse_suggestions}
+
+C. NETWORTH
+${float(networth):,.2f}
+
 ⏱️ Report Time: {live_clock}
 
 Visit your dashboard: https://www.nodevt.com/dashboard/
 
-Happy trading! 🚀
-NODE! — Crypto Automation on the Go.
+Have a wonderful Investing Experience with NODE! 🚀
+NODE! — The Crypto Automation Engine on the Go.
 """
+
             send_mail(
                 subject=subject,
                 message=message,
