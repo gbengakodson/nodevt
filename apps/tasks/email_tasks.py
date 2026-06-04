@@ -53,9 +53,6 @@ def send_daily_email_to_all_users():
             # External wallet automation balance (capital deployed on connected exchanges)
             # External wallet automation balance — filter in Python (JSONField can't use ORM exclude)
             external_balance = Decimal('0')
-            for bot in active_bots:
-                if bot.metadata and bot.metadata.get('connection_id'):
-                    external_balance += bot.amount
 
             # Networth
             networth = spot_value + grid_value + grand_balance + yield_balance
