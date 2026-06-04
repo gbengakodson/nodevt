@@ -51,8 +51,11 @@ def send_daily_email_to_all_users():
                 spot_value += b.quantity * b.token.current_price
 
             # External wallet automation balance (capital deployed on connected exchanges)
-            external_bots = active_bots.exclude(metadata__connection_id=None)
-            external_balance = sum(b.amount for b in external_bots) if external_bots.exists() else Decimal('0')
+            # External wallet automation balance — filter in Python (JSONField can't use ORM exclude)
+            external_balance = Decimal('0')
+            for bot in active_bots:
+                if bot.metadata and bot.metadata.get('connection_id'):
+                    external_balance += bot.amount
 
             # Networth
             networth = spot_value + grid_value + grand_balance + yield_balance
