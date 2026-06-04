@@ -4,6 +4,7 @@ from django.contrib.auth import get_user_model
 from django.utils import timezone
 from decimal import Decimal
 from datetime import datetime
+from apps.wallets.models import Transaction
 
 User = get_user_model()
 
