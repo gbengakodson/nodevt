@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>You're Offline — NODE</title>
+    <style>
+        :root {
+            --primary: #F0B90B;
+            --bg-dark: #0B0E11;
+            --text-primary: #EAECEF;
+            --text-secondary: #848E9C;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            background: var(--bg-dark);
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 20px;
+        }
+        .offline-card {
+            max-width: 400px;
+        }
+        .offline-icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+            animation: float 2s ease-in-out infinite;
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+        p {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+        .btn-retry {
+            display: inline-block;
+            padding: 12px 30px;
+            background: var(--primary);
+            color: #0B0E11;
+            border-radius: 25px;
+            font-weight: 700;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.2s;
+            border: none;
+            cursor: pointer;
+        }
+        .btn-retry:hover {
+            background: #E0A800;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="offline-card">
+        <div class="offline-icon">📡</div>
+        <h1>No Internet Connection</h1>
+        <p>Your trading bots are still working — you're just offline right now. Check your connection and try again.</p>
+        <button class="btn-retry" onclick="location.reload()">🔄 Retry</button>
+    </div>
+</body>
+</html>
