@@ -17,6 +17,32 @@
     "categories": ["finance", "productivity"],
     "prefer_related_applications": false,
     "related_applications": [],
+        "screenshots": [
+        {
+            "src": "/static/screenshot-dashboard.png",
+            "sizes": "736x1387",
+            "type": "image/png",
+            "label": "Dashboard"
+        },
+        {
+            "src": "/static/screenshot-trading.png",
+            "sizes": "522x976",
+            "type": "image/png",
+            "label": "Trading"
+        },
+        {
+            "src": "/static/screenshot-portfolio.png",
+            "sizes": "736x1385",
+            "type": "image/png",
+            "label": "Portfolio"
+        },
+        {
+            "src": "/static/screenshot-menu.jpeg",
+            "sizes": "736x1520",
+            "type": "image/png",
+            "label": "Public Menu"
+        }
+    ],
     "icons": [
         {
             "src": "/static/icon-192.png",
