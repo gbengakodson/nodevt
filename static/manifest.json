@@ -1,22 +1,24 @@
 {
-    "name": "NODE Robo-Advisor",
-    "short_name": "NODE 2.0",
-    "description": "Automated Crypto Spot Grid Bot — Earn Passive Income in Dollars",
-    "start_url": "/",
+    "name": "NODE — Crypto Automation Engine",
+    "short_name": "NODE",
+    "description": "Automated grid trading that works 24/7. Start with $10. Real profits, verifiable on-chain.",
+    "start_url": "/dashboard/",
     "display": "standalone",
     "background_color": "#0B0E11",
     "theme_color": "#F0B90B",
-    "orientation": "portrait-primary",
+    "orientation": "any",
     "icons": [
         {
             "src": "/static/favicon.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "/static/favicon.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any maskable"
         }
     ]
 }
