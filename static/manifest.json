@@ -1,60 +1,60 @@
 {
-    "name": "NODE — Crypto Automation Engine",
-    "short_name": "NODE",
-    "description": "Automated grid trading that works 24/7. Start with $10. Real profits, verifiable on-chain.",
-    "start_url": "/dashboard/",
-    "id": "https://www.nodevt.com/",
-    "scope": "/",
-    "lang": "en",
-    "display": "standalone",
-    "display_override": ["standalone", "minimal-ui"],
-    "launch_handler": {
-        "client_mode": "navigate-existing"
+  "name": "NODE — Crypto Automation Engine",
+  "short_name": "NODE",
+  "description": "Automated grid trading. Works 24/7. Start with $10. Real profits, verifiable on-chain.",
+  "start_url": "/dashboard/",
+  "id": "https://www.nodevt.com/",
+  "scope": "/",
+  "lang": "en",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  },
+  "background_color": "#0B0E11",
+  "theme_color": "#F0B90B",
+  "orientation": "any",
+  "categories": ["finance", "productivity"],
+  "prefer_related_applications": false,
+  "related_applications": [],
+  "screenshots": [
+    {
+      "src": "/static/screenshot-dashboard.jpg",
+      "sizes": "736x1387",
+      "type": "image/jpg",
+      "label": "Dashboard"
     },
-    "background_color": "#0B0E11",
-    "theme_color": "#F0B90B",
-    "orientation": "any",
-    "categories": ["finance", "productivity"],
-    "prefer_related_applications": false,
-    "related_applications": [],
-        "screenshots": [
-        {
-            "src": "/static/screenshot-dashboard.png",
-            "sizes": "736x1387",
-            "type": "image/png",
-            "label": "Dashboard"
-        },
-        {
-            "src": "/static/screenshot-trading.png",
-            "sizes": "522x976",
-            "type": "image/png",
-            "label": "Trading"
-        },
-        {
-            "src": "/static/screenshot-portfolio.png",
-            "sizes": "736x1385",
-            "type": "image/png",
-            "label": "Portfolio"
-        },
-        {
-            "src": "/static/screenshot-menu.jpeg",
-            "sizes": "736x1520",
-            "type": "image/png",
-            "label": "Public Menu"
-        }
-    ],
-    "icons": [
-        {
-            "src": "/static/icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "/static/icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any maskable"
-        }
-    ]
+    {
+      "src": "/static/screenshot-trading.jpg",
+      "sizes": "522x976",
+      "type": "image/jpg",
+      "label": "Trading"
+    },
+    {
+      "src": "/static/screenshot-portfolio.jpg",
+      "sizes": "736x1385",
+      "type": "image/jpg",
+      "label": "Portfolio"
+    },
+    {
+      "src": "/static/screenshot-menu.jpg",
+      "sizes": "736x1520",
+      "type": "image/jpg",
+      "label": "Public Menu"
+    }
+  ],
+  "icons": [
+    {
+      "src": "/static/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/static/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
 }
