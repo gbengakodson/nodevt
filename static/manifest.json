@@ -18,31 +18,31 @@
   "prefer_related_applications": false,
   "related_applications": [],
   "screenshots": [
-    {
-      "src": "/static/screenshot-dashboard.jpg",
-      "sizes": "736x1387",
-      "type": "image/jpg",
-      "label": "Dashboard"
-    },
-    {
-      "src": "/static/screenshot-trading.jpg",
-      "sizes": "522x976",
-      "type": "image/jpg",
-      "label": "Trading"
-    },
-    {
-      "src": "/static/screenshot-portfolio.jpg",
-      "sizes": "736x1385",
-      "type": "image/jpg",
-      "label": "Portfolio"
-    },
-    {
-      "src": "/static/screenshot-menu.jpg",
-      "sizes": "736x1520",
-      "type": "image/jpg",
-      "label": "Public Menu"
-    }
-  ],
+        {
+            "src": "/static/screenshot-dashboard.jpg",
+            "sizes": "736x1387",
+            "type": "image/png",
+            "label": "Dashboard"
+        },
+        {
+            "src": "/static/screenshot-trading.jpg",
+            "sizes": "522x976",
+            "type": "image/png",
+            "label": "Trading"
+        },
+        {
+            "src": "/static/screenshot-portfolio.jpg",
+            "sizes": "736x1385",
+            "type": "image/png",
+            "label": "Portfolio"
+        },
+        {
+            "src": "/static/screenshot-menu.jpg",
+            "sizes": "736x1520",
+            "type": "image/jpeg",
+            "label": "Public Menu"
+        }
+    ],
   "icons": [
     {
       "src": "/static/icon-192.png",
