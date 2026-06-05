@@ -17,6 +17,30 @@
   "categories": ["finance", "productivity"],
   "prefer_related_applications": false,
   "related_applications": [],
+  "iarc_rating_id": "0",
+  "shortcuts": [
+        {
+            "name": "Dashboard",
+            "short_name": "Dashboard",
+            "description": "View your portfolio",
+            "url": "/dashboard/",
+            "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Trading",
+            "short_name": "Trading",
+            "description": "Activate bots",
+            "url": "/trading/",
+            "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }]
+        },
+        {
+            "name": "Public Ledger",
+            "short_name": "Ledger",
+            "description": "Verify trades",
+            "url": "/transparency/",
+            "icons": [{ "src": "/static/icon-192.png", "sizes": "192x192" }]
+        }
+    ],
   "screenshots": [
         {
             "src": "/static/screenshot-dashboard.jpg",
@@ -44,17 +68,17 @@
         }
     ],
   "icons": [
-    {
-      "src": "/static/icon-192.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/static/icon-512.png",
-      "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "any maskable"
-    }
-  ]
+        {
+            "src": "/static/icon-192-circular.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "/static/icon-512-circular.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ]
 }
