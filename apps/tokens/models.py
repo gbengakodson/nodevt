@@ -109,3 +109,44 @@ class WeeklyClose(models.Model):
     class Meta:
         unique_together = ['token', 'week_end']
         ordering = ['week_end']
+
+
+
+class NODEToken(models.Model):
+    """Tracks token balance for each user"""
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='node_tokens')
+    balance = models.DecimalField(max_digits=20, decimal_places=4, default=0)  # Activated tokens
+    pending_balance = models.DecimalField(max_digits=20, decimal_places=4, default=0)  # Pending activation
+    total_earned = models.DecimalField(max_digits=20, decimal_places=4, default=0)  # Lifetime
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+
+class TokenTransaction(models.Model):
+    SOURCE_CHOICES = [
+        ('TRACKER', 'Position Tracker Activation'),
+        ('KYC', 'KYC Verification'),
+        ('REFERRAL', 'Referral Bonus'),
+        ('PROMO', 'Promo Code'),
+        ('STREAK', 'Streak Bonus'),
+        ('ADMIN', 'Admin Airdrop'),
+        ('CONVERSION', 'Converted to USDC'),
+        ('EXPIRY', 'Expired/Burned'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending Activation'),
+        ('ACTIVATED', 'Activated'),
+        ('EXPIRED', 'Expired'),
+        ('CONVERTED', 'Converted to USDC'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='token_transactions')
+    amount = models.DecimalField(max_digits=20, decimal_places=4)
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='PENDING')
+    expires_at = models.DateTimeField(null=True, blank=True)
+    activated_at = models.DateTimeField(null=True, blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
