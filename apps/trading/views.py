@@ -193,6 +193,9 @@ class TradingViewSet(viewsets.ViewSet):
 
         bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
         bot.save()
+        # Award NODE tokens for activation (auto-activated)
+        from apps.tokens.services.token_service import TokenService
+        TokenService.award_tracker_tokens(request.user, amount_usdc)
 
         notify_user(
             request.user,
@@ -543,6 +546,15 @@ class TradingViewSet(viewsets.ViewSet):
             },
             completed_at=timezone.now()
         )
+        from apps.tokens.services.token_service import TokenService
+        activated = TokenService.activate_pending_tokens(request.user)
+        if activated > 0:
+            notify_user(
+                request.user,
+                '🎉 Tokens Activated!',
+                f'{int(activated)} NODE tokens have been activated and are now permanent.',
+                'PORTFOLIO'
+            )
 
         bot.status = 'COMPLETED'
         bot.save()
@@ -1644,8 +1656,15 @@ def sweep_webhook(request):
                 actions = FadakkaService.scan_and_activate(available)
                 for action in actions:
                     print(f"Fadakka: {action['action']} {action['symbol']} ({action.get('level', '')})")
+
+            # Expire pending tokens daily
+            from datetime import datetime
+            if datetime.utcnow().hour == 0:  # Run at midnight
+                call_command('expire_tokens')
         except Exception as e:
             print(f"Background task error: {e}")
+
+
 
     thread = threading.Thread(target=background_tasks)
     thread.start()
