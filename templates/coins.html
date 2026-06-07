@@ -489,13 +489,9 @@
     function updateMarketStats(coins) {
         const totalMarketCap = coins.reduce((sum, c) => sum + (c.market_cap || 0), 0);
         const totalVolume = coins.reduce((sum, c) => sum + (c.total_volume || 0), 0);
-        const btc = coins.find(c => c.symbol === 'BTC');
-        const btcDominance = btc && totalMarketCap > 0 ? (btc.market_cap / totalMarketCap) * 100 : 0;
 
         document.getElementById('totalMarketCap').innerHTML = formatCurrencyShort(totalMarketCap);
         document.getElementById('totalVolume').innerHTML = formatCurrencyShort(totalVolume);
-        document.getElementById('activeCoins').innerHTML = coins.length;
-        document.getElementById('btcDominance').innerHTML = btcDominance.toFixed(1) + '%';
     }
 
     function renderCoins(coins) {
