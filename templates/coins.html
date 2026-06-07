@@ -331,20 +331,41 @@
             <div class="stat-value" id="totalVolume">$0</div>
         </div>
                 <!-- NODE Token — Activated -->
-        <!-- NODE Token — Activated -->
-        <div class="stat-card token-card" style="cursor:pointer;" onclick="window.location.href='/portfolio/'">
-            <div class="stat-label">
-                <img src="/static/favicon.png" alt="NODE" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;">
-                Activated Tokens
+        <!-- NVT Token Market Card -->
+        <div class="stat-card" style="cursor:default;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <img src="/static/favicon.png" alt="NVT" style="width:28px;height:28px;border-radius:50%;">
+                <div>
+                    <div style="font-size:14px;font-weight:700;color:#1E2329;">NVT</div>
+                    <div style="font-size:10px;color:#707A8A;">NODE Token</div>
+                </div>
             </div>
-            <div class="stat-value" id="tokenActivated">0</div>
-            <div class="stat-sub" id="tokenActivatedValue" style="font-size:10px;color:var(--success);">$0.00</div>
+            <div style="font-size:20px;font-weight:700;color:#F0B90B;margin-bottom:6px;" id="tokenMarketPrice">$0.0005</div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#707A8A;">
+                <span>Max Supply</span>
+                <span>10,000,000</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:10px;color:#707A8A;margin-top:2px;">
+                <span>Floor Price</span>
+                <span>$0.0005</span>
+            </div>
         </div>
-        <!-- NODE Token — Pending -->
-        <div class="stat-card token-card" style="cursor:pointer;" onclick="window.location.href='/portfolio/'">
-            <div class="stat-label">🟡 Pending Tokens</div>
-            <div class="stat-value" id="tokenPending">0</div>
-            <div class="stat-sub" id="tokenPendingValue" style="font-size:10px;color:#F0B90B;">Activate by closing a tracker</div>
+
+        <!-- Your NVT Wallet Card -->
+        <div class="stat-card" style="cursor:default;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+                <img src="/static/favicon.png" alt="NVT" style="width:28px;height:28px;border-radius:50%;">
+                <div>
+                    <div style="font-size:14px;font-weight:700;color:#1E2329;">Your NVT</div>
+                    <div style="font-size:10px;color:#707A8A;">Balance</div>
+                </div>
+            </div>
+            <div style="font-size:20px;font-weight:700;color:#0ECB81;margin-bottom:4px;" id="tokenActivated">0</div>
+            <div style="font-size:10px;color:#707A8A;">Activated</div>
+            <div style="font-size:16px;font-weight:600;color:#F0B90B;margin-top:6px;" id="tokenPending">0</div>
+            <div style="font-size:10px;color:#707A8A;">Pending (activate by closing a tracker)</div>
+            <div style="font-size:12px;font-weight:700;color:#1E2329;margin-top:8px;" id="tokenWalletValue">$0.00</div>
+            <div style="font-size:9px;color:#707A8A;">Total Value</div>
         </div>
     </div>
 
@@ -570,15 +591,13 @@
             });
             var data = await res.json();
 
-            document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
-            document.getElementById('tokenActivatedValue').textContent = '$' + data.activated_value.toFixed(4);
+            // Market card
+            document.getElementById('tokenMarketPrice').textContent = '$' + data.token_price.toFixed(6);
 
+            // Wallet card
+            document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
             document.getElementById('tokenPending').textContent = data.pending_tokens.toLocaleString();
-            if (data.pending_tokens > 0) {
-                document.getElementById('tokenPendingValue').textContent = 'Close a tracker to activate';
-            } else {
-                document.getElementById('tokenPendingValue').textContent = 'No pending tokens';
-            }
+            document.getElementById('tokenWalletValue').textContent = '$' + data.activated_value.toFixed(4);
         } catch(e) {}
     }
 
