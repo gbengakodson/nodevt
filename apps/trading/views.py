@@ -1732,5 +1732,63 @@ def audit_profits_webhook(request):
     return JsonResponse({'status': 'success'})
 
 
+@action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
+def create_promo_code(self, request):
+    """Admin creates a promo code"""
+    from apps.tokens.models import PromoCode
+    from django.utils import timezone
+    from datetime import timedelta
+
+    code = request.data.get('code', '').strip().upper()
+    token_bonus = Decimal(str(request.data.get('token_bonus', 0)))
+    max_uses = int(request.data.get('max_uses', 100))
+    referrer_code = request.data.get('referrer_code', '').strip()
+    days_valid = int(request.data.get('days_valid', 30))
+
+    if not code or token_bonus <= 0:
+        return Response({'error': 'Code and token bonus required'}, status=400)
+
+    if PromoCode.objects.filter(code=code).exists():
+        return Response({'error': 'Code already exists'}, status=400)
+
+    promo = PromoCode.objects.create(
+        code=code,
+        token_bonus=token_bonus,
+        max_uses=max_uses,
+        referrer_code=referrer_code,
+        expires_at=timezone.now() + timedelta(days=days_valid),
+        created_by=request.user
+    )
+
+    return Response({
+        'success': True,
+        'code': promo.code,
+        'token_bonus': float(promo.token_bonus),
+        'max_uses': promo.max_uses,
+        'expires_at': promo.expires_at.isoformat()
+    })
+
+
+@action(detail=False, methods=['get'], permission_classes=[IsAdminUser])
+def list_promo_codes(self, request):
+    """Admin lists all promo codes with usage stats"""
+    from apps.tokens.models import PromoCode
+
+    promos = PromoCode.objects.all().order_by('-created_at')
+    data = [{
+        'id': str(p.id),
+        'code': p.code,
+        'token_bonus': float(p.token_bonus),
+        'max_uses': p.max_uses,
+        'used_count': p.used_count,
+        'is_active': p.is_active and p.is_valid(),
+        'referrer_code': p.referrer_code,
+        'expires_at': p.expires_at.isoformat() if p.expires_at else None,
+        'created_at': p.created_at.isoformat()
+    } for p in promos]
+
+    return Response(data)
+
+
 
 

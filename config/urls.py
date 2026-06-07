@@ -128,6 +128,7 @@ urlpatterns = [
 
     path('api/profile/upload-picture/', ProfilePictureUploadView.as_view(), name='profile_upload_picture'),
     path('api/tokens/wallet/', TradingViewSet.as_view({'get': 'token_wallet'}), name='token_wallet'),
+    path('api/admin/promo-codes/', TradingViewSet.as_view({'get': 'list_promo_codes', 'post': 'create_promo_code'}), name='admin_promo_codes'),
 
 ]
 

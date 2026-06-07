@@ -70,6 +70,28 @@ class RegisterView(APIView):
                 except Exception as e:
                     print(f"Error creating ReferralRelationship: {e}")
 
+            # After user creation in register view
+            promo_code = request.data.get('promo_code', '').strip()
+            if promo_code:
+                from apps.tokens.models import PromoCode
+                from apps.tokens.services.token_service import TokenService
+
+                try:
+                    promo = PromoCode.objects.get(code=promo_code.upper(), is_active=True)
+                    if promo.is_valid():
+                        # Award bonus tokens to new user (pending, needs activation)
+                        TokenService.award_tokens(
+                            user=user,
+                            amount=promo.token_bonus,
+                            source='PROMO',
+                            metadata={'promo_code': promo.code},
+                            auto_activate=False
+                        )
+                        promo.used_count += 1
+                        promo.save()
+                except PromoCode.DoesNotExist:
+                    pass  # Invalid promo code, skip silently
+
             refresh = RefreshToken.for_user(user)
             return Response({
                 'user': UserSerializer(user).data,
