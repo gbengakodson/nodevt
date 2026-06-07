@@ -1,6 +1,7 @@
 from decimal import Decimal
 from django.utils import timezone
 from datetime import timedelta
+from django.db.models import Sum
 
 
 class TokenService:
@@ -157,23 +158,22 @@ class TokenService:
 
     @classmethod
     def get_token_price(cls):
-        """Calculate current token price based on active management fees"""
-        from apps.trading.models import GridBot
+        """Calculate current token price based on cumulative management fees collected"""
+        from apps.tokens.models import Purchase
         from decimal import Decimal
 
         TOTAL_SUPPLY = Decimal('10000000')  # 10 million
 
-        # Sum management fees from active trackers
-        active_bots = GridBot.objects.filter(status='ACTIVE')
-        total_fees = Decimal('0')
-        for bot in active_bots:
-            # 10% management fee on activation
-            total_fees += bot.amount * Decimal('0.10')
+        # Sum ALL management fees ever collected (from every tracker activation)
+        total_fees = Purchase.objects.aggregate(
+            total=Sum('node_fee')
+        )['total'] or Decimal('0')
 
         if TOTAL_SUPPLY == 0:
-            return Decimal('0.0005')  # Starting price
+            return Decimal('0.0005')
 
         price = total_fees / TOTAL_SUPPLY
+
         # Floor at starting price
         if price < Decimal('0.0005'):
             price = Decimal('0.0005')
