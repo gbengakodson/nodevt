@@ -1541,6 +1541,23 @@ class TradingViewSet(viewsets.ViewSet):
         """Public version of master grid live data - no auth required"""
         return self.master_grid_live(request)
 
+    @action(detail=False, methods=['get'])
+    def token_wallet(self, request):
+        """Get user's NODE token balance"""
+        from apps.tokens.services.token_service import TokenService
+        from apps.tokens.models import NODEToken
+
+        wallet, _ = NODEToken.objects.get_or_create(user=request.user, defaults={'balance': 0, 'pending_balance': 0})
+        price = TokenService.get_token_price()
+
+        return Response({
+            'activated_tokens': float(wallet.balance),
+            'pending_tokens': float(wallet.pending_balance),
+            'token_price': float(price),
+            'activated_value': float(wallet.balance * price),
+            'pending_value': float(wallet.pending_balance * price),
+        })
+
 
 
 
@@ -1705,4 +1722,7 @@ def audit_profits_webhook(request):
     from django.core.management import call_command
     call_command('audit_grid_profits')
     return JsonResponse({'status': 'success'})
+
+
+
 

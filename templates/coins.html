@@ -330,13 +330,21 @@
             <div class="stat-label">24h Volume</div>
             <div class="stat-value" id="totalVolume">$0</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Active Coins</div>
-            <div class="stat-value" id="activeCoins">0</div>
+                <!-- NODE Token — Activated -->
+        <!-- NODE Token — Activated -->
+        <div class="stat-card token-card" style="cursor:pointer;" onclick="window.location.href='/portfolio/'">
+            <div class="stat-label">
+                <img src="/static/favicon.png" alt="NODE" style="width:16px;height:16px;vertical-align:middle;margin-right:4px;">
+                Activated Tokens
+            </div>
+            <div class="stat-value" id="tokenActivated">0</div>
+            <div class="stat-sub" id="tokenActivatedValue" style="font-size:10px;color:var(--success);">$0.00</div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">BTC Dominance</div>
-            <div class="stat-value" id="btcDominance">0%</div>
+        <!-- NODE Token — Pending -->
+        <div class="stat-card token-card" style="cursor:pointer;" onclick="window.location.href='/portfolio/'">
+            <div class="stat-label">🟡 Pending Tokens</div>
+            <div class="stat-value" id="tokenPending">0</div>
+            <div class="stat-sub" id="tokenPendingValue" style="font-size:10px;color:#F0B90B;">Activate by closing a tracker</div>
         </div>
     </div>
 
@@ -555,6 +563,33 @@
             `;
         }).join('');
     }
+
+    async function loadTokenWallet() {
+        try {
+            var token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            var res = await fetch('/api/tokens/wallet/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await res.json();
+
+            document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
+            document.getElementById('tokenActivatedValue').textContent = '$' + data.activated_value.toFixed(4);
+
+            document.getElementById('tokenPending').textContent = data.pending_tokens.toLocaleString();
+            if (data.pending_tokens > 0) {
+                document.getElementById('tokenPendingValue').textContent = 'Close a tracker to activate';
+            } else {
+                document.getElementById('tokenPendingValue').textContent = 'No pending tokens';
+            }
+        } catch(e) {}
+    }
+
+    // Call on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadTokenWallet();
+    });
 
     function filterCoins() {
         renderCoins(allCoins);
