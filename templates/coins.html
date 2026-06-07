@@ -135,6 +135,17 @@
         font-weight: 600;
         color: #1E2329;
     }
+    /* NVT Token Card */
+    .nvt-card {
+        grid-column: span 2;  /* Takes 2 columns on desktop */
+        min-width: 0;
+    }
+
+    @media (max-width: 768px) {
+        .nvt-card {
+            grid-column: span 1;  /* Full width on mobile */
+        }
+    }
 
     .coins-grid {
         display: grid;
@@ -331,41 +342,59 @@
             <div class="stat-value" id="totalVolume">$0</div>
         </div>
                 <!-- NODE Token — Activated -->
-        <!-- NVT Token Market Card -->
-        <div class="stat-card" style="cursor:default;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <img src="/static/favicon.png" alt="NVT" style="width:28px;height:28px;border-radius:50%;">
+        <!-- NVT Token Card -->
+        <div class="stat-card nvt-card" style="padding:0; overflow:hidden; cursor:default;">
+            <!-- Header with logo and symbol -->
+            <div style="background: linear-gradient(135deg, #1A1C23, #2B3139); padding:14px 16px; display:flex; align-items:center; gap:12px;">
+                <img src="/static/favicon.png" alt="NVT" style="width:40px;height:40px;border-radius:50%;border:2px solid #F0B90B;">
                 <div>
-                    <div style="font-size:14px;font-weight:700;color:#1E2329;">NVT</div>
-                    <div style="font-size:10px;color:#707A8A;">NODE Token</div>
+                    <div style="font-size:16px;font-weight:700;color:#F0B90B;">NVT</div>
+                    <div style="font-size:10px;color:#848E9C;">NODE Token</div>
                 </div>
+                <button id="btnConvertToken"
+                        style="margin-left:auto;padding:6px 14px;border-radius:16px;border:1px solid #F0B90B;background:transparent;color:#F0B90B;font-size:11px;font-weight:600;cursor:not-allowed;opacity:0.4;"
+                        disabled
+                        title="Conversion available at 10,000 active users">
+                    Convert
+                </button>
             </div>
-            <div style="font-size:20px;font-weight:700;color:#F0B90B;margin-bottom:6px;" id="tokenMarketPrice">$0.0005</div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#707A8A;">
-                <span>Max Supply</span>
-                <span>10,000,000</span>
-            </div>
-            <div style="display:flex;justify-content:space-between;font-size:10px;color:#707A8A;margin-top:2px;">
-                <span>Floor Price</span>
-                <span>$0.0005</span>
-            </div>
-        </div>
 
-        <!-- Your NVT Wallet Card -->
-        <div class="stat-card" style="cursor:default;">
-            <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
-                <img src="/static/favicon.png" alt="NVT" style="width:28px;height:28px;border-radius:50%;">
-                <div>
-                    <div style="font-size:14px;font-weight:700;color:#1E2329;">Your NVT</div>
-                    <div style="font-size:10px;color:#707A8A;">Balance</div>
+            <!-- Data body -->
+            <div style="padding:14px 16px;">
+                <!-- Market row -->
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                    <div>
+                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Market Price</div>
+                        <div style="font-size:18px;font-weight:700;color:#F0B90B;" id="tokenMarketPrice">$0.0005</div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Total Supply</div>
+                        <div style="font-size:13px;font-weight:600;color:#EAECEF;">10,000,000</div>
+                    </div>
+                </div>
+
+                <!-- Divider -->
+                <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:12px;"></div>
+
+                <!-- Your balance row -->
+                <div style="display:flex;justify-content:space-between;align-items:flex-end;">
+                    <div>
+                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Your Balance</div>
+                        <div style="display:flex;align-items:baseline;gap:8px;">
+                            <div style="font-size:18px;font-weight:700;color:#0ECB81;" id="tokenActivated">0</div>
+                            <div style="font-size:10px;color:#848E9C;">activated</div>
+                        </div>
+                        <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px;">
+                            <div style="font-size:13px;font-weight:600;color:#F0B90B;" id="tokenPending">0</div>
+                            <div style="font-size:9px;color:#848E9C;">pending</div>
+                        </div>
+                    </div>
+                    <div style="text-align:right;">
+                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Value</div>
+                        <div style="font-size:16px;font-weight:700;color:#EAECEF;" id="tokenWalletValue">$0.00</div>
+                    </div>
                 </div>
             </div>
-            <div style="font-size:20px;font-weight:700;color:#0ECB81;margin-bottom:4px;" id="tokenActivated">0</div>
-            <div style="font-size:10px;color:#707A8A;">Activated</div>
-            <div style="font-size:16px;font-weight:600;color:#F0B90B;margin-top:6px;" id="tokenPending">0</div>
-            <div style="font-size:10px;color:#707A8A;">Pending (activate by closing a tracker)</div>
-            <div style="font-size:12px;font-weight:700;color:#1E2329;margin-top:8px;" id="tokenWalletValue">$0.00</div>
-            <div style="font-size:9px;color:#707A8A;">Total Value</div>
         </div>
     </div>
 
@@ -598,6 +627,16 @@
             document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
             document.getElementById('tokenPending').textContent = data.pending_tokens.toLocaleString();
             document.getElementById('tokenWalletValue').textContent = '$' + data.activated_value.toFixed(4);
+
+            // Enable convert button if eligible (10,000+ active users)
+            var btn = document.getElementById('btnConvertToken');
+            if (data.can_convert) {
+                btn.disabled = false;
+                btn.style.cursor = 'pointer';
+                btn.style.opacity = '1';
+                btn.title = 'Convert tokens to USDC';
+                btn.onclick = function() { window.location.href = '/convert/'; };
+            }
         } catch(e) {}
     }
 

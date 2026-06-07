@@ -1549,9 +1549,13 @@ class TradingViewSet(viewsets.ViewSet):
         """Get user's NODE token balance"""
         from apps.tokens.services.token_service import TokenService
         from apps.tokens.models import NODEToken
+        from django.contrib.auth import get_user_model
 
         wallet, _ = NODEToken.objects.get_or_create(user=request.user, defaults={'balance': 0, 'pending_balance': 0})
         price = TokenService.get_token_price()
+        User = get_user_model()
+        active_users = User.objects.filter(is_active=True).count()
+        can_convert = active_users >= 10000
 
         return Response({
             'activated_tokens': float(wallet.balance),
@@ -1559,6 +1563,7 @@ class TradingViewSet(viewsets.ViewSet):
             'token_price': float(price),
             'activated_value': float(wallet.balance * price),
             'pending_value': float(wallet.pending_balance * price),
+            'can_convert': can_convert,
         })
 
 
