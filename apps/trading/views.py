@@ -193,9 +193,12 @@ class TradingViewSet(viewsets.ViewSet):
 
         bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
         bot.save()
-        # Award NODE tokens for activation (auto-activated)
-        from apps.tokens.services.token_service import TokenService
-        TokenService.award_tracker_tokens(request.user, amount_usdc)
+        # Award NODE tokens for Position Tracker activation (auto-activated)
+        try:
+            from apps.tokens.services.token_service import TokenService
+            TokenService.award_tracker_tokens(request.user, amount_usdc)
+        except Exception as e:
+            print(f"Token award failed (non-critical): {e}")
 
         notify_user(
             request.user,
