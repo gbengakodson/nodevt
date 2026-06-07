@@ -85,6 +85,11 @@ class ReferralService:
                         completed_at=timezone.now()
                     )
                     distributions.append(earning)
+                    # Award NODE tokens to referrer (pending, 10% of referred user's tracker tokens)
+                    from apps.tokens.services.token_service import TokenService
+                    tracker_tokens = TokenService.get_tracker_reward(purchase.total_amount)
+                    if tracker_tokens > 0:
+                        TokenService.award_referral_tokens(referrer, user, tracker_tokens)
             except WalletKey.DoesNotExist:
                 pass  # Skip if referrer has no wallet yet
 

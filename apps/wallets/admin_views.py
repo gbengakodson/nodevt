@@ -312,6 +312,9 @@ class AdminKYCActions(APIView):
             user.kyc_status = 'APPROVED'
             user.is_verified = True
             user.date_verified = timezone.now()
+            # Award KYC tokens (pending)
+            from apps.tokens.services.token_service import TokenService
+            TokenService.award_kyc_tokens(user)
         elif action == 'reject':
             user.kyc_status = 'REJECTED'
             # Store rejection reason in metadata or a notification
