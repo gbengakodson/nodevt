@@ -135,16 +135,28 @@
         font-weight: 600;
         color: #1E2329;
     }
-    /* NVT Token Card */
+
+    /* NVT Token Card - full width on desktop and mobile */
     .nvt-card {
-        grid-column: span 2;  /* Takes 2 columns on desktop */
+        grid-column: span 2;  /* Takes 2 of 4 columns on desktop */
         min-width: 0;
     }
 
-    @media (max-width: 768px) {
-        .nvt-card {
-            grid-column: span 1;  /* Full width on mobile */
-        }
+    /* Chart card styling */
+    .chart-card {
+        background: white;
+        border-radius: 12px;
+        border: 1px solid #E2E4E8;
+        padding: 16px;
+        text-align: center;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .chart-card canvas {
+        max-width: 100%;
+        height: 120px;
     }
 
     .coins-grid {
@@ -292,6 +304,9 @@
         .stats-row {
             grid-template-columns: repeat(2, 1fr);
         }
+        .nvt-card {
+            grid-column: span 2;  /* Full width on mobile */
+        }
         .coins-grid {
             grid-template-columns: 1fr;
         }
@@ -305,6 +320,9 @@
         .coin-icon {
             width: 40px;
             height: 40px;
+        }
+        .chart-card canvas {
+            height: 100px;
         }
     }
 </style>
@@ -333,20 +351,35 @@
     </div>
 
     <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Total Market Cap</div>
-            <div class="stat-value" id="totalMarketCap">$0</div>
+        <!-- Market Overview Card (Merged Market Cap + Volume) -->
+        <div class="stat-card" style="cursor:default;text-align:left;">
+            <div style="font-size:10px;color:#707A8A;text-transform:uppercase;margin-bottom:6px;">📈 Market Overview</div>
+            <div style="display:flex;gap:12px;margin-bottom:10px;">
+                <div style="flex:1;">
+                    <div style="font-size:9px;color:#707A8A;">Market Cap</div>
+                    <div style="font-size:15px;font-weight:700;color:#1E2329;" id="totalMarketCap">$0</div>
+                </div>
+                <div style="flex:1;text-align:right;">
+                    <div style="font-size:9px;color:#707A8A;">24h Volume</div>
+                    <div style="font-size:15px;font-weight:700;color:#1E2329;" id="totalVolume">$0</div>
+                </div>
+            </div>
+            <div style="display:flex;gap:8px;font-size:10px;color:#707A8A;">
+                <span>🟢 BTC Dominance:</span>
+                <span id="btcDominance" style="font-weight:600;color:#F0B90B;">0%</span>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">24h Volume</div>
-            <div class="stat-value" id="totalVolume">$0</div>
+
+        <!-- Market Cap Chart Card -->
+        <div class="stat-card chart-card" style="cursor:default;padding:12px;">
+            <div style="font-size:10px;color:#707A8A;text-transform:uppercase;margin-bottom:4px;">📊 Market Cap Distribution</div>
+            <canvas id="marketCapChart" style="max-height:100px;width:100%;"></canvas>
         </div>
-                <!-- NODE Token — Activated -->
+
         <!-- NVT Token Card -->
-        <div class="stat-card nvt-card" style="padding:0; overflow:hidden; cursor:default;">
-            <!-- Header with logo and symbol -->
-            <div style="background: linear-gradient(135deg, #1A1C23, #2B3139); padding:14px 16px; display:flex; align-items:center; gap:12px;">
-                <img src="/static/favicon.png" alt="NVT" style="width:40px;height:40px;border-radius:50%;border:2px solid #F0B90B;">
+        <div class="stat-card nvt-card" style="padding:0;overflow:hidden;cursor:default;">
+            <div style="background: linear-gradient(135deg, #1A1C23, #2B3139); padding:14px 16px; display:flex;align-items:center;gap:12px;">
+                <img src="/static/icon-512-circular.png" alt="NVT" style="width:40px;height:40px;border-radius:50%;border:2px solid #F0B90B;">
                 <div>
                     <div style="font-size:16px;font-weight:700;color:#F0B90B;">NVT</div>
                     <div style="font-size:10px;color:#848E9C;">NODE Token</div>
@@ -359,9 +392,7 @@
                 </button>
             </div>
 
-            <!-- Data body -->
             <div style="padding:14px 16px;">
-                <!-- Market row -->
                 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
                     <div>
                         <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Market Price</div>
@@ -373,10 +404,8 @@
                     </div>
                 </div>
 
-                <!-- Divider -->
                 <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:12px;"></div>
 
-                <!-- Your balance row -->
                 <div style="display:flex;justify-content:space-between;align-items:flex-end;">
                     <div>
                         <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Your Balance</div>
@@ -539,9 +568,52 @@
     function updateMarketStats(coins) {
         const totalMarketCap = coins.reduce((sum, c) => sum + (c.market_cap || 0), 0);
         const totalVolume = coins.reduce((sum, c) => sum + (c.total_volume || 0), 0);
+        const btc = coins.find(c => c.symbol === 'BTC');
+        const btcDominance = btc && totalMarketCap > 0 ? (btc.market_cap / totalMarketCap) * 100 : 0;
 
-        document.getElementById('totalMarketCap').innerHTML = formatCurrencyShort(totalMarketCap);
-        document.getElementById('totalVolume').innerHTML = formatCurrencyShort(totalVolume);
+        document.getElementById('totalMarketCap').textContent = formatCurrencyShort(totalMarketCap);
+        document.getElementById('totalVolume').textContent = formatCurrencyShort(totalVolume);
+        document.getElementById('btcDominance').textContent = btcDominance.toFixed(1) + '%';
+
+        // Render chart
+        renderMarketCapChart(coins);
+    }
+    var marketCapChart = null;
+
+    function renderMarketCapChart(coins) {
+        var ctx = document.getElementById('marketCapChart').getContext('2d');
+        if (marketCapChart) marketCapChart.destroy();
+
+        // Get top 5 coins by market cap
+        var sorted = coins.slice().sort(function(a, b) { return (b.market_cap || 0) - (a.market_cap || 0); }).slice(0, 5);
+        var others = coins.slice(5).reduce(function(sum, c) { return sum + (c.market_cap || 0); }, 0);
+
+        var labels = sorted.map(function(c) { return c.symbol; });
+        var data = sorted.map(function(c) { return c.market_cap || 0; });
+
+        if (others > 0) {
+            labels.push('Others');
+            data.push(others);
+        }
+
+        marketCapChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: ['#F0B90B', '#FCD535', '#1E2329', '#707A8A', '#E2E4E8', '#D9DDE2'],
+                    borderWidth: 0
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false }
+                }
+            }
+        });
     }
 
     function renderCoins(coins) {
