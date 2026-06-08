@@ -76,7 +76,7 @@ class PriceService:
         prices = cls.fetch_all_prices()
         
         if prices:
-            from .models import CryptoToken
+            from apps.tokens.models import CryptoToken
             
             updated = 0
             for symbol, price in prices.items():
