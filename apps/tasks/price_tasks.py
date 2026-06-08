@@ -7,7 +7,7 @@ import requests
 def update_all_token_prices():
     """Update prices for all tokens from CoinGecko"""
     from apps.tokens.models import CryptoToken
-    from apps.tokens.services import PriceService
+    from apps.tokens.services.price_service import PriceService
     
     print("Fetching real-time prices from CoinGecko...")
     prices = PriceService.fetch_all_prices()
@@ -33,7 +33,7 @@ def update_all_token_prices():
 def update_single_token_price(symbol):
     """Update price for a single token"""
     from apps.tokens.models import CryptoToken
-    from apps.tokens.services import PriceService
+    from apps.tokens.services.price_service import PriceService
     
     prices = PriceService.fetch_all_prices()
     if prices and symbol in prices:

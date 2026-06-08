@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.tokens.services import PriceService
+from apps.tokens.services.price_service import PriceService
 
 class Command(BaseCommand):
     help = 'Update token prices from CoinGecko'

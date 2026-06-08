@@ -1644,7 +1644,7 @@ def send_daily_email_webhook(request):
 
 
 def sweep_webhook(request):
-    from apps.tokens.services import PriceService
+    from apps.tokens.services.price_service import PriceService
     PriceService.update_token_prices()
 
     from django.core.management import call_command
