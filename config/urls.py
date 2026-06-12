@@ -123,6 +123,7 @@ urlpatterns = [
 
     path('api/referrer-profile/', ReferrerProfileView.as_view(), name='referrer_profile'),
     path('whitepaper/', TemplateView.as_view(template_name='whitepaper.html'), name='whitepaper'),
+    path('privacy/', TemplateView.as_view(template_name='privacy.html'), name='privacy'),
 
 
 
