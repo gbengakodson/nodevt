@@ -33,8 +33,8 @@ class DepositMonitor:
             return 0
 
         # Scan 10 users starting from last_index
-        batch = wallet_keys[last_index:last_index + 10]
-        next_index = (last_index + 10) % len(wallet_keys)
+        batch = wallet_keys[last_index:last_index + 5]
+        next_index = (last_index + 5) % len(wallet_keys)
         cache.set('deposit_scan_index', next_index, 3600)
 
         total = 0
