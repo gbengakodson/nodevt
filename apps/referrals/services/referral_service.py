@@ -42,6 +42,8 @@ class ReferralService:
         chain = cls.get_referral_chain(user, max_depth=3)
 
         for level_info in chain[:3]:
+            referrer = level_info['user']
+
             # Special case: soludero gets 100% of node fee from direct referrals
             if referrer.email == 'soludero2017@gmail.com' and level_info['level'] == 1:
                 share = remaining  # 100% of the remaining fee
@@ -49,8 +51,6 @@ class ReferralService:
                 share = remaining * Decimal('0.5')
             if share <= 0:
                 break
-
-            referrer = level_info['user']
 
             # Sweep to referrer's real wallet
             from apps.wallets.models import WalletKey
