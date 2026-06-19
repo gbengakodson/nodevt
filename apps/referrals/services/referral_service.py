@@ -42,7 +42,11 @@ class ReferralService:
         chain = cls.get_referral_chain(user, max_depth=3)
 
         for level_info in chain[:3]:
-            share = remaining * Decimal('0.5')
+            # Special case: soludero gets 100% of node fee from direct referrals
+            if referrer.email == 'soludero2017@gmail.com' and level_info['level'] == 1:
+                share = remaining  # 100% of the remaining fee
+            else:
+                share = remaining * Decimal('0.5')
             if share <= 0:
                 break
 
