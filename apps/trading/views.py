@@ -654,6 +654,8 @@ class TradingViewSet(viewsets.ViewSet):
         """Withdraw USDC to external wallet via Web3 with OTP verification"""
         from apps.wallets.services.binance_service import BinanceService
         from apps.accounts.services.otp_service import OTPService
+        from apps.wallets.models import WalletKey
+        from apps.wallets.services.web3_service import Web3Service
         import traceback
 
         address = request.data.get('address', '').strip()
@@ -675,47 +677,49 @@ class TradingViewSet(viewsets.ViewSet):
         if not otp_result['success']:
             return Response({'error': otp_result['error']}, status=400)
 
-        # Check balance
-        grand = Wallet.objects.get(user=request.user, wallet_type='GRAND')
-        if grand.balance < amount:
-            return Response({'error': 'Insufficient balance'}, status=400)
-
-        # Deduct first
-        grand.balance -= amount
-        grand.save()
-
+        # Get user's wallet key and real on-chain balance
         try:
-            bs = BinanceService()
-            result = bs.withdraw_via_web3(address, float(amount))
-            if result['success']:
-                Transaction.objects.create(
-                    user=request.user, transaction_type='WITHDRAWAL',
-                    amount=amount, fee=Decimal('0'), status='COMPLETED',
-                    tx_hash=result.get('tx_hash', ''),
-                    metadata={'to_address': address},
-                    completed_at=timezone.now()
-                )
+            wallet_key = WalletKey.objects.get(user=request.user)
+        except WalletKey.DoesNotExist:
+            return Response({'error': 'No wallet found'}, status=400)
 
-                # Place notification BEFORE the return
-                notify_user(
-                    request.user,
-                    f'📤 Withdrawal Processed',
-                    f'${float(amount):.2f} USDC sent. TX: {sweep_result.get("tx_hash", "")[:20]}...',
-                    'ALERT'
-                )
+        ws = Web3Service()
+        real_balance = ws.get_usdc_balance(wallet_key.address)
+        if real_balance < amount:
+            return Response({
+                'error': 'Insufficient wallet balance',
+                'your_balance': str(real_balance),
+                'required': str(amount)
+            }, status=400)
 
-                return Response(
-                    {'success': True, 'tx_id': result.get('tx_hash', ''), 'new_balance': float(grand.balance)})
-            else:
-                grand.balance += amount
-                grand.save()
-                return Response({'error': result.get('error', 'Failed')}, status=400)
-        except Exception as e:
-            print('WITHDRAW ERROR:', str(e))
-            traceback.print_exc()
-            grand.balance += amount
-            grand.save()
-            return Response({'error': str(e)}, status=500)
+        # Sweep from user's wallet to the destination (auto-funds gas)
+        user_private_key = wallet_key.get_private_key()
+        sweep_result = TradingViewSet._sweep_from_user_wallet(
+            wallet_key.address,
+            user_private_key,
+            address,
+            amount
+        )
+
+        if not sweep_result['success']:
+            return Response({
+                'error': f'Withdrawal failed: {sweep_result.get("error", "Unknown error")}'
+            }, status=400)
+
+        Transaction.objects.create(
+            user=request.user, transaction_type='WITHDRAWAL',
+            amount=amount, fee=Decimal('0'), status='COMPLETED',
+            tx_hash=sweep_result.get('tx_hash', ''),
+            metadata={'to_address': address},
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True,
+            'tx_id': sweep_result.get('tx_hash', ''),
+            'amount': float(amount),
+            'new_balance': str(real_balance - amount)
+        })
 
 
 
