@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'apps.chatbot',
     'apps.portfolio',
     'apps.core',
+    'apps.forex_ea',
 
     # Local apps
     'apps.accounts.apps.AccountsConfig',
