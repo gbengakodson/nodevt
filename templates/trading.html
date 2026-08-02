@@ -1503,14 +1503,27 @@
         });
     });
 
-   document.querySelectorAll('.order-tab').forEach(btn => {
+    document.querySelectorAll('.order-tab').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.order-tab').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             const tab = this.getAttribute('data-tab');
-            document.getElementById('forexPanel').style.display = tab === 'forex' ? 'block' : 'none';
-            document.getElementById('gridPanel').style.display = tab === 'grid' ? 'block' : 'none';
+
+            // Hide all panels first
+            const allPanels = ['marketPanel', 'gridPanel', 'forexPanel'];
+            allPanels.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+
+            // Show the correct panel
+            const panelId = tab === 'forex' ? 'forexPanel' : (tab === 'grid' ? 'gridPanel' : 'marketPanel');
+            const panel = document.getElementById(panelId);
+            if (panel) panel.style.display = 'block';
+
+            // Load data for the selected tab
             if (tab === 'forex') loadForexPanel();
+            if (tab === 'grid') updateGridRange(); // optional
         });
     });
 
