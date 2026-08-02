@@ -1569,7 +1569,7 @@
         try {
             const res = await apiCall('/ea/slave/');
             if (!res.slaves || res.slaves.length === 0) {
-                list.innerHTML = '<p>No slave accounts added yet.</p>';
+                list.innerHTML = '';   // simply leave the area empty
                 return;
             }
             list.innerHTML = res.slaves.map(s => `
