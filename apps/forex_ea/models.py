@@ -59,3 +59,48 @@ class ForexCommission(models.Model):
     level = models.PositiveSmallIntegerField()
     amount = models.DecimalField(max_digits=10, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
+
+class MasterAccount(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='master_account')
+    mt5_account = models.CharField(max_length=20)
+    api_key_hash = models.CharField(max_length=128)  # master EA uses this
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class SlaveAccount(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='slave_accounts')
+    mt5_account = models.CharField(max_length=20)
+    mt5_password_encrypted = models.TextField()  # encrypted with EncryptionService
+    broker_server = models.CharField(max_length=50)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class MasterTrade(models.Model):
+    # The user who reported the trade (the master)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    master_mt5_account = models.CharField(max_length=20)
+    symbol = models.CharField(max_length=20)
+    direction = models.CharField(max_length=4)  # BUY/SELL
+    volume = models.FloatField()
+    open_price = models.FloatField()
+    open_time = models.DateTimeField()
+    ticket = models.BigIntegerField()
+    magic_number = models.IntegerField()
+    status = models.CharField(max_length=20, default='pending')  # pending, executing, closed
+    closed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+class SlaveTrade(models.Model):
+    master_trade = models.ForeignKey(MasterTrade, on_delete=models.CASCADE, related_name='slave_trades')
+    slave_account = models.ForeignKey(SlaveAccount, on_delete=models.CASCADE)
+    slave_ticket = models.BigIntegerField(null=True, blank=True)
+    closed = models.BooleanField(default=False)
+    closed_at = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+
+

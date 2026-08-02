@@ -3,10 +3,11 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from django.contrib.auth import get_user_model
-from .models import UserForexProfile, ForexTrade, ForexMLM, ForexCommission
+from .models import UserForexProfile, ForexTrade, ForexMLM, ForexCommission, MasterTrade, SlaveAccount, SlaveTrade
 from .auth import EAApiKeyAuthentication
 from apps.wallets.models import Wallet
 from decimal import Decimal
+from apps.wallets.security.encryption import EncryptionService
 
 User = get_user_model()
 
@@ -164,3 +165,119 @@ class ActivateForexView(APIView):
             return Response({'success': True, 'api_key': raw_key})
         else:
             return Response({'error': 'EA already activated. Use regenerate=true to get a new key.'}, status=400)
+
+
+from .models import MasterTrade, SlaveAccount, SlaveTrade  # add this import at top if not already
+
+class TradeOpenedView(APIView):
+    """Called by master EA when a new trade is opened."""
+    authentication_classes = [EAApiKeyAuthentication]
+
+    def post(self, request):
+        user = request.user
+        required = ['mt5_account', 'symbol', 'direction', 'volume', 'open_price', 'open_time', 'ticket', 'magic_number']
+        data = {k: request.data.get(k) for k in required}
+        if None in data.values():
+            return Response({'error': 'Missing required fields'}, status=400)
+
+        # Create master trade record
+        trade = MasterTrade.objects.create(
+            user=user,
+            master_mt5_account=data['mt5_account'],
+            symbol=data['symbol'],
+            direction=data['direction'],
+            volume=data['volume'],
+            open_price=data['open_price'],
+            open_time=data['open_time'],
+            ticket=data['ticket'],
+            magic_number=data['magic_number'],
+            status='pending'
+        )
+        return Response({
+            'status': 'recorded',
+            'master_trade_id': str(trade.id),
+            'message': 'Trade will be copied to all active slaves.'
+        }, status=201)
+
+
+class TradeClosedView(APIView):
+    """Called by master EA when a trade is closed (for copier purposes)."""
+    authentication_classes = [EAApiKeyAuthentication]
+
+    def post(self, request):
+        ticket = request.data.get('ticket')
+        close_time = request.data.get('close_time')
+        if not ticket or not close_time:
+            return Response({'error': 'Missing ticket or close_time'}, status=400)
+
+        try:
+            trade = MasterTrade.objects.get(ticket=ticket, user=request.user)
+        except MasterTrade.DoesNotExist:
+            return Response({'error': 'Master trade not found'}, status=404)
+
+        trade.status = 'closed'
+        trade.closed_at = close_time
+        trade.save()
+        return Response({'status': 'closed', 'master_trade_id': str(trade.id)})
+
+
+class SlaveAccountView(APIView):
+    """User adds/views their slave accounts."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        slaves = SlaveAccount.objects.filter(user=request.user)
+        data = []
+        for s in slaves:
+            data.append({
+                'id': str(s.id),
+                'mt5_account': s.mt5_account,
+                'broker_server': s.broker_server,
+                'is_active': s.is_active,
+                'created_at': s.created_at
+            })
+        return Response({'slaves': data})
+
+    def post(self, request):
+        mt5_account = request.data.get('mt5_account')
+        password = request.data.get('password')       # raw password from user
+        broker_server = request.data.get('broker_server')
+        if not mt5_account or not password or not broker_server:
+            return Response({'error': 'Missing mt5_account, password, or broker_server'}, status=400)
+
+        # Encrypt password before storage
+        encrypted_pw = EncryptionService.encrypt(password)
+        slave = SlaveAccount.objects.create(
+            user=request.user,
+            mt5_account=mt5_account,
+            mt5_password_encrypted=encrypted_pw,
+            broker_server=broker_server
+        )
+        return Response({
+            'success': True,
+            'id': str(slave.id),
+            'mt5_account': slave.mt5_account
+        }, status=201)
+
+
+class SlaveTradeStatusView(APIView):
+    """Returns recent slave trades for the logged-in user."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Get all slave accounts belonging to this user
+        slave_accounts = SlaveAccount.objects.filter(user=request.user)
+        trades = SlaveTrade.objects.filter(slave_account__in=slave_accounts).order_by('-created_at')[:20]
+        data = []
+        for t in trades:
+            data.append({
+                'id': str(t.id),
+                'master_ticket': t.master_trade.ticket,
+                'symbol': t.master_trade.symbol,
+                'direction': t.master_trade.direction,
+                'volume': t.master_trade.volume,
+                'slave_ticket': t.slave_ticket,
+                'closed': t.closed,
+                'created_at': t.created_at
+            })
+        return Response({'trades': data})
