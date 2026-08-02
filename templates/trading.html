@@ -628,7 +628,15 @@
                 <div class="card-body">
                     <h5>Nodev16 EA – Forex Auto‑Trading</h5>
                     <div id="forexStatus">
-                        <!-- Filled by JavaScript -->
+                        <p>Add the MT5 accounts you want to be copied when the master trades.</p>
+                        <div id="slaveList"></div>
+                        <hr>
+                        <div class="row">
+                            <div class="col-md-3"><input type="text" id="newMT5Account" class="form-control mb-2" placeholder="MT5 Account"></div>
+                            <div class="col-md-3"><input type="password" id="newMT5Password" class="form-control mb-2" placeholder="MT5 Password"></div>
+                            <div class="col-md-3"><input type="text" id="newBrokerServer" class="form-control mb-2" placeholder="Broker Server (e.g. ICMarkets-Demo)"></div>
+                            <div class="col-md-3"><button onclick="addSlaveAccount()" class="btn btn-primary w-100">Add Account</button></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1554,61 +1562,62 @@
     `;
     document.head.appendChild(style);
 
-    async function loadForexPanel() {
-        const statusDiv = document.getElementById('forexStatus');
-        statusDiv.innerHTML = 'Loading...';
+    async function loadSlaves() {
+        const list = document.getElementById('slaveList');
+        if (!list) return;
+        list.innerHTML = 'Loading...';
         try {
-            const res = await apiCall('/ea/profile/');
-            if (!res.active) {
-                statusDiv.innerHTML = `
-                    <p>Activate your Forex EA to start auto‑trading.</p>
-                    <div class="mb-3">
-                        <input type="text" id="forexMT5" placeholder="MT5 Account Number" class="form-control mb-2">
-                        <input type="text" id="forexBroker" placeholder="Broker (e.g. ICMarkets)" class="form-control mb-2">
-                        <button onclick="activateForexEA()" class="btn btn-primary w-100">Activate EA</button>
+            const res = await apiCall('/ea/slave/');
+            if (!res.slaves || res.slaves.length === 0) {
+                list.innerHTML = '<p>No slave accounts added yet.</p>';
+                return;
+            }
+            list.innerHTML = res.slaves.map(s => `
+                <div class="d-flex justify-content-between align-items-center p-2 border mb-2">
+                    <div>
+                        <strong>${s.mt5_account}</strong> <span class="text-muted">(${s.broker_server})</span>
+                        <br><small>${s.is_active ? 'Active' : 'Inactive'}</small>
                     </div>
-                `;
-            } else {
-                statusDiv.innerHTML = `
-                    <p><strong>Status:</strong> <span class="text-success">Active</span></p>
-                    <p>MT5 Account: <strong>${res.mt5_account}</strong></p>
-                    <p>Broker: <strong>${res.broker}</strong></p>
-                    <p>API Key: <code>${res.api_key_masked}</code></p>
-                    <p>Balance: <strong>${formatCurrency(res.balance)}</strong></p>
-                    <button onclick="regenerateForexKey()" class="btn btn-outline-secondary btn-sm">Regenerate API Key</button>
-                `;
-            }
-        } catch(e) {
-            statusDiv.innerHTML = 'Could not load Forex EA status.';
-        }
+                    <div>
+                        <button onclick="toggleSlave('${s.id}')" class="btn btn-sm btn-outline-warning">${s.is_active ? 'Pause' : 'Resume'}</button>
+                        <button onclick="deleteSlave('${s.id}')" class="btn btn-sm btn-outline-danger">Delete</button>
+                    </div>
+                </div>
+            `).join('');
+        } catch(e) { console.error(e); list.innerHTML = 'Error loading slave accounts.'; }
     }
 
-    async function activateForexEA() {
-        const mt5 = document.getElementById('forexMT5').value.trim();
-        const broker = document.getElementById('forexBroker').value.trim();
-        if (!mt5 || !broker) { alert('Please fill in all fields'); return; }
+    async function addSlaveAccount() {
+        const mt5 = document.getElementById('newMT5Account').value.trim();
+        const pw = document.getElementById('newMT5Password').value;
+        const server = document.getElementById('newBrokerServer').value.trim();
+        if (!mt5 || !pw || !server) return alert('Please fill in all fields');
         try {
-            const res = await apiCall('/ea/activate/', 'POST', { mt5_account: mt5, broker: broker });
+            const res = await apiCall('/ea/slave/', 'POST', { mt5_account: mt5, password: pw, broker_server: server });
             if (res.success) {
-                alert('Forex EA activated! Your API key is: ' + res.api_key + '\nKeep it safe – it will not be shown again.');
-                loadForexPanel();
+                loadSlaves();
+                document.getElementById('newMT5Account').value = '';
+                document.getElementById('newMT5Password').value = '';
+                document.getElementById('newBrokerServer').value = '';
             } else {
-                alert('Activation failed: ' + (res.error || 'unknown error'));
+                alert(res.error || 'Failed to add account');
             }
         } catch(e) { alert('Network error'); }
     }
 
-    async function regenerateForexKey() {
-        if (!confirm('Regenerate your API key? This will invalidate the old one.')) return;
+    async function toggleSlave(id) {
         try {
-            const res = await apiCall('/ea/activate/', 'POST', { regenerate: true });
-            if (res.success) {
-                alert('New API key: ' + res.api_key);
-                loadForexPanel();
-            } else {
-                alert('Error: ' + (res.error || 'unknown'));
-            }
-        } catch(e) { alert('Network error'); }
+            const res = await apiCall(`/ea/slave/${id}/toggle/`, 'POST');
+            loadSlaves();
+        } catch(e) { console.error(e); }
+    }
+
+    async function deleteSlave(id) {
+        if (!confirm('Delete this slave account?')) return;
+        try {
+            const res = await apiCall(`/ea/slave/${id}/delete/`, 'POST');
+            loadSlaves();
+        } catch(e) { console.error(e); }
     }
 
 

@@ -257,7 +257,7 @@
         <div class="tabs" style="margin-bottom:12px;">
             <button class="tab-btn active" data-ttab="chart">Buy/Sell Chart</button>
             <button class="tab-btn" data-ttab="web3">Web3 Wallet</button>
-            <button class="tab-btn" data-ttab="binance">Binance Wallet</button>
+            <button class="tab-btn" data-ttab="forex">Forex EA</button>
         </div>
 
         <!-- Tab 1: Chart -->
@@ -280,18 +280,10 @@
             </div>
         </div>
 
-        <!-- Tab 3: Binance -->
-        <div id="ttab-binance" style="display:none;">
-            <div class="stats-grid" style="grid-template-columns: repeat(3, 1fr); margin-bottom:10px;">
-                <div class="stat-card green"><div class="label">Binance Balance</div><div class="value" id="binanceBalance">$0</div></div>
-                <div class="stat-card"><div class="label">Master Grids</div><div class="value" id="masterGridCount">0</div></div>
-                <div class="stat-card green"><div class="label">Grid Profit</div><div class="value" id="masterGridProfit">$0</div></div>
-            </div>
-            <div class="table-wrap">
-                <table class="compact-table">
-                    <thead><tr><th>Date</th><th>Type</th><th>Amount</th><th>Symbol</th></tr></thead>
-                    <tbody id="binanceTxList"></tbody>
-                </table>
+        <!-- Tab 3: Forex EA (Master Activation) -->
+        <div id="ttab-forex" style="display:none;">
+            <div class="card-body" id="masterEAPanel">
+                Loading...
             </div>
         </div>
     </div>
@@ -488,14 +480,15 @@
             var tab = this.getAttribute('data-ttab');
             document.getElementById('ttab-chart').style.display = tab === 'chart' ? 'block' : 'none';
             document.getElementById('ttab-web3').style.display = tab === 'web3' ? 'block' : 'none';
-            document.getElementById('ttab-binance').style.display = tab === 'binance' ? 'block' : 'none';
+            document.getElementById('ttab-forex').style.display = tab === 'forex' ? 'block' : 'none';
             if (tab === 'chart') loadChart();
             if (tab === 'web3') loadWeb3Treasury();
-            if (tab === 'binance') loadBinanceTreasury();
+            if (tab === 'forex') loadMasterEAStatus();
         });
     });
 
     async function loadWeb3Treasury() {
+        // Keep the same function body as before
         try {
             var data = await apiCall('/admin/treasury/');
             document.getElementById('web3Balance').textContent = fc(data.web3_balance);
@@ -508,36 +501,57 @@
         } catch(e) { console.error(e); }
     }
 
-    async function loadBinanceTreasury() {
+    // loadBinanceTreasury removed – no longer needed
+    // add the master EA functions you already inserted, or insert them now:
+    async function loadMasterEAStatus() {
+        const panel = document.getElementById('masterEAPanel');
+        if (!panel) return;
+        panel.innerHTML = 'Loading...';
         try {
-            var data = await apiCall('/admin/treasury/');
-            document.getElementById('binanceBalance').textContent = fc(data.binance_balance);
-
-            var gridData = await apiCall('/trading/grid_performance/');
-            document.getElementById('masterGridCount').textContent = gridData.stats.active_grids || 0;
-            document.getElementById('masterGridProfit').textContent = fc(gridData.stats.total_profit || 0);
-
-            var html = '';
-
-            // NODE sweep records
-            if (data.sweep_transactions && data.sweep_transactions.length > 0) {
-                html += '<div style="margin-bottom:8px;font-size:10px;color:var(--text-secondary);">Recent Sweeps</div>';
-                html += '<table class="compact-table"><thead><tr><th>Date</th><th>Type</th><th>Amount</th></tr></thead><tbody>';
-                data.sweep_transactions.forEach(function(s) {
-                    var color = s.direction === 'to_binance' ? 'var(--success)' : 'var(--danger)';
-                    var sign = s.direction === 'to_binance' ? '→' : '←';
-                    html += '<tr><td>' + s.date + '</td><td>' + s.type + '</td><td style="color:' + color + ';">' + sign + ' ' + fc(s.amount) + '</td></tr>';
-                });
-                html += '</tbody></table>';
+            const res = await apiCall('/ea/profile/');
+            if (res.active) {
+                panel.innerHTML = `
+                    <p><strong>Status:</strong> <span class="text-success">Active</span></p>
+                    <p>MT5 Account: <strong>${res.mt5_account}</strong></p>
+                    <p>Broker: <strong>${res.broker}</strong></p>
+                    <p>API Key: <code>${res.api_key_masked}</code></p>
+                    <button onclick="regenerateMasterKey()" class="btn btn-outline-secondary btn-sm">Regenerate API Key</button>
+                `;
+            } else {
+                panel.innerHTML = `
+                    <p>You have not activated the Master EA yet.</p>
+                    <div class="row">
+                        <div class="col-md-4"><input type="text" id="masterMT5" class="form-control mb-2" placeholder="Your MT5 Account"></div>
+                        <div class="col-md-4"><input type="text" id="masterBroker" class="form-control mb-2" placeholder="Broker (e.g. ICMarkets)"></div>
+                        <div class="col-md-4"><button onclick="activateMasterEA()" class="btn btn-primary w-100">Activate Master EA</button></div>
+                    </div>
+                `;
             }
+        } catch(e) { panel.innerHTML = 'Error loading master EA status.'; }
+    }
 
-            // Link to Binance
-            html += '<div style="text-align:center;margin-top:12px;">' +
-                '<a href="https://www.binance.com/en/my/wallet/account/main" target="_blank" class="btn-sm btn-confirm" style="display:inline-block;padding:8px 16px;text-decoration:none;">🔗 View Full History on Binance</a>' +
-                '</div>';
+    async function activateMasterEA() {
+        const mt5 = document.getElementById('masterMT5').value.trim();
+        const broker = document.getElementById('masterBroker').value.trim();
+        if (!mt5 || !broker) return alert('Fill all fields');
+        const res = await apiCall('/ea/activate/', 'POST', { mt5_account: mt5, broker: broker });
+        if (res.success) {
+            alert('Master EA activated! Your API key is: ' + res.api_key);
+            loadMasterEAStatus();
+        } else {
+            alert(res.error || 'Activation failed');
+        }
+    }
 
-            document.getElementById('binanceTxList').innerHTML = '<tr><td colspan="4">' + html + '</td></tr>';
-        } catch(e) { console.error(e); }
+    async function regenerateMasterKey() {
+        if (!confirm('Regenerate your API key? The old key will stop working.')) return;
+        const res = await apiCall('/ea/activate/', 'POST', { regenerate: true });
+        if (res.success) {
+            alert('New API key: ' + res.api_key);
+            loadMasterEAStatus();
+        } else {
+            alert(res.error || 'Error regenerating key');
+        }
     }
 
     // Deposits
