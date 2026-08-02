@@ -1,3 +1,4 @@
+from django.urls import path
 from .api_views import (
     AuthenticateView, BalanceView, ReportTradeView,
     ForexProfileView, ActivateForexView,
