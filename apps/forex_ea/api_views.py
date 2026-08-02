@@ -139,17 +139,28 @@ class ActivateForexView(APIView):
     def post(self, request):
         mt5 = request.data.get('mt5_account')
         broker = request.data.get('broker')
-        if not mt5 or not broker:
-            return Response({'error': 'Missing fields'}, status=400)
-        if UserForexProfile.objects.filter(mt5_account=mt5).exists():
-            return Response({'error': 'MT5 account already in use'}, status=400)
+        regenerate = request.data.get('regenerate', False)
 
-        raw_key = UserForexProfile.generate_api_key()
-        profile = UserForexProfile.objects.create(
-            user=request.user,
-            mt5_account=mt5,
-            broker=broker
-        )
-        profile.set_api_key(raw_key)
-        profile.save()
-        return Response({'success': True, 'api_key': raw_key})
+        try:
+            profile = request.user.forex_profile
+        except UserForexProfile.DoesNotExist:
+            if not mt5 or not broker:
+                return Response({'error': 'Missing fields'}, status=400)
+            if UserForexProfile.objects.filter(mt5_account=mt5).exists():
+                return Response({'error': 'MT5 account already in use'}, status=400)
+            raw_key = UserForexProfile.generate_api_key()
+            profile = UserForexProfile.objects.create(
+                user=request.user, mt5_account=mt5, broker=broker
+            )
+            profile.set_api_key(raw_key)
+            profile.save()
+            return Response({'success': True, 'api_key': raw_key})
+
+        # Profile exists
+        if regenerate:
+            raw_key = UserForexProfile.generate_api_key()
+            profile.set_api_key(raw_key)
+            profile.save()
+            return Response({'success': True, 'api_key': raw_key})
+        else:
+            return Response({'error': 'EA already activated. Use regenerate=true to get a new key.'}, status=400)

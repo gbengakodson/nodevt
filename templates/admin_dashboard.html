@@ -590,7 +590,9 @@
         document.getElementById('chatHeader').textContent = data.user_email;
         document.getElementById('chatInputArea').style.display = 'flex';
         document.getElementById('chatMessages').innerHTML = data.messages.map(function(m) {
-            return '<div class="chat-msg ' + (m.is_admin_reply ? 'admin' : 'user') + '">' + m.message + '<div class="time">' + m.created_at + '</div></div>';
+            var div = document.createElement('div');
+            div.textContent = m.message;
+            return '<div class="chat-msg ' + (m.is_admin_reply ? 'admin' : 'user') + '">' + div.innerHTML + '<div class="time">' + m.created_at + '</div></div>';
         }).join('');
         document.getElementById('chatMessages').scrollTop = document.getElementById('chatMessages').scrollHeight;
         document.querySelectorAll('.chat-user-item').forEach(function(el) { el.classList.remove('active'); });
