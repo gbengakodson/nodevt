@@ -619,7 +619,7 @@
 
         <div class="order-card">
             <div class="order-tabs">
-                <button class="order-tab" data-tab="market">🔗 Forex Expert Advisor</button>
+                <button class="order-tab" data-tab="forex">🔗 Forex Expert Advisor</button>
                 <button class="order-tab active" data-tab="grid">🤖 Crypto Position Tracker</button>
             </div>
 
@@ -1516,14 +1516,13 @@
                 if (el) el.style.display = 'none';
             });
 
-            // Show the correct panel
+            // Show the selected panel
             const panelId = tab === 'forex' ? 'forexPanel' : (tab === 'grid' ? 'gridPanel' : 'marketPanel');
             const panel = document.getElementById(panelId);
             if (panel) panel.style.display = 'block';
 
-            // Load data for the selected tab
+            // Load data for the Forex tab
             if (tab === 'forex') loadForexPanel();
-            if (tab === 'grid') updateGridRange(); // optional
         });
     });
 
