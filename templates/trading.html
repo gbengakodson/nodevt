@@ -1286,15 +1286,17 @@
     }
 
     async function loadExchangeConnections() {
+        // Guard: exit if the external exchange panel no longer exists
+        const container = document.getElementById('connectedExchanges');
+        const statusEl = document.getElementById('exchangeStatus');
+        if (!container || !statusEl) return;
+
         try {
             var res = await fetch('/api/exchange/list/', {
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             });
             var connections = await res.json();
             connections = connections.filter(function(c) { return c.is_active !== false; });
-
-            var container = document.getElementById('connectedExchanges');
-            var statusEl = document.getElementById('exchangeStatus');
 
             if (connections.length > 0) {
                 statusEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(14,203,129,0.05);border:1px solid rgba(14,203,129,0.2);border-radius:8px;">' +
