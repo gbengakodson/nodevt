@@ -304,6 +304,14 @@ class SlaveTradeStatusView(APIView):
         return Response({'trades': data})
 
 
+class SlaveDeleteView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, pk):
+        SlaveAccount.objects.filter(pk=pk, user=request.user).delete()
+        return Response({'success': True})
+
+
 class SignalView(APIView):
     authentication_classes = [EAApiKeyAuthentication]
 
