@@ -8,6 +8,7 @@ from .auth import EAApiKeyAuthentication
 from apps.wallets.models import Wallet
 from decimal import Decimal
 from apps.wallets.security.encryption import EncryptionService
+from datetime import datetime
 
 User = get_user_model()
 
@@ -170,7 +171,6 @@ class ActivateForexView(APIView):
 from .models import MasterTrade, SlaveAccount, SlaveTrade  # add this import at top if not already
 
 class TradeOpenedView(APIView):
-    """Called by master EA when a new trade is opened."""
     authentication_classes = [EAApiKeyAuthentication]
 
     def post(self, request):
@@ -180,7 +180,21 @@ class TradeOpenedView(APIView):
         if None in data.values():
             return Response({'error': 'Missing required fields'}, status=400)
 
-        # Create master trade record
+        # Parse open_time – handle both "2026.08.03 09:56:58" and "2026-08-03 09:56:58"
+        open_time_str = data['open_time']
+        for fmt in ('%Y.%m.%d %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S'):
+            try:
+                open_time = datetime.strptime(open_time_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return Response({'error': 'Invalid open_time format. Use YYYY.MM.DD HH:MM:SS'}, status=400)
+
+        # Make timezone aware (use UTC if your settings use UTC)
+        from django.utils.timezone import make_aware
+        open_time = make_aware(open_time)
+
         trade = MasterTrade.objects.create(
             user=user,
             master_mt5_account=data['mt5_account'],
@@ -188,27 +202,34 @@ class TradeOpenedView(APIView):
             direction=data['direction'],
             volume=data['volume'],
             open_price=data['open_price'],
-            open_time=data['open_time'],
+            open_time=open_time,
             ticket=data['ticket'],
             magic_number=data['magic_number'],
             status='pending'
         )
-        return Response({
-            'status': 'recorded',
-            'master_trade_id': str(trade.id),
-            'message': 'Trade will be copied to all active slaves.'
-        }, status=201)
+        return Response({'status': 'recorded', 'master_trade_id': str(trade.id)}, status=201)
 
 
 class TradeClosedView(APIView):
-    """Called by master EA when a trade is closed (for copier purposes)."""
     authentication_classes = [EAApiKeyAuthentication]
 
     def post(self, request):
         ticket = request.data.get('ticket')
-        close_time = request.data.get('close_time')
-        if not ticket or not close_time:
+        close_time_str = request.data.get('close_time')
+        if not ticket or not close_time_str:
             return Response({'error': 'Missing ticket or close_time'}, status=400)
+
+        # Parse close_time
+        for fmt in ('%Y.%m.%d %H:%M:%S', '%Y-%m-%d %H:%M:%S', '%Y-%m-%dT%H:%M:%S'):
+            try:
+                close_time = datetime.strptime(close_time_str, fmt)
+                break
+            except ValueError:
+                continue
+        else:
+            return Response({'error': 'Invalid close_time format'}, status=400)
+        from django.utils.timezone import make_aware
+        close_time = make_aware(close_time)
 
         try:
             trade = MasterTrade.objects.get(ticket=ticket, user=request.user)
@@ -281,3 +302,11 @@ class SlaveTradeStatusView(APIView):
                 'created_at': t.created_at
             })
         return Response({'trades': data})
+
+
+class SignalView(APIView):
+    authentication_classes = [EAApiKeyAuthentication]
+
+    def post(self, request):
+        # We don't need to do anything with the signal for now
+        return Response({'status': 'signal_received'})

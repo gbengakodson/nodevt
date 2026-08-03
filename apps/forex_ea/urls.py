@@ -3,7 +3,7 @@ from .api_views import (
     AuthenticateView, BalanceView, ReportTradeView,
     ForexProfileView, ActivateForexView,
     TradeOpenedView, TradeClosedView,
-    SlaveAccountView, SlaveTradeStatusView
+    SlaveAccountView, SlaveTradeStatusView, SignalView
 )
 
 urlpatterns = [
@@ -16,4 +16,5 @@ urlpatterns = [
     path('trade/closed/', TradeClosedView.as_view(), name='ea_trade_closed'),
     path('slave/', SlaveAccountView.as_view(), name='ea_slave_account'),
     path('slave/trades/', SlaveTradeStatusView.as_view(), name='ea_slave_trades'),
+    path('signal/', SignalView.as_view(), name='ea_signal'),
 ]
