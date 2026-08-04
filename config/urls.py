@@ -19,6 +19,7 @@ from apps.chat.views import TransparencyLikeView
 from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView, ProfilePictureUploadView
 from django.conf.urls.static import static
 from django.views.static import serve
+from apps.forex_ea.public_views import MarketIntelligenceView
 
 
 
@@ -132,6 +133,7 @@ urlpatterns = [
     path('api/admin/promo-codes/', TradingViewSet.as_view({'get': 'list_promo_codes', 'post': 'create_promo_code'}), name='admin_promo_codes'),
 
     path('api/ea/', include('apps.forex_ea.urls')),
+    path('api/public/market-intelligence/', MarketIntelligenceView.as_view(), name='market_intelligence'),
 ]
 
 urlpatterns += [

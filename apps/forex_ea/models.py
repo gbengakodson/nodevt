@@ -104,3 +104,12 @@ class SlaveTrade(models.Model):
 
 
 
+class MarketWeather(models.Model):
+    symbol = models.CharField(max_length=20, unique=True)   # e.g. EURUSD, BTC, AAPL
+    category = models.CharField(max_length=20, default='forex')  # forex, crypto, stock
+    weather = models.CharField(max_length=50, default='Sunny')   # e.g. "Storm", "Rainy in the Plateau"
+    trend = models.CharField(max_length=20, default='NEUTRAL')   # UPTREND, DOWNTREND, CONSOLIDATION
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.symbol} - {self.weather}"
