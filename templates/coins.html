@@ -987,14 +987,11 @@
     // ───────── TAB SWITCHING (Market / Community) ─────────
     document.querySelectorAll('[data-ttab]').forEach(function(btn) {
         btn.addEventListener('click', function() {
-            document.getElementById('ttab-market').style.display = 'none';
-            document.getElementById('ttab-community').style.display = 'none';
-
-            var tab = this.getAttribute('data-ttab');
-            document.getElementById('ttab-' + tab).style.display = 'block';
-
             document.querySelectorAll('[data-ttab]').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
+            var tab = this.getAttribute('data-ttab');
+            document.getElementById('ttab-market').style.display = tab === 'market' ? 'block' : 'none';
+            document.getElementById('ttab-community').style.display = tab === 'community' ? 'block' : 'none';
         });
     });
 
