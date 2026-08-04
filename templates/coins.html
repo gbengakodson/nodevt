@@ -477,7 +477,7 @@
 
     let allCoins = [];
     let currentFilter = 'all';
-    let reviewRating = 0;            // ← needed for star rating
+    let reviewRating = 0;            // single global declaration
 
     // ───────── Token icons & ID mapping ─────────
     function getTokenIcon(symbol) {
@@ -529,6 +529,8 @@
         'THETA': 'theta-token'
     };
 
+    function getToken() { return localStorage.getItem('access_token'); }
+
     // ───────── Helper functions ─────────
     function formatCurrency(num) {
         if (!num) return '$0.00';
@@ -554,10 +556,6 @@
 
     function goToTrading(symbol) {
         window.location.href = '/trading/?coin=' + symbol;
-    }
-
-    function getToken() {
-        return localStorage.getItem('access_token');
     }
 
     // ───────── CoinGecko market data (public) ─────────
@@ -756,10 +754,8 @@
     });
 
     // ───────── REVIEWS & COMMUNITY FEED ─────────
-    var reviewRating = 0;
-
     function setRating(star) {
-        reviewRating = star;
+        reviewRating = star;   // uses the global let declared above
         document.querySelectorAll('.star').forEach(function(s, i) {
             s.textContent = i < star ? '★' : '☆';
             s.classList.toggle('active', i < star);
@@ -854,12 +850,5 @@
 
     setInterval(updateMarketData, 120000);   // refresh market data every 2 min
     setInterval(loadFeed, 30000);            // refresh community posts every 30 sec
-
-    // legacy Transparency tab handler (if any) – harmless
-    document.querySelectorAll('[data-pubtab]').forEach(function(btn) {
-        btn.addEventListener('click', function() {
-            showPubTab(this.getAttribute('data-pubtab'));
-        });
-    });
 </script>
 {% endblock %}
