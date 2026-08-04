@@ -4,6 +4,16 @@
 
 {% block extra_css %}
 <style>
+    :root {
+        --primary: #F0B90B;
+        --bg-body: #0B0E11;
+        --bg-card: #1A1C23;
+        --text-primary: #EAECEF;
+        --text-secondary: #848E9C;
+        --border: #2B3139;
+        --success: #0ECB81;
+        --danger: #F6465D;
+    }
     .coins-container {
         max-width: 1400px;
         margin: 0 auto;
@@ -326,268 +336,232 @@
         }
     }
 
-    /* ── Community Tab Styles (Enhanced) ── */
-    .social-panel {
-        overflow-y: auto;
+    /* ── Modern Community Social Feed ── */
+    .community-wrapper {
+        max-width: 680px;
+        margin: 0 auto;
+        padding: 20px 0;
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        color: #1c1e21;
+    }
+
+    /* Compose */
+    .compose-box {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        padding: 16px;
+        margin-bottom: 20px;
+    }
+    .compose-header {
         display: flex;
-        flex-direction: column;
         gap: 12px;
     }
-    .card {
-        background: var(--bg-card);
-        border-radius: 14px;
-        border: 1px solid var(--border);
-        padding: 16px;
-    }
-    .card-title {
-        font-size: 13px;
-        font-weight: 700;
-        color: var(--text-primary);
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    .card-title .icon { font-size: 15px; }
-
-    /* Feed Composer */
-    .feed-composer {
-        display: flex;
-        gap: 10px;
-        padding: 12px;
-        background: rgba(255,255,255,0.02);
-        border-radius: 14px;
-        border: 1px solid var(--border);
-    }
-    .composer-avatar {
-        width: 38px;
-        height: 38px;
+    .user-avatar {
+        width: 44px;
+        height: 44px;
+        background: #e4e6eb;
         border-radius: 50%;
-        background: var(--primary);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 16px;
+        font-size: 20px;
         flex-shrink: 0;
-        color: #1E2329;
     }
-    .composer-body {
+    .compose-textarea-wrapper {
         flex: 1;
         display: flex;
         flex-direction: column;
-        gap: 8px;
+        gap: 10px;
     }
-    .composer-textarea {
+    .compose-textarea-wrapper textarea {
         width: 100%;
-        padding: 10px 14px;
+        border: none;
+        background: #f0f2f5;
         border-radius: 20px;
-        border: 1px solid var(--border);
-        background: rgba(255,255,255,0.03);
-        color: var(--text-primary);
-        font-size: 11px;
+        padding: 12px 16px;
+        font-size: 15px;
         resize: none;
         font-family: inherit;
         line-height: 1.4;
-        min-height: 40px;
-        transition: border-color 0.2s;
-    }
-    .composer-textarea:focus {
+        min-height: 48px;
         outline: none;
-        border-color: var(--primary);
     }
-    .composer-actions {
+    .compose-actions {
         display: flex;
         align-items: center;
         justify-content: space-between;
         gap: 8px;
     }
-    .composer-img-btn {
+    .action-icon {
         cursor: pointer;
         font-size: 20px;
-        transition: transform 0.2s;
+        color: #65676b;
+        transition: 0.2s;
     }
-    .composer-img-btn:hover { transform: scale(1.1); }
-    .composer-btn {
-        padding: 8px 18px;
+    .action-icon:hover { color: #1b74e4; }
+    .post-submit-btn {
+        background: #1b74e4;
+        color: white;
+        border: none;
         border-radius: 20px;
-        border: none;
-        background: var(--primary);
-        color: #1E2329;
-        font-size: 11px;
+        padding: 8px 20px;
         font-weight: 600;
+        font-size: 14px;
         cursor: pointer;
-        transition: opacity 0.2s;
+        transition: 0.2s;
     }
-    .composer-btn:hover { opacity: 0.9; }
+    .post-submit-btn:hover { background: #1664c4; }
 
-    /* Image Preview */
-    #imagePreviewContainer {
+    /* Image preview */
+    .image-preview {
         position: relative;
-        margin-top: 8px;
+        margin-top: 12px;
     }
-    #imagePreview {
+    .image-preview img {
         width: 100%;
-        max-height: 200px;
-        border-radius: 10px;
+        max-height: 300px;
         object-fit: cover;
+        border-radius: 12px;
     }
-    .remove-img-btn {
+    .remove-preview {
         position: absolute;
-        top: 6px;
+        top: 8px;
         right: 8px;
-        background: rgba(0,0,0,0.7);
-        color: #fff;
-        border: none;
+        background: rgba(0,0,0,0.6);
+        color: white;
         border-radius: 50%;
-        padding: 4px 8px;
-        font-size: 12px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         cursor: pointer;
+        font-size: 14px;
     }
 
-    /* Feed Posts */
+    /* Post card */
     .feed-post {
-        background: rgba(255,255,255,0.03);
-        border-radius: 14px;
-        padding: 14px;
-        border: 1px solid var(--border);
-        transition: box-shadow 0.2s, border-color 0.2s;
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        padding: 16px;
+        margin-bottom: 16px;
+        transition: box-shadow 0.2s;
     }
     .feed-post:hover {
-        border-color: rgba(255,255,255,0.08);
-        box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.12);
     }
     .post-header {
         display: flex;
         align-items: center;
-        gap: 10px;
-        margin-bottom: 10px;
+        gap: 12px;
+        margin-bottom: 12px;
     }
-    .post-avatar {
-        width: 34px;
-        height: 34px;
+    .post-header .user-avatar {
+        width: 42px;
+        height: 42px;
+        background: #e4e6eb;
         border-radius: 50%;
-        background: var(--success);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 14px;
-        color: #fff;
-        flex-shrink: 0;
     }
     .post-username {
-        font-size: 12px;
         font-weight: 600;
-        color: var(--text-primary);
+        font-size: 14px;
+        color: #050505;
     }
     .post-time {
-        font-size: 10px;
-        color: var(--text-secondary);
+        font-size: 12px;
+        color: #65676b;
     }
     .post-body {
-        font-size: 13px;
-        color: var(--text-primary);
+        font-size: 15px;
         line-height: 1.5;
-        margin-bottom: 10px;
+        color: #1c1e21;
+        margin-bottom: 12px;
         word-wrap: break-word;
     }
     .post-image img {
         width: 100%;
-        max-height: 350px;
+        border-radius: 12px;
+        max-height: 400px;
         object-fit: cover;
-        border-radius: 10px;
-        margin-top: 8px;
+        margin-bottom: 12px;
     }
     .post-actions {
         display: flex;
-        gap: 16px;
-        padding-top: 10px;
-        border-top: 1px solid rgba(255,255,255,0.04);
+        gap: 20px;
+        border-top: 1px solid #f0f2f5;
+        padding-top: 12px;
     }
-    .post-action {
-        display: flex;
-        align-items: center;
-        gap: 4px;
+    .post-actions button {
         background: none;
         border: none;
-        color: var(--text-secondary);
-        font-size: 11px;
+        color: #65676b;
+        font-weight: 600;
+        font-size: 13px;
         cursor: pointer;
-        transition: color 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: 0.2s;
     }
-    .post-action:hover { color: var(--primary); }
-    .post-action.liked { color: var(--danger); }
+    .post-actions button:hover { color: #1b74e4; }
+    .post-actions button.liked { color: #e41e3f; }
 
     /* Reviews */
+    .review-card {
+        background: #ffffff;
+        border-radius: 16px;
+        box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+        padding: 16px;
+        margin-bottom: 16px;
+    }
+    .review-header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 10px;
+    }
+    .star-picker {
+        display: flex;
+        gap: 4px;
+        margin-bottom: 8px;
+    }
     .star {
-        font-size: 16px;
+        font-size: 22px;
         cursor: pointer;
-        color: #3B3F48;
-        transition: color 0.15s;
+        color: #d8d9db;
+        transition: 0.2s;
     }
-    .star.active, .star:hover { color: var(--primary); }
+    .star.active, .star:hover { color: #f7b500; }
+    .review-input {
+        width: 100%;
+        border: 1px solid #e4e6eb;
+        border-radius: 20px;
+        padding: 8px 14px;
+        font-size: 14px;
+        outline: none;
+        margin-bottom: 8px;
+    }
+    .review-list {
+        border-top: 1px solid #f0f2f5;
+    }
     .review-item {
-        padding: 8px 0;
-        border-bottom: 1px solid rgba(255,255,255,0.03);
+        padding: 10px 0;
+        border-bottom: 1px solid #f0f2f5;
     }
-    .review-stars { color: var(--primary); font-size: 10px; }
-    .review-user { font-size: 10px; color: var(--text-secondary); }
-    .review-text {
-        font-size: 12px;
-        color: var(--text-primary);
-        line-height: 1.4;
-        margin-top: 4px;
-    }
+    .review-stars { color: #f7b500; font-size: 13px; }
+    .review-user { font-size: 13px; font-weight: 600; color: #050505; }
+    .review-text { font-size: 14px; color: #1c1e21; margin-top: 4px; }
 
-    .panel-scroll {
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: var(--border) transparent;
-    }
+    /* Empty & Loading */
     .empty-state {
         text-align: center;
-        padding: 20px;
-        color: var(--text-secondary);
-        font-size: 11px;
-    }
-
-    /* ── Mobile Adjustments ── */
-    @media (max-width: 768px) {
-        .card {
-            padding: 12px;
-        }
-        .card-title {
-            font-size: 12px;
-        }
-        .composer-textarea {
-            font-size: 10px;
-            padding: 8px 12px;
-        }
-        .composer-btn {
-            font-size: 10px;
-            padding: 6px 14px;
-        }
-        .composer-avatar {
-            width: 32px;
-            height: 32px;
-            font-size: 14px;
-        }
-        .post-avatar {
-            width: 28px;
-            height: 28px;
-            font-size: 12px;
-        }
-        .post-username {
-            font-size: 11px;
-        }
-        .post-body {
-            font-size: 12px;
-        }
-        .post-action {
-            font-size: 10px;
-        }
-        .star {
-            font-size: 14px;
-        }
+        padding: 40px;
+        color: #65676b;
+        font-size: 14px;
+        background: #ffffff;
+        border-radius: 16px;
     }
 </style>
 {% endblock %}
@@ -697,49 +671,46 @@
     <div id="ttab-market" style="display: block;">
         <div id="coinsGrid" class="coins-grid"></div>
     </div>
-    <div id="ttab-community" style="display: none;">
-        <div class="social-panel" id="socialPanel">
-            <!-- Reviews -->
-            <div class="card">
-                <div class="card-title"><span class="icon">⭐</span> Reviews <span style="font-size:10px;color:var(--text-secondary);" id="reviewCount">0</span></div>
-                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
-                    <div style="display:flex;gap:1px;" id="starPicker">
-                        <span class="star" onclick="setRating(1)">☆</span>
-                        <span class="star" onclick="setRating(2)">☆</span>
-                        <span class="star" onclick="setRating(3)">☆</span>
-                        <span class="star" onclick="setRating(4)">☆</span>
-                        <span class="star" onclick="setRating(5)">☆</span>
+    <div class="community-wrapper">
+    <!-- Compose Box -->
+        <div class="compose-box">
+            <div class="compose-header">
+                <div class="user-avatar">👤</div>
+                <div class="compose-textarea-wrapper">
+                    <textarea id="feedPostInput" placeholder="What's happening in the markets today?"></textarea>
+                    <div class="compose-actions">
+                        <label for="imageUpload" class="action-icon" title="Add image">🖼️</label>
+                        <input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="previewImage(this)">
+                        <button class="post-submit-btn" onclick="submitFeedPost()">Post</button>
                     </div>
-                    <input type="text" id="reviewInput" placeholder="Quick review..." style="flex:1;padding:6px 10px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text-primary);font-size:10px;">
-                    <button onclick="submitReview()" class="composer-btn" style="padding:6px 12px;font-size:10px;">Post</button>
-                </div>
-                <div class="panel-scroll" style="max-height:200px;" id="reviewsList">
-                    <div class="empty-state">No reviews yet</div>
                 </div>
             </div>
+            <div id="imagePreviewContainer" class="image-preview" style="display:none;">
+                <img id="imagePreview" src="">
+                <span class="remove-preview" onclick="removeImage()">✕</span>
+            </div>
+        </div>
 
-            <!-- Community Feed -->
-            <div class="card" style="flex:1;">
-                <div class="card-title"><span class="icon">💬</span> Community</div>
-                <div class="feed-composer">
-                    <div class="composer-avatar">👤</div>
-                    <div class="composer-body">
-                        <textarea id="feedPostInput" class="composer-textarea" placeholder="Share something..."></textarea>
-                        <div class="composer-actions">
-                            <label for="imageUpload" class="composer-img-btn" title="Add image">🖼️</label>
-                            <input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="previewImage(this)">
-                            <button class="composer-btn" onclick="submitFeedPost()">Post</button>
-                        </div>
-                        <div id="imagePreviewContainer" style="display:none; position:relative; margin-top:8px;">
-                            <img id="imagePreview" src="" style="max-width:100%; max-height:200px; border-radius:8px;">
-                            <span onclick="removeImage()" style="position:absolute; top:4px; right:8px; cursor:pointer; color:#fff; background:rgba(0,0,0,0.6); border-radius:50%; padding:2px 6px; font-size:12px;">✕</span>
-                        </div>
-                    </div>
-                </div>
-                <div class="panel-scroll" style="max-height:calc(100% - 60px);" id="feedPosts">
-                    <div class="empty-state">Loading...</div>
-                </div>
+        <!-- Reviews (optional, can be placed here or separate) -->
+        <div class="review-card">
+            <div class="review-header">
+                <span class="icon">⭐</span> <strong>Reviews</strong> <span id="reviewCount" style="font-size:12px;color:#65676b;">0</span>
             </div>
+            <div class="star-picker" id="starPicker">
+                <span class="star" onclick="setRating(1)">☆</span>
+                <span class="star" onclick="setRating(2)">☆</span>
+                <span class="star" onclick="setRating(3)">☆</span>
+                <span class="star" onclick="setRating(4)">☆</span>
+                <span class="star" onclick="setRating(5)">☆</span>
+            </div>
+            <input type="text" id="reviewInput" class="review-input" placeholder="Write a quick review...">
+            <button onclick="submitReview()" class="post-submit-btn" style="margin-top:8px;">Post Review</button>
+            <div id="reviewsList" class="review-list" style="margin-top:12px;"></div>
+        </div>
+
+        <!-- Feed -->
+        <div id="feedPosts" class="feed-list">
+            <div class="empty-state">Loading...</div>
         </div>
     </div>
 
@@ -1027,9 +998,106 @@
         });
     });
 
-    // ───────── REVIEWS & COMMUNITY FEED ─────────
+    let selectedImageFile = null;
+
+    function previewImage(input) {
+        if (input.files && input.files[0]) {
+            selectedImageFile = input.files[0];
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('imagePreview').src = e.target.result;
+                document.getElementById('imagePreviewContainer').style.display = 'block';
+            };
+            reader.readAsDataURL(input.files[0]);
+        }
+    }
+
+    function removeImage() {
+        selectedImageFile = null;
+        document.getElementById('imageUpload').value = '';
+        document.getElementById('imagePreviewContainer').style.display = 'none';
+    }
+
+    async function submitFeedPost() {
+        var msg = document.getElementById('feedPostInput').value.trim();
+        if (!msg && !selectedImageFile) return;
+        var formData = new FormData();
+        if (msg) formData.append('message', msg);
+        if (selectedImageFile) formData.append('image', selectedImageFile);
+        try {
+            var res = await fetch('/api/chat/transparency/', {
+                method: 'POST',
+                headers: { 'Authorization': 'Bearer ' + getToken() },
+                body: formData
+            });
+            if (res.ok) {
+                document.getElementById('feedPostInput').value = '';
+                removeImage();
+                loadFeed();
+            }
+        } catch(e) {}
+    }
+
+    async function loadFeed() {
+        try {
+            var posts = await fetch('/api/chat/transparency/').then(r => r.json());
+            var container = document.getElementById('feedPosts');
+            container.innerHTML = posts.length === 0 ? '<div class="empty-state">No posts yet</div>' :
+                posts.map(function(p) {
+                    var imgHtml = p.image ? `<div class="post-image"><img src="${p.image}" alt="Post"></div>` : '';
+                    return `
+                    <div class="feed-post">
+                        <div class="post-header">
+                            <div class="user-avatar">👤</div>
+                            <div>
+                                <div class="post-username">${p.username || 'User'}</div>
+                                <div class="post-time">${p.created_at ? new Date(p.created_at).toLocaleString() : ''}</div>
+                            </div>
+                        </div>
+                        ${p.message ? `<div class="post-body">${p.message}</div>` : ''}
+                        ${imgHtml}
+                        <div class="post-actions">
+                            <button onclick="likePost('${p.id}')" class="${p.likes > 0 ? 'liked' : ''}">👍 <span>${p.likes || 0}</span></button>
+                            <button disabled>💬 Comment</button>
+                            <button disabled>↗️ Share</button>
+                        </div>
+                    </div>`;
+                }).join('');
+        } catch(e) { console.error(e); }
+    }
+
+    async function likePost(id) {
+        try {
+            await fetch('/api/chat/transparency/like/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                body: JSON.stringify({ post_id: id })
+            });
+            loadFeed();
+        } catch(e) {}
+    }
+    async function loadReviews() {
+        try {
+            var reviews = await fetch('/api/chat/reviews/').then(r => r.json());
+            document.getElementById('reviewCount').textContent = reviews.length + ' reviews';
+            var container = document.getElementById('reviewsList');
+            container.innerHTML = reviews.length === 0 ? '<div class="empty-state">No reviews yet</div>' :
+                reviews.map(function(r) {
+                    return `
+                    <div class="review-item">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span class="review-stars">${'★'.repeat(r.rating)}</span>
+                            <span class="review-user">${r.username || 'User'}</span>
+                        </div>
+                        <div class="review-text">${r.message}</div>
+                    </div>`;
+                }).join('');
+        } catch(e) {}
+    }
+    var reviewRating = 0;
+
     function setRating(star) {
-        reviewRating = star;   // uses the global let declared above
+        reviewRating = star;
         document.querySelectorAll('.star').forEach(function(s, i) {
             s.textContent = i < star ? '★' : '☆';
             s.classList.toggle('active', i < star);
@@ -1050,99 +1118,6 @@
             document.querySelectorAll('.star').forEach(function(s) { s.textContent = '☆'; s.classList.remove('active'); });
             loadReviews();
         } catch(e) {}
-    }
-
-    async function loadReviews() {
-        try {
-            var reviews = await fetch('/api/chat/reviews/').then(r => r.json());
-            document.getElementById('reviewCount').textContent = reviews.length + ' reviews';
-            var container = document.getElementById('reviewsList');
-            container.innerHTML = reviews.length === 0 ? '<div class="empty-state">No reviews yet</div>' :
-                reviews.map(function(r) {
-                    return '<div class="review-item"><div style="display:flex;justify-content:space-between;"><span class="review-stars">' + '★'.repeat(r.rating) + '</span><span class="review-user">' + (r.username || 'User') + '</span></div><div class="review-text">' + r.message + '</div></div>';
-                }).join('');
-        } catch(e) {}
-    }
-
-    async function submitFeedPost() {
-        var msg = document.getElementById('feedPostInput').value.trim();
-        if (!msg && !selectedImageFile) return;
-
-        var formData = new FormData();
-        if (msg) formData.append('message', msg);
-        if (selectedImageFile) formData.append('image', selectedImageFile);
-
-        try {
-            var res = await fetch('/api/chat/transparency/', {
-                method: 'POST',
-                headers: { 'Authorization': 'Bearer ' + getToken() },
-                body: formData
-            });
-            if (res.ok) {
-                document.getElementById('feedPostInput').value = '';
-                removeImage();
-                loadFeed();
-            }
-        } catch(e) {}
-    }
-
-
-    async function loadFeed() {
-        try {
-            var posts = await fetch('/api/chat/transparency/').then(r => r.json());
-            var container = document.getElementById('feedPosts');
-            container.innerHTML = posts.length === 0 ? '<div class="empty-state">No posts yet</div>' :
-                posts.map(function(p) {
-                    var imgHtml = p.image ? `<div class="post-image"><img src="${p.image}" alt="Post image" style="width:100%; border-radius:8px; margin-top:8px;"></div>` : '';
-                    return `
-                    <div class="feed-post">
-                        <div class="post-header">
-                            <div class="post-avatar">👤</div>
-                            <div>
-                                <div class="post-username">${p.username || 'User'}</div>
-                                <div class="post-time">${p.created_at || ''}</div>
-                            </div>
-                        </div>
-                        <div class="post-body">${p.message}</div>
-                        ${imgHtml}
-                        <div class="post-actions">
-                            <button class="post-action" onclick="likePost('${p.id}')">👍 <span>${p.likes || 0}</span></button>
-                            <button class="post-action" disabled>💬 Comment</button>
-                        </div>
-                    </div>`;
-                }).join('');
-        } catch(e) {}
-    }
-
-    async function likePost(id) {
-        try {
-            await fetch('/api/chat/transparency/like/', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
-                body: JSON.stringify({ post_id: id })
-            });
-            loadFeed();
-        } catch(e) {}
-    }
-
-    let selectedImageFile = null;
-
-    function previewImage(input) {
-        if (input.files && input.files[0]) {
-            selectedImageFile = input.files[0];
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                document.getElementById('imagePreview').src = e.target.result;
-                document.getElementById('imagePreviewContainer').style.display = 'block';
-            };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function removeImage() {
-        selectedImageFile = null;
-        document.getElementById('imageUpload').value = '';
-        document.getElementById('imagePreviewContainer').style.display = 'none';
     }
 
     // ───────── Filtering & Search ─────────
