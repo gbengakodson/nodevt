@@ -671,46 +671,48 @@
     <div id="ttab-market" style="display: block;">
         <div id="coinsGrid" class="coins-grid"></div>
     </div>
-    <div class="community-wrapper">
-    <!-- Compose Box -->
-        <div class="compose-box">
-            <div class="compose-header">
-                <div class="user-avatar">👤</div>
-                <div class="compose-textarea-wrapper">
-                    <textarea id="feedPostInput" placeholder="What's happening in the markets today?"></textarea>
-                    <div class="compose-actions">
-                        <label for="imageUpload" class="action-icon" title="Add image">🖼️</label>
-                        <input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="previewImage(this)">
-                        <button class="post-submit-btn" onclick="submitFeedPost()">Post</button>
+    <div id="ttab-community" style="display: none;">
+        <div class="community-wrapper">
+        <!-- Compose Box -->
+            <div class="compose-box">
+                <div class="compose-header">
+                    <div class="user-avatar">👤</div>
+                    <div class="compose-textarea-wrapper">
+                        <textarea id="feedPostInput" placeholder="What's happening in the markets today?"></textarea>
+                        <div class="compose-actions">
+                            <label for="imageUpload" class="action-icon" title="Add image">🖼️</label>
+                            <input type="file" id="imageUpload" accept="image/*" style="display:none;" onchange="previewImage(this)">
+                            <button class="post-submit-btn" onclick="submitFeedPost()">Post</button>
+                        </div>
                     </div>
                 </div>
+                <div id="imagePreviewContainer" class="image-preview" style="display:none;">
+                    <img id="imagePreview" src="">
+                    <span class="remove-preview" onclick="removeImage()">✕</span>
+                </div>
             </div>
-            <div id="imagePreviewContainer" class="image-preview" style="display:none;">
-                <img id="imagePreview" src="">
-                <span class="remove-preview" onclick="removeImage()">✕</span>
-            </div>
-        </div>
 
-        <!-- Reviews (optional, can be placed here or separate) -->
-        <div class="review-card">
-            <div class="review-header">
-                <span class="icon">⭐</span> <strong>Reviews</strong> <span id="reviewCount" style="font-size:12px;color:#65676b;">0</span>
+            <!-- Reviews (optional, can be placed here or separate) -->
+            <div class="review-card">
+                <div class="review-header">
+                    <span class="icon">⭐</span> <strong>Reviews</strong> <span id="reviewCount" style="font-size:12px;color:#65676b;">0</span>
+                </div>
+                <div class="star-picker" id="starPicker">
+                    <span class="star" onclick="setRating(1)">☆</span>
+                    <span class="star" onclick="setRating(2)">☆</span>
+                    <span class="star" onclick="setRating(3)">☆</span>
+                    <span class="star" onclick="setRating(4)">☆</span>
+                    <span class="star" onclick="setRating(5)">☆</span>
+                </div>
+                <input type="text" id="reviewInput" class="review-input" placeholder="Write a quick review...">
+                <button onclick="submitReview()" class="post-submit-btn" style="margin-top:8px;">Post Review</button>
+                <div id="reviewsList" class="review-list" style="margin-top:12px;"></div>
             </div>
-            <div class="star-picker" id="starPicker">
-                <span class="star" onclick="setRating(1)">☆</span>
-                <span class="star" onclick="setRating(2)">☆</span>
-                <span class="star" onclick="setRating(3)">☆</span>
-                <span class="star" onclick="setRating(4)">☆</span>
-                <span class="star" onclick="setRating(5)">☆</span>
-            </div>
-            <input type="text" id="reviewInput" class="review-input" placeholder="Write a quick review...">
-            <button onclick="submitReview()" class="post-submit-btn" style="margin-top:8px;">Post Review</button>
-            <div id="reviewsList" class="review-list" style="margin-top:12px;"></div>
-        </div>
 
-        <!-- Feed -->
-        <div id="feedPosts" class="feed-list">
-            <div class="empty-state">Loading...</div>
+            <!-- Feed -->
+            <div id="feedPosts" class="feed-list">
+                <div class="empty-state">Loading...</div>
+            </div>
         </div>
     </div>
 
