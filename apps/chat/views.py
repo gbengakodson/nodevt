@@ -6,6 +6,7 @@ from .models import ChatMessage
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.decorators import action
 from .models import ChatMessage, TransparencyChatMessage
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 
 
 class ChatMessagesView(APIView):
@@ -107,6 +108,7 @@ class ReviewView(APIView):
 
 
 class TransparencyChatView(APIView):
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [AllowAny]
 
     def get(self, request):
@@ -115,6 +117,7 @@ class TransparencyChatView(APIView):
             'id': str(msg.id),
             'username': msg.user.username or msg.user.email.split('@')[0],
             'message': msg.message,
+            'image': request.build_absolute_uri(msg.image.url) if msg.image else None,
             'created_at': msg.created_at.isoformat(),
             'is_admin': msg.user.is_staff,
             'parent_id': str(msg.parent_id) if msg.parent_id else None,
@@ -127,43 +130,26 @@ class TransparencyChatView(APIView):
             return Response({'error': 'Please login to comment'}, status=401)
 
         message = request.data.get('message', '').strip()
-        parent_id = request.data.get('parent_id')
+        image = request.FILES.get('image')
 
-        if not message:
-            return Response({'error': 'Message cannot be empty'}, status=400)
+        # Require either text or image
+        if not message and not image:
+            return Response({'error': 'Message or image is required'}, status=400)
 
-        if len(message) > 500:
+        if message and len(message) > 500:
             return Response({'error': 'Message too long'}, status=400)
-
-        parent = None
-        if parent_id:
-            try:
-                parent = TransparencyChatMessage.objects.get(id=parent_id)
-            except TransparencyChatMessage.DoesNotExist:
-                return Response({'error': 'Parent message not found'}, status=400)
 
         chat_msg = TransparencyChatMessage.objects.create(
             user=request.user,
-            message=message,
-            parent=parent
+            message=message or '',
+            image=image
         )
 
-        return Response({'success': True, 'id': str(chat_msg.id)})
-
-    @action(detail=False, methods=['post'])
-    def like(self, request):
-        post_id = request.data.get('post_id')
-        if not request.user.is_authenticated:
-            return Response({'error': 'Login required'}, status=401)
-        try:
-            post = TransparencyChatMessage.objects.get(id=post_id)
-            if request.user in post.likes.all():
-                post.likes.remove(request.user)
-            else:
-                post.likes.add(request.user)
-            return Response({'likes': post.likes.count()})
-        except TransparencyChatMessage.DoesNotExist:
-            return Response({'error': 'Post not found'}, status=404)
+        return Response({
+            'success': True,
+            'id': str(chat_msg.id),
+            'image': request.build_absolute_uri(chat_msg.image.url) if chat_msg.image else None
+        })
 
 
 class TransparencyLikeView(APIView):
