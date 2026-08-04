@@ -20,7 +20,7 @@ from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView, Profil
 from django.conf.urls.static import static
 from django.views.static import serve
 from apps.forex_ea.public_views import MarketIntelligenceView
-
+from django.views.generic.base import RedirectView
 
 
 
@@ -90,7 +90,7 @@ urlpatterns = [
     path('about/', TemplateView.as_view(template_name='about.html'), name='about'),
 
     path('risk-disclosure/', TemplateView.as_view(template_name='risk-disclosure.html'), name='risk_disclosure'),
-    path('transparency/', TemplateView.as_view(template_name='transparency.html'), name='transparency'),
+    path('transparency/', RedirectView.as_view(url='/', permanent=True)),
 
     path('api/yield-rate/', yield_rate_view, name='yield_rate'),
 
