@@ -331,8 +331,8 @@
 {% block content %}
 <div class="coins-container">
     <div class="market-header">
-        <div class="market-title">📊 Forex & Crypto Automation on the go!</div>
-        <div class="market-subtitle">Real-time Grid execution and Live yield</div>
+        <div class="market-title">📊 Market Intelligence on the go!</div>
+        <div class="market-subtitle">Real-time data for Traders, Travellers and investors.</div>
         <div class="last-updated">
             <span class="refresh-indicator"></span>
             <span id="lastUpdated">Updating...</span>
@@ -426,8 +426,49 @@
             </div>
         </div>
     </div>
+    <div class="tabs" style="margin-bottom: 12px; padding: 0 20px;">
+        <button class="tab-btn active" data-ttab="market">Market Data</button>
+        <button class="tab-btn" data-ttab="community">Community</button>
+    </div>
+    <div id="ttab-market" style="display: block;">
+        <div id="coinsGrid" class="coins-grid"></div>
+    </div>
+    <div id="ttab-community" style="display: none;">
+        <div class="social-panel" id="socialPanel">
+            <!-- Reviews -->
+            <div class="card">
+                <div class="card-title"><span class="icon">⭐</span> Reviews <span style="font-size:10px;color:var(--text-secondary);" id="reviewCount">0</span></div>
+                <div style="display:flex;gap:6px;align-items:center;margin-bottom:8px;">
+                    <div style="display:flex;gap:1px;" id="starPicker">
+                        <span class="star" onclick="setRating(1)">☆</span>
+                        <span class="star" onclick="setRating(2)">☆</span>
+                        <span class="star" onclick="setRating(3)">☆</span>
+                        <span class="star" onclick="setRating(4)">☆</span>
+                        <span class="star" onclick="setRating(5)">☆</span>
+                    </div>
+                    <input type="text" id="reviewInput" placeholder="Quick review..." style="flex:1;padding:6px 10px;border-radius:14px;border:1px solid var(--border);background:rgba(255,255,255,0.03);color:var(--text-primary);font-size:10px;">
+                    <button onclick="submitReview()" class="composer-btn" style="padding:6px 12px;font-size:10px;">Post</button>
+                </div>
+                <div class="panel-scroll" style="max-height:200px;" id="reviewsList">
+                    <div class="empty-state">No reviews yet</div>
+                </div>
+            </div>
 
-    <div id="coinsGrid" class="coins-grid"></div>
+            <!-- Community Feed -->
+            <div class="card" style="flex:1;">
+                <div class="card-title"><span class="icon">💬</span> Community</div>
+                <div class="feed-composer" style="margin-bottom:8px;">
+                    <div class="composer-avatar">👤</div>
+                    <input type="text" id="feedPostInput" class="composer-input" placeholder="Share something...">
+                    <button class="composer-btn" onclick="submitFeedPost()">Post</button>
+                </div>
+                <div class="panel-scroll" style="max-height:calc(100% - 60px);" id="feedPosts">
+                    <div class="empty-state">Loading...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <script>
@@ -436,7 +477,9 @@
 
     let allCoins = [];
     let currentFilter = 'all';
+    let reviewRating = 0;            // ← needed for star rating
 
+    // ───────── Token icons & ID mapping ─────────
     function getTokenIcon(symbol) {
         const icons = {
             'BTC': 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png',
@@ -486,6 +529,7 @@
         'THETA': 'theta-token'
     };
 
+    // ───────── Helper functions ─────────
     function formatCurrency(num) {
         if (!num) return '$0.00';
         const value = parseFloat(num);
@@ -508,21 +552,15 @@
         return `$${value.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`;
     }
 
-    function formatNumber(num, decimals = 6) {
-        if (!num) return '0';
-        const value = parseFloat(num);
-        if (isNaN(value)) return '0';
-        if (value === 0) return '0';
-        if (Math.abs(value) < 0.01 && Math.abs(value) > 0) {
-            return value.toFixed(8);
-        }
-        return value.toFixed(decimals);
-    }
-
     function goToTrading(symbol) {
         window.location.href = '/trading/?coin=' + symbol;
     }
 
+    function getToken() {
+        return localStorage.getItem('access_token');
+    }
+
+    // ───────── CoinGecko market data (public) ─────────
     async function fetchMarketData() {
         try {
             const ids = Object.values(symbolToId).join(',');
@@ -575,16 +613,14 @@
         document.getElementById('totalVolume').textContent = formatCurrencyShort(totalVolume);
         document.getElementById('btcDominance').textContent = btcDominance.toFixed(1) + '%';
 
-        // Render chart
         renderMarketCapChart(coins);
     }
-    var marketCapChart = null;
 
+    var marketCapChart = null;
     function renderMarketCapChart(coins) {
         var ctx = document.getElementById('marketCapChart').getContext('2d');
         if (marketCapChart) marketCapChart.destroy();
 
-        // Get top 5 coins by market cap
         var sorted = coins.slice().sort(function(a, b) { return (b.market_cap || 0) - (a.market_cap || 0); }).slice(0, 5);
         var others = coins.slice(5).reduce(function(sum, c) { return sum + (c.market_cap || 0); }, 0);
 
@@ -609,16 +645,13 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                plugins: {
-                    legend: { display: false }
-                }
+                plugins: { legend: { display: false } }
             }
         });
     }
 
     function renderCoins(coins) {
         const container = document.getElementById('coinsGrid');
-
         if (!coins || coins.length === 0) {
             container.innerHTML = '<div class="empty-state">No coins found</div>';
             return;
@@ -626,7 +659,6 @@
 
         let filtered = [...coins];
         const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
         if (searchTerm) {
             filtered = filtered.filter(coin =>
                 coin.symbol.toLowerCase().includes(searchTerm) ||
@@ -635,9 +667,11 @@
         }
 
         if (currentFilter === 'gainers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0).sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
+            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0)
+                               .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
         } else if (currentFilter === 'losers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0).sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
+            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0)
+                               .sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
         }
 
         container.innerHTML = filtered.map((coin, index) => {
@@ -651,9 +685,7 @@
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}"
-                                 alt="${coin.symbol}"
-                                 class="coin-icon"
+                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon"
                                  onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
                             <div class="coin-details">
                                 <h3>${coin.symbol}</h3>
@@ -682,9 +714,10 @@
         }).join('');
     }
 
+    // ───────── NVT Token Wallet (logged‑in only) ─────────
     async function loadTokenWallet() {
         try {
-            var token = localStorage.getItem('access_token');
+            var token = getToken();
             if (!token) return;
 
             var res = await fetch('/api/tokens/wallet/', {
@@ -692,15 +725,11 @@
             });
             var data = await res.json();
 
-            // Market card
             document.getElementById('tokenMarketPrice').textContent = '$' + data.token_price.toFixed(6);
-
-            // Wallet card
             document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
             document.getElementById('tokenPending').textContent = data.pending_tokens.toLocaleString();
             document.getElementById('tokenWalletValue').textContent = '$' + data.activated_value.toFixed(4);
 
-            // Enable convert button if eligible (10,000+ active users)
             var btn = document.getElementById('btnConvertToken');
             if (data.can_convert) {
                 btn.disabled = false;
@@ -712,29 +741,125 @@
         } catch(e) {}
     }
 
-    // Call on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        loadTokenWallet();
+    // ───────── TAB SWITCHING (Market / Community) ─────────
+    document.querySelectorAll('[data-ttab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            document.getElementById('ttab-market').style.display = 'none';
+            document.getElementById('ttab-community').style.display = 'none';
+
+            var tab = this.getAttribute('data-ttab');
+            document.getElementById('ttab-' + tab).style.display = 'block';
+
+            document.querySelectorAll('[data-ttab]').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+        });
     });
 
-    function filterCoins() {
-        renderCoins(allCoins);
+    // ───────── REVIEWS & COMMUNITY FEED ─────────
+    var reviewRating = 0;
+
+    function setRating(star) {
+        reviewRating = star;
+        document.querySelectorAll('.star').forEach(function(s, i) {
+            s.textContent = i < star ? '★' : '☆';
+            s.classList.toggle('active', i < star);
+        });
     }
 
-    document.getElementById('searchInput').addEventListener('input', filterCoins);
+    async function submitReview() {
+        var msg = document.getElementById('reviewInput').value.trim();
+        if (!msg || reviewRating === 0) return;
+        try {
+            await fetch('/api/chat/reviews/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                body: JSON.stringify({ rating: reviewRating, message: msg })
+            });
+            document.getElementById('reviewInput').value = '';
+            reviewRating = 0;
+            document.querySelectorAll('.star').forEach(function(s) { s.textContent = '☆'; s.classList.remove('active'); });
+            loadReviews();
+        } catch(e) {}
+    }
+
+    async function loadReviews() {
+        try {
+            var reviews = await fetch('/api/chat/reviews/').then(r => r.json());
+            document.getElementById('reviewCount').textContent = reviews.length + ' reviews';
+            var container = document.getElementById('reviewsList');
+            container.innerHTML = reviews.length === 0 ? '<div class="empty-state">No reviews yet</div>' :
+                reviews.map(function(r) {
+                    return '<div class="review-item"><div style="display:flex;justify-content:space-between;"><span class="review-stars">' + '★'.repeat(r.rating) + '</span><span class="review-user">' + (r.username || 'User') + '</span></div><div class="review-text">' + r.message + '</div></div>';
+                }).join('');
+        } catch(e) {}
+    }
+
+    async function submitFeedPost() {
+        var msg = document.getElementById('feedPostInput').value.trim();
+        if (!msg) return;
+        try {
+            await fetch('/api/chat/transparency/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                body: JSON.stringify({ message: msg })
+            });
+            document.getElementById('feedPostInput').value = '';
+            loadFeed();
+        } catch(e) {}
+    }
+
+    async function loadFeed() {
+        try {
+            var posts = await fetch('/api/chat/transparency/').then(r => r.json());
+            var container = document.getElementById('feedPosts');
+            container.innerHTML = posts.length === 0 ? '<div class="empty-state">No posts yet</div>' :
+                posts.map(function(p) {
+                    return '<div class="feed-post"><div class="post-header"><div class="post-avatar">👤</div><div><div class="post-username">' + (p.username || 'User') + '</div><div class="post-time">' + (p.created_at || '') + '</div></div></div><div class="post-body">' + p.message + '</div><div class="post-actions"><button class="post-action" onclick="likePost(\'' + p.id + '\')">👍 <span>' + (p.likes || 0) + '</span></button></div></div>';
+                }).join('');
+        } catch(e) {}
+    }
+
+    async function likePost(id) {
+        try {
+            await fetch('/api/chat/transparency/like/', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() },
+                body: JSON.stringify({ post_id: id })
+            });
+            loadFeed();
+        } catch(e) {}
+    }
+
+    // ───────── Filtering & Search ─────────
+    document.getElementById('searchInput').addEventListener('input', function() {
+        renderCoins(allCoins);
+    });
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             currentFilter = this.getAttribute('data-filter');
-            filterCoins();
+            renderCoins(allCoins);
         });
     });
 
+    // ───────── INIT ─────────
     document.getElementById('coinsGrid').innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading market data...</div>';
 
-    updateMarketData();
-    setInterval(updateMarketData, 120000);
+    updateMarketData();      // coin grid + market stats
+    loadReviews();           // community reviews
+    loadFeed();              // community posts
+    loadTokenWallet();       // NVT card (if logged in)
+
+    setInterval(updateMarketData, 120000);   // refresh market data every 2 min
+    setInterval(loadFeed, 30000);            // refresh community posts every 30 sec
+
+    // legacy Transparency tab handler (if any) – harmless
+    document.querySelectorAll('[data-pubtab]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            showPubTab(this.getAttribute('data-pubtab'));
+        });
+    });
 </script>
 {% endblock %}

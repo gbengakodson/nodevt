@@ -41,7 +41,7 @@ urlpatterns = [
     path('api/auth/', include('apps.accounts.urls')),
     path('api/chat/', include('apps.chat.urls')),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('', TemplateView.as_view(template_name='index.html'), name='home'),
+    path('', TemplateView.as_view(template_name='coins.html'), name='home'),
     path('dashboard/', TemplateView.as_view(template_name='dashboard.html'), name='dashboard'),
     path('coins/', TemplateView.as_view(template_name='coins.html'), name='coins'),
     path('trading/', TemplateView.as_view(template_name='trading.html'), name='trading'),
