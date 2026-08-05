@@ -220,7 +220,12 @@
         border-color: #D9DDE2;
     }
 
-
+    .coin-card-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 16px;
+    }
 
     .coin-info {
         display: flex;
@@ -253,16 +258,11 @@
         position: absolute;
         top: 12px;
         right: 12px;
-        background: #F0B90B;
-        color: #1E2329;
-        font-size: 12px;
+        font-size: 14px;
         font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 20px;
+        color: #1E2329;
         z-index: 2;
     }
-
-
 
     .coin-price-section {
         text-align: right;
@@ -954,13 +954,15 @@
 
             const volume = coin.total_volume || 0;
             return `
-                <div class="coin-card" onclick="goToTrading('${coin.symbol}')" style="position:relative;">
-                    <div class="card-category-badge">Crypto Market</div>
+                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="card-top">
                         <div class="card-picture-placeholder">📷</div>
-                        <div class="card-price-area">
-                            <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
-                            <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
+                        <div class="card-top-right">
+                            <div class="card-category-label">Crypto Market</div>
+                            <div class="coin-price-section">
+                                <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
+                                <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
+                            </div>
                         </div>
                     </div>
                     <div class="card-middle">
