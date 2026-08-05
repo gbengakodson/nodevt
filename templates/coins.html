@@ -209,6 +209,10 @@
         border-radius: 50%;
         object-fit: contain;
     }
+    .coin-stats .coin-icon {
+        width: 32px;
+        height: 32px;
+    }
 
     .coin-details h3 {
         font-size: 16px;
@@ -923,16 +927,6 @@
             return `
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
-                        <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}"
-                                 alt="${coin.symbol}"
-                                 class="coin-icon"
-                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
-                            <div class="coin-details">
-                                <h3>${coin.symbol}</h3>
-                                <p>${coin.name}</p>
-                            </div>
-                        </div>
                         <div class="coin-rank">#${index + 1}</div>
                     </div>
                     <div class="coin-price-section">
@@ -940,9 +934,13 @@
                         <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
                     </div>
                     <div class="coin-stats">
-                        <div class="coin-stat">
-                            <div class="coin-stat-label">Market Cap</div>
-                            <div class="coin-stat-value">${formatCurrency(marketCap)}</div>
+                        <div class="coin-info">
+                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon"
+                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                            <div class="coin-details">
+                                <h3>${coin.symbol}</h3>
+                                <p>${coin.name}</p>
+                            </div>
                         </div>
                         <div class="coin-stat">
                             <div class="coin-stat-label">24h Volume</div>
