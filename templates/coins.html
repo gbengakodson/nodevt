@@ -982,10 +982,9 @@
         const container = document.getElementById('coinsGrid');
         const now = new Date();
 
-        // ── 1. Build uniform card objects ──
         let cards = [];
 
-        // Add daily intelligence cards (timestamp = today 8:00 AM)
+        // Daily intelligence cards
         if (dailyIntel && dailyIntel.length > 0) {
             dailyIntel.forEach(function(item) {
                 const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
@@ -1002,21 +1001,21 @@
                     price: item.price || null,
                     imageUrl: item.image_url || '',
                     reactionCounts: { likes: 0, loves: 0 },
-                    timestamp: createdTime,
+                    timestamp: createdTime
                 });
             });
         }
 
-        // Add live crypto cards (timestamp = now)
+        // Live crypto cards
         if (coins && coins.length > 0) {
-            coins.forEach(coin => {
+            coins.forEach(function(coin) {
                 const discountData = fadakkaDiscounts[coin.symbol];
                 let discountText = '';
                 let discountClass = '';
                 if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
                     const d = discountData.discount;
                     const sign = d > 0 ? '+' : '';
-                    discountText = `Discount: ${sign}${d.toFixed(0)}%`;
+                    discountText = 'Discount: ' + sign + d.toFixed(0) + '%';
                     discountClass = d <= -10 ? 'price-down' : (d >= 10 ? 'price-up' : '');
                 } else {
                     discountText = 'Discount: --';
@@ -1032,62 +1031,47 @@
                     caption: getFadakkaCaption(coin.symbol, fadakkaDiscounts, coin.total_volume),
                     imageUrl: getCoinImageUrl(coin.symbol),
                     reactionCounts: reactionCounts[coin.symbol] || { likes: 0, loves: 0 },
-                    timestamp: now.getTime(),
+                    timestamp: now.getTime()
                 });
             });
         }
 
-        // ── 2. Sort by timestamp descending (most recent first) ──
-        cards.sort((a, b) => b.timestamp - a.timestamp);
+        // Sort newest first
+        cards.sort(function(a, b) { return b.timestamp - a.timestamp; });
 
-        // ── 3. Render cards ──
         if (!cards.length) {
             container.innerHTML = '<div class="empty-state">No cards to display</div>';
             return;
         }
 
-        container.innerHTML = cards.map(card => {
-            return `
-                onclick="${card.category === 'Forex Market' || card.type === 'crypto' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}"
-                    <div class="card-top">
-                        ${card.imageUrl
-                            ? `<img src="${card.imageUrl}" class="card-picture" alt="${card.symbol}"
-                                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-                            : ''}
-                        <div class="card-picture-placeholder" style="display:${card.imageUrl ? 'none' : 'flex'};">
-                            📷
-                        </div>
-                        <div class="card-top-right">
-                            <div class="card-category-label">${card.category}</div>
-                            ${card.price ? `
-                            <div class="coin-price-section">
-                                <div class="coin-current-price">${formatCurrency(card.price)}</div>
-                                <div class="coin-change ${card.discountClass}">${card.discountText}</div>
-                            </div>` : ''}
-                        </div>
-                    </div>
-                    <div class="card-middle">
-                        <div class="coin-info">
-                            <div class="coin-details">
-                                <h3>${card.symbol}</h3>
-                                <p>${card.name}</p>
-                            </div>
-                        </div>
-                        <div class="card-caption">${card.caption}</div>
-                    </div>
-                    <div class="trade-btn">
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'like')" title="Like">
-                            <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${card.reactionCounts.likes}</span>
-                        </button>
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'love')" title="Love">
-                            <i class="fas fa-heart"></i> <span class="reaction-count">${card.reactionCounts.loves}</span>
-                        </button>
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${card.symbol}')" title="Share">
-                            <i class="fas fa-share-alt"></i>
-                        </button>
-                    </div>
-                </div>
-            `;
+        container.innerHTML = cards.map(function(card) {
+            return (
+                '<div class="coin-card" onclick="' + (card.category === 'Forex Market' || card.type === 'crypto' ? "goToTrading('" + card.symbol + "')" : "viewDetails('" + card.symbol + "')") + '">' +
+                    '<div class="card-top">' +
+                        (card.imageUrl
+                            ? '<img src="' + card.imageUrl + '" class="card-picture" alt="' + card.symbol + '" onerror="this.style.display=\'none\'; this.nextElementSibling.style.display=\'flex\';">'
+                            : '') +
+                        '<div class="card-picture-placeholder" style="display:' + (card.imageUrl ? 'none' : 'flex') + ';">📷</div>' +
+                        '<div class="card-top-right">' +
+                            '<div class="card-category-label">' + card.category + '</div>' +
+                            (card.price
+                                ? '<div class="coin-price-section"><div class="coin-current-price">' + formatCurrency(card.price) + '</div><div class="coin-change ' + card.discountClass + '">' + card.discountText + '</div></div>'
+                                : '') +
+                        '</div>' +
+                    '</div>' +
+                    '<div class="card-middle">' +
+                        '<div class="coin-info">' +
+                            '<div class="coin-details"><h3>' + card.symbol + '</h3><p>' + card.name + '</p></div>' +
+                        '</div>' +
+                        '<div class="card-caption">' + card.caption + '</div>' +
+                    '</div>' +
+                    '<div class="trade-btn">' +
+                        '<button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction(\'' + card.symbol + '\', \'like\')" title="Like"><i class="fas fa-thumbs-up"></i> <span class="reaction-count">' + card.reactionCounts.likes + '</span></button>' +
+                        '<button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction(\'' + card.symbol + '\', \'love\')" title="Love"><i class="fas fa-heart"></i> <span class="reaction-count">' + card.reactionCounts.loves + '</span></button>' +
+                        '<button class="card-icon-btn" onclick="event.stopPropagation(); shareCard(\'' + card.symbol + '\')" title="Share"><i class="fas fa-share-alt"></i></button>' +
+                    '</div>' +
+                '</div>'
+            );
         }).join('');
     }
 
