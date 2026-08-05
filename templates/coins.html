@@ -893,22 +893,21 @@
             const coins = await fetchMarketData();
             if (coins) allCoins = coins;
 
-            // Fetch Fadakka discounts
+            // Fetch Fadakka discounts (always)
             let fadakkaDiscounts = {};
             try {
                 const resp = await fetch('/api/public/fadakka-discounts/');
                 if (resp.ok) fadakkaDiscounts = await resp.json();
             } catch(e) {}
 
-            // Fetch reaction counts
+            // Fetch reaction counts (always)
             let reactionCounts = {};
             try {
                 const resp = await fetch('/api/public/coin-reactions/');
                 if (resp.ok) reactionCounts = await resp.json();
             } catch(e) {}
-            renderCoins(allCoins, fadakkaDiscounts, reactionCounts);
 
-            renderCoins(allCoins, fadakkaDiscounts);
+            renderCoins(allCoins, fadakkaDiscounts, reactionCounts);
             updateMarketStats(allCoins);
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
