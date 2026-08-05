@@ -169,13 +169,7 @@
         height: 120px;
     }
 
-    .coins-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-        gap: 16px;
-    }
-
-    /* ── Redesigned Coin Card ── */
+    /* ── Coin Card Redesign ── */
     .coin-card {
         background: white;
         border-radius: 16px;
@@ -193,21 +187,23 @@
         border-color: #D9DDE2;
     }
 
-    /* Top section: Picture + Price */
+    /* Top section: Picture (large) + Price (right) */
     .card-top {
         display: flex;
         justify-content: space-between;
         align-items: flex-start;
+        gap: 12px;
     }
     .card-picture {
-        width: 100px;
-        height: 70px;
+        width: 58%;                  /* a little more than 50% */
+        height: 100px;
         object-fit: cover;
         border-radius: 12px;
-        background: #F0F2F5;          /* fallback grey */
+        background: #F0F2F5;        /* fallback */
     }
     .card-price-area {
         text-align: right;
+        flex-shrink: 0;
     }
     .card-category {
         font-size: 10px;
@@ -222,17 +218,8 @@
         margin-top: 4px;
     }
 
-    /* Price change (reused from old .price-up / .price-down) */
-    .price-up { color: #0ECB81; }
-    .price-down { color: #F6465D; }
-
-    /* Middle section: Symbol + Caption */
-    .card-middle {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .card-symbol-name {
+    /* Symbol + Name row (moved down from header) */
+    .card-symbol-row {
         display: flex;
         align-items: baseline;
         gap: 8px;
@@ -246,23 +233,21 @@
         font-size: 12px;
         color: #707A8A;
     }
+
+    /* Caption – bold, centered, no background, large */
     .card-caption {
-        font-size: 13px;
-        font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 20px;
-        white-space: nowrap;
-        background: rgba(240,185,11,0.1);   /* default neutral colour */
-        color: #F0B90B;
+        font-size: 18px;
+        font-weight: 700;
+        color: #1E2329;
+        text-align: center;
+        margin: 4px 0;
     }
 
-    /* Bottom section: Action Buttons */
+    /* Reactions – left-aligned, social style */
     .card-actions {
         display: flex;
-        gap: 8px;
-        justify-content: space-around;
-        border-top: 1px solid #E2E4E8;
-        padding-top: 12px;
+        gap: 12px;
+        align-items: center;
     }
     .card-actions button {
         background: none;
@@ -274,14 +259,21 @@
         display: flex;
         align-items: center;
         gap: 4px;
-        transition: color 0.2s;
+        padding: 4px 8px;
+        border-radius: 20px;
+        transition: background 0.2s, color 0.2s;
     }
     .card-actions button:hover {
+        background: #F0F2F5;
         color: #1E2329;
     }
     .card-actions button.liked {
         color: #E41E3F;
     }
+
+    /* Keep old price-up / price-down */
+    .price-up { color: #0ECB81; }
+    .price-down { color: #F6465D; }
 
     .loading-state, .empty-state {
         text-align: center;
@@ -944,10 +936,10 @@
                 const change = coin.price_change_percentage_24h || 0;
                 const changeClass = change >= 0 ? 'price-up' : 'price-down';
                 const sign = change >= 0 ? '+' : '';
-                const volume = coin.total_volume || 0;
 
                 html += `
                     <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
+                        <!-- Top: Picture + Price (picture >50% width) -->
                         <div class="card-top">
                             <img src="${getTokenIcon(coin.symbol)}" class="card-picture" alt="${coin.symbol}"
                                  onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
@@ -957,15 +949,19 @@
                                 <div class="${changeClass}" style="font-size:12px; margin-top:2px;">${sign}${change.toFixed(2)}%</div>
                             </div>
                         </div>
-                        <div class="card-middle">
-                            <div class="card-symbol-name">
-                                <span class="card-symbol">${coin.symbol}</span>
-                                <span class="card-name">${coin.name}</span>
-                            </div>
-                            <div class="card-caption">Vol ${formatCurrency(volume)}</div>
+
+                        <!-- Symbol + Name (moved down from header) -->
+                        <div class="card-symbol-row">
+                            <span class="card-symbol">${coin.symbol}</span>
+                            <span class="card-name">${coin.name}</span>
                         </div>
+
+                        <!-- Bold Caption (replaces old Market Cap / 24h Volume row) -->
+                        <div class="card-caption">${formatCurrency(coin.total_volume)} 24h Vol</div>
+
+                        <!-- Reactions (left-aligned, social style) -->
                         <div class="card-actions">
-                            <button onclick="event.stopPropagation(); likeCard('${coin.symbol}')">👍 <span>0</span></button>
+                            <button onclick="event.stopPropagation(); likeCard('${coin.symbol}')">👍 0</button>
                             <button onclick="event.stopPropagation(); shareCard('${coin.symbol}')">🔄 0</button>
                             <button onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">👁 View</button>
                         </div>
