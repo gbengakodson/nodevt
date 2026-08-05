@@ -993,13 +993,10 @@
             const volume = coin.total_volume || 0;
 
             const discountData = fadakkaDiscounts[coin.symbol];
-            let imageUrl = '';
-            if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
-                const d = discountData.discount;
-                if (d <= -10) imageUrl = 'https://source.unsplash.com/featured/?cheap,discount,sale';
-                else if (d >= 10) imageUrl = 'https://source.unsplash.com/featured/?expensive,luxury,peak';
-                else imageUrl = 'https://source.unsplash.com/featured/?balance,fair,market';
-            }
+            // Dynamic image (new reliable source)
+            const today = new Date().toISOString().slice(0,10);
+            const seed = `${coin.symbol}-${today}`;
+            const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(seed)}/300/200`;
 
             let discountText = '';
             let discountClass = '';
