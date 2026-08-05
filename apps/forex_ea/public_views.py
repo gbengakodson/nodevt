@@ -3,6 +3,8 @@ from rest_framework.response import Response
 from apps.tokens.models import CryptoToken
 from apps.forex_ea.models import MarketWeather
 from apps.trading.services.fadakka_service import FadakkaService
+from .models import DailyIntelligence
+from datetime import date
 
 class MarketIntelligenceView(APIView):
     authentication_classes = []
@@ -38,4 +40,23 @@ class MarketIntelligenceView(APIView):
                 'trend': trend,
             })
 
+        return Response(data)
+
+
+
+class DailyIntelligenceView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        today = date.today()
+        items = DailyIntelligence.objects.filter(created_at=today)
+        data = [{
+            'symbol': i.symbol,
+            'category': i.category,
+            'caption': i.caption,
+            'trend': i.trend,
+            'image_url': i.image_url,
+            'name': i.symbol,           # display name (can be expanded)
+        } for i in items]
         return Response(data)

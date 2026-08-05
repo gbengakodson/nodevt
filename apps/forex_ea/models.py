@@ -113,3 +113,30 @@ class MarketWeather(models.Model):
 
     def __str__(self):
         return f"{self.symbol} - {self.weather}"
+
+
+class DailyIntelligence(models.Model):
+    CATEGORY_CHOICES = [
+        ('forex', 'Forex'),
+        ('crypto', 'Crypto'),
+        ('stock', 'Stock'),
+        ('economic', 'Economic'),
+    ]
+    TREND_CHOICES = [
+        ('UPTREND', 'Uptrend'),
+        ('DOWNTREND', 'Downtrend'),
+        ('CONSOLIDATION', 'Consolidation'),
+    ]
+
+    symbol = models.CharField(max_length=20)          # e.g. EURUSD, BTC, AAPL, NGN
+    category = models.CharField(max_length=20, choices=CATEGORY_CHOICES)
+    caption = models.CharField(max_length=100)        # "Strong Sell", "Deep Discount -22%", etc.
+    trend = models.CharField(max_length=20, choices=TREND_CHOICES, default='CONSOLIDATION')
+    image_url = models.URLField(blank=True, null=True)
+    created_at = models.DateField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('symbol', 'created_at')    # one entry per symbol per day
+
+    def __str__(self):
+        return f"{self.symbol} ({self.created_at}) - {self.caption}"
