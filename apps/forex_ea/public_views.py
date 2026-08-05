@@ -52,7 +52,7 @@ class DailyIntelligenceView(APIView):
 
     def get(self, request):
         today = date.today()
-        items = DailyIntelligence.objects.filter(created_at=today)
+        items = DailyIntelligence.objects.filter(created_at__date=today)
         data = [{
             'symbol': i.symbol,
             'category': i.category,
