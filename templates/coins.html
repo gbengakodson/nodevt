@@ -220,12 +220,7 @@
         border-color: #D9DDE2;
     }
 
-    .coin-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
-    }
+
 
     .coin-info {
         display: flex;
@@ -254,14 +249,20 @@
         margin: 0;
     }
 
-    .coin-rank {
-        background: #F8F9FA;
+    .card-category-badge {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        background: #F0B90B;
+        color: #1E2329;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 4px 10px;
         border-radius: 20px;
-        padding: 4px 8px;
-        font-size: 10px;
-        font-weight: 500;
-        color: #707A8A;
+        z-index: 2;
     }
+
+
 
     .coin-price-section {
         text-align: right;
@@ -953,10 +954,8 @@
 
             const volume = coin.total_volume || 0;
             return `
-                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
-                    <div class="coin-card-header">
-                        <div class="coin-rank">#${index + 1}</div>
-                    </div>
+                <div class="coin-card" onclick="goToTrading('${coin.symbol}')" style="position:relative;">
+                    <div class="card-category-badge">Crypto Market</div>
                     <div class="card-top">
                         <div class="card-picture-placeholder">📷</div>
                         <div class="card-price-area">
