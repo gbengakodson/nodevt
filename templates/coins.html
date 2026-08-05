@@ -331,6 +331,23 @@
         transition: all 0.2s;
     }
 
+
+    .card-icon-btn {
+        background: none;
+        border: none;
+        color: #0ECB81;
+        font-size: 16px;
+        cursor: pointer;
+        padding: 4px 6px;
+        border-radius: 4px;
+        transition: background 0.2s, color 0.2s;
+        line-height: 1;
+    }
+    .card-icon-btn:hover {
+        background: rgba(14, 203, 129, 0.15);
+        color: #0b9e6a;
+    }
+
     .trade-btn:hover {
         background: rgba(14, 203, 129, 0.2);
         border-color: #0ECB81;
@@ -1010,7 +1027,17 @@
                         </div>
                         <div class="card-caption">${caption}</div>
                     </div>
-                    <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
+                    <div class="trade-btn">
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); likeCard('${coin.symbol}')" title="Like">
+                            <i class="fas fa-thumbs-up"></i>
+                        </button>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); loveCard('${coin.symbol}')" title="Love">
+                            <i class="fas fa-heart"></i>
+                        </button>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${coin.symbol}')" title="Share">
+                            <i class="fas fa-share-alt"></i>
+                        </button>
+                    </div>
                 </div>
             `;
         }).join('');
