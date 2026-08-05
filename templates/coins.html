@@ -987,8 +987,8 @@
 
         // Add daily intelligence cards (timestamp = today 8:00 AM)
         if (dailyIntel && dailyIntel.length > 0) {
-            const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
-            dailyIntel.forEach(item => {
+            dailyIntel.forEach(function(item) {
+                const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
                 cards.push({
                     type: 'daily',
                     symbol: item.symbol,
@@ -1001,7 +1001,7 @@
                     discountClass: '',
                     price: item.price || null,
                     imageUrl: item.image_url || '',
-                    reactionCounts: { likes: 0, loves: 0 }, // daily cards don't have reactions yet
+                    reactionCounts: { likes: 0, loves: 0 },
                     timestamp: createdTime,
                 });
             });
