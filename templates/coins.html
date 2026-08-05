@@ -1077,16 +1077,16 @@
     }
 
     function shareCard(symbol) {
+        const url = window.location.origin + '/?coin=' + symbol;
         if (navigator.share) {
             navigator.share({
-                title: `NODE Market Intelligence - ${symbol}`,
-                text: `Check out ${symbol} on NODE Market Intelligence`,
-                url: window.location.href
+                title: 'NODE Market Intelligence - ' + symbol,
+                text: 'Check out ' + symbol + ' on NODE Market Intelligence',
+                url: url
             }).catch(() => {});
         } else {
-            // Fallback: copy link
             const el = document.createElement('textarea');
-            el.value = window.location.href;
+            el.value = url;
             document.body.appendChild(el);
             el.select();
             document.execCommand('copy');
