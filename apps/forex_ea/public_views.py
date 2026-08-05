@@ -5,6 +5,7 @@ from apps.forex_ea.models import MarketWeather
 from apps.trading.services.fadakka_service import FadakkaService
 from .models import DailyIntelligence
 from datetime import date
+from rest_framework.permissions import AllowAny, IsAuthenticated
 
 
 class MarketIntelligenceView(APIView):
