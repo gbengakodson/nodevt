@@ -22,6 +22,8 @@ from django.views.static import serve
 from apps.forex_ea.public_views import MarketIntelligenceView
 from django.views.generic.base import RedirectView
 from apps.forex_ea.public_views import DailyIntelligenceView
+from apps.forex_ea.public_views import FadakkaDiscountsView
+
 
 
 
@@ -137,6 +139,7 @@ urlpatterns = [
     path('api/ea/', include('apps.forex_ea.urls')),
     path('api/public/market-intelligence/', MarketIntelligenceView.as_view(), name='market_intelligence'),
     path('api/public/daily-intelligence/', DailyIntelligenceView.as_view(), name='daily_intelligence'),
+    path('api/public/fadakka-discounts/', FadakkaDiscountsView.as_view(), name='fadakka_discounts'),
 ]
 
 urlpatterns += [

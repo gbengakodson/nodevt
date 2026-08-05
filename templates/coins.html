@@ -862,15 +862,20 @@
     async function updateMarketData() {
         try {
             const coins = await fetchMarketData();
-            if (coins) {
-                allCoins = coins;
-                renderCoins(allCoins);
-                updateMarketStats(coins);
-                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
-            }
+            if (coins) allCoins = coins;
+
+            // Fetch Fadakka discounts
+            let fadakkaDiscounts = {};
+            try {
+                const resp = await fetch('/api/public/fadakka-discounts/');
+                if (resp.ok) fadakkaDiscounts = await resp.json();
+            } catch(e) {}
+
+            renderCoins(allCoins, fadakkaDiscounts);
+            updateMarketStats(allCoins);
+            document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-            console.error('Error updating market data:', e);
-            document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data. Please refresh the page.</div>';
+            document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data.</div>';
         }
     }
 
@@ -921,7 +926,7 @@
         });
     }
 
-    function renderCoins(coins) {
+    function renderCoins(coins, fadakkaDiscounts = {}) {
         const container = document.getElementById('coinsGrid');
 
         if (!coins || coins.length === 0) {
@@ -949,10 +954,29 @@
             const change = coin.price_change_percentage_24h || 0;
             const changeClass = change >= 0 ? 'price-up' : 'price-down';
             const changeSymbol = change >= 0 ? '+' : '';
-            const marketCap = coin.market_cap || 0;
-            const volume24h = coin.total_volume || 0;
-
             const volume = coin.total_volume || 0;
+
+            // ── Fadakka Caption (replaces volume) ──
+            const discount = fadakkaDiscounts[coin.symbol];
+            let caption = '';
+            let captionColor = '#1E2329';   // default dark
+
+            if (discount !== undefined && discount !== null) {
+                if (discount <= -20) {
+                    caption = `Deep Discount ${discount.toFixed(0)}%`;
+                    captionColor = '#0ECB81';          // green
+                } else if (discount >= 20) {
+                    caption = `Overvalued +${discount.toFixed(0)}%`;
+                    captionColor = '#F6465D';          // red
+                } else {
+                    caption = `Fair Value (${discount > 0 ? '+' : ''}${discount.toFixed(0)}%)`;
+                    captionColor = '#F0B90B';          // yellow
+                }
+            } else {
+                // Fallback to volume if discount not available
+                caption = formatCurrency(volume);
+            }
+
             return `
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="card-top">
@@ -974,7 +998,7 @@
                                 <p>${coin.name}</p>
                             </div>
                         </div>
-                        <div class="card-caption">${formatCurrency(volume)}</div>
+                        <div class="card-caption" style="color:${captionColor}">${caption}</div>
                     </div>
                     <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
                 </div>

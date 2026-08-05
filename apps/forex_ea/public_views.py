@@ -6,6 +6,7 @@ from apps.trading.services.fadakka_service import FadakkaService
 from .models import DailyIntelligence
 from datetime import date
 
+
 class MarketIntelligenceView(APIView):
     authentication_classes = []
     permission_classes = []
@@ -60,3 +61,23 @@ class DailyIntelligenceView(APIView):
             'name': i.symbol,           # display name (can be expanded)
         } for i in items]
         return Response(data)
+
+
+class FadakkaDiscountsView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        symbols = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'LINK', 'UNI', 'MATIC', 'AVAX', 'DOT', 'LTC', 'NEAR', 'ATOM', 'ALGO', 'VET', 'FTM', 'EGLD', 'THETA']
+        discounts = {}
+        for sym in symbols:
+            token = CryptoToken.objects.filter(symbol=sym).first()
+            if not token:
+                continue
+            k = FadakkaService.get_fadakka_k(sym)
+            if k and k > 0:
+                discount = ((token.current_price - k) / k) * 100
+                discounts[sym] = round(discount, 1)
+            else:
+                discounts[sym] = None
+        return Response(discounts)
