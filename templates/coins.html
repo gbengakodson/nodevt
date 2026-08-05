@@ -926,6 +926,7 @@
             updateMarketStats(allCoins);
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
+            console.error('updateMarketData failed:', e);
             document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data.</div>';
         }
     }
