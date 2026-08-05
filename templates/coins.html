@@ -205,7 +205,7 @@
 
     .card-picture {
         width: 50%;
-        height: 70px;
+        height: 80px;
         object-fit: cover;
     }
     .card-middle {
@@ -896,24 +896,33 @@
 
     async function updateMarketData() {
         try {
+            // 1. Fetch live crypto data
             const coins = await fetchMarketData();
             if (coins) allCoins = coins;
 
-            // Fetch Fadakka discounts (always)
+            // 2. Fetch daily intelligence (Forex, Crypto Economy, Economic Cycle)
+            let dailyIntel = [];
+            try {
+                const resp = await fetch('/api/public/daily-intelligence/');
+                if (resp.ok) dailyIntel = await resp.json();
+            } catch(e) {}
+
+            // 3. Fetch Fadakka discounts
             let fadakkaDiscounts = {};
             try {
                 const resp = await fetch('/api/public/fadakka-discounts/');
                 if (resp.ok) fadakkaDiscounts = await resp.json();
             } catch(e) {}
 
-            // Fetch reaction counts (always)
+            // 4. Fetch reaction counts
             let reactionCounts = {};
             try {
                 const resp = await fetch('/api/public/coin-reactions/');
                 if (resp.ok) reactionCounts = await resp.json();
             } catch(e) {}
 
-            renderCoins(allCoins, fadakkaDiscounts, reactionCounts);
+            // 5. Render everything as a unified sorted feed
+            renderUnifiedFeed(coins, dailyIntel, fadakkaDiscounts, reactionCounts);
             updateMarketStats(allCoins);
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
@@ -968,112 +977,133 @@
         });
     }
 
-    function renderCoins(coins, fadakkaDiscounts = {}, reactionCounts = {}) {
+    function renderUnifiedFeed(coins, dailyIntel, fadakkaDiscounts, reactionCounts) {
         const container = document.getElementById('coinsGrid');
+        const now = new Date();
 
-        if (!coins || coins.length === 0) {
-            container.innerHTML = '<div class="empty-state">No coins found</div>';
+        // ── 1. Build uniform card objects ──
+        let cards = [];
+
+        // Add daily intelligence cards (timestamp = today 8:00 AM)
+        if (dailyIntel && dailyIntel.length > 0) {
+            const today8am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            dailyIntel.forEach(item => {
+                cards.push({
+                    type: 'daily',
+                    symbol: item.symbol,
+                    name: item.name || item.symbol,
+                    category: item.category === 'forex' ? 'Forex Market' :
+                              item.category === 'crypto' ? 'Crypto Economy' :
+                              item.category === 'economic' ? 'Economic Cycle' : 'Market Intel',
+                    caption: item.caption,
+                    discountText: 'Today\'s Outlook',
+                    discountClass: '',
+                    price: item.price || null,
+                    imageUrl: item.image_url || '',
+                    reactionCounts: { likes: 0, loves: 0 }, // daily cards don't have reactions yet
+                    timestamp: today8am.getTime(),
+                });
+            });
+        }
+
+        // Add live crypto cards (timestamp = now)
+        if (coins && coins.length > 0) {
+            coins.forEach(coin => {
+                const discountData = fadakkaDiscounts[coin.symbol];
+                let discountText = '';
+                let discountClass = '';
+                if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
+                    const d = discountData.discount;
+                    const sign = d > 0 ? '+' : '';
+                    discountText = `Discount: ${sign}${d.toFixed(0)}%`;
+                    discountClass = d <= -10 ? 'price-down' : (d >= 10 ? 'price-up' : '');
+                } else {
+                    discountText = 'Discount: --';
+                }
+                cards.push({
+                    type: 'crypto',
+                    symbol: coin.symbol,
+                    name: coin.name,
+                    category: 'Crypto Market',
+                    price: coin.current_price,
+                    discountText: discountText,
+                    discountClass: discountClass,
+                    caption: getFadakkaCaption(coin.symbol, fadakkaDiscounts, coin.total_volume),
+                    imageUrl: getCoinImageUrl(coin.symbol),
+                    reactionCounts: reactionCounts[coin.symbol] || { likes: 0, loves: 0 },
+                    timestamp: now.getTime(),
+                });
+            });
+        }
+
+        // ── 2. Sort by timestamp descending (most recent first) ──
+        cards.sort((a, b) => b.timestamp - a.timestamp);
+
+        // ── 3. Render cards ──
+        if (!cards.length) {
+            container.innerHTML = '<div class="empty-state">No cards to display</div>';
             return;
         }
 
-        let filtered = [...coins];
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-
-        if (searchTerm) {
-            filtered = filtered.filter(coin =>
-                coin.symbol.toLowerCase().includes(searchTerm) ||
-                coin.name.toLowerCase().includes(searchTerm)
-            );
-        }
-
-        if (currentFilter === 'gainers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0).sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
-        } else if (currentFilter === 'losers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0).sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
-        }
-
-        container.innerHTML = filtered.map((coin, index) => {
-            const change = coin.price_change_percentage_24h || 0;
-            const changeClass = change >= 0 ? 'price-up' : 'price-down';
-            const changeSymbol = change >= 0 ? '+' : '';
-            const volume = coin.total_volume || 0;
-
-            const discountData = fadakkaDiscounts[coin.symbol];
-            // Dynamic image (new reliable source)
-            const today = new Date().toISOString().slice(0,10);
-            const seed = `${coin.symbol}-${today}`;
-            const imageUrl = `https://picsum.photos/seed/${encodeURIComponent(seed)}/300/200`;
-
-            let discountText = '';
-            let discountClass = '';
-            if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
-                const d = discountData.discount;
-                const sign = d > 0 ? '+' : '';
-                discountText = `Discount: ${sign}${d.toFixed(0)}%`;
-                discountClass = d <= -10 ? 'price-down' : (d >= 10 ? 'price-up' : '');
-            } else {
-                discountText = 'Discount: --';
-                discountClass = '';
-            }
-
-            // Right-side caption (fair value phrase), will wrap with CSS
-            const fair = discountData?.fair_value;
-            let caption = '';
-            if (fair) {
-                if (discountData.discount <= -10) {
-                    caption = `${coin.symbol} should be ${formatCurrency(fair)}. It is too cheap now.`;
-                } else if (discountData.discount >= 10) {
-                    caption = `${coin.symbol} should be ${formatCurrency(fair)}. It is too expensive now.`;
-                } else {
-                    caption = `${coin.symbol} is fairly priced today.`;
-                }
-            } else {
-                caption = formatCurrency(coin.total_volume); // fallback
-            }
-
+        container.innerHTML = cards.map(card => {
             return `
-                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
+                <div class="coin-card" onclick="${card.type === 'crypto' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}">
                     <div class="card-top">
-                        ${imageUrl
-                            ? `<img src="${imageUrl}" class="card-picture" alt="${coin.symbol}"
+                        ${card.imageUrl
+                            ? `<img src="${card.imageUrl}" class="card-picture" alt="${card.symbol}"
                                    onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
                             : ''}
-                        <div class="card-picture-placeholder" style="display:${imageUrl ? 'none' : 'flex'};">
+                        <div class="card-picture-placeholder" style="display:${card.imageUrl ? 'none' : 'flex'};">
                             📷
                         </div>
                         <div class="card-top-right">
-                            <div class="card-category-label">Crypto Market</div>
+                            <div class="card-category-label">${card.category}</div>
+                            ${card.price ? `
                             <div class="coin-price-section">
-                                <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
-                                <div class="coin-change ${discountClass}">${discountText}</div>
-                            </div>
+                                <div class="coin-current-price">${formatCurrency(card.price)}</div>
+                                <div class="coin-change ${card.discountClass}">${card.discountText}</div>
+                            </div>` : ''}
                         </div>
                     </div>
                     <div class="card-middle">
                         <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon"
-                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
                             <div class="coin-details">
-                                <h3>${coin.symbol}</h3>
-                                <p>${coin.name}</p>
+                                <h3>${card.symbol}</h3>
+                                <p>${card.name}</p>
                             </div>
                         </div>
-                        <div class="card-caption">${caption}</div>
+                        <div class="card-caption">${card.caption}</div>
                     </div>
                     <div class="trade-btn">
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${coin.symbol}', 'like')" title="Like">
-                            <i class="fas fa-thumbs-up"></i> <span class="reaction-count" id="like-count-${coin.symbol}">${(reactionCounts[coin.symbol]?.likes || 0)}</span>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'like')" title="Like">
+                            <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${card.reactionCounts.likes}</span>
                         </button>
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${coin.symbol}', 'love')" title="Love">
-                            <i class="fas fa-heart"></i> <span class="reaction-count" id="love-count-${coin.symbol}">${(reactionCounts[coin.symbol]?.loves || 0)}</span>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'love')" title="Love">
+                            <i class="fas fa-heart"></i> <span class="reaction-count">${card.reactionCounts.loves}</span>
                         </button>
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${coin.symbol}')" title="Share">
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${card.symbol}')" title="Share">
                             <i class="fas fa-share-alt"></i>
                         </button>
                     </div>
                 </div>
             `;
         }).join('');
+    }
+
+    function getFadakkaCaption(symbol, fadakkaDiscounts, volume) {
+        const discountData = fadakkaDiscounts[symbol];
+        if (discountData && discountData.fair_value) {
+            const fair = discountData.fair_value;
+            const discount = discountData.discount;
+            if (discount <= -10) {
+                return `${symbol} should be ${formatCurrency(fair)}. It is too cheap now.`;
+            } else if (discount >= 10) {
+                return `${symbol} should be ${formatCurrency(fair)}. It is too expensive now.`;
+            } else {
+                return `${symbol} is fairly priced today.`;
+            }
+        }
+        return formatCurrency(volume); // fallback to volume
     }
 
     async function toggleReaction(symbol, reaction) {
