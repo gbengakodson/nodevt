@@ -175,130 +175,112 @@
         gap: 16px;
     }
 
+    /* ── Redesigned Coin Card ── */
     .coin-card {
         background: white;
-        border-radius: 12px;
+        border-radius: 16px;
         border: 1px solid #E2E4E8;
         padding: 16px;
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
     }
-
     .coin-card:hover {
         transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        box-shadow: 0 8px 20px rgba(0,0,0,0.08);
         border-color: #D9DDE2;
     }
 
-    .coin-card-header {
+    /* Top section: Picture + Price */
+    .card-top {
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        margin-bottom: 16px;
+        align-items: flex-start;
     }
-
-    .coin-info {
-        display: flex;
-        align-items: center;
-        gap: 12px;
+    .card-picture {
+        width: 100px;
+        height: 70px;
+        object-fit: cover;
+        border-radius: 12px;
+        background: #F0F2F5;          /* fallback grey */
     }
-
-    .coin-icon {
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        object-fit: contain;
-    }
-
-    .coin-details h3 {
-        font-size: 16px;
-        font-weight: 600;
-        margin: 0 0 4px 0;
-        color: #1E2329;
-    }
-
-    .coin-details p {
-        font-size: 11px;
-        color: #707A8A;
-        margin: 0;
-    }
-
-    .coin-rank {
-        background: #F8F9FA;
-        border-radius: 20px;
-        padding: 4px 8px;
-        font-size: 10px;
-        font-weight: 500;
-        color: #707A8A;
-    }
-
-    .coin-price-section {
+    .card-price-area {
         text-align: right;
-        margin-bottom: 12px;
     }
-
-    .coin-current-price {
-        font-size: 18px;
-        font-weight: 600;
+    .card-category {
+        font-size: 10px;
+        color: #707A8A;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .card-price {
+        font-size: 20px;
+        font-weight: 700;
         color: #1E2329;
-    }
-
-    .coin-change {
-        font-size: 12px;
-        font-weight: 500;
         margin-top: 4px;
     }
 
-    .price-up {
-        color: #0ECB81;
-    }
+    /* Price change (reused from old .price-up / .price-down) */
+    .price-up { color: #0ECB81; }
+    .price-down { color: #F6465D; }
 
-    .price-down {
-        color: #F6465D;
-    }
-
-    .coin-stats {
+    /* Middle section: Symbol + Caption */
+    .card-middle {
         display: flex;
         justify-content: space-between;
-        padding-top: 12px;
-        border-top: 1px solid #E2E4E8;
-        margin-top: 12px;
+        align-items: center;
     }
-
-    .coin-stat {
-        text-align: center;
-        flex: 1;
+    .card-symbol-name {
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
     }
-
-    .coin-stat-label {
-        font-size: 10px;
-        color: #707A8A;
-        margin-bottom: 4px;
-    }
-
-    .coin-stat-value {
-        font-size: 12px;
-        font-weight: 500;
+    .card-symbol {
+        font-size: 16px;
+        font-weight: 700;
         color: #1E2329;
     }
-
-    .trade-btn {
-        width: 100%;
-        background: rgba(14, 203, 129, 0.1);
-        border: 1px solid rgba(14, 203, 129, 0.3);
-        color: #0ECB81;
-        border-radius: 8px;
-        padding: 8px;
+    .card-name {
         font-size: 12px;
-        font-weight: 500;
-        cursor: pointer;
-        margin-top: 12px;
-        transition: all 0.2s;
+        color: #707A8A;
+    }
+    .card-caption {
+        font-size: 13px;
+        font-weight: 600;
+        padding: 4px 10px;
+        border-radius: 20px;
+        white-space: nowrap;
+        background: rgba(240,185,11,0.1);   /* default neutral colour */
+        color: #F0B90B;
     }
 
-    .trade-btn:hover {
-        background: rgba(14, 203, 129, 0.2);
-        border-color: #0ECB81;
+    /* Bottom section: Action Buttons */
+    .card-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: space-around;
+        border-top: 1px solid #E2E4E8;
+        padding-top: 12px;
+    }
+    .card-actions button {
+        background: none;
+        border: none;
+        color: #707A8A;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        transition: color 0.2s;
+    }
+    .card-actions button:hover {
+        color: #1E2329;
+    }
+    .card-actions button.liked {
+        color: #E41E3F;
     }
 
     .loading-state, .empty-state {
@@ -835,16 +817,23 @@
 
     async function updateMarketData() {
         try {
+            // Fetch crypto data (existing CoinGecko)
             const coins = await fetchMarketData();
-            if (coins) {
-                allCoins = coins;
-                renderCoins(allCoins);
-                updateMarketStats(coins);
-                document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
-            }
+            if (coins) allCoins = coins;
+
+            // Fetch daily intelligence (Forex, Stocks, Economic)
+            let dailyIntel = [];
+            try {
+                const resp = await fetch('/api/public/daily-intelligence/');
+                if (resp.ok) dailyIntel = await resp.json();
+            } catch(e) {}
+
+            // Render all cards together
+            renderCoins(allCoins, dailyIntel);
+            updateMarketStats(allCoins);
+            document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
-            console.error('Error updating market data:', e);
-            document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data. Please refresh the page.</div>';
+            document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data.</div>';
         }
     }
 
@@ -895,68 +884,114 @@
         });
     }
 
-    function renderCoins(coins) {
+    function renderCoins(coins, dailyIntel) {
         const container = document.getElementById('coinsGrid');
-        if (!coins || coins.length === 0) {
-            container.innerHTML = '<div class="empty-state">No coins found</div>';
-            return;
-        }
+        let html = '';
 
-        let filtered = [...coins];
-        const searchTerm = document.getElementById('searchInput').value.toLowerCase();
-        if (searchTerm) {
-            filtered = filtered.filter(coin =>
-                coin.symbol.toLowerCase().includes(searchTerm) ||
-                coin.name.toLowerCase().includes(searchTerm)
-            );
-        }
-
-        if (currentFilter === 'gainers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0)
-                               .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
-        } else if (currentFilter === 'losers') {
-            filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0)
-                               .sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
-        }
-
-        container.innerHTML = filtered.map((coin, index) => {
-            const change = coin.price_change_percentage_24h || 0;
-            const changeClass = change >= 0 ? 'price-up' : 'price-down';
-            const changeSymbol = change >= 0 ? '+' : '';
-            const marketCap = coin.market_cap || 0;
-            const volume24h = coin.total_volume || 0;
-
-            return `
-                <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
-                    <div class="coin-card-header">
-                        <div class="coin-info">
-                            <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon"
-                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
-                            <div class="coin-details">
-                                <h3>${coin.symbol}</h3>
-                                <p>${coin.name}</p>
+        // 1. Daily Intelligence Cards (Forex, Stocks, Economic) — shown first
+        if (dailyIntel && dailyIntel.length > 0) {
+            dailyIntel.forEach(item => {
+                const captionColor = item.trend === 'DOWNTREND' ? '#F6465D' :
+                                     item.trend === 'UPTREND' ? '#0ECB81' : '#F0B90B';
+                html += `
+                    <div class="coin-card" onclick="viewDetails('${item.symbol}')">
+                        <div class="card-top">
+                            <img src="${item.image_url || '/static/default-weather.jpg'}" class="card-picture" alt="${item.symbol}">
+                            <div class="card-price-area">
+                                <span class="card-category">${item.category}</span>
+                                ${item.price ? `<div class="card-price">${formatCurrency(item.price)}</div>` : ''}
                             </div>
                         </div>
-                        <div class="coin-rank">#${index + 1}</div>
-                    </div>
-                    <div class="coin-price-section">
-                        <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
-                        <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
-                    </div>
-                    <div class="coin-stats">
-                        <div class="coin-stat">
-                            <div class="coin-stat-label">Market Cap</div>
-                            <div class="coin-stat-value">${formatCurrency(marketCap)}</div>
+                        <div class="card-middle">
+                            <div class="card-symbol-name">
+                                <span class="card-symbol">${item.symbol}</span>
+                                <span class="card-name">${item.name || ''}</span>
+                            </div>
+                            <div class="card-caption" style="background:${captionColor}20; color:${captionColor};">
+                                ${item.caption}
+                            </div>
                         </div>
-                        <div class="coin-stat">
-                            <div class="coin-stat-label">24h Volume</div>
-                            <div class="coin-stat-value">${formatCurrency(volume24h)}</div>
+                        <div class="card-actions">
+                            <button onclick="event.stopPropagation(); likeCard('${item.symbol}')">👍 <span>0</span></button>
+                            <button onclick="event.stopPropagation(); shareCard('${item.symbol}')">🔄 0</button>
+                            <button onclick="event.stopPropagation(); viewDetails('${item.symbol}')">👁 View</button>
                         </div>
                     </div>
-                    <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
-                </div>
-            `;
-        }).join('');
+                `;
+            });
+        }
+
+        // 2. Live Crypto Coin Cards
+        if (coins && coins.length > 0) {
+            let filtered = [...coins];
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            if (searchTerm) {
+                filtered = filtered.filter(coin =>
+                    coin.symbol.toLowerCase().includes(searchTerm) ||
+                    coin.name.toLowerCase().includes(searchTerm)
+                );
+            }
+
+            if (currentFilter === 'gainers') {
+                filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) > 0)
+                                   .sort((a, b) => (b.price_change_percentage_24h || 0) - (a.price_change_percentage_24h || 0));
+            } else if (currentFilter === 'losers') {
+                filtered = filtered.filter(coin => (coin.price_change_percentage_24h || 0) < 0)
+                                   .sort((a, b) => (a.price_change_percentage_24h || 0) - (b.price_change_percentage_24h || 0));
+            }
+
+            filtered.forEach(coin => {
+                const change = coin.price_change_percentage_24h || 0;
+                const changeClass = change >= 0 ? 'price-up' : 'price-down';
+                const sign = change >= 0 ? '+' : '';
+                const volume = coin.total_volume || 0;
+
+                html += `
+                    <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
+                        <div class="card-top">
+                            <img src="${getTokenIcon(coin.symbol)}" class="card-picture" alt="${coin.symbol}"
+                                 onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
+                            <div class="card-price-area">
+                                <span class="card-category">Crypto</span>
+                                <div class="card-price">${formatCurrency(coin.current_price)}</div>
+                                <div class="${changeClass}" style="font-size:12px; margin-top:2px;">${sign}${change.toFixed(2)}%</div>
+                            </div>
+                        </div>
+                        <div class="card-middle">
+                            <div class="card-symbol-name">
+                                <span class="card-symbol">${coin.symbol}</span>
+                                <span class="card-name">${coin.name}</span>
+                            </div>
+                            <div class="card-caption">Vol ${formatCurrency(volume)}</div>
+                        </div>
+                        <div class="card-actions">
+                            <button onclick="event.stopPropagation(); likeCard('${coin.symbol}')">👍 <span>0</span></button>
+                            <button onclick="event.stopPropagation(); shareCard('${coin.symbol}')">🔄 0</button>
+                            <button onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">👁 View</button>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        container.innerHTML = html || '<div class="empty-state">No cards to display</div>';
+    }
+
+    function likeCard(symbol) {
+        alert('Like ' + symbol);
+    }
+
+    function shareCard(symbol) {
+        alert('Share ' + symbol);
+    }
+
+    function viewDetails(symbol) {
+        // For crypto, go to trading; for daily intelligence, go to a detail page
+        if (['BTC','ETH','BNB','SOL','XRP','ADA','DOGE','LINK','UNI','MATIC'].includes(symbol)) {
+            goToTrading(symbol);
+        } else {
+            window.location.href = '/details/?symbol=' + encodeURIComponent(symbol);
+        }
     }
 
     // ───────── NVT Token Wallet (logged‑in only) ─────────
