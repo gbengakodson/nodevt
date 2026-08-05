@@ -33,6 +33,11 @@ class FadakkaService:
         return cls.FADAKKA_VALUES.get(symbol)
 
     @classmethod
+    def get_fadakka_k(cls, symbol):
+        """Return the 99-week EMA (fair value) from the manual Fadakka values."""
+        return cls.get_fadakka(symbol)
+
+    @classmethod
     def get_alpha_levels(cls, symbol):
         """Calculate alpha levels from Fadakka Index"""
         k = cls.get_fadakka(symbol)

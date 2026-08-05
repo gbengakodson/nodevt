@@ -26,25 +26,41 @@ def generate_daily_intelligence_if_needed():
             image_url=None   # can add a chart image later
         )
 
+
     # ── Crypto cards (Fadakka discount) ──
     crypto_watch = ['BTC', 'ETH', 'BNB', 'SOL']
     for sym in crypto_watch:
         token = CryptoToken.objects.filter(symbol=sym).first()
         if not token:
             continue
-        # Compute discount (you can replace with FadakkaService later)
-        # For MVP, use a simple placeholder: 10% random discount
-        import random
-        discount = random.randint(-30, 5)   # placeholder
+
+        # Try to get Fadakka fair value K from the token or from WeeklyClose
+        k = None
+        if hasattr(token, 'fadakka_k') and token.fadakka_k:
+            k = token.fadakka_k
+        else:
+            # Fallback: use the FadakkaService if available
+            from apps.trading.services.fadakka_service import FadakkaService
+            try:
+                k = FadakkaService.get_fadakka_k(sym)
+            except Exception:
+                pass
+
+        if k and k > 0:
+            discount = ((token.current_price - k) / k) * 100
+        else:
+            discount = 0
+
         if discount <= -20:
-            caption = f"Deep Discount {discount}%"
-            trend = 'UPTREND'   # oversold may rebound
+            caption = f"Deep Discount {discount:.0f}%"
+            trend = 'UPTREND'
         elif discount >= 20:
-            caption = f"Overvalued +{discount}%"
+            caption = f"Overvalued +{discount:.0f}%"
             trend = 'DOWNTREND'
         else:
             caption = "Fair Value"
             trend = 'CONSOLIDATION'
+
         DailyIntelligence.objects.create(
             symbol=sym,
             category='crypto',
