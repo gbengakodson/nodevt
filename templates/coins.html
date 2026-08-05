@@ -956,24 +956,21 @@
             const changeSymbol = change >= 0 ? '+' : '';
             const volume = coin.total_volume || 0;
 
-            // ── Fadakka Caption (replaces volume) ──
-            const discount = fadakkaDiscounts[coin.symbol];
+            // ── Fadakka Caption (plain English, no percentages) ──
+            const discountData = fadakkaDiscounts[coin.symbol];
             let caption = '';
-            let captionColor = '#1E2329';   // default dark
-
-            if (discount !== undefined && discount !== null) {
-                if (discount <= -20) {
-                    caption = `Deep Discount ${discount.toFixed(0)}%`;
-                    captionColor = '#0ECB81';          // green
-                } else if (discount >= 20) {
-                    caption = `Overvalued +${discount.toFixed(0)}%`;
-                    captionColor = '#F6465D';          // red
+            if (discountData && discountData.fair_value) {
+                const fair = discountData.fair_value;
+                const discount = discountData.discount;
+                if (discount <= -10) {
+                    caption = `${coin.symbol} price should be ${formatCurrency(fair)}. It is too cheap now.`;
+                } else if (discount >= 10) {
+                    caption = `${coin.symbol} price should be ${formatCurrency(fair)}. It is too expensive now.`;
                 } else {
-                    caption = `Fair Value (${discount > 0 ? '+' : ''}${discount.toFixed(0)}%)`;
-                    captionColor = '#F0B90B';          // yellow
+                    caption = `${coin.symbol} is fairly priced today.`;
                 }
             } else {
-                // Fallback to volume if discount not available
+                // Fallback to volume if Fadakka data missing
                 caption = formatCurrency(volume);
             }
 
@@ -998,7 +995,7 @@
                                 <p>${coin.name}</p>
                             </div>
                         </div>
-                        <div class="card-caption" style="color:${captionColor}">${caption}</div>
+                        <div class="card-caption">${caption}</div>
                     </div>
                     <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
                 </div>

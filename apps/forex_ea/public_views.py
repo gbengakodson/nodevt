@@ -69,7 +69,7 @@ class FadakkaDiscountsView(APIView):
 
     def get(self, request):
         symbols = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'LINK', 'UNI', 'MATIC', 'AVAX', 'DOT', 'LTC', 'NEAR', 'ATOM', 'ALGO', 'VET', 'FTM', 'EGLD', 'THETA']
-        discounts = {}
+        data = {}
         for sym in symbols:
             token = CryptoToken.objects.filter(symbol=sym).first()
             if not token:
@@ -77,7 +77,10 @@ class FadakkaDiscountsView(APIView):
             k = FadakkaService.get_fadakka_k(sym)
             if k and k > 0:
                 discount = ((token.current_price - k) / k) * 100
-                discounts[sym] = round(discount, 1)
+                data[sym] = {
+                    'discount': round(discount, 1),
+                    'fair_value': float(k)
+                }
             else:
-                discounts[sym] = None
-        return Response(discounts)
+                data[sym] = None
+        return Response(data)
