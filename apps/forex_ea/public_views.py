@@ -84,3 +84,43 @@ class FadakkaDiscountsView(APIView):
             else:
                 data[sym] = None
         return Response(data)
+
+
+from .models import CoinReaction
+from django.db.models import Count
+
+class CoinReactionView(APIView):
+    """Handle like/love toggling (requires login)."""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        symbol = request.data.get('symbol')
+        reaction = request.data.get('reaction')   # 'like' or 'love'
+        if not symbol or reaction not in ('like', 'love'):
+            return Response({'error': 'Invalid'}, status=400)
+
+        obj, created = CoinReaction.objects.get_or_create(
+            user=request.user, coin_symbol=symbol, reaction=reaction
+        )
+        if not created:
+            obj.delete()   # toggle off
+
+        # Return updated counts for this coin
+        likes = CoinReaction.objects.filter(coin_symbol=symbol, reaction='like').count()
+        loves = CoinReaction.objects.filter(coin_symbol=symbol, reaction='love').count()
+        return Response({'symbol': symbol, 'likes': likes, 'loves': loves})
+
+
+class CoinReactionCountsView(APIView):
+    """Public: get reaction counts for all coins."""
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        symbols = ['BTC', 'ETH', 'BNB', 'SOL', 'XRP', 'ADA', 'DOGE', 'LINK', 'UNI', 'MATIC', 'AVAX', 'DOT', 'LTC', 'NEAR', 'ATOM', 'ALGO', 'VET', 'FTM', 'EGLD', 'THETA']
+        counts = {}
+        for sym in symbols:
+            likes = CoinReaction.objects.filter(coin_symbol=sym, reaction='like').count()
+            loves = CoinReaction.objects.filter(coin_symbol=sym, reaction='love').count()
+            counts[sym] = {'likes': likes, 'loves': loves}
+        return Response(counts)

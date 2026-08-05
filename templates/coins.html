@@ -554,6 +554,12 @@
     .post-actions button:hover { color: #1b74e4; }
     .post-actions button.liked { color: #e41e3f; }
 
+    .reaction-count {
+        font-size: 13px;
+        font-weight: 500;
+        margin-left: 4px;
+    }
+
     /* Reviews */
     .review-card {
         background: #ffffff;
@@ -891,6 +897,14 @@
                 if (resp.ok) fadakkaDiscounts = await resp.json();
             } catch(e) {}
 
+            // Fetch reaction counts
+            let reactionCounts = {};
+            try {
+                const resp = await fetch('/api/public/coin-reactions/');
+                if (resp.ok) reactionCounts = await resp.json();
+            } catch(e) {}
+            renderCoins(allCoins, fadakkaDiscounts, reactionCounts);
+
             renderCoins(allCoins, fadakkaDiscounts);
             updateMarketStats(allCoins);
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
@@ -946,7 +960,7 @@
         });
     }
 
-    function renderCoins(coins, fadakkaDiscounts = {}) {
+    function renderCoins(coins, fadakkaDiscounts = {}, reactionCounts = {}) {
         const container = document.getElementById('coinsGrid');
 
         if (!coins || coins.length === 0) {
@@ -1028,11 +1042,11 @@
                         <div class="card-caption">${caption}</div>
                     </div>
                     <div class="trade-btn">
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); likeCard('${coin.symbol}')" title="Like">
-                            <i class="fas fa-thumbs-up"></i>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${coin.symbol}', 'like')" title="Like">
+                            <i class="fas fa-thumbs-up"></i> <span class="reaction-count" id="like-count-${coin.symbol}">${(reactionCounts[coin.symbol]?.likes || 0)}</span>
                         </button>
-                        <button class="card-icon-btn" onclick="event.stopPropagation(); loveCard('${coin.symbol}')" title="Love">
-                            <i class="fas fa-heart"></i>
+                        <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${coin.symbol}', 'love')" title="Love">
+                            <i class="fas fa-heart"></i> <span class="reaction-count" id="love-count-${coin.symbol}">${(reactionCounts[coin.symbol]?.loves || 0)}</span>
                         </button>
                         <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${coin.symbol}')" title="Share">
                             <i class="fas fa-share-alt"></i>
@@ -1043,13 +1057,48 @@
         }).join('');
     }
 
+    async function toggleReaction(symbol, reaction) {
+        try {
+            const res = await fetch('/api/public/coin-reaction/toggle/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken()
+                },
+                body: JSON.stringify({ symbol: symbol, reaction: reaction })
+            });
+            if (res.ok) {
+                const data = await res.json();
+                // Update the displayed counts for this coin
+                document.getElementById('like-count-' + symbol).textContent = data.likes;
+                document.getElementById('love-count-' + symbol).textContent = data.loves;
+            }
+        } catch(e) {}
+    }
+
+    function shareCard(symbol) {
+        if (navigator.share) {
+            navigator.share({
+                title: `NODE Market Intelligence - ${symbol}`,
+                text: `Check out ${symbol} on NODE Market Intelligence`,
+                url: window.location.href
+            }).catch(() => {});
+        } else {
+            // Fallback: copy link
+            const el = document.createElement('textarea');
+            el.value = window.location.href;
+            document.body.appendChild(el);
+            el.select();
+            document.execCommand('copy');
+            document.body.removeChild(el);
+            alert('Link copied!');
+        }
+    }
+
     function likeCard(symbol) {
         alert('Like ' + symbol);
     }
 
-    function shareCard(symbol) {
-        alert('Share ' + symbol);
-    }
 
     function viewDetails(symbol) {
         // For crypto, go to trading; for daily intelligence, go to a detail page

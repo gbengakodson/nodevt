@@ -140,3 +140,17 @@ class DailyIntelligence(models.Model):
 
     def __str__(self):
         return f"{self.symbol} ({self.created_at}) - {self.caption}"
+
+
+class CoinReaction(models.Model):
+    REACTION_CHOICES = [
+        ('like', 'Like'),
+        ('love', 'Love'),
+    ]
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    coin_symbol = models.CharField(max_length=10)
+    reaction = models.CharField(max_length=5, choices=REACTION_CHOICES)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'coin_symbol', 'reaction')
