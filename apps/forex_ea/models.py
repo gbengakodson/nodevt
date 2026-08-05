@@ -133,7 +133,7 @@ class DailyIntelligence(models.Model):
     caption = models.CharField(max_length=100)        # "Strong Sell", "Deep Discount -22%", etc.
     trend = models.CharField(max_length=20, choices=TREND_CHOICES, default='CONSOLIDATION')
     image_url = models.URLField(blank=True, null=True)
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateTimeField(auto_now_add=True)   # was DateField
 
     class Meta:
         unique_together = ('symbol', 'created_at')    # one entry per symbol per day
