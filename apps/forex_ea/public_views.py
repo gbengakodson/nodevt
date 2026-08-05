@@ -59,7 +59,8 @@ class DailyIntelligenceView(APIView):
             'caption': i.caption,
             'trend': i.trend,
             'image_url': i.image_url,
-            'name': i.symbol,           # display name (can be expanded)
+            'name': i.symbol,
+            'created_at': i.created_at.isoformat() if i.created_at else None   # ← new
         } for i in items]
         return Response(data)
 

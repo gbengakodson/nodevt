@@ -204,8 +204,8 @@
     }
 
     .card-picture {
-        width: 50%;
-        height: 80px;
+        width: 60%;
+        height: 90px;
         object-fit: cover;
     }
     .card-middle {
@@ -863,7 +863,7 @@
     }
 
     function goToTrading(symbol) {
-        window.location.href = '/trading/?coin=' + symbol;
+        window.location.href = '/trading/?coin=' + encodeURIComponent(symbol);
     }
 
     // ───────── CoinGecko market data (public) ─────────
@@ -987,7 +987,7 @@
 
         // Add daily intelligence cards (timestamp = today 8:00 AM)
         if (dailyIntel && dailyIntel.length > 0) {
-            const today8am = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 8, 0, 0);
+            const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
             dailyIntel.forEach(item => {
                 cards.push({
                     type: 'daily',
@@ -1002,7 +1002,7 @@
                     price: item.price || null,
                     imageUrl: item.image_url || '',
                     reactionCounts: { likes: 0, loves: 0 }, // daily cards don't have reactions yet
-                    timestamp: today8am.getTime(),
+                    timestamp: createdTime,
                 });
             });
         }
@@ -1048,7 +1048,7 @@
 
         container.innerHTML = cards.map(card => {
             return `
-                <div class="coin-card" onclick="${card.type === 'crypto' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}">
+                onclick="${card.category === 'Forex Market' || card.type === 'crypto' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}"
                     <div class="card-top">
                         ${card.imageUrl
                             ? `<img src="${card.imageUrl}" class="card-picture" alt="${card.symbol}"
