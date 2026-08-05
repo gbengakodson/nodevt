@@ -993,6 +993,14 @@
             const volume = coin.total_volume || 0;
 
             const discountData = fadakkaDiscounts[coin.symbol];
+            let imageUrl = '';
+            if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
+                const d = discountData.discount;
+                if (d <= -10) imageUrl = 'https://source.unsplash.com/featured/?cheap,discount,sale';
+                else if (d >= 10) imageUrl = 'https://source.unsplash.com/featured/?expensive,luxury,peak';
+                else imageUrl = 'https://source.unsplash.com/featured/?balance,fair,market';
+            }
+
             let discountText = '';
             let discountClass = '';
             if (discountData && discountData.discount !== undefined && discountData.discount !== null) {
@@ -1023,7 +1031,13 @@
             return `
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="card-top">
-                        <div class="card-picture-placeholder">📷</div>
+                        ${imageUrl
+                            ? `<img src="${imageUrl}" class="card-picture" alt="${coin.symbol}"
+                                   onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
+                            : ''}
+                        <div class="card-picture-placeholder" style="display:${imageUrl ? 'none' : 'flex'};">
+                            📷
+                        </div>
                         <div class="card-top-right">
                             <div class="card-category-label">Crypto Market</div>
                             <div class="coin-price-section">
