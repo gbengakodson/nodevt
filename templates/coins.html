@@ -183,6 +183,36 @@
         transition: transform 0.2s, box-shadow 0.2s;
         cursor: pointer;
     }
+    .card-top {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 12px;
+    }
+    .card-picture-placeholder {
+        width: 50%;
+        aspect-ratio: 16/9;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        color: #B0B8C1;
+        border: 1px dashed #E2E4E8;
+        border-radius: 0;
+        background: none;
+    }
+    .card-middle {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .card-caption {
+        font-size: 16px;
+        font-weight: 700;
+        color: #1E2329;
+        white-space: nowrap;
+    }
 
     .coin-card:hover {
         transform: translateY(-2px);
@@ -209,10 +239,7 @@
         border-radius: 50%;
         object-fit: contain;
     }
-    .coin-stats .coin-icon {
-        width: 32px;
-        height: 32px;
-    }
+
 
     .coin-details h3 {
         font-size: 16px;
@@ -924,16 +951,20 @@
             const marketCap = coin.market_cap || 0;
             const volume24h = coin.total_volume || 0;
 
+            const volume = coin.total_volume || 0;
             return `
                 <div class="coin-card" onclick="goToTrading('${coin.symbol}')">
                     <div class="coin-card-header">
                         <div class="coin-rank">#${index + 1}</div>
                     </div>
-                    <div class="coin-price-section">
-                        <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
-                        <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
+                    <div class="card-top">
+                        <div class="card-picture-placeholder">📷</div>
+                        <div class="card-price-area">
+                            <div class="coin-current-price">${formatCurrency(coin.current_price)}</div>
+                            <div class="coin-change ${changeClass}">${changeSymbol}${change.toFixed(2)}%</div>
+                        </div>
                     </div>
-                    <div class="coin-stats">
+                    <div class="card-middle">
                         <div class="coin-info">
                             <img src="${getTokenIcon(coin.symbol)}" alt="${coin.symbol}" class="coin-icon"
                                  onerror="this.src='https://assets.coingecko.com/coins/images/1/small/bitcoin.png'">
@@ -942,10 +973,7 @@
                                 <p>${coin.name}</p>
                             </div>
                         </div>
-                        <div class="coin-stat">
-                            <div class="coin-stat-label">24h Volume</div>
-                            <div class="coin-stat-value">${formatCurrency(volume24h)}</div>
-                        </div>
+                        <div class="card-caption">${formatCurrency(volume)}</div>
                     </div>
                     <button class="trade-btn" onclick="event.stopPropagation(); goToTrading('${coin.symbol}')">Trade ${coin.symbol}</button>
                 </div>
