@@ -318,3 +318,27 @@ class SignalView(APIView):
     def post(self, request):
         # We don't need to do anything with the signal for now
         return Response({'status': 'signal_received'})
+
+
+class ForexForecastView(APIView):
+    authentication_classes = [EAApiKeyAuthentication]
+
+    def post(self, request):
+        forecasts = request.data.get('forecasts', [])
+        if not forecasts:
+            return Response({'error': 'No forecasts provided'}, status=400)
+
+        for item in forecasts:
+            ForexForecast.objects.create(
+                pair=item['pair'],
+                current_price=item.get('current_price'),
+                trend=item['trend'],
+                condition=item['condition'],
+                trigger=item['trigger']
+            )
+
+        # Generate daily intelligence cards immediately
+        from .services import generate_daily_forecast_cards
+        generate_daily_forecast_cards()
+
+        return Response({'status': 'ok', 'cards_created': len(forecasts)})

@@ -678,15 +678,11 @@
     </div>
 
     <div class="right-column">
-        <div class="orderbook-card">
-            <div class="orderbook-title">Order Book</div>
-            <div class="orderbook-header">
-                <span>Price (USDC)</span>
-                <span>Amount</span>
-                <span>Total</span>
+        <div id="forexForecastPanel" style="padding: 12px;">
+            <div class="card-title" style="color: var(--text-primary); font-size: 14px;">📊 Daily Forecast</div>
+            <div id="forexForecastContent" style="color: var(--text-secondary); font-size: 12px;">
+                Select a forex pair to see today's forecast.
             </div>
-            <div id="askOrders" style="margin-bottom: 8px;"></div>
-            <div id="bidOrders"></div>
         </div>
 
         <div class="coins-card">
@@ -1076,6 +1072,7 @@
                 });
 
                 addChartBotIcon();
+                loadForexForecast(currentSymbol);
             } catch (error) {
                 console.error('Forex chart error:', error);
                 chartContainer.innerHTML = `<div class="loading-chart">Error loading ${currentSymbol} chart</div>`;
@@ -1141,11 +1138,27 @@
         return { bids: bids.map(b => ({ ...b, total: bidTotal += b.size })), asks: asks.map(a => ({ ...a, total: askTotal += a.size })) };
     }
 
-    function renderOrderBook() {
-        if (!currentPrice) return;
-        const book = generateOrderBook(currentPrice);
-        document.getElementById('askOrders').innerHTML = book.asks.map(a => `<div class="orderbook-row" onclick="setPrice(${a.price})"><span class="ask-price">${formatCurrency(a.price)}</span><span>${formatNumber(a.size)}</span><span>${formatNumber(a.total)}</span></div>`).join('');
-        document.getElementById('bidOrders').innerHTML = book.bids.map(b => `<div class="orderbook-row" onclick="setPrice(${b.price})"><span class="bid-price">${formatCurrency(b.price)}</span><span>${formatNumber(b.size)}</span><span>${formatNumber(b.total)}</span></div>`).join('');
+    async function loadForexForecast(symbol) {
+        const panel = document.getElementById('forexForecastContent');
+        if (!panel) return;
+        panel.innerHTML = 'Loading forecast...';
+        try {
+            const resp = await fetch(`/api/forex/forecast/?pair=${symbol}`);
+            const data = await resp.json();
+            if (data.error) {
+                panel.innerHTML = 'No forecast available yet.';
+                return;
+            }
+            panel.innerHTML = `
+                <strong>${symbol}</strong><br>
+                Trend: ${data.trend}<br>
+                Condition: ${data.condition}<br>
+                Trigger: ${data.trigger}<br>
+                <small>Prediction: ${data.prediction}</small>
+            `;
+        } catch(e) {
+            panel.innerHTML = 'Error loading forecast.';
+        }
     }
 
     async function updateButtonState() {

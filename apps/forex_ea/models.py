@@ -168,3 +168,12 @@ class ForexCache(models.Model):
 
     class Meta:
         unique_together = ('symbol', 'date')
+
+
+class ForexForecast(models.Model):
+    pair = models.CharField(max_length=20)
+    current_price = models.DecimalField(max_digits=15, decimal_places=5, null=True)
+    trend = models.CharField(max_length=30)         # e.g. "Strong Bullish"
+    condition = models.CharField(max_length=30)     # e.g. "Overbought"
+    trigger = models.CharField(max_length=30)       # e.g. "Breakout"
+    created_at = models.DateTimeField(auto_now_add=True)

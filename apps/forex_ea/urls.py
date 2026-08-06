@@ -1,7 +1,7 @@
 from django.urls import path
 from .api_views import (
     AuthenticateView, BalanceView, ReportTradeView,
-    ForexProfileView, ActivateForexView,
+    ForexProfileView, ActivateForexView, ForexForecastView,
     TradeOpenedView, TradeClosedView, SlaveDeleteView,
     SlaveAccountView, SlaveTradeStatusView, SignalView
 )
@@ -18,4 +18,5 @@ urlpatterns = [
     path('slave/trades/', SlaveTradeStatusView.as_view(), name='ea_slave_trades'),
     path('signal/', SignalView.as_view(), name='ea_signal'),
     path('slave/<uuid:pk>/delete/', SlaveDeleteView.as_view(), name='ea_slave_delete'),
+    path('forecast/', ForexForecastView.as_view(), name='forex_forecast'),
 ]

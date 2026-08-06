@@ -31,3 +31,31 @@ class ForexDailyView(APIView):
             "current_price": current_price,
             "data": result,
         })
+
+
+class ForexForecastDetailView(APIView):
+    authentication_classes = []
+    permission_classes = []
+
+    def get(self, request):
+        pair = request.GET.get('pair', '').upper()
+        if not pair:
+            return Response({'error': 'No pair'}, status=400)
+        forecast = ForexForecast.objects.filter(pair=pair).order_by('-created_at').first()
+        if not forecast:
+            return Response({'error': 'Not found'}, status=404)
+
+        if 'Bullish' in forecast.trend:
+            prediction = 'Bullish candle expected'
+        elif 'Bearish' in forecast.trend:
+            prediction = 'Bearish candle expected'
+        else:
+            prediction = 'Neutral'
+
+        return Response({
+            'pair': forecast.pair,
+            'trend': forecast.trend,
+            'condition': forecast.condition,
+            'trigger': forecast.trigger,
+            'prediction': prediction
+        })
