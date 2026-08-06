@@ -13,7 +13,6 @@ SYMBOL_MAP = {
     "USDCAD": ("FX_DAILY", "USD", "CAD"),
     "USDCHF": ("FX_DAILY", "USD", "CHF"),
     "NZDUSD": ("FX_DAILY", "NZD", "USD"),
-    # Commodities
     "WTI":      ("WTI", None, None),
     "USOIL":    ("WTI", None, None),
     "NATURALGAS": ("NATURAL_GAS", None, None),
@@ -32,8 +31,28 @@ class ForexDailyView(APIView):
             return Response({"error": f"Symbol {pair} not supported"}, status=400)
 
         function, from_cur, to_cur = info
+        current_price = None
 
+        # --- Forex pairs: get both current quote and daily data ---
         if function == "FX_DAILY" and from_cur and to_cur:
+            # Current quote
+            try:
+                url = (
+                    f"https://www.alphavantage.co/query"
+                    f"?function=CURRENCY_EXCHANGE_RATE"
+                    f"&from_currency={from_cur}"
+                    f"&to_currency={to_cur}"
+                    f"&apikey={ALPHA_VANTAGE_KEY}"
+                )
+                resp = requests.get(url)
+                quote_data = resp.json()
+                rate = quote_data.get("Realtime Currency Exchange Rate")
+                if rate:
+                    current_price = float(rate.get("5. Exchange Rate", 0))
+            except Exception:
+                pass
+
+            # Daily data
             url = (
                 f"https://www.alphavantage.co/query"
                 f"?function={function}"
@@ -57,9 +76,13 @@ class ForexDailyView(APIView):
                     "close": float(values["4. close"]),
                 })
             result.reverse()
-            return Response({"pair": pair, "data": result})
+            return Response({
+                "pair": pair,
+                "current_price": current_price,
+                "data": result,
+            })
 
-        # Commodities (single daily value – fake OHLC)
+        # --- Commodities (no current quote) ---
         elif function in ("WTI", "NATURAL_GAS"):
             url = (
                 f"https://www.alphavantage.co/query"
@@ -81,6 +104,10 @@ class ForexDailyView(APIView):
                     "close": val,
                 })
             result.reverse()
-            return Response({"pair": pair, "data": result})
+            return Response({
+                "pair": pair,
+                "current_price": None,
+                "data": result,
+            })
 
         return Response({"error": "Unsupported"}, status=500)

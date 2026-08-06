@@ -1043,10 +1043,11 @@
 
                 const lastCandle = candles[candles.length - 1];
                 const firstCandle = candles[0];
+                const currentPriceVal = result.current_price || lastCandle.close;
                 const changePercent = ((lastCandle.close - firstCandle.close) / firstCandle.close) * 100;
                 const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
 
-                document.getElementById('currentPrice').innerHTML = lastCandle.close.toFixed(5);
+                document.getElementById('currentPrice').innerHTML = currentPriceVal.toFixed(5);
                 document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
                 document.getElementById('priceChange').className = `price-change ${changeClass}`;
                 document.getElementById('symbolName').innerHTML = currentSymbol;
