@@ -24,6 +24,7 @@ from django.views.generic.base import RedirectView
 from apps.forex_ea.public_views import DailyIntelligenceView
 from apps.forex_ea.public_views import FadakkaDiscountsView
 from apps.forex_ea.public_views import CoinReactionView, CoinReactionCountsView
+from apps.forex_ea.forex_api import ForexDailyView
 
 
 
@@ -144,6 +145,7 @@ urlpatterns = [
     path('api/public/fadakka-discounts/', FadakkaDiscountsView.as_view(), name='fadakka_discounts'),
     path('api/public/coin-reactions/', CoinReactionCountsView.as_view(), name='coin_reaction_counts'),
     path('api/public/coin-reaction/toggle/', CoinReactionView.as_view(), name='coin_reaction_toggle'),
+    path('api/forex/daily/', ForexDailyView.as_view(), name='forex_daily'),
 ]
 
 urlpatterns += [
