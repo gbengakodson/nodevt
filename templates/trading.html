@@ -998,9 +998,7 @@
 
     function isMarketSymbol(symbol) {
         const supported = [
-            // Major forex (no crosses)
             'EURUSD','GBPUSD','USDJPY','USDNGN','AUDUSD','USDCAD','USDCHF','NZDUSD',
-            // Commodities
             'WTI','USOIL','NATURALGAS','GOLD','SILVER'
         ];
         return supported.includes(symbol.toUpperCase());
@@ -1013,7 +1011,7 @@
         if (!chartContainer) return;
 
         // ── 1. Forex pair → Alpha Vantage ──
-        if isMarketSymbol(currentSymbol)) {
+        if (isMarketSymbol(currentSymbol)) {
             chartContainer.innerHTML = `<div class="loading-chart">Loading ${currentSymbol} chart...</div><canvas id="priceChart" style="display:none;"></canvas>`;
             try {
                 const resp = await fetch(`/api/forex/daily/?pair=${currentSymbol}`);
