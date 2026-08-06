@@ -51,8 +51,7 @@ class DailyIntelligenceView(APIView):
     permission_classes = []
 
     def get(self, request):
-        today = date.today()
-        items = DailyIntelligence.objects.filter(created_at__date=today)
+        items = DailyIntelligence.objects.order_by('-created_at')[:20]
         data = [{
             'symbol': i.symbol,
             'category': i.category,
@@ -60,7 +59,7 @@ class DailyIntelligenceView(APIView):
             'trend': i.trend,
             'image_url': i.image_url,
             'name': i.symbol,
-            'created_at': i.created_at.isoformat() if i.created_at else None   # ← new
+            'created_at': i.created_at.isoformat() if i.created_at else None
         } for i in items]
         return Response(data)
 

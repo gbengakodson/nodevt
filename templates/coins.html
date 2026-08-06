@@ -349,6 +349,12 @@
         transition: background 0.2s, color 0.2s;
         line-height: 1;
     }
+    .card-time-right {
+        margin-left: auto;
+        font-size: 10px;
+        color: #707A8A;
+        white-space: nowrap;
+    }
     .card-icon-btn:hover {
         background: rgba(14, 203, 129, 0.15);
         color: #0b9e6a;
@@ -1033,6 +1039,7 @@
                     <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${card.symbol}')" title="Share">
                         <i class="fas fa-share-alt"></i>
                     </button>
+                    <span class="card-time-right">${timeAgo(card.timestamp)}</span>
                 </div>
             </div>
         `).join('');
@@ -1100,6 +1107,17 @@
 
     function likeCard(symbol) {
         alert('Like ' + symbol);
+    }
+
+    function timeAgo(timestamp) {
+        const seconds = Math.floor((Date.now() - timestamp) / 1000);
+        if (seconds < 60) return 'Just now';
+        const minutes = Math.floor(seconds / 60);
+        if (minutes < 60) return minutes + 'm ago';
+        const hours = Math.floor(minutes / 60);
+        if (hours < 24) return hours + 'h ago';
+        const days = Math.floor(hours / 24);
+        return days + 'd ago';
     }
 
 
