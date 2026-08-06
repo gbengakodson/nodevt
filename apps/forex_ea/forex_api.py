@@ -59,7 +59,7 @@ class ForexDailyView(APIView):
             result.reverse()
             return Response({"pair": pair, "data": result})
 
-        # Commodities – we only have single values, so we'll fake OHLC (all equal to close)
+        # Commodities (single daily value – fake OHLC)
         elif function in ("WTI", "NATURAL_GAS"):
             url = (
                 f"https://www.alphavantage.co/query"
