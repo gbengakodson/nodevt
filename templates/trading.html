@@ -1241,7 +1241,6 @@
             document.getElementById('currentCoinIcon').src = getTokenIcon(symbol);
             document.getElementById('symbolName').innerHTML = `${symbol}/USDC`;
             updateChart();
-            renderOrderBook();
             updateButtonState();
             updateGridRange();
             setTimeout(() => addChartBotIcon(), 500);
@@ -1737,7 +1736,7 @@
             }
         }
 
-        renderOrderBook();
+
         updateButtonState();
         await updateChart();
 
@@ -1747,7 +1746,7 @@
             }, 500);
         }
 
-        setInterval(function() { renderOrderBook(); }, 3000);
+
         setInterval(async function() {
             tokens = await apiCall('/trading/');
             await loadFadakkaData();
