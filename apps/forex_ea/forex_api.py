@@ -4,7 +4,6 @@ from rest_framework.response import Response
 
 ALPHA_VANTAGE_KEY = "GJB9YUD6E6ACTXKC"
 
-# Map symbols to Alpha Vantage functions / from-to currencies
 SYMBOL_MAP = {
     "EURUSD": ("FX_DAILY", "EUR", "USD"),
     "GBPUSD": ("FX_DAILY", "GBP", "USD"),
@@ -20,7 +19,6 @@ SYMBOL_MAP = {
     "NATURALGAS": ("NATURAL_GAS", None, None),
     "GOLD":     ("FX_DAILY", "XAU", "USD"),
     "SILVER":   ("FX_DAILY", "XAG", "USD"),
-    # Cocoa – Alpha Vantage free tier has no direct endpoint; we'll skip it for now
 }
 
 class ForexDailyView(APIView):
@@ -43,42 +41,46 @@ class ForexDailyView(APIView):
                 f"&to_symbol={to_cur}"
                 f"&apikey={ALPHA_VANTAGE_KEY}"
             )
-            data_key = "Time Series FX (Daily)"
+            resp = requests.get(url)
+            data = resp.json()
+            series = data.get("Time Series FX (Daily)")
+            if not series:
+                return Response({"error": "No data found"}, status=404)
+
+            result = []
+            for date_str, values in sorted(series.items(), reverse=True)[:30]:
+                result.append({
+                    "date": date_str,
+                    "open": float(values["1. open"]),
+                    "high": float(values["2. high"]),
+                    "low": float(values["3. low"]),
+                    "close": float(values["4. close"]),
+                })
+            result.reverse()
+            return Response({"pair": pair, "data": result})
+
+        # Commodities – we only have single values, so we'll fake OHLC (all equal to close)
         elif function in ("WTI", "NATURAL_GAS"):
             url = (
                 f"https://www.alphavantage.co/query"
                 f"?function={function}"
                 f"&apikey={ALPHA_VANTAGE_KEY}"
             )
-            data_key = "data"      # Commodities return a different structure
-        else:
-            return Response({"error": "Unsupported function"}, status=500)
-
-        resp = requests.get(url)
-        data = resp.json()
-
-        # Handle commodity responses (they have a "data" array)
-        if data_key == "data":
+            resp = requests.get(url)
+            data = resp.json()
             if not data.get("data"):
                 return Response({"error": "No data found"}, status=404)
-            # Alpha Vantage commodity response: { "data": [ { "date": "...", "value": "..." }, ... ] }
             result = []
             for item in data["data"][:30]:
+                val = float(item["value"])
                 result.append({
                     "date": item["date"],
-                    "close": float(item["value"]),
+                    "open": val,
+                    "high": val,
+                    "low": val,
+                    "close": val,
                 })
             result.reverse()
             return Response({"pair": pair, "data": result})
-        else:
-            series = data.get(data_key)
-            if not series:
-                return Response({"error": "No data found"}, status=404)
-            result = []
-            for date_str, values in sorted(series.items(), reverse=True)[:30]:
-                result.append({
-                    "date": date_str,
-                    "close": float(values["4. close"]),
-                })
-            result.reverse()
-            return Response({"pair": pair, "data": result})
+
+        return Response({"error": "Unsupported"}, status=500)
