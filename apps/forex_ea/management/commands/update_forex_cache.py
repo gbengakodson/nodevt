@@ -15,7 +15,8 @@ SYMBOLS = {
     "USDCHF": "USD/CHF",
     "NZDUSD": "NZD/USD",
     "GOLD": "XAU/USD",
-    "SILVER": "XAG/USD",
+    "WTI": "WTI/USD",           # ← Crude Oil
+    "NATURALGAS": "XNG/USD",   # ← Natural Gas
 }
 
 class Command(BaseCommand):
