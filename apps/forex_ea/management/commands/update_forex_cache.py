@@ -1,43 +1,45 @@
 import requests
 from django.core.management.base import BaseCommand
 from apps.forex_ea.models import ForexCache
-from datetime import date, timedelta
+from datetime import date
 
-ALPHA_VANTAGE_KEY = "GJB9YUD6E6ACTXKC"
-SYMBOLS = [
-    ("EURUSD", "EUR", "USD"), ("GBPUSD", "GBP", "USD"), ("USDJPY", "USD", "JPY"),
-    ("USDNGN", "USD", "NGN"), ("AUDUSD", "AUD", "USD"), ("USDCAD", "USD", "CAD"),
-    ("USDCHF", "USD", "CHF"), ("NZDUSD", "NZD", "USD"),
-    ("GOLD", "XAU", "USD"), ("SILVER", "XAG", "USD"),
-]
+TWELVE_API_KEY = "0e71d2b553d44d7da9915a1d1c97bf45"
+SYMBOLS = {
+    "EURUSD": "EUR/USD",
+    "GBPUSD": "GBP/USD",
+    "USDJPY": "USD/JPY",
+    "USDNGN": "USD/NGN",
+    "AUDUSD": "AUD/USD",
+    "USDCAD": "USD/CAD",
+    "USDCHF": "USD/CHF",
+    "NZDUSD": "NZD/USD",
+    "GOLD": "XAU/USD",
+    "SILVER": "XAG/USD",
+}
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        for symbol, from_cur, to_cur in SYMBOLS:
+        for symbol, twelve_symbol in SYMBOLS.items():
             url = (
-                f"https://www.alphavantage.co/query"
-                f"?function=FX_DAILY"
-                f"&from_symbol={from_cur}"
-                f"&to_symbol={to_cur}"
-                f"&apikey={ALPHA_VANTAGE_KEY}"
+                f"https://api.twelvedata.com/time_series"
+                f"?symbol={twelve_symbol}&interval=1day&outputsize=30&apikey={TWELVE_API_KEY}"
             )
             resp = requests.get(url)
             data = resp.json()
-            series = data.get("Time Series FX (Daily)")
-            if not series:
-                self.stdout.write(f"No data for {symbol}")
+            if data.get("status") == "error":
+                self.stdout.write(f"Error for {symbol}: {data.get('message')}")
                 continue
 
-            for date_str, values in series.items():
-                date_obj = date.fromisoformat(date_str)
+            for item in data.get("values", []):
+                date_obj = date.fromisoformat(item["datetime"])
                 ForexCache.objects.update_or_create(
                     symbol=symbol,
                     date=date_obj,
                     defaults={
-                        "open": values["1. open"],
-                        "high": values["2. high"],
-                        "low": values["3. low"],
-                        "close": values["4. close"],
+                        "open":  item["open"],
+                        "high":  item["high"],
+                        "low":   item["low"],
+                        "close": item["close"],
                     }
                 )
             self.stdout.write(f"Updated {symbol}")

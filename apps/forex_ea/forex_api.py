@@ -25,7 +25,7 @@ class ForexDailyView(APIView):
                 "close": float(row.close),
             })
 
-        current_price = float(data[0].close)   # yesterday's close
+        current_price = float(data[0].close)
         return Response({
             "pair": pair,
             "current_price": current_price,

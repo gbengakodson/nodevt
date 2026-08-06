@@ -1011,8 +1011,7 @@
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
 
-        // ── 1. Forex pair → Alpha Vantage ──
-        // ── Forex / Commodity (candlestick, no date adapter) ──
+        // ── Forex / Commodity (candlestick from cache) ──
         if (isMarketSymbol(currentSymbol)) {
             chartContainer.innerHTML = `<div class="loading-chart">Loading ${currentSymbol} chart...</div><canvas id="priceChart" style="display:none;"></canvas>`;
             try {
@@ -1024,16 +1023,15 @@
                 }
 
                 const candles = result.data;
-                // Build candlestick data arrays with numeric x (index)
                 const ohlc = candles.map((c, i) => ({
-                    x: i,                           // simple numeric index
+                    x: i,                           // numeric index for category scale
                     o: c.open,
                     h: c.high,
                     l: c.low,
                     c: c.close,
                 }));
                 const labels = candles.map(c => {
-                    const d = new Date(c.date);
+                    const d = new Date(c.date + 'T00:00:00');
                     return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
                 });
 
@@ -1043,11 +1041,10 @@
 
                 const lastCandle = candles[candles.length - 1];
                 const firstCandle = candles[0];
-                const currentPriceVal = result.current_price || lastCandle.close;
                 const changePercent = ((lastCandle.close - firstCandle.close) / firstCandle.close) * 100;
                 const changeClass = changePercent >= 0 ? 'price-up' : 'price-down';
 
-                document.getElementById('currentPrice').innerHTML = currentPriceVal.toFixed(5);
+                document.getElementById('currentPrice').innerHTML = result.current_price.toFixed(5);
                 document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
                 document.getElementById('priceChange').className = `price-change ${changeClass}`;
                 document.getElementById('symbolName').innerHTML = currentSymbol;
@@ -1067,7 +1064,7 @@
                         plugins: { legend: { display: false } },
                         scales: {
                             x: {
-                                type: 'category',          // use labels as categories
+                                type: 'category',
                                 labels: labels,
                                 grid: { display: false }
                             },
