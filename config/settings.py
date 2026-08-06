@@ -114,7 +114,7 @@ CELERY_TIMEZONE = 'UTC'
 CELERY_TASK_ALWAYS_EAGER = True  # Run tasks synchronously for testing
 
 
-YIELD_MONTHLY_RATE = 10.0
+YIELD_MONTHLY_RATE = 5.0
 
 
 # REST Framework
