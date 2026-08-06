@@ -1012,7 +1012,7 @@
         if (!chartContainer) return;
 
         // ── 1. Forex pair → Alpha Vantage ──
-        // ── Forex / Commodity section (candlestick) ──
+        // ── Forex / Commodity (candlestick, no date adapter) ──
         if (isMarketSymbol(currentSymbol)) {
             chartContainer.innerHTML = `<div class="loading-chart">Loading ${currentSymbol} chart...</div><canvas id="priceChart" style="display:none;"></canvas>`;
             try {
@@ -1024,13 +1024,18 @@
                 }
 
                 const candles = result.data;
-                const ohlc = candles.map(c => ({
-                    x: new Date(c.date + 'T00:00:00'),
+                // Build candlestick data arrays with numeric x (index)
+                const ohlc = candles.map((c, i) => ({
+                    x: i,                           // simple numeric index
                     o: c.open,
                     h: c.high,
                     l: c.low,
                     c: c.close,
                 }));
+                const labels = candles.map(c => {
+                    const d = new Date(c.date);
+                    return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+                });
 
                 chartContainer.innerHTML = '<canvas id="priceChart"></canvas>';
                 const ctx = document.getElementById('priceChart').getContext('2d');
@@ -1045,7 +1050,7 @@
                 document.getElementById('priceChange').innerHTML = `${changePercent >= 0 ? '+' : ''}${changePercent.toFixed(2)}%`;
                 document.getElementById('priceChange').className = `price-change ${changeClass}`;
                 document.getElementById('symbolName').innerHTML = currentSymbol;
-                document.getElementById('currentCoinIcon').src = getTokenIcon('BTC'); // generic
+                document.getElementById('currentCoinIcon').src = getTokenIcon('BTC');
 
                 priceChart = new Chart(ctx, {
                     type: 'candlestick',
@@ -1053,9 +1058,6 @@
                         datasets: [{
                             label: currentSymbol,
                             data: ohlc,
-                            borderColor: '#F0B90B',
-                            backgroundColor: '#0ECB81',
-                            borderWidth: 1,
                         }]
                     },
                     options: {
@@ -1064,8 +1066,8 @@
                         plugins: { legend: { display: false } },
                         scales: {
                             x: {
-                                type: 'time',
-                                time: { unit: 'day' },
+                                type: 'category',          // use labels as categories
+                                labels: labels,
                                 grid: { display: false }
                             },
                             y: {
