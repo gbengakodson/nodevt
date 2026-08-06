@@ -1650,7 +1650,7 @@ def send_daily_email_webhook(request):
 def sweep_webhook(request):
     from apps.tokens.services.price_service import PriceService
     from apps.forex_ea.services import generate_daily_intelligence_if_needed
-    generate_daily_intelligence_if_needed()
+    #generate_daily_intelligence_if_needed()
     PriceService.update_token_prices()
 
     from django.core.management import call_command
