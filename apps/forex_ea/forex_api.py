@@ -1,6 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from .models import ForexCache
+from .models import ForexCache, ForexForecast
 
 class ForexDailyView(APIView):
     authentication_classes = []
