@@ -2,6 +2,7 @@ import requests
 from django.core.management.base import BaseCommand
 from apps.forex_ea.models import ForexCache
 from datetime import date
+import time
 
 TWELVE_API_KEY = "0e71d2b553d44d7da9915a1d1c97bf45"
 SYMBOLS = {
@@ -43,3 +44,4 @@ class Command(BaseCommand):
                     }
                 )
             self.stdout.write(f"Updated {symbol}")
+            time.sleep(10)
