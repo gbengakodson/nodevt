@@ -147,3 +147,65 @@ NODE! — The Crypto Automation Engine on the Go.
             continue
 
     return f"Sent {sent_count} daily emails"
+
+
+from apps.forex_ea.models import ForexForecast
+from django.template.loader import render_to_string
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_daily_forecast_email_to_all_users():
+    """Send EURUSD, WTI, GOLD forecast to every active user."""
+    symbols = ['EURUSD', 'WTI', 'GOLD']
+    forecasts = {}
+    for sym in symbols:
+        f = ForexForecast.objects.filter(pair=sym).order_by('-created_at').first()
+        forecasts[sym] = f
+
+    users = User.objects.filter(is_active=True)
+    for user in users:
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2>📊 Daily Market Forecast</h2>
+            <p>Good morning! Here's what our NodeV16 engine predicts for today.</p>
+            <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                <tr style="background: #1A1C23; color: white;">
+                    <th style="padding: 10px; text-align: left;">Instrument</th>
+                    <th style="padding: 10px; text-align: center;">Prediction</th>
+                    <th style="padding: 10px; text-align: center;">Trend</th>
+                    <th style="padding: 10px; text-align: center;">Condition</th>
+                    <th style="padding: 10px; text-align: center;">Trigger</th>
+                </tr>
+        """
+        for sym in symbols:
+            f = forecasts[sym]
+            if not f:
+                continue
+            emoji = '🟢' if f.daily_candle == 'Bullish day' else ('🔴' if f.daily_candle == 'Bearish day' else '🟡')
+            bg = '#0ECB8120' if f.daily_candle == 'Bullish day' else ('#F6465D20' if f.daily_candle == 'Bearish day' else '#F0B90B20')
+            html_body += f"""
+                <tr style="background: #F8F9FA; border-bottom: 1px solid #E2E4E8;">
+                    <td style="padding: 12px; font-weight: bold;">{sym}</td>
+                    <td style="padding: 12px; text-align: center; background: {bg};">
+                        <span style="font-size: 14px; font-weight: 700;">{emoji} {f.daily_candle}</span>
+                    </td>
+                    <td style="padding: 12px; text-align: center;">{f.trend}</td>
+                    <td style="padding: 12px; text-align: center;">{f.condition}</td>
+                    <td style="padding: 12px; text-align: center;">{f.trigger}</td>
+                </tr>
+            """
+        html_body += """
+            </table>
+            <p style="margin-top: 20px; color: #707A8A; font-size: 12px;">
+                Powered by NodeV16 • Updated daily at 6 AM UTC
+            </p>
+        </div>
+        """
+        send_mail(
+            subject='📊 Daily Market Forecast – EURUSD, WTI & GOLD',
+            message='',
+            html_message=html_body,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            recipient_list=[user.email],
+            fail_silently=True
+        )

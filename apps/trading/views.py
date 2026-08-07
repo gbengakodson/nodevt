@@ -1634,17 +1634,27 @@ def yield_rate_view(request):
     return Response({'monthly': monthly_rate, 'hourly': monthly_rate / 720})
 
 
-@csrf_exempt
 def send_daily_email_webhook(request):
-    """Trigger daily emails in background - returns immediately"""
-    import threading
+    # ── NEW: Daily forecast pipeline ──
+    try:
+        from apps.forex_ea.services import generate_daily_forecast_cards
+        from django.core.management import call_command
+        call_command('update_forex_cache')
+        generate_daily_forecast_cards()
+    except Exception as e:
+        print(f"Forecast pipeline error: {e}")
+
+    # ── NEW: Send forecast email to all users ──
+    try:
+        from apps.tasks.email_tasks import send_daily_forecast_email_to_all_users
+        send_daily_forecast_email_to_all_users()
+    except Exception as e:
+        print(f"Forecast email error: {e}")
+
+    # ── EXISTING: original daily portfolio email (keep unchanged) ──
     from apps.tasks.email_tasks import send_daily_email_to_all_users
-
-    # Run in background thread so cron-job.org doesn't timeout
-    thread = threading.Thread(target=send_daily_email_to_all_users)
-    thread.start()
-
-    return JsonResponse({'status': 'queued', 'message': 'Emails sending in background'})
+    send_daily_email_to_all_users()
+    return JsonResponse({'status': 'ok'})
 
 
 def sweep_webhook(request):
