@@ -1151,10 +1151,10 @@
             }
             panel.innerHTML = `
                 <strong>${symbol}</strong><br>
-                Trend: ${data.trend}<br>
-                Condition: ${data.condition}<br>
-                Trigger: ${data.trigger}<br>
-                <small>Prediction: ${data.prediction}</small>
+                <span style="font-size: 16px; font-weight: 700;">${data.daily_candle}</span><br>
+                <small>Trend: ${data.trend}</small><br>
+                <small>Condition: ${data.condition}</small><br>
+                <small>Trigger: ${data.trigger}</small>
             `;
         } catch(e) {
             panel.innerHTML = 'Error loading forecast.';

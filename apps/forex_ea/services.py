@@ -17,15 +17,15 @@ def generate_daily_forecast_cards():
     forecasts = ForexForecast.objects.filter(created_at__date=today)
 
     for f in forecasts:
-        # Simple prediction caption
-        if 'Bullish' in f.trend:
-            prediction = 'Bullish'
-        elif 'Bearish' in f.trend:
-            prediction = 'Bearish'
+        # Simple, bold caption using the daily_candle prediction
+        if f.daily_candle == 'Bullish day':
+            emoji = '🟢'
+        elif f.daily_candle == 'Bearish day':
+            emoji = '🔴'
         else:
-            prediction = 'Neutral'
+            emoji = '🟡'
 
-        caption = f"{f.pair}: {prediction} – {f.trigger}"
+        caption = f"{f.pair}: {f.daily_candle} {emoji}"
 
         DailyIntelligence.objects.update_or_create(
             symbol=f.pair,
@@ -34,6 +34,6 @@ def generate_daily_forecast_cards():
             defaults={
                 'caption': caption,
                 'trend': f.trend.replace(' ', '')[:20].upper(),
-                'image_url': None   # we can add chart thumbnails later
+                'image_url': None
             }
         )

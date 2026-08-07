@@ -45,17 +45,11 @@ class ForexForecastDetailView(APIView):
         if not forecast:
             return Response({'error': 'Not found'}, status=404)
 
-        if 'Bullish' in forecast.trend:
-            prediction = 'Bullish candle expected'
-        elif 'Bearish' in forecast.trend:
-            prediction = 'Bearish candle expected'
-        else:
-            prediction = 'Neutral'
-
         return Response({
             'pair': forecast.pair,
             'trend': forecast.trend,
             'condition': forecast.condition,
             'trigger': forecast.trigger,
-            'prediction': prediction
+            'daily_candle': forecast.daily_candle,        # ← new
+            'prediction': forecast.daily_candle or 'Neutral'
         })

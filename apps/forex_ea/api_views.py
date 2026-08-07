@@ -334,7 +334,8 @@ class ForexForecastView(APIView):
                 current_price=item.get('current_price'),
                 trend=item['trend'],
                 condition=item['condition'],
-                trigger=item['trigger']
+                trigger=item['trigger'],
+                daily_candle=item.get('daily_candle', 'Neutral day')
             )
 
         # Generate daily intelligence cards immediately
