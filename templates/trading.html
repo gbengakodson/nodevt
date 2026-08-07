@@ -678,9 +678,11 @@
     </div>
 
     <div class="right-column">
-        <div id="forexForecastPanel" style="padding: 12px;">
-            <div class="card-title" style="color: var(--text-primary); font-size: 14px;">📊 Daily Forecast</div>
-            <div id="forexForecastContent" style="color: var(--text-secondary); font-size: 12px;">
+        <div id="forexForecastPanel" style="padding: 16px; background: var(--bg-card, #1A1C23); border-radius: 12px; border: 1px solid var(--border, #2B3139); color: var(--text-primary, #EAECEF);">
+            <div id="forexForecastTitle" class="card-title" style="font-size: 14px; font-weight: 700; margin-bottom: 16px; display: flex; align-items: center; gap: 6px;">
+                📊 Daily Forecast – <span id="forecastDate"></span>
+            </div>
+            <div id="forexForecastContent" style="color: var(--text-secondary, #848E9C); font-size: 12px;">
                 Select a forex pair to see today's forecast.
             </div>
         </div>
@@ -1139,25 +1141,78 @@
     }
 
     async function loadForexForecast(symbol) {
-        const panel = document.getElementById('forexForecastContent');
-        if (!panel) return;
-        panel.innerHTML = 'Loading forecast...';
+        const container = document.getElementById('forexForecastContent');
+        const titleEl = document.getElementById('forecastDate');
+        if (!container || !titleEl) return;
+        container.innerHTML = 'Loading forecast...';
+        titleEl.textContent = new Date().toLocaleDateString('en-US', { year:'numeric', month:'short', day:'numeric' });
+
         try {
             const resp = await fetch(`/api/forex/forecast/?pair=${symbol}`);
             const data = await resp.json();
             if (data.error) {
-                panel.innerHTML = 'No forecast available yet.';
+                container.innerHTML = `<div style="color:#848E9C; text-align:center; padding:20px;">No forecast available yet.</div>`;
                 return;
             }
-            panel.innerHTML = `
-                <strong>${symbol}</strong><br>
-                <span style="font-size: 16px; font-weight: 700;">${data.daily_candle}</span><br>
-                <small>Trend: ${data.trend}</small><br>
-                <small>Condition: ${data.condition}</small><br>
-                <small>Trigger: ${data.trigger}</small>
+
+            // Determine prediction style
+            const isBullish = data.daily_candle === 'Bullish day';
+            const isBearish = data.daily_candle === 'Bearish day';
+            const emoji = isBullish ? '🟢' : (isBearish ? '🔴' : '🟡');
+            const bgColor = isBullish ? 'rgba(14,203,129,0.1)' : (isBearish ? 'rgba(246,70,93,0.1)' : 'rgba(240,185,11,0.1)');
+            const textColor = isBullish ? '#0ECB81' : (isBearish ? '#F6465D' : '#F0B90B');
+
+            // Trend strength meter (mapping to a value 0-100)
+            const trendMap = {
+                'Strong Bullish': 100,
+                'Bullish': 75,
+                'Weak Bullish': 60,
+                'Sideways (Up)': 50,
+                'Sideways (Down)': 50,
+                'Weak Bearish': 60,
+                'Bearish': 75,
+                'Strong Bearish': 100
+            };
+            let trendStrength = trendMap[data.trend] || 50;
+            let meterColor = data.trend.includes('Bullish') ? '#0ECB81' :
+                             (data.trend.includes('Bearish') ? '#F6465D' : '#F0B90B');
+            let meterLabel = data.trend;
+
+            container.innerHTML = `
+                <div style="text-align:center; margin-bottom:20px;">
+                    <div style="font-size:18px; font-weight:700; margin-bottom:4px;">${symbol}</div>
+                    <div style="display:inline-block; padding:8px 20px; border-radius:24px; font-size:18px; font-weight:700; color:${textColor}; background:${bgColor};">
+                        ${emoji} ${data.daily_candle}
+                    </div>
+                </div>
+
+                <div style="margin-bottom:16px;">
+                    <div style="display:flex; justify-content:space-between; font-size:12px; margin-bottom:4px;">
+                        <span>Trend Strength</span>
+                        <span style="color:${meterColor};">${meterLabel}</span>
+                    </div>
+                    <div style="height:6px; background:#2B3139; border-radius:3px;">
+                        <div style="width:${trendStrength}%; height:100%; background:${meterColor}; border-radius:3px; transition: width 0.5s;"></div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; font-size:12px;">
+                    <div>
+                        <div style="color:#848E9C; margin-bottom:2px;">Condition</div>
+                        <div style="color:#EAECEF; font-weight:600;">${data.condition}</div>
+                    </div>
+                    <div>
+                        <div style="color:#848E9C; margin-bottom:2px;">Trigger</div>
+                        <div style="color:#EAECEF; font-weight:600;">${data.trigger}</div>
+                    </div>
+                </div>
+
+                <div style="margin-top:16px; padding-top:12px; border-top:1px solid #2B3139; font-size:11px; color:#848E9C; text-align:center;">
+                    Updated daily at 6 AM UTC
+                </div>
             `;
         } catch(e) {
-            panel.innerHTML = 'Error loading forecast.';
+            container.innerHTML = `<div style="color:#848E9C; text-align:center; padding:20px;">Error loading forecast.</div>`;
         }
     }
 
