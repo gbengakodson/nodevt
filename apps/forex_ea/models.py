@@ -173,9 +173,9 @@ class ForexCache(models.Model):
 class ForexForecast(models.Model):
     pair = models.CharField(max_length=20)
     current_price = models.DecimalField(max_digits=15, decimal_places=5, null=True)
-    trend = models.CharField(max_length=30)
-    condition = models.CharField(max_length=30)
-    trigger = models.CharField(max_length=30)
+    trend = models.CharField(max_length=200)
+    condition = models.CharField(max_length=200)
+    trigger = models.CharField(max_length=200)
     daily_candle = models.CharField(max_length=30, blank=True, null=True)   # ← new
     created_at = models.DateTimeField(auto_now_add=True)
 
