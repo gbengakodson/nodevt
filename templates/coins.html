@@ -984,15 +984,21 @@
 
         let cards = dailyIntel.map(item => {
             const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
+            const isSavings = item.symbol === 'USDC';   // ← special savings card
+
             return {
                 symbol: item.symbol,
                 name: item.name || item.symbol,
-                category: item.category === 'forex' ? 'Forex Market' :
-                          item.category === 'crypto' ? 'Crypto Economy' :
-                          item.category === 'economic' ? 'Economic Cycle' : 'Market Intel',
-                caption: item.caption,
-                price: item.price || null,
-                imageUrl: item.image_url || '',
+                category: isSavings
+                    ? 'Savings'
+                    : (item.category === 'forex' ? 'Forex Market' :
+                       item.category === 'crypto' ? 'Crypto Economy' :
+                       item.category === 'economic' ? 'Economic Cycle' : 'Market Intel'),
+                caption: isSavings ? 'Lock & Earn 3%/mo' : item.caption,
+                price: isSavings ? 1.00 : (item.price || null),   // always $1 for USDC
+                imageUrl: isSavings
+                    ? 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png'
+                    : (item.image_url || ''),
                 reactionCounts: reactionCounts[item.symbol] || { likes: 0, loves: 0 },
                 timestamp: createdTime
             };
@@ -1002,7 +1008,7 @@
         cards.sort((a, b) => b.timestamp - a.timestamp);
 
         container.innerHTML = cards.map(card => `
-            <div class="coin-card" onclick="${card.category === 'Forex Market' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}">
+            <div class="coin-card" onclick="${card.category === 'Savings' || card.category === 'Forex Market' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}">
                 <div class="card-top">
                     ${card.imageUrl
                         ? `<img src="${card.imageUrl}" class="card-picture" alt="${card.symbol}"

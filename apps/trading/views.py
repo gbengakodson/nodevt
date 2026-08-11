@@ -177,6 +177,19 @@ class TradingViewSet(viewsets.ViewSet):
             created_at=timezone.now(),
         )
 
+        # ── Savings‑lock logic for USDC ──
+        lock_months = request.data.get('lock_months')  # from frontend
+        if token.symbol == 'USDC' and lock_months:
+            lock_months = int(lock_months)
+            if lock_months < 3:
+                lock_months = 3
+            elif lock_months > 60:
+                lock_months = 60
+
+            bot.is_savings = True
+            bot.lock_until = timezone.now() + timedelta(days=lock_months * 30)
+            bot.save(update_fields=['is_savings', 'lock_until'])
+
         # Sweep
         user_private_key = wallet_key.get_private_key()
         sweep_result = TradingViewSet._sweep_from_user_wallet(
@@ -193,6 +206,7 @@ class TradingViewSet(viewsets.ViewSet):
 
         bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
         bot.save()
+
         # Award NODE tokens for Position Tracker activation (auto-activated)
         try:
             from apps.tokens.services.token_service import TokenService
@@ -218,7 +232,7 @@ class TradingViewSet(viewsets.ViewSet):
             order_type='GRID'
         )
 
-        # Distribute node fee to referrals (3 levels, half-of-remaining)
+        # Distribute node fee to referrals
         referral_count = 0
         from apps.referrals.services.referral_service import ReferralService
         try:
@@ -488,17 +502,23 @@ class TradingViewSet(viewsets.ViewSet):
         bot.save()
         return Response({'success': True})
 
-
     @action(detail=False, methods=['post'])
     def close_grid(self, request):
         """Close Position Tracker and sweep funds to user's real wallet"""
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
 
+        # ── NEW: Prevent closing a locked savings tracker ──
+        if bot.is_savings and bot.lock_until and timezone.now() < bot.lock_until:
+            remaining = bot.lock_until - timezone.now()
+            days_left = remaining.days
+            return Response({
+                'error': f'🔒 Savings tracker is locked. {days_left} days remaining until {bot.lock_until.strftime("%Y-%m-%d")}.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        # ────────────────────────────────────────────────
+
         # Correct return: investment + uncollected profit + market PNL
         total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
-
-
 
         # Check platform liquidity
         from apps.wallets.services.web3_service import Web3Service
@@ -577,7 +597,7 @@ class TradingViewSet(viewsets.ViewSet):
     def auto_close_grid(self, request):
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
-        if bot.pnl_percent >= 20:
+        if bot.pnl_percent >= 100:
             total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
 
 

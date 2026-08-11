@@ -31,6 +31,9 @@ class GridBot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
+    is_savings = models.BooleanField(default=False)  # marks it as a savings tracker
+    lock_until = models.DateTimeField(null=True, blank=True)  # unlock date
+
     @property
     def current_grid_level(self):
         if not self.token.current_price:
