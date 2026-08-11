@@ -1157,40 +1157,91 @@
                 return;
             }
 
-            // Build full forecast template
+            // ── Build dynamic narrative from the raw values ──
+            const trend = data.trend || 'No data';
+            const condition = data.condition || 'No data';
+            const trigger = data.trigger || 'No data';
+            const price = data.current_price || 'N/A';
+
+            // Determine trend direction for wording
+            const isBullish = trend.toLowerCase().includes('bullish');
+            const isBearish = trend.toLowerCase().includes('bearish');
+            const isWeak = trend.toLowerCase().includes('weak');
+            const isStrong = trend.toLowerCase().includes('strong');
+            const isSideways = trend.toLowerCase().includes('sideways');
+
+            // Trend analysis sentence
+            let trendAnalysis = '';
+            if (isSideways) {
+                trendAnalysis = `The ${symbol} is moving sideways, indicating a lack of clear direction. Traders should wait for a breakout before committing.`;
+            } else if (isWeak) {
+                const direction = isBullish ? 'upward' : 'downward';
+                trendAnalysis = `The ${symbol} is showing a weak ${direction} bias this morning. While sellers are present, momentum is lacking and the market is drifting rather than trending aggressively. Caution is advised—the pair could easily reverse or consolidate.`;
+            } else if (isStrong) {
+                const direction = isBullish ? 'bullish' : 'bearish';
+                trendAnalysis = `The ${symbol} is experiencing a strong ${direction} momentum this morning. Major market participants are driving the price action, making it critical to align intraday strategies with this broader trend.`;
+            } else {
+                trendAnalysis = `The ${symbol} is showing a ${trend} momentum this morning. Monitor closely for any shift in direction.`;
+            }
+
+            // Condition analysis sentence
+            let conditionAnalysis = '';
+            if (condition.toLowerCase().includes('low activity')) {
+                conditionAnalysis = `The pair is currently in a low activity zone. Trading near ${price}, there is no strong conviction from either side. This environment favours patience—waiting for a clearer signal before committing to a position.`;
+            } else if (condition.toLowerCase().includes('overbought')) {
+                conditionAnalysis = `The pair has entered an overbought condition. At ${price}, the risk of a pullback is elevated. Consider waiting for confirmation before entering new positions.`;
+            } else if (condition.toLowerCase().includes('oversold')) {
+                conditionAnalysis = `The pair is currently oversold. At ${price}, a short-term bounce is possible, but the overall trend must still be respected.`;
+            } else {
+                conditionAnalysis = `The current condition is ${condition}. Price is at ${price}. Watch for key levels to confirm the next move.`;
+            }
+
+            // Trigger analysis sentence
+            let triggerAnalysis = '';
+            if (trigger.toLowerCase().includes('no clear signal')) {
+                triggerAnalysis = `Our Expert Advisor has flagged <strong>no clear signal</strong> for today.<br><br>
+                    • <strong>If a signal does not appear:</strong> Avoid forcing trades; the best trade today may be no trade at all.<br>
+                    • <strong>Risk Management:</strong> Protect your capital by sitting out choppy conditions. The next opportunity will come when volatility returns.`;
+            } else if (trigger.toLowerCase().includes('breakout')) {
+                triggerAnalysis = `Our Expert Advisor has flagged a <strong>${trigger}</strong> as the primary execution signal today.<br><br>
+                    • <strong>If the trigger activates:</strong> Look for momentum to carry the price toward the next liquidity pool.<br>
+                    • <strong>Risk Management:</strong> Place stop-losses outside the structure of the breakout zone.`;
+            } else if (trigger.toLowerCase().includes('reversal')) {
+                triggerAnalysis = `Our Expert Advisor has flagged a <strong>${trigger}</strong> as the primary execution signal today.<br><br>
+                    • <strong>If the trigger activates:</strong> A reversal could offer a high-reward entry, but confirmation is essential.<br>
+                    • <strong>Risk Management:</strong> Use tight stops until the reversal is confirmed.`;
+            } else {
+                triggerAnalysis = `Our Expert Advisor has flagged <strong>${trigger}</strong> as the primary output for today.<br><br>
+                    • <strong>If the signal appears:</strong> Execute according to your trading plan.<br>
+                    • <strong>Risk Management:</strong> Always protect your capital with proper stop-losses.`;
+            }
+
             container.innerHTML = `
                 <div style="font-size:18px; font-weight:700; margin-bottom:12px; text-align:center;">
                     ${symbol} Daily Market Forecast
                 </div>
                 <div style="font-size:12px; color:#848E9C; text-align:center; margin-bottom:16px;">
-                    Current Price: <strong style="color:#EAECEF;">${data.current_price}</strong>
+                    Current Price: <strong style="color:#EAECEF;">${price}</strong>
                 </div>
 
                 <div style="margin-bottom:14px;">
                     <div style="font-weight:600; color:#EAECEF; margin-bottom:4px;">1. Market Sentiment & Trend Analysis</div>
                     <div style="font-size:12px; color:#848E9C; line-height:1.5;">
-                        The ${symbol} is experiencing a <strong style="color:#EAECEF;">${data.trend}</strong> momentum this morning.
-                        This indicates that while sellers are present, the momentum is lacking, and the market is drifting rather than trending aggressively.
-                        Traders should remain cautious—the weak directional bias means the pair could easily reverse or consolidate.
+                        ${trendAnalysis}
                     </div>
                 </div>
 
                 <div style="margin-bottom:14px;">
                     <div style="font-weight:600; color:#EAECEF; margin-bottom:4px;">2. Key Technical Conditions</div>
                     <div style="font-size:12px; color:#848E9C; line-height:1.5;">
-                        According to our technical models, the pair is currently in a <strong style="color:#EAECEF;">${data.condition}</strong> zone.
-                        Trading near the current price of ${data.current_price}, the market is moderately cheap, but there is no strong conviction from either side.
-                        This environment typically favours patience—waiting for a clearer signal before committing to a position.
+                        ${conditionAnalysis}
                     </div>
                 </div>
 
                 <div style="margin-bottom:14px;">
                     <div style="font-weight:600; color:#EAECEF; margin-bottom:4px;">3. Strategic Execution Trigger</div>
                     <div style="font-size:12px; color:#848E9C; line-height:1.5;">
-                        Our Expert Advisor has flagged <strong style="color:#EAECEF;">${data.trigger}</strong> as the primary output for today.
-                        <br><br>
-                        • <strong>If a signal does not appear:</strong> Avoid forcing trades; the best trade today may be no trade at all.<br>
-                        • <strong>Risk Management:</strong> Protect your capital by sitting out choppy conditions. The next opportunity will come when volatility returns.
+                        ${triggerAnalysis}
                     </div>
                 </div>
 
