@@ -1352,18 +1352,24 @@
         const token = tokens.find(t => t.symbol === symbol);
         if (token) {
             currentPrice = parseFloat(token.current_price);
-            document.getElementById('currentPrice').innerHTML = formatCurrency(currentPrice);
-            document.getElementById('currentCoinIcon').src = getTokenIcon(symbol);
-            document.getElementById('symbolName').innerHTML = `${symbol}/USDC`;
+            const priceEl = document.getElementById('currentPrice');
+            if (priceEl) priceEl.innerHTML = formatCurrency(currentPrice);
+            const iconEl = document.getElementById('currentCoinIcon');
+            if (iconEl) iconEl.src = getTokenIcon(symbol);
+            const nameEl = document.getElementById('symbolName');
+            if (nameEl) nameEl.innerHTML = `${symbol}/USDC`;
             updateChart();
             updateButtonState();
             updateGridRange();
             setTimeout(() => addChartBotIcon(), 500);
         }
-        document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
-        document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
 
-        // ── USDC savings tweaks ──
+        const buyBtn = document.getElementById('buyBtnMarket');
+        const sellBtn = document.getElementById('sellBtnMarket');
+        if (buyBtn) buyBtn.innerHTML = `Buy ${symbol}`;
+        if (sellBtn) sellBtn.innerHTML = `Sell ${symbol}`;
+
+        // ── USDC savings UI ──
         const lockGroup = document.getElementById('lockDurationGroup');
         if (lockGroup) {
             lockGroup.style.display = symbol === 'USDC' ? 'block' : 'none';
