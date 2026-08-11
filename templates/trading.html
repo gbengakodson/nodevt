@@ -1873,6 +1873,8 @@
                 coinParam = storedCoin;
             }
         }
+        // Trigger the same UI updates as clicking a coin card
+        if (currentSymbol) selectCoin(currentSymbol);
 
 
         updateButtonState();
