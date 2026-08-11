@@ -649,6 +649,22 @@
                     <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">Your funds will be added to NODE central wallet and managed by NODE Master Grid API</div>
                 </div>
 
+                <!-- NEW: Lock duration for USDC savings -->
+                <div id="lockDurationGroup" style="display:none; margin-top: 12px;">
+                    <label class="form-label">Lock Period</label>
+                    <select id="lockDuration" class="form-input">
+                        <option value="3">3 Months</option>
+                        <option value="6">6 Months</option>
+                        <option value="12">12 Months</option>
+                        <option value="24">24 Months</option>
+                        <option value="36">36 Months</option>
+                        <option value="60">60 Months</option>
+                    </select>
+                    <div class="input-hint" style="font-size: 11px; color: #707A8A; margin-top: 4px;">
+                        🔒 Funds are locked and cannot be withdrawn until the period ends.
+                    </div>
+                </div>
+
                 <div class="grid-params-preview">
                     <div class="param-row">
                         <span>Price Range:</span>
@@ -1005,6 +1021,12 @@
 
 
     async function updateChart() {
+
+        if (currentSymbol === 'USDC') {
+            document.getElementById('chartContainer').innerHTML =
+                '<div class="loading-chart">Stablecoin — No chart available</div>';
+            return;
+        }
         if (!currentSymbol) return;
         const chartContainer = document.getElementById('chartContainer');
         if (!chartContainer) return;
@@ -1340,7 +1362,18 @@
         }
         document.getElementById('buyBtnMarket').innerHTML = `Buy ${symbol}`;
         document.getElementById('sellBtnMarket').innerHTML = `Sell ${symbol}`;
-        document.getElementById('activateGridBtn').innerHTML = `Activate Position Tracker for ${symbol}`;
+
+        // ── USDC savings tweaks ──
+        const lockGroup = document.getElementById('lockDurationGroup');
+        if (lockGroup) {
+            lockGroup.style.display = symbol === 'USDC' ? 'block' : 'none';
+        }
+        const activateBtn = document.getElementById('activateGridBtn');
+        if (activateBtn) {
+            activateBtn.textContent = symbol === 'USDC'
+                ? 'Lock & Earn'
+                : `Activate Position Tracker for ${symbol}`;
+        }
     }
     window.selectCoin = selectCoin;
 
@@ -1611,35 +1644,47 @@
         const btn = document.getElementById('activateGridBtn');
         btn.disabled = true;
 
+        // Build the request body
+        const body = {
+            token_id: token.id,
+            amount_usdc: amount,
+            order_type: 'grid'
+        };
+
+        // ── Add lock_months if USDC is selected ──
+        if (currentSymbol === 'USDC') {
+            const lockDuration = document.getElementById('lockDuration');
+            if (lockDuration) {
+                body.lock_months = parseInt(lockDuration.value);
+            }
+        }
+
         // Show loader overlay
         showGridLoader();
 
         try {
-            // Step 1: Attaching Grids
             updateLoaderStep(1, '...attaching Grids');
             await sleep(800);
 
-            const result = await apiCall('/trading/buy/', 'POST', {
-                token_id: token.id,
-                amount_usdc: amount,
-                order_type: 'grid'
-            });
+            const result = await apiCall('/trading/buy/', 'POST', body);
 
             if (result.success) {
-                // Step 2: Setting up
                 updateLoaderStep(2, '...setting up');
                 await sleep(1000);
 
-                // Step 3: Grid Activated
                 updateLoaderStep(3, '...Activated ✅');
                 await sleep(1200);
 
                 hideGridLoader();
-                showModal(`Activated for ${currentSymbol} with $${amount} (1% fee applied). Your Position Tracker will appear in dashboard.`, 'success');
+
+                const lockMsg = currentSymbol === 'USDC'
+                    ? ` 🔒 Locked for ${body.lock_months} months.`
+                    : '';
+                showModal(`Activated for ${currentSymbol} with $${amount} (10% fee applied).${lockMsg} Your Position Tracker will appear in dashboard.`, 'success');
                 document.getElementById('gridAmount').value = '';
             } else {
                 hideGridLoader();
-                showModal('Failed to activate grid bot', 'error');
+                showModal(result.error || 'Failed to activate grid bot', 'error');
             }
         } catch (e) {
             hideGridLoader();
