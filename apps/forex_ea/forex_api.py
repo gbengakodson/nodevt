@@ -47,9 +47,9 @@ class ForexForecastDetailView(APIView):
 
         return Response({
             'pair': forecast.pair,
+            'current_price': float(forecast.current_price),
             'trend': forecast.trend,
             'condition': forecast.condition,
             'trigger': forecast.trigger,
-            'daily_candle': forecast.daily_candle,        # ← new
-            'prediction': forecast.daily_candle or 'Neutral'
+            'daily_candle': forecast.daily_candle,
         })
