@@ -156,13 +156,22 @@ from django.core.mail import send_mail
 from django.conf import settings
 
 def send_daily_forecast_email_to_all_users():
+    """Send EURUSD, WTI, GOLD forecast — only if data is from today."""
+    from datetime import date
+    today = date.today()
     symbols = ['EURUSD', 'WTI', 'GOLD']
     forecasts = {}
-    for sym in symbols:
-        f = ForexForecast.objects.filter(pair=sym).order_by('-created_at').first()
-        forecasts[sym] = f
 
-    today_str = date.today().strftime('%B %d, %Y')
+    for sym in symbols:
+        f = ForexForecast.objects.filter(pair=sym, created_at__date=today).first()
+        if f:
+            forecasts[sym] = f
+
+    if not forecasts:
+        # No fresh data at all — do nothing (or send a simple note if you prefer)
+        return
+
+    today_str = today.strftime('%B %d, %Y')
     users = User.objects.filter(is_active=True)
     for user in users:
         html_body = f"""
@@ -171,7 +180,7 @@ def send_daily_forecast_email_to_all_users():
             <p>Good morning! Here's what our NodeV16 engine predicts for today.</p>
         """
         for sym in symbols:
-            f = forecasts[sym]
+            f = forecasts.get(sym)
             if not f:
                 continue
             html_body += f"""
