@@ -214,8 +214,9 @@
         var statusEl = document.getElementById('statusMsg');
         var btn = document.getElementById('btnWithdraw');
 
+        // Always show status messages, then update text
         statusEl.className = 'status-msg';
-        statusEl.style.display = 'none';
+        statusEl.style.display = 'block';
 
         if (!address.startsWith('0x') || address.length !== 42) {
             statusEl.textContent = '❌ Invalid BSC address.';
@@ -250,6 +251,7 @@
                 showOTPInput();
                 statusEl.textContent = '📧 ' + (res.message || 'OTP sent to your email');
                 statusEl.className = 'status-msg success';
+                statusEl.style.display = 'block';
             } else if (res.success) {
                 hideOTPInput();
                 statusEl.textContent = '✅ Withdrawal successful! TX: ' + (res.tx_id || '').substring(0, 20) + '...';
@@ -260,12 +262,15 @@
                 updateFee(0);
                 loadBalance();
             } else {
+                // Backend 400 errors (wrong OTP, expired, insufficient, etc.)
                 statusEl.textContent = '❌ ' + (res.error || 'Failed');
                 statusEl.className = 'status-msg error';
+                statusEl.style.display = 'block';
             }
         } catch(e) {
             statusEl.textContent = '❌ Network error.';
             statusEl.className = 'status-msg error';
+            statusEl.style.display = 'block';
         } finally {
             btn.disabled = false;
             if (document.getElementById('otpGroup')) {
@@ -276,6 +281,8 @@
         }
     }
 
+    var otpTimerInterval = null;
+
     function showOTPInput() {
         var existing = document.getElementById('otpGroup');
         if (existing) return;
@@ -283,16 +290,48 @@
         var otpGroup = document.createElement('div');
         otpGroup.id = 'otpGroup';
         otpGroup.className = 'form-group';
-        otpGroup.innerHTML = '<label class="form-label">Enter OTP Code</label><input type="text" id="otpInput" class="form-input" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code"><div class="input-hint">Check your email for the OTP code. Expires in 10 minutes.</div>';
+        otpGroup.innerHTML =
+            '<label class="form-label">Enter OTP Code</label>' +
+            '<input type="text" id="otpInput" class="form-input" placeholder="6-digit code" maxlength="6" inputmode="numeric" autocomplete="one-time-code">' +
+            '<div class="input-hint">Check your email for the OTP code. <span id="otpTimer">10:00 remaining</span></div>';
 
         var btn = document.getElementById('btnWithdraw');
         btn.parentNode.insertBefore(otpGroup, btn);
         document.getElementById('otpInput').focus();
+
+        // Start 10‑minute countdown
+        startOtpTimer(600);
     }
 
     function hideOTPInput() {
         var el = document.getElementById('otpGroup');
         if (el) el.remove();
+        clearOtpTimer();
+    }
+
+    function startOtpTimer(duration = 600) {
+        clearOtpTimer();
+        let timeLeft = duration;
+        const timerEl = document.getElementById('otpTimer');
+
+        otpTimerInterval = setInterval(() => {
+            if (timeLeft <= 0) {
+                clearInterval(otpTimerInterval);
+                if (timerEl) timerEl.textContent = 'expired';
+                return;
+            }
+            const mins = Math.floor(timeLeft / 60);
+            const secs = timeLeft % 60;
+            if (timerEl) timerEl.textContent = `${mins}:${secs < 10 ? '0' : ''}${secs} remaining`;
+            timeLeft--;
+        }, 1000);
+    }
+
+    function clearOtpTimer() {
+        if (otpTimerInterval) {
+            clearInterval(otpTimerInterval);
+            otpTimerInterval = null;
+        }
     }
 
     loadBalance();
