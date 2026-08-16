@@ -207,3 +207,25 @@ def send_daily_forecast_email_to_all_users():
             recipient_list=[user.email],
             fail_silently=True
         )
+
+
+
+import threading
+from django.core.mail import send_mail
+from django.conf import settings
+
+def send_email_notification(user, subject, message):
+    """Send a simple email in a background thread (non-blocking)."""
+    def _send():
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Email notification error for {user.email}: {e}")
+
+    threading.Thread(target=_send).start()

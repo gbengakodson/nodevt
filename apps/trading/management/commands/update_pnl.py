@@ -48,25 +48,19 @@ class Command(BaseCommand):
                     )
 
                 # Auto-close at 20%+ PNL
+                # Auto-close at 20%+ PNL and automatically reactivate
                 if pnl_percent >= 20:
-                    total_return = bot.amount + bot.grid_profit + bot.pnl
+                    old_capital = bot.amount or Decimal('0')
+                    pnl = bot.pnl or Decimal('0')
+                    grid_profit = bot.grid_profit or Decimal('0')
 
-                    # Check liquidity
+                    # 10% management fee on the new capital (old capital + PNL)
+                    new_capital_total = old_capital + pnl
+                    fee = new_capital_total * Decimal('0.10')
+                    new_invested = new_capital_total - fee
+
+                    # Sweep only the grid profit to the user's wallet
                     from apps.wallets.services.web3_service import Web3Service
-                    ws = Web3Service()
-                    central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
-
-                    if central_balance < total_return:
-                        self.stdout.write(f'⚠️ Liquidity gap for {token.symbol} bot ({bot.user.email})')
-                        notify_user(
-                            bot.user,
-                            f'⏳ {token.symbol} Close Pending',
-                            f'Your {token.symbol} tracker reached +{float(pnl_percent):.1f}% PNL but close is delayed due to platform liquidity. Processing within 24 hours.',
-                            'ALERT'
-                        )
-                        continue
-
-                    # Sweep to user's wallet
                     from apps.wallets.models import WalletKey, Transaction
                     from apps.trading.views import TradingViewSet
 
@@ -74,46 +68,91 @@ class Command(BaseCommand):
                         wallet_key = WalletKey.objects.get(user=bot.user)
                         user_address = wallet_key.address
 
-                        sweep_result = TradingViewSet._sweep_from_user_wallet(
-                            settings.CENTRAL_WALLET_ADDRESS,
-                            settings.CENTRAL_WALLET_PRIVATE_KEY,
-                            user_address,
-                            total_return
-                        )
+                        if grid_profit > 0:
+                            profit_sweep = TradingViewSet._sweep_from_user_wallet(
+                                settings.CENTRAL_WALLET_ADDRESS,
+                                settings.CENTRAL_WALLET_PRIVATE_KEY,
+                                user_address,
+                                grid_profit
+                            )
+                        else:
+                            profit_sweep = {'success': True, 'tx_hash': None}
 
-                        if sweep_result['success']:
+                        if not profit_sweep['success']:
+                            self.stdout.write(f'⚠️ Grid profit sweep failed: {profit_sweep.get("error")}')
+                            continue
+
+                        # Record grid profit withdrawal
+                        if grid_profit > 0:
                             Transaction.objects.create(
                                 user=bot.user,
                                 transaction_type='GRID_CLOSE',
-                                amount=total_return,
+                                amount=grid_profit,
                                 fee=0,
                                 status='COMPLETED',
-                                tx_hash=sweep_result.get('tx_hash', ''),
+                                tx_hash=profit_sweep.get('tx_hash', ''),
                                 metadata={
                                     'grid_bot_id': str(bot.id),
                                     'token': token.symbol,
-                                    'reason': 'auto_close_20_percent',
-                                    'pnl_percent': float(pnl_percent),
+                                    'reason': 'auto_reactivate_grid_profit',
                                     'to_address': user_address
                                 },
                                 completed_at=timezone.now()
                             )
 
-                            bot.status = 'COMPLETED'
-                            bot.save()
-                            closed += 1
+                        # Create new GridBot with capital + PNL (after 10% fee)
+                        upper_price = current_price * Decimal('1.15')
+                        lower_price = current_price * Decimal('0.85')
+                        new_bot = GridBot.objects.create(
+                            user=bot.user,
+                            token=token,
+                            amount=new_invested,
+                            lower_price=lower_price,
+                            upper_price=upper_price,
+                            grids=100,
+                            status='ACTIVE',
+                            grid_profit=Decimal('0'),
+                            pnl=Decimal('0'),
+                            pnl_percent=Decimal('0'),
+                            price_at_creation=current_price,
+                            created_at=timezone.now(),
+                        )
 
-                            notify_user(
-                                bot.user,
-                                f'🎉 {token.symbol} Auto-Closed at +{float(pnl_percent):.1f}%',
-                                f'${float(total_return):.2f} returned to your wallet. Reactivate anytime to keep earning.',
-                                'PORTFOLIO'
-                            )
+                        # Record the 10% management fee
+                        Transaction.objects.create(
+                            user=bot.user,
+                            transaction_type='PURCHASE',
+                            amount=new_capital_total,
+                            fee=fee,
+                            status='COMPLETED',
+                            metadata={
+                                'token_id': str(token.id),
+                                'token_symbol': token.symbol,
+                                'reason': 'auto_reactivate_20_percent',
+                                'new_bot_id': str(new_bot.id),
+                                'old_bot_id': str(bot.id),
+                            },
+                            completed_at=timezone.now()
+                        )
 
-                            self.stdout.write(f'🔒 Auto-closed {token.symbol} for {bot.user.email} at +{float(pnl_percent):.1f}%')
-                        else:
-                            self.stdout.write(f'⚠️ Sweep failed: {sweep_result.get("error")}')
+                        # Mark old bot as completed
+                        bot.status = 'COMPLETED'
+                        bot.save()
+                        closed += 1
+
+                        # Notify user
+                        notify_user(
+                            bot.user,
+                            f'🔄 {token.symbol} Auto-Renewed at +{float(pnl_percent):.1f}%',
+                            f'${float(grid_profit):.2f} profit was sent to your wallet. '
+                            f'${float(new_invested):.2f} has been automatically reinvested in a new {token.symbol} tracker (after 10% fee).',
+                            'PORTFOLIO'
+                        )
+
+                        self.stdout.write(
+                            f'🔄 Auto-renewed {token.symbol} for {bot.user.email} with ${float(new_invested):.2f}')
                     except Exception as e:
-                        self.stdout.write(f'⚠️ Auto-close error: {e}')
+                        self.stdout.write(f'⚠️ Auto-renew error: {e}')
+                        continue
 
         self.stdout.write(self.style.SUCCESS(f'Updated PNL for {updated} bots | Auto-closed {closed} bots'))

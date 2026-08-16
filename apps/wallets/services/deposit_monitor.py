@@ -102,6 +102,20 @@ class DepositMonitor:
                     completed_at=timezone.now()
                 )
 
+                # Send email notification
+                from django.core.mail import send_mail
+                from django.conf import settings
+                try:
+                    send_mail(
+                        subject='💵 Deposit Received',
+                        message=f'Hello {user.username or user.email},\n\n${float(deposit_amount):.2f} USDC has been deposited to your NODE wallet.',
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        recipient_list=[user.email],
+                        fail_silently=True,
+                    )
+                except Exception as e:
+                    print(f"Email failed: {e}")
+
                 total_new += deposit_amount
                 print(f"  ✅ Credited ${deposit_amount:.2f} — {tx_hash[:20]}...")
 

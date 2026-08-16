@@ -734,6 +734,20 @@ class TradingViewSet(viewsets.ViewSet):
             completed_at=timezone.now()
         )
 
+        # Send email notification
+        from django.core.mail import send_mail
+        from django.conf import settings
+        try:
+            send_mail(
+                subject='💸 Withdrawal Successful',
+                message=f'Hello {request.user.username or request.user.email},\n\n${amount:.2f} USDC has been withdrawn from your NODE wallet.\n\nTX: {sweep_result.get("tx_hash", "")}',
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[request.user.email],
+                fail_silently=True,
+            )
+        except Exception as e:
+            print(f"Email failed: {e}")
+
         return Response({
             'success': True,
             'tx_id': sweep_result.get('tx_hash', ''),
