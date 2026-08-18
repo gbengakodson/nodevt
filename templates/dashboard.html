@@ -402,11 +402,16 @@
             </div>
             <div class="col-md-3 col-6">
                 <div class="stat-card">
-                    <div class="stat-label">🆘 Reserved Fund</div>
-                    <div class="stat-value gold" id="reserveBalance">$0.00</div>
+                    <div class="stat-label">Portfolio Value</div>
+                    <div class="stat-value gold" id="portfolioValue">$0</div>
 
                     <!-- Reserved Fund (moved from bottom card) -->
                     <div id="reservePurseSection" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); text-align:left; display:none;">
+                        <div style="font-size:10px; color:#707A8A; text-transform:uppercase; margin-bottom:6px;">🆘 Reserved Fund</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; color:#848E9C;">Balance</span>
+                            <span class="stat-value green" id="reserveBalance" style="font-size:14px;">$0.00</span>
+                        </div>
 
                         <div style="font-size:9px; color:#707A8A; margin:6px 0;">
                             Auto-sweeps grid profit weekly. Withdraw any amount anytime.
