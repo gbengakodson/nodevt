@@ -404,12 +404,44 @@
                 <div class="stat-card">
                     <div class="stat-label">Portfolio Value</div>
                     <div class="stat-value gold" id="portfolioValue">$0</div>
+
+                    <!-- Reserved Fund (moved from bottom card) -->
+                    <div id="reservePurseSection" style="margin-top:10px; padding-top:10px; border-top:1px solid var(--border); text-align:left; display:none;">
+                        <div style="font-size:10px; color:#707A8A; text-transform:uppercase; margin-bottom:6px;">🆘 Reserved Fund</div>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:11px; color:#848E9C;">Balance</span>
+                            <span class="stat-value green" id="reserveBalance" style="font-size:14px;">$0.00</span>
+                        </div>
+
+                        <div style="font-size:9px; color:#707A8A; margin:6px 0;">
+                            Auto-sweeps grid profit weekly. Withdraw any amount anytime.
+                        </div>
+
+                        <div class="card-row" style="padding:6px 0;">
+                            <span class="card-label" style="font-size:11px;">Auto-Sweep</span>
+                            <div class="toggle" id="toggleReserveSweep" onclick="togglePurse('Reserve')"></div>
+                        </div>
+
+                        <div class="card-row" style="padding:6px 0;">
+                            <span class="card-label" style="font-size:11px;">Sweep % of Profit</span>
+                            <select id="reserveSweepPct" class="form-select" style="max-width:70px; font-size:10px;">
+                                <option value="10">10%</option>
+                                <option value="25">25%</option>
+                                <option value="50">50%</option>
+                                <option value="100">100%</option>
+                            </select>
+                        </div>
+
+                        <button class="btn-transfer-yield" onclick="withdrawFromPurse('Reserve')" style="margin-top:6px; width:100%;">💸 Withdraw</button>
+                    </div>
                 </div>
             </div>
             <div class="col-md-3 col-6">
                 <div class="stat-card">
                     <div class="stat-label">Yield Balance</div>
                     <div class="stat-value green" id="yieldBalance">$0</div>
+                    <div class="stat-sub" id="yieldMinRequired">Min: $0.00</div>
+                    <button class="btn-transfer-yield" id="btnWithdrawYield" onclick="openWithdrawYieldModal()">💰 Withdraw</button>
                 </div>
             </div>
             <div class="col-md-3 col-6">
@@ -436,47 +468,6 @@
             </div>
         </div>
 
-        <!-- Yield Wallet Card -->
-        <div class="yield-card">
-            <div class="yield-card-title">💎 Yield Wallet</div>
-            <div class="yield-balance-row">
-                <span class="yield-balance-label">Available Yield</span>
-                <span class="yield-balance-value" id="yieldWalletBalance">$0.00</span>
-            </div>
-            <div class="yield-min-hint">
-                Min required to transfer: <strong id="minRequired">$0.00</strong> (10% of portfolio)
-            </div>
-            <button class="btn-transfer-yield" id="btnWithdrawYield" onclick="openWithdrawYieldModal()">
-                💰 Withdraw Yield
-            </button>
-        </div>
-        <!-- ============ SEGMENT-SPECIFIC CARDS ============ -->
-
-        <!-- SURVIVOR: Emergency Purse -->
-        <div id="survivorPurse" class="yield-card" style="display:none;">
-            <div class="yield-card-title">🆘 Reserved Fund</div>
-            <div class="yield-balance-row">
-                <span class="yield-balance-label">Balance</span>
-                <span class="yield-balance-value" id="reserveBalance">$0.00</span>
-            </div>
-            <div style="font-size:10px;color:#707A8A;margin-bottom:8px;">
-                Auto-sweeps grid profit weekly. Withdraw any amount anytime.
-            </div>
-            <div class="card-row" style="padding:8px 0;">
-                <span class="card-label">Auto-Sweep</span>
-                <div class="toggle" id="toggleReserveSweep" onclick="togglePurse('Reserve')"></div>
-            </div>
-            <div class="card-row" style="padding:8px 0;">
-                <span class="card-label">Sweep % of Profit</span>
-                <select id="reserveSweepPct" class="form-select" style="max-width:80px;">
-                    <option value="10">10%</option>
-                    <option value="25">25%</option>
-                    <option value="50">50%</option>
-                    <option value="100">100%</option>
-                </select>
-            </div>
-            <button class="btn-transfer-yield" onclick="withdrawFromPurse('Reserve')" style="margin-top:8px;">💸 Withdraw Emergency Fund</button>
-        </div>
 
         <!-- HUSTLER: Business Purses -->
         <div id="hustlerPurses" style="display:none;">
@@ -984,11 +975,12 @@
             }
 
             // ============ SEGMENT-SPECIFIC CARDS ============
+            // ============ SEGMENT-SPECIFIC CARDS ============
             // Show/hide segment cards based on user type
-            var survEl = document.getElementById('survivorPurse');
+            var reserveSection = document.getElementById('reservePurseSection');
             var hustEl = document.getElementById('hustlerPurses');
             var provEl = document.getElementById('providerPurses');
-            if (survEl) survEl.style.display = (userType === 'MICRO') ? 'block' : 'none';
+            if (reserveSection) reserveSection.style.display = (userType === 'MICRO') ? 'block' : 'none';
             if (hustEl) hustEl.style.display = (userType === 'BUSINESS') ? 'block' : 'none';
             if (provEl) provEl.style.display = (userType === 'SALARY' || userType === 'DIASPORA') ? 'block' : 'none';
 
@@ -1020,13 +1012,19 @@
             const btnTransfer = document.getElementById('btnWithdrawYield');
             const minRequired = portfolioData ? (userType === 'BUSINESS' ? portfolioData.total_portfolio * 0.03 : portfolioData.min_required_to_transfer) : 0;
             const canTransfer = portfolioData ? (userType === 'BUSINESS' ? (userYieldBalance >= minRequired && userYieldBalance > 0) : portfolioData.can_transfer) : false;
-            if (document.getElementById('minRequired')) {
-                document.getElementById('minRequired').textContent = formatCurrency(minRequired);
+
+            const minEl = document.getElementById('yieldMinRequired');
+            if (minEl) {
+                minEl.textContent = formatCurrency(minRequired);
             }
-            btnTransfer.disabled = !canTransfer;
-            if (!canTransfer && userYieldBalance > 0) {
-                btnTransfer.title = 'Need at least ' + formatCurrency(minRequired) + ' in yield (' + (userType === 'BUSINESS' ? '3' : '10') + '% of portfolio)';
-            } else { btnTransfer.title = ''; }
+            if (btnTransfer) {
+                btnTransfer.disabled = !canTransfer;
+                if (!canTransfer && userYieldBalance > 0) {
+                    btnTransfer.title = 'Need at least ' + formatCurrency(minRequired) + ' in yield (' + (userType === 'BUSINESS' ? '3' : '10') + '% of portfolio)';
+                } else {
+                    btnTransfer.title = '';
+                }
+            }
 
             // Grid Bots
             const gridBots = await apiCall('/trading/my_grids_all/');
