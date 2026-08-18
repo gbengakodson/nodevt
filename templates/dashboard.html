@@ -437,11 +437,11 @@
                 </div>
             </div>
             <div class="col-md-3 col-6">
-                <div class="stat-card">
-                    <div class="stat-label">Yield Balance</div>
-                    <div class="stat-value green" id="yieldBalance">$0</div>
-                    <div class="stat-sub" id="yieldMinRequired">Min: $0.00</div>
-                    <button class="btn-transfer-yield" id="btnWithdrawYield" onclick="openWithdrawYieldModal()">💰 Withdraw</button>
+                <div class="stat-card" style="padding:8px 10px; display:flex; flex-direction:column; gap:4px;">
+                    <div class="stat-label" style="font-size:9px;">Yield Balance</div>
+                    <div class="stat-value green" id="yieldBalance" style="font-size:16px;">$0</div>
+                    <div class="stat-sub" id="yieldMinRequired" style="font-size:9px; color:#848E9C;">Min: $0.00</div>
+                    <button class="btn-transfer-yield" onclick="openWithdrawYieldModal()" style="padding:4px 8px; font-size:10px; margin-top:2px;">💰 Withdraw</button>
                 </div>
             </div>
             <div class="col-md-3 col-6">
@@ -994,7 +994,7 @@
                 loadPurse('Operations');
                 loadPurse('Supply Chain');
                 loadPurse('Maintenance');
-                var minReqEl = document.getElementById('minRequired');
+                var minReqEl = document.getElementById('yieldMinRequired');
                 if (minReqEl && portfolioData) {
                     minReqEl.textContent = formatCurrency(portfolioData.total_portfolio * 0.03);
                 }
