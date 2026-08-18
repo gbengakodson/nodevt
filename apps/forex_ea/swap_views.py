@@ -96,3 +96,21 @@ class ForexSwapView(APIView):
             'fee': float(fee),
             'final_amount': float(final_amount),
         })
+
+
+class ForexBalancesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        # Always include all six supported assets
+        balances = {}
+        for currency in SUPPORTED_CURRENCIES:
+            if currency == 'USD':
+                wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+                balance = wallet.balance if wallet else Decimal('0')
+            else:
+                fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=currency)
+                balance = fiat.balance
+            balances[currency] = float(balance)
+
+        return Response({'balances': balances})
