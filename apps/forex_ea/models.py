@@ -2,6 +2,8 @@ import uuid
 import hashlib
 from django.db import models
 from django.conf import settings
+from decimal import Decimal
+
 
 class UserForexProfile(models.Model):
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='forex_profile')
@@ -178,5 +180,28 @@ class ForexForecast(models.Model):
     trigger = models.CharField(max_length=200)
     daily_candle = models.CharField(max_length=30, blank=True, null=True)   # ← new
     created_at = models.DateTimeField(auto_now_add=True)
+
+
+
+class FiatBalance(models.Model):
+    CURRENCY_CHOICES = [
+        ('USD', 'US Dollar'),
+        ('EUR', 'Euro'),
+        ('GBP', 'British Pound'),
+        ('NGN', 'Nigerian Naira'),
+        ('GOLD', 'Gold (XAU)'),
+        ('USOIL', 'US Oil (WTI)'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fiat_balances')
+    currency = models.CharField(max_length=6, choices=CURRENCY_CHOICES)   # increased length to 6 for USOIL
+    balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
+
+    class Meta:
+        unique_together = ('user', 'currency')
+        verbose_name_plural = 'Fiat balances'
+
+    def __str__(self):
+        return f"{self.user.email} - {self.currency}: {self.balance}"
 
 
