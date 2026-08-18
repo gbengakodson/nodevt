@@ -393,38 +393,52 @@
     <div class="container-fluid px-3">
 
         <!-- Top Stats -->
-        <div class="d-flex gap-3 align-items-start flex-nowrap">
-            <!-- LEFT COLUMN: small cards stacked vertically -->
-            <div class="d-flex flex-column gap-3" style="flex:1; min-width:0;">
-                <!-- Wallet Balance -->
-                <div class="stat-card">
-                    <div class="stat-label">Wallet Balance</div>
-                    <div class="stat-value gold" id="grandBalance">$0</div>
-                </div>
+        <div class="row g-3 mb-4">
+            <!-- LEFT COLUMN: small cards -->
+            <div class="col-12 col-md-8 order-2 order-md-1">
+                <div class="row g-3">
+                    <!-- Wallet Balance (always visible) -->
+                    <div class="col-6 col-md-12">
+                        <div class="stat-card">
+                            <div class="stat-label">Wallet Balance</div>
+                            <div class="stat-value gold" id="grandBalance">$0</div>
+                        </div>
+                    </div>
 
-                <!-- Profit / Yield -->
-                <div class="stat-card">
-                    <div class="stat-label">Profit</div>
-                    <div class="stat-value green" id="yieldBalance">$0</div>
-                    <div class="stat-sub" id="yieldMinRequired" style="font-size:9px; color:#848E9C;">Min: $0.00</div>
-                    <button class="btn-transfer-yield" onclick="openWithdrawYieldModal()" style="margin-top:2px; font-size:10px;">💰</button>
-                </div>
+                    <!-- Profit / Yield (always visible) -->
+                    <div class="col-6 col-md-12">
+                        <div class="stat-card">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <div class="stat-label">Profit</div>
+                                    <div class="stat-value green" id="yieldBalance">$0</div>
+                                    <div class="stat-sub" id="yieldMinRequired" style="font-size:9px; color:#848E9C;">Min: $0.00</div>
+                                </div>
+                                <span onclick="openWithdrawYieldModal()" style="font-size:18px; cursor:pointer;" title="Withdraw Profit">💰</span>
+                            </div>
+                        </div>
+                    </div>
 
-                <!-- Total Value -->
-                <div class="stat-card">
-                    <div class="stat-label">Total Value</div>
-                    <div class="stat-value dark" id="totalValue">$0</div>
-                </div>
+                    <!-- Total Value (desktop only) -->
+                    <div class="col-6 col-md-12 d-none d-md-block">
+                        <div class="stat-card">
+                            <div class="stat-label">Total Value</div>
+                            <div class="stat-value dark" id="totalValue">$0</div>
+                        </div>
+                    </div>
 
-                <!-- Fifth Card (now visible on all devices) -->
-                <div class="stat-card">
-                    <div class="stat-label">Referral Earnings</div>
-                    <div class="stat-value" id="referralEarnings" style="color:#0ECB81;">$0.00</div>
+                    <!-- Referral Earnings (desktop only) -->
+                    <div class="col-6 col-md-12 d-none d-md-block">
+                        <div class="stat-card">
+                            <div class="stat-label">Referral Earnings</div>
+                            <div class="stat-value" id="referralEarnings" style="color:#0ECB81;">$0.00</div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: tall Portfolio/Reserve card -->
-            <div class="flex-shrink-0" style="width: 280px;">
+            <!-- RIGHT COLUMN: Portfolio / Reserve Fund (full width on mobile, 4 cols on desktop) -->
+            <div class="col-12 col-md-4 order-1 order-md-2">
                 <div class="stat-card">
                     <div class="stat-label">Portfolio Value</div>
                     <div class="stat-value gold" id="portfolioValue">$0</div>
