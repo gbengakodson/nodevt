@@ -432,6 +432,120 @@
         color: #FFFFFF;
         border-color: #1B1E21;
     }
+    /* Holdings Table - Binance-style */
+    .table-wrapper {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    .holdings-table {
+        width: 100%;
+        border-collapse: collapse;
+        min-width: 600px;
+    }
+
+    .holdings-table th {
+        padding: 10px 14px;
+        text-align: left;
+        background: rgba(240, 185, 11, 0.04);
+        font-size: 10px;
+        font-weight: 700;
+        color: var(--text-secondary);
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+    }
+
+    .holdings-table td {
+        padding: 12px 14px;
+        border-bottom: 1px solid rgba(255,255,255,0.03);
+        font-size: 12px;
+        color: var(--text-primary);
+        white-space: nowrap;
+    }
+
+    .holdings-table tbody tr {
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+
+    .holdings-table tbody tr:hover {
+        background: rgba(240, 185, 11, 0.03);
+    }
+
+    .holdings-table tbody tr:last-child td {
+        border-bottom: none;
+    }
+
+    .token-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .token-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+
+    .token-info .t-symbol {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .token-info .t-name {
+        font-size: 10px;
+        color: var(--text-secondary);
+    }
+
+    .positive { color: var(--success); font-weight: 500; }
+    .negative { color: var(--danger); font-weight: 500; }
+
+    /* Action buttons */
+    .action-btns {
+        display: flex;
+        gap: 6px;
+    }
+
+    .btn-action {
+        padding: 5px 12px;
+        border-radius: 5px;
+        font-size: 10px;
+        font-weight: 600;
+        cursor: pointer;
+        border: 1px solid var(--border);
+        background: transparent;
+        color: var(--text-primary);
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+
+    .btn-action:hover {
+        border-color: var(--primary);
+        color: var(--primary);
+    }
+
+    .btn-action.sell {
+        color: var(--danger);
+        border-color: rgba(246, 70, 93, 0.3);
+    }
+    .btn-action.sell:hover {
+        background: rgba(246, 70, 93, 0.1);
+    }
+
+    .btn-action.buy {
+        color: var(--success);
+        border-color: rgba(14, 203, 129, 0.3);
+    }
+    .btn-action.buy:hover {
+        background: rgba(14, 203, 129, 0.1);
+    }
 </style>
 {% endblock %}
 
