@@ -471,16 +471,7 @@
     </div>
 
     <!-- Position Trackers & Pension -->
-    <div class="info-card">
-        <div class="info-title" style="display:flex;gap:12px;">
-            <span class="tab-link active" id="tabTrackers" onclick="switchTab('trackers')" style="cursor:pointer;font-size:12px;color:var(--primary);border-bottom:2px solid var(--primary);padding-bottom:4px;">📊 Position Trackers</span>
-            <span class="tab-link" id="tabPension" onclick="switchTab('pension')" style="cursor:pointer;font-size:12px;color:var(--text-secondary);padding-bottom:4px;display:none;">🏦 Pension</span>
-        </div>
-        <div id="tabContentTrackers">
-            <div id="trackersContainer"><div class="empty-state"><div class="icon">📊</div><p>Loading...</p></div></div>
-        </div>
-        <div id="tabContentPension" style="display:none;"></div>
-    </div>
+
     <!-- Purse Withdraw Modal -->
     <div class="modal-overlay" id="purseModal" style="display:none !important;">
         <div class="modal-box">
@@ -675,77 +666,6 @@
 
     var currentTab = 'trackers';
 
-    function switchTab(tab) {
-        currentTab = tab;
-        document.getElementById('tabTrackers').style.color = tab === 'trackers' ? 'var(--primary)' : 'var(--text-secondary)';
-        document.getElementById('tabTrackers').style.borderBottom = tab === 'trackers' ? '2px solid var(--primary)' : 'none';
-        document.getElementById('tabPension').style.color = tab === 'pension' ? 'var(--primary)' : 'var(--text-secondary)';
-        document.getElementById('tabPension').style.borderBottom = tab === 'pension' ? '2px solid var(--primary)' : 'none';
-        document.getElementById('tabContentTrackers').style.display = tab === 'trackers' ? 'block' : 'none';
-        document.getElementById('tabContentPension').style.display = tab === 'pension' ? 'block' : 'none';
-        if (tab === 'trackers') loadTrackers();
-        if (tab === 'pension') loadPensionDetail();
-    }
-
-    async function loadPortfolio() {
-        // Show pension tab only for SALARY/DIASPORA
-        if (userType === 'SALARY' || userType === 'DIASPORA') {
-            document.getElementById('tabPension').style.display = 'inline';
-        }
-        if (currentTab === 'trackers') loadTrackers();
-        else loadPensionDetail();
-    }
-
-    async function loadTrackers() {
-        var container = document.getElementById('trackersContainer');
-        try {
-            var bots = await apiCall('/trading/my_grids_all/');
-            allTokens = await apiCall('/trading/');
-            var totalValue = 0;
-
-            if (!bots || bots.length === 0) {
-                container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>No Position Trackers</p><p style="font-size:10px;"><a href="/trading/" style="color:#F0B90B;">Activate one</a> on the trading page</p></div>';
-                portfolioValue = 0;
-                updateGoalTracker();
-                return;
-            }
-
-            var html = '<div class="table-wrapper"><table class="holdings-table"><thead><tr>' +
-                '<th>Asset</th><th>Invested</th><th>Value</th><th>Yield</th><th>PNL</th><th>Actions</th></tr></thead><tbody>';
-
-            for (var i = 0; i < bots.length; i++) {
-                var bot = bots[i];
-                var tokenData = allTokens.find(function(t) { return t.symbol === bot.token_symbol; });
-                var currentPrice = tokenData ? parseFloat(tokenData.current_price) : 0;
-                var invested = parseFloat(bot.amount);
-                var profit = parseFloat(bot.grid_profit) || 0;
-                var pnl = parseFloat(bot.pnl) || 0;
-                var value = invested + profit + pnl;
-                var pnlClass = pnl >= 0 ? 'positive' : 'negative';
-                var pnlSymbol = pnl >= 0 ? '+' : '';
-                var hasProfit = profit > 0;
-                totalValue += value;
-
-                html += '<tr>' +
-                    '<td><div class="token-cell"><img src="' + getTokenIcon(bot.token_symbol) + '" class="token-icon" onerror="this.src=\'https://cryptologos.cc/logos/bitcoin-btc-logo.png\'"><div class="token-info"><div class="t-symbol">' + bot.token_symbol + '</div><div class="t-name">' + (bot.token_name || '') + '</div></div></div></td>' +
-                    '<td>' + formatCurrency(invested) + '</td>' +
-                    '<td>' + formatCurrency(value) + '</td>' +
-                    '<td style="color:' + (profit > 0 ? '#0ECB81' : '#848E9C') + ';">' + formatCurrency(profit) +
-                        (hasProfit ? '<br><small style="color:var(--primary);cursor:pointer;" onclick="collectProfit(\'' + bot.id + '\')">Collect →</small>' : '') +
-                    '</td>' +
-                    '<td class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(pnl)) + '<br><small>' + pnlSymbol + (bot.pnl_percent || 0).toFixed(2) + '%</small></td>' +
-                    '<td><span style="font-size:9px;color:' + (bot.status === 'ACTIVE' ? '#0ECB81' : '#848E9C') + ';">' + (bot.status === 'ACTIVE' ? '🤖 Active' : '⏸️ Stopped') + '</span></td>' +
-                '</tr>';
-            }
-            html += '</tbody></table></div>';
-            container.innerHTML = html;
-            portfolioValue = totalValue;
-            updateGoalTracker();
-        } catch(e) {
-            container.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
-        }
-    }
-
     async function collectProfit(botId) {
         try {
             var res = await apiCall('/trading/collect_grid_profit/', 'POST', { bot_id: botId });
@@ -756,59 +676,6 @@
             } else {
                 alert('❌ ' + (res.error || 'Failed'));
             }
-        } catch(e) { alert('Error'); }
-    }
-
-    async function loadPensionDetail() {
-        var container = document.getElementById('tabContentPension');
-        try {
-            var res = await apiCall('/trading/pension_status/');
-            var wallet = await apiCall('/trading/my_balance/');
-
-            if (!res.active) {
-                container.innerHTML = '<div style="padding:16px;text-align:center;">' +
-                    '<p style="font-size:12px;color:var(--text-secondary);">🏦 Pension not active</p>' +
-                    '<p style="font-size:10px;color:var(--text-secondary);">Lock your Yield Wallet to start</p>' +
-                    '<select id="pensionDuration" style="font-size:10px;padding:4px 8px;margin:8px;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:4px;color:var(--text-primary);"><option value="2">2 Years</option><option value="3">3 Years</option><option value="5">5 Years</option><option value="10">10 Years</option><option value="15">15 Years</option><option value="20">20 Years</option><option value="25">25 Years</option><option value="30">30 Years</option></select>' +
-                    '<button class="btn-goal" onclick="activatePension()" style="margin-left:4px;">Lock & Activate</button>' +
-                    '<p style="font-size:8px;color:var(--danger);margin-top:8px;">⚠️ Cannot be undone until expiry</p></div>';
-                return;
-            }
-
-            var lockedUntil = res.locked_until ? new Date(res.locked_until) : null;
-            var now = new Date();
-            var daysLeft = lockedUntil ? Math.ceil((lockedUntil - now) / (1000 * 60 * 60 * 24)) : 0;
-            var createdDate = lockedUntil ? new Date(lockedUntil.getTime() - (res.reinvest_years || 5) * 365 * 24 * 60 * 60 * 1000) : null;
-            var nextReinvest = new Date(now.getTime() + (6 * 30 * 24 * 60 * 60 * 1000)); // ~6 months
-
-            container.innerHTML = '<div style="padding:12px;">' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Status</span><span style="color:var(--success);">🔒 Active</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Locked Amount</span><span style="color:var(--primary);">' + formatCurrency(wallet.yield_balance) + '</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Created</span><span>' + (createdDate ? createdDate.toLocaleDateString() : '—') + '</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Maturity</span><span>' + (lockedUntil ? lockedUntil.toLocaleDateString() : '—') + '</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Days Left</span><span style="color:var(--warning);">' + daysLeft + ' days</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;border-bottom:1px solid rgba(255,255,255,0.03);">' +
-                    '<span class="lbl">Next Reinvest</span><span style="color:var(--success);">~' + nextReinvest.toLocaleDateString() + '</span></div>' +
-                '<div class="row" style="display:flex;justify-content:space-between;padding:6px 0;font-size:10px;">' +
-                    '<span class="lbl">Reinvest Rule</span><span>Every 6 months if &gt; $10</span></div>' +
-            '</div>';
-        } catch(e) {
-            container.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
-        }
-    }
-
-    async function activatePension() {
-        var years = parseInt(document.getElementById('pensionDuration').value) || 5;
-        if (!confirm('Lock Yield Wallet for ' + years + ' years? Cannot undo until expiry.')) return;
-        try {
-            var res = await apiCall('/trading/pension_activate/', 'POST', { years: years });
-            if (res.success) { alert('✅ Activated!'); loadPensionDetail(); loadPurseCard(); }
-            else alert('❌ ' + (res.error || 'Failed'));
         } catch(e) { alert('Error'); }
     }
 
