@@ -1008,10 +1008,13 @@
         var container = document.getElementById('trackersContainer');
         try {
             var bots = await apiCall('/trading/my_grids_all/');
-            var allTokens = await apiCall('/trading/');
+            allTokens = await apiCall('/trading/');
+            var totalValue = 0;
 
             if (!bots || bots.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>No Position Trackers</p><p style="font-size:10px;"><a href="/trading/" style="color:#F0B90B;">Activate one</a> on the trading page</p></div>';
+                portfolioValue = 0;
+                updateGoalTracker();
                 return;
             }
 
@@ -1021,6 +1024,7 @@
             for (var i = 0; i < bots.length; i++) {
                 var bot = bots[i];
                 var tokenData = allTokens.find(function(t) { return t.symbol === bot.token_symbol; });
+                var currentPrice = tokenData ? parseFloat(tokenData.current_price) : 0;
                 var invested = parseFloat(bot.amount);
                 var profit = parseFloat(bot.grid_profit) || 0;
                 var pnl = parseFloat(bot.pnl) || 0;
@@ -1028,6 +1032,7 @@
                 var pnlClass = pnl >= 0 ? 'positive' : 'negative';
                 var pnlSymbol = pnl >= 0 ? '+' : '';
                 var hasProfit = profit > 0;
+                totalValue += value;
 
                 html += '<tr>' +
                     '<td><div class="token-cell"><img src="' + getTokenIcon(bot.token_symbol) + '" class="token-icon" onerror="this.src=\'https://cryptologos.cc/logos/bitcoin-btc-logo.png\'"><div class="token-info"><div class="t-symbol">' + bot.token_symbol + '</div><div class="t-name">' + (bot.token_name || '') + '</div></div></div></td>' +
@@ -1040,9 +1045,10 @@
                     '<td><span style="font-size:9px;color:' + (bot.status === 'ACTIVE' ? '#0ECB81' : '#848E9C') + ';">' + (bot.status === 'ACTIVE' ? '🤖 Active' : '⏸️ Stopped') + '</span></td>' +
                 '</tr>';
             }
-
             html += '</tbody></table></div>';
             container.innerHTML = html;
+            portfolioValue = totalValue;
+            updateGoalTracker();
         } catch(e) {
             container.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
         }
