@@ -452,7 +452,7 @@
                         </div>
                     </div>
 
-                    <!-- Profit / Yield (always visible) -->
+
                     <!-- Profit / Yield (always visible) -->
                     <div class="col-6 col-md-12">
                         <div class="stat-card">
@@ -655,10 +655,8 @@
             <button class="btn-primary" onclick="withdrawYield()" style="flex:2;">💰 Withdraw</button>
         </div>
     </div>
-
-    <!-- Custom Compound Growth Calculator Modal -->
-    <!-- Custom Compound Growth Calculator Modal -->
-    <div id="compoundGrowthModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10001; align-items:center; justify-content:center; padding:16px;">
+</div>
+<div id="compoundGrowthModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10001; align-items:center; justify-content:center; padding:16px;">
         <div style="background:#FFFFFF; border-radius:14px; max-width:380px; width:100%; padding:20px; color:#1B1E21; box-shadow:0 20px 50px rgba(0,0,0,0.4);">
             <!-- Header -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -729,7 +727,6 @@
             </div>
         </div>
     </div>
-</div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
@@ -822,6 +819,7 @@
 
     // ============ YIELD TRANSFER ============
     async function openWithdrawYieldModal() {
+        closeGrowthModal();
         try {
             const summary = await apiCall('/trading/portfolio_summary/');
             document.getElementById('wYieldBalance').textContent = formatCurrency(summary.yield_balance);
@@ -936,6 +934,7 @@
         updateGrowthChart(initial, years);
     }
     function openGrowthModal() {
+        closeYieldModal();
         var modal = document.getElementById('compoundGrowthModal');
         if (modal) {
             modal.style.display = 'flex';
