@@ -1013,8 +1013,7 @@
 
             if (!bots || bots.length === 0) {
                 container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>No Position Trackers</p><p style="font-size:10px;"><a href="/trading/" style="color:#F0B90B;">Activate one</a> on the trading page</p></div>';
-                portfolioValue = 0;
-                updateGoalTracker();
+
                 return;
             }
 
@@ -1047,8 +1046,7 @@
             }
             html += '</tbody></table></div>';
             container.innerHTML = html;
-            portfolioValue = totalValue;
-            updateGoalTracker();
+
         } catch(e) {
             container.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
         }
