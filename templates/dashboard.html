@@ -657,7 +657,8 @@
     </div>
 
     <!-- Custom Compound Growth Calculator Modal -->
-    <div id="compoundGrowthModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <!-- Custom Compound Growth Calculator Modal -->
+    <div id="compoundGrowthModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10001; align-items:center; justify-content:center; padding:16px;">
         <div style="background:#FFFFFF; border-radius:14px; max-width:380px; width:100%; padding:20px; color:#1B1E21; box-shadow:0 20px 50px rgba(0,0,0,0.4);">
             <!-- Header -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
@@ -671,22 +672,23 @@
             <!-- Amount input -->
             <label style="font-size:10px; color:#6B7280; text-transform:uppercase; letter-spacing:0.05em;">Investment Amount</label>
             <input type="number" id="manualInvestment" class="form-control" value="100" placeholder="100"
+                   oninput="updateGrowthProjection()"
                    style="font-size:16px; font-weight:700; border:1px solid #E2E4E8; border-radius:8px; padding:8px 10px; margin-bottom:8px;">
 
             <!-- Quick presets -->
             <div style="display:flex; gap:6px; margin-bottom:16px;">
-                <button onclick="setGrowthAmount(100)" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$100</button>
-                <button onclick="setGrowthAmount(500)" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$500</button>
-                <button onclick="setGrowthAmount(1000)" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$1K</button>
-                <button onclick="setGrowthAmount(5000)" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$5K</button>
+                <button onclick="document.getElementById('manualInvestment').value=100; updateGrowthProjection();" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$100</button>
+                <button onclick="document.getElementById('manualInvestment').value=500; updateGrowthProjection();" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$500</button>
+                <button onclick="document.getElementById('manualInvestment').value=1000; updateGrowthProjection();" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$1K</button>
+                <button onclick="document.getElementById('manualInvestment').value=5000; updateGrowthProjection();" style="flex:1; padding:5px 0; border-radius:6px; border:1px solid #E2E4E8; background:#F8F9FA; font-size:11px;">$5K</button>
             </div>
 
             <!-- Years -->
             <div style="display:flex; gap:6px; margin-bottom:16px;">
-                <button class="growth-year-btn active" data-years="2" onclick="setGrowthYears(2, this)">2Y</button>
-                <button class="growth-year-btn" data-years="3" onclick="setGrowthYears(3, this)">3Y</button>
-                <button class="growth-year-btn" data-years="4" onclick="setGrowthYears(4, this)">4Y</button>
-                <button class="growth-year-btn" data-years="5" onclick="setGrowthYears(5, this)">5Y</button>
+                <button class="growth-year-btn active" data-years="2" onclick="setGrowthYears(this)">2Y</button>
+                <button class="growth-year-btn" data-years="3" onclick="setGrowthYears(this)">3Y</button>
+                <button class="growth-year-btn" data-years="4" onclick="setGrowthYears(this)">4Y</button>
+                <button class="growth-year-btn" data-years="5" onclick="setGrowthYears(this)">5Y</button>
             </div>
 
             <!-- Summary -->
@@ -914,28 +916,44 @@
     }
 
     function updateGrowthProjection() {
-        const slider = document.getElementById('growthSlider');
-        if (!slider) return;
-        let initial = parseFloat(slider.value);
-        let years = parseInt(document.querySelector('.year-btn.active')?.getAttribute('data-years') || '3');
-        document.getElementById('sliderAmount').textContent = formatCurrency(initial);
+        const amountInput = document.getElementById('manualInvestment');
+        if (!amountInput) return;
+
+        let initial = parseFloat(amountInput.value) || 100;
+        let activeYearBtn = document.querySelector('.growth-year-btn.active') ||
+                            document.querySelector('.year-btn.active');
+        let years = parseInt(activeYearBtn?.getAttribute('data-years') || '3');
+
         const result = calculateCompoundGrowth(initial, years);
         document.getElementById('finalValue').textContent = formatCurrency(result.finalBalance);
         document.getElementById('totalYieldEarned').textContent = formatCurrency(result.totalYield);
+
         document.getElementById('timeTo10k').textContent = findYearsToTarget(initial, 10000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 10000)) + 'y';
         document.getElementById('timeTo50k').textContent = findYearsToTarget(initial, 50000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 50000)) + 'y';
         document.getElementById('timeTo100k').textContent = findYearsToTarget(initial, 100000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 100000)) + 'y';
         document.getElementById('timeTo1M').textContent = findYearsToTarget(initial, 1000000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 1000000)) + 'y';
+
         updateGrowthChart(initial, years);
     }
     function openGrowthModal() {
         var modal = document.getElementById('compoundGrowthModal');
-        if (modal) modal.style.display = 'flex';
+        if (modal) {
+            modal.style.display = 'flex';
+            updateGrowthProjection();
+        }
     }
 
     function closeGrowthModal() {
         var modal = document.getElementById('compoundGrowthModal');
         if (modal) modal.style.display = 'none';
+    }
+
+    function setGrowthYears(btn) {
+        document.querySelectorAll('.growth-year-btn').forEach(function(b) {
+            b.classList.remove('active');
+        });
+        if (btn) btn.classList.add('active');
+        updateGrowthProjection();
     }
 
     function setGrowthAmount(amount) {
@@ -946,11 +964,6 @@
         }
     }
 
-    function setGrowthYears(years, btn) {
-        document.querySelectorAll('.growth-year-btn').forEach(function(b) { b.classList.remove('active'); });
-        if (btn) btn.classList.add('active');
-        updateGrowthCalculator();
-    }
 
     function updateGrowthChart(initial, years) {
         const ctx = document.getElementById('growthChart')?.getContext('2d');
@@ -969,43 +982,26 @@
     }
 
     function initGrowthProjector() {
-        const slider = document.getElementById('growthSlider');
         const manualInput = document.getElementById('manualInvestment');
-        if (!slider) return;
         if (manualInput) {
             manualInput.addEventListener('input', function() {
-                let val = parseFloat(this.value);
-                if (isNaN(val)) val = 10;
-                val = Math.min(10000, Math.max(10, val));
-                slider.value = val;
                 updateGrowthProjection();
             });
-            slider.addEventListener('input', function() { manualInput.value = this.value; updateGrowthProjection(); });
         }
-        slider.addEventListener('input', updateGrowthProjection);
-        document.querySelectorAll('.year-btn').forEach(btn => {
+
+        // Year buttons inside the new modal
+        document.querySelectorAll('.growth-year-btn').forEach(btn => {
             btn.addEventListener('click', function() {
-                document.querySelectorAll('.year-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.growth-year-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 updateGrowthProjection();
             });
         });
+
         updateGrowthProjection();
     }
 
-    function openGrowthModal() {
-        var modal = document.getElementById('compoundGrowthModal');
-        if (modal) modal.style.display = 'flex';
-    }
 
-    function closeGrowthModal() {
-        var modal = document.getElementById('compoundGrowthModal');
-        if (modal) modal.style.display = 'none';
-    }
-
-    document.getElementById('compoundGrowthModal').addEventListener('click', function(e) {
-        if (e.target === this) closeGrowthModal();
-    });
 
     // ============ PURSE FUNCTIONS ============
     async function loadPurse(name) {
