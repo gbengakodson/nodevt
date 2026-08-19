@@ -599,12 +599,17 @@
             </div>
         </div>
 
-        <!-- Yield Earnings Section -->
-        <div class="card" style="background: #F5F7FA; border: none; border-radius: 16px;">
+        <!-- Position Trackers -->
+        <div class="card mt-4" style="background: #F5F7FA; border: 1px solid #6B7280; border-radius: 16px;">
             <div class="card-body p-4">
-
-                <!-- Growth Projector -->
-
+                <div class="info-title" style="display:flex; gap:12px; margin-bottom:12px;">
+                    <span class="tab-link active" id="tabTrackers" style="cursor:pointer; font-size:12px; color:#F0B90B; border-bottom:2px solid #F0B90B; padding-bottom:4px;">📊 Position Trackers</span>
+                </div>
+                <div id="tabContentTrackers">
+                    <div id="trackersContainer">
+                        <div class="empty-state"><div class="icon">📊</div><p>Loading...</p></div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -999,6 +1004,50 @@
         updateGrowthProjection();
     }
 
+    async function loadTrackers() {
+        var container = document.getElementById('trackersContainer');
+        try {
+            var bots = await apiCall('/trading/my_grids_all/');
+            var allTokens = await apiCall('/trading/');
+
+            if (!bots || bots.length === 0) {
+                container.innerHTML = '<div class="empty-state"><div class="icon">📊</div><p>No Position Trackers</p><p style="font-size:10px;"><a href="/trading/" style="color:#F0B90B;">Activate one</a> on the trading page</p></div>';
+                return;
+            }
+
+            var html = '<div class="table-wrapper"><table class="holdings-table"><thead><tr>' +
+                '<th>Asset</th><th>Invested</th><th>Value</th><th>Yield</th><th>PNL</th><th>Actions</th></tr></thead><tbody>';
+
+            for (var i = 0; i < bots.length; i++) {
+                var bot = bots[i];
+                var tokenData = allTokens.find(function(t) { return t.symbol === bot.token_symbol; });
+                var invested = parseFloat(bot.amount);
+                var profit = parseFloat(bot.grid_profit) || 0;
+                var pnl = parseFloat(bot.pnl) || 0;
+                var value = invested + profit + pnl;
+                var pnlClass = pnl >= 0 ? 'positive' : 'negative';
+                var pnlSymbol = pnl >= 0 ? '+' : '';
+                var hasProfit = profit > 0;
+
+                html += '<tr>' +
+                    '<td><div class="token-cell"><img src="' + getTokenIcon(bot.token_symbol) + '" class="token-icon" onerror="this.src=\'https://cryptologos.cc/logos/bitcoin-btc-logo.png\'"><div class="token-info"><div class="t-symbol">' + bot.token_symbol + '</div><div class="t-name">' + (bot.token_name || '') + '</div></div></div></td>' +
+                    '<td>' + formatCurrency(invested) + '</td>' +
+                    '<td>' + formatCurrency(value) + '</td>' +
+                    '<td style="color:' + (profit > 0 ? '#0ECB81' : '#848E9C') + ';">' + formatCurrency(profit) +
+                        (hasProfit ? '<br><small style="color:var(--primary);cursor:pointer;" onclick="collectProfit(\'' + bot.id + '\')">Collect →</small>' : '') +
+                    '</td>' +
+                    '<td class="' + pnlClass + '">' + pnlSymbol + formatCurrency(Math.abs(pnl)) + '<br><small>' + pnlSymbol + (bot.pnl_percent || 0).toFixed(2) + '%</small></td>' +
+                    '<td><span style="font-size:9px;color:' + (bot.status === 'ACTIVE' ? '#0ECB81' : '#848E9C') + ';">' + (bot.status === 'ACTIVE' ? '🤖 Active' : '⏸️ Stopped') + '</span></td>' +
+                '</tr>';
+            }
+
+            html += '</tbody></table></div>';
+            container.innerHTML = html;
+        } catch(e) {
+            container.innerHTML = '<div class="empty-state"><p>Error loading</p></div>';
+        }
+    }
+
 
 
     // ============ PURSE FUNCTIONS ============
@@ -1249,7 +1298,9 @@
     }
 
     loadDashboard();
+    loadTrackers();
     setInterval(loadDashboard, 120000);
+    setInterval(loadTrackers, 120000);
 
 
 
