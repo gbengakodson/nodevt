@@ -589,61 +589,67 @@
     function renderForexCards(balances, rates) {
         var container = document.getElementById('forexSpot');
         if (!container) return;
+        if (!balances) return;
 
-        var symbols = {
-            'USD': '💵',
-            'EUR': '💶',
-            'GBP': '💷',
-            'NGN': '🇳🇬',
-            'GOLD': '🥇',
-            'USOIL': '🛢️'
+        var assets = {
+            'USD': { flag: '🇺🇸', symbol: '$', name: 'US Dollar' },
+            'EUR': { flag: '🇪🇺', symbol: '€', name: 'Euro' },
+            'GBP': { flag: '🇬🇧', symbol: '£', name: 'British Pound' },
+            'NGN': { flag: '🇳🇬', symbol: '₦', name: 'Nigerian Naira' },
+            'GOLD': { flag: '🥇', symbol: 'XAU', name: 'Gold' },
+            'USOIL': { flag: '🛢️', symbol: 'WTI', name: 'US Oil' }
         };
 
-        if (!balances) return;
         container.innerHTML = Object.keys(balances).map(function(currency) {
+            var info = assets[currency] || { flag: '💱', symbol: '', name: currency };
             var balance = Number(balances[currency]) || 0;
-            var rate = rates[currency]?.price || 0;
-            var change = rates[currency]?.change_24h || 0;
+            var rate = rates && rates[currency] ? rates[currency].price : 0;
+            var change = rates && rates[currency] ? rates[currency].change_24h : 0;
             var usdEquivalent = balance * rate;
 
             return `
-                <div class="col-6 col-md-4 col-lg-3">
-                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:12px; padding:12px; display:flex; flex-direction:column; height:100%;">
-                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
-                            <span style="font-size:20px;">${symbols[currency] || '💱'}</span>
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px; position:relative; overflow:hidden;">
+                        <!-- Watermark currency symbol -->
+                        <div style="position:absolute; right:-10px; top:-10px; font-size:80px; font-weight:700; color:rgba(27,30,33,0.04); pointer-events:none;">${info.symbol}</div>
+
+                        <!-- Asset header -->
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:32px;">${info.flag}</span>
                             <div>
-                                <div style="font-size:12px; font-weight:700; color:#1B1E21;">${currency}</div>
-                                <div style="font-size:10px; color:#6B7280;">Spot Balance</div>
+                                <div style="font-size:16px; font-weight:700; color:#1B1E21;">${currency}</div>
+                                <div style="font-size:11px; color:#6B7280;">${info.name}</div>
                             </div>
                         </div>
 
-                        <div style="font-size:18px; font-weight:700; color:#1B1E21;">
-                            ${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        <!-- Balance -->
+                        <div style="font-size:30px; font-weight:700; color:#1B1E21; line-height:1.1;">
+                            ${info.symbol}${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
                         </div>
-                        <div style="font-size:10px; color:#6B7280;">
+                        <div style="font-size:12px; color:#6B7280;">
                             ≈ $${usdEquivalent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDT
                         </div>
 
-                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
-                            <span style="font-size:11px; color:#6B7280;">Rate: $${rate.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</span>
+                        <!-- Rate & PNL -->
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
+                            <span style="font-size:11px; color:#6B7280;">Rate</span>
+                            <span style="font-size:12px; font-weight:700; color:#1B1E21;">$${rate.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</span>
                             <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
                                 ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
                             </span>
                         </div>
 
-                        <!-- Transaction history placeholder -->
-                        <div style="margin-top:10px; padding-top:8px; border-top:1px solid #F0F2F5;">
-                            <div style="font-size:10px; color:#6B7280; font-weight:600;">History</div>
-                            <div id="history-${currency}" style="font-size:9px; color:#6B7280;">
-                                No transactions yet
-                            </div>
+                        <!-- History -->
+                        <div style="font-size:10px; color:#6B7280; font-weight:600;">Transaction History</div>
+                        <div id="history-${currency}" style="font-size:9px; color:#6B7280; background:#F8F9FA; border-radius:8px; padding:8px;">
+                            No transactions yet
                         </div>
 
-                        <!-- Action buttons -->
-                        <div style="display:flex; gap:6px; margin-top:auto; padding-top:10px;">
-                            <button onclick="openAddAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">+ Add</button>
-                            <button onclick="openSendAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">Send</button>
-                            <button onclick="openTransferAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">Transfer</button>
+                        <!-- Actions -->
+                        <div style="display:flex; gap:8px; margin-top:auto;">
+                            <button onclick="openAddAsset('${currency}')" style="flex:1; padding:8px 0; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; font-size:11px; cursor:pointer;">+ Add</button>
+                            <button onclick="openSendAsset('${currency}')" style="flex:1; padding:8px 0; border:1px solid #E2E4E8; border-radius:8px; background:#F8F9FA; color:#1B1E21; font-size:11px; cursor:pointer;">Send</button>
+                            <button onclick="openTransferAsset('${currency}')" style="flex:1; padding:8px 0; border:1px solid #E2E4E8; border-radius:8px; background:#F8F9FA; color:#1B1E21; font-size:11px; cursor:pointer;">Transfer</button>
                         </div>
                     </div>
                 </div>
