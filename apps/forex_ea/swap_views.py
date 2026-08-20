@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from decimal import Decimal
 from .models import FiatBalance
-from .rates_service import get_fiat_rate, get_commodity_price
+from .rates_service import get_fiat_rate, get_commodity_price, get_spot_rates
 from apps.wallets.models import Wallet
 
 SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']
@@ -121,3 +121,10 @@ class ForexBalancesView(APIView):
 
         def get(self, request):
             return Response({'rates': get_spot_rates()})
+
+
+class SpotRatesView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        return Response({'rates': get_spot_rates()})
