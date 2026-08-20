@@ -422,25 +422,23 @@
 {% block content %}
 <div class="portfolio-container">
 
-    <!-- Stats Row -->
-    <div class="d-flex gap-3 mb-3">
-        <button id="tabForex" class="spot-tab" onclick="switchSpotTab('forex')" style="flex:1; padding:10px; border:1px solid #2B3139; border-radius:8px; background:#2B3139; color:#FFFFFF; font-weight:700; cursor:pointer;">🌍 FOREX</button>
-        <button id="tabStocks" class="spot-tab" onclick="switchSpotTab('stocks')" style="flex:1; padding:10px; border:1px solid #2B3139; border-radius:8px; background:transparent; color:#848E9C; font-weight:700; cursor:pointer;">📈 STOCKS</button>
-    </div>
-
-    <div id="forexTabContent">
-        <div class="info-card" style="background:#2B3139; border-radius:14px; padding:16px;">
-            <div class="info-title" style="color:#EAECEF;">🌍 Spot Assets</div>
-            <div id="forexSpot" class="row g-3"></div>
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="stat-card" id="tabForex" onclick="switchSpotTab('forex')" style="cursor:pointer;">
+                <div class="stat-label">FOREX</div>
+                <div class="stat-value" id="forexSpotValue">$0</div>
+                <div class="stat-subtitle">Spot FX & Commodities</div>
+            </div>
+        </div>
+        <div class="col-6">
+            <div class="stat-card" id="tabStocks" onclick="switchSpotTab('stocks')" style="cursor:pointer;">
+                <div class="stat-label">STOCKS</div>
+                <div class="stat-value" id="stocksSpotValue">$0</div>
+                <div class="stat-subtitle">Global & Nigerian Shares</div>
+            </div>
         </div>
     </div>
 
-    <div id="stocksTabContent" style="display:none;">
-        <div class="info-card" style="background:#2B3139; border-radius:14px; padding:16px;">
-            <div class="info-title" style="color:#EAECEF;">📈 Stocks</div>
-            <div id="stocksSpot" class="row g-3"></div>
-        </div>
-    </div>
     <div id="forexTabContent">
         <div class="info-card" style="background:#2B3139; border-radius:14px; padding:16px;">
             <div class="info-title" style="color:#EAECEF;">🌍 Spot Assets</div>
@@ -632,22 +630,14 @@
         var stocksContent = document.getElementById('stocksTabContent');
 
         if (tab === 'forex') {
-            forexTab.classList.add('active');
-            stocksTab.classList.remove('active');
-            forexTab.style.background = '#2B3139';
-            forexTab.style.color = '#FFFFFF';
-            stocksTab.style.background = 'transparent';
-            stocksTab.style.color = '#848E9C';
+            forexTab.style.border = '2px solid #F0B90B';
+            stocksTab.style.border = '1px solid #2B3139';
             forexContent.style.display = 'block';
             stocksContent.style.display = 'none';
             loadForexBalances();
         } else {
-            stocksTab.classList.add('active');
-            forexTab.classList.remove('active');
-            stocksTab.style.background = '#2B3139';
-            stocksTab.style.color = '#FFFFFF';
-            forexTab.style.background = 'transparent';
-            forexTab.style.color = '#848E9C';
+            stocksTab.style.border = '2px solid #F0B90B';
+            forexTab.style.border = '1px solid #2B3139';
             stocksContent.style.display = 'block';
             forexContent.style.display = 'none';
             loadStocks();
