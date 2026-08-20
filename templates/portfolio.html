@@ -490,6 +490,65 @@
     </div>
 </div>
 
+<!-- Send Asset Modal -->
+<div id="sendAssetModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#FFFFFF; border-radius:14px; max-width:400px; width:100%; padding:20px; color:#1B1E21;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:700;">Send Asset</div>
+            <button onclick="closeSendAssetModal()" style="background:none; border:none; font-size:22px; cursor:pointer;">×</button>
+        </div>
+
+        <label style="font-size:11px; color:#6B7280;">Asset</label>
+        <select id="sendAssetSymbol" class="form-control" style="margin-bottom:10px;">
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+        </select>
+
+        <label style="font-size:11px; color:#6B7280;">Recipient Wallet</label>
+        <input type="text" id="sendAssetAddress" class="form-control" placeholder="0x..." style="margin-bottom:10px;">
+
+        <label style="font-size:11px; color:#6B7280;">Amount</label>
+        <input type="number" id="sendAssetAmount" class="form-control" placeholder="0.00" style="margin-bottom:16px;">
+
+        <button onclick="confirmSendAsset()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; cursor:pointer;">Send</button>
+    </div>
+</div>
+    <!-- Transfer Asset Modal -->
+<div id="transferAssetModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#FFFFFF; border-radius:14px; max-width:400px; width:100%; padding:20px; color:#1B1E21;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:700;">Transfer Asset</div>
+            <button onclick="closeTransferAssetModal()" style="background:none; border:none; font-size:22px; cursor:pointer;">×</button>
+        </div>
+
+        <label style="font-size:11px; color:#6B7280;">Asset</label>
+        <select id="transferAssetSymbol" class="form-control" style="margin-bottom:10px;">
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+        </select>
+
+        <label style="font-size:11px; color:#6B7280;">Destination</label>
+        <select id="transferAssetTarget" class="form-control" style="margin-bottom:10px;">
+            <option value="USD">USD (Balance)</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+        </select>
+
+        <label style="font-size:11px; color:#6B7280;">Amount</label>
+        <input type="number" id="transferAssetAmount" class="form-control" placeholder="0.00" style="margin-bottom:16px;">
+
+        <button onclick="confirmTransferAsset()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; cursor:pointer;">Transfer</button>
+    </div>
+</div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -705,8 +764,81 @@
     }
 
 
-    function openSendAsset(currency) { alert('Send ' + currency); }
-    function openTransferAsset(currency) { alert('Transfer ' + currency); }
+    function openSendAsset(currency) {
+        document.getElementById('sendAssetSymbol').value = currency;
+        document.getElementById('sendAssetAddress').value = '';
+        document.getElementById('sendAssetAmount').value = '';
+        document.getElementById('sendAssetModal').style.display = 'flex';
+    }
+
+    function closeSendAssetModal() {
+        document.getElementById('sendAssetModal').style.display = 'none';
+    }
+
+    async function confirmSendAsset() {
+        var symbol = document.getElementById('sendAssetSymbol').value;
+        var address = document.getElementById('sendAssetAddress').value.trim();
+        var amount = parseFloat(document.getElementById('sendAssetAmount').value);
+
+        if (!address.startsWith('0x') || address.length !== 42) {
+            alert('Invalid wallet address');
+            return;
+        }
+        if (!amount || amount <= 0) {
+            alert('Enter amount');
+            return;
+        }
+
+        alert('Send ' + symbol + ' to ' + address + ' coming soon.');
+        closeSendAssetModal();
+    }
+
+    function openTransferAsset(currency) {
+        document.getElementById('transferAssetSymbol').value = currency;
+        document.getElementById('transferAssetAmount').value = '';
+        document.getElementById('transferAssetModal').style.display = 'flex';
+    }
+
+    function closeTransferAssetModal() {
+        document.getElementById('transferAssetModal').style.display = 'none';
+    }
+
+    async function confirmTransferAsset() {
+        var fromSymbol = document.getElementById('transferAssetSymbol').value;
+        var toSymbol = document.getElementById('transferAssetTarget').value;
+        var amount = parseFloat(document.getElementById('transferAssetAmount').value);
+
+        if (!amount || amount <= 0) {
+            alert('Enter amount');
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('access_token');
+            var resp = await fetch('/api/ea/swap/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    from_currency: fromSymbol,
+                    to_currency: toSymbol,
+                    amount: amount
+                })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                alert('Transferred ' + amount + ' ' + fromSymbol + ' to ' + toSymbol);
+                closeTransferAssetModal();
+                loadForexBalances();
+            } else {
+                alert(data.error || 'Transfer failed');
+            }
+        } catch(e) {
+            alert('Network error');
+        }
+    }
 
 
 
