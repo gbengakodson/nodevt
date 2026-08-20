@@ -466,6 +466,30 @@
         </div>
 </div>
 
+<!-- Add Asset Modal -->
+<div id="addAssetModal" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.65); z-index:10000; align-items:center; justify-content:center; padding:16px;">
+    <div style="background:#FFFFFF; border-radius:14px; max-width:400px; width:100%; padding:20px; color:#1B1E21;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+            <div style="font-size:14px; font-weight:700;">Add Asset</div>
+            <button onclick="closeAddAssetModal()" style="background:none; border:none; font-size:22px; cursor:pointer;">×</button>
+        </div>
+
+        <label style="font-size:11px; color:#6B7280;">Asset</label>
+        <select id="addAssetSymbol" class="form-control" style="margin-bottom:10px;">
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+        </select>
+
+        <label style="font-size:11px; color:#6B7280;">Amount (USDC)</label>
+        <input type="number" id="addAssetAmount" class="form-control" placeholder="10.00" step="0.01" style="margin-bottom:16px;">
+
+        <button onclick="confirmAddAsset()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; cursor:pointer;">Buy</button>
+    </div>
+</div>
+
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -549,17 +573,20 @@
             var token = localStorage.getItem('access_token');
             if (!token) return;
 
-            var resp = await fetch('/api/ea/balances/', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
-            var data = await resp.json();
-            renderForexCards(data.balances);
+            var [balancesRes, ratesRes] = await Promise.all([
+                fetch('/api/ea/balances/', { headers: { 'Authorization': 'Bearer ' + token } }),
+                fetch('/api/ea/spot-rates/', { headers: { 'Authorization': 'Bearer ' + token } })
+            ]);
+
+            var balancesData = await balancesRes.json();
+            var ratesData = await ratesRes.json();
+            renderForexCards(balancesData.balances, ratesData.rates || {});
         } catch(e) {
             console.error('Forex balances error:', e);
         }
     }
 
-    function renderForexCards(balances) {
+    function renderForexCards(balances, rates) {
         var container = document.getElementById('forexSpot');
         if (!container) return;
 
@@ -573,9 +600,14 @@
         };
 
         container.innerHTML = Object.keys(balances).map(function(currency) {
+            var balance = Number(balances[currency]) || 0;
+            var rate = rates[currency]?.price || 0;
+            var change = rates[currency]?.change_24h || 0;
+            var usdEquivalent = balance * rate;
+
             return `
                 <div class="col-6 col-md-4 col-lg-3">
-                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:12px; padding:12px;">
+                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:12px; padding:12px; display:flex; flex-direction:column; height:100%;">
                         <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
                             <span style="font-size:20px;">${symbols[currency] || '💱'}</span>
                             <div>
@@ -583,8 +615,35 @@
                                 <div style="font-size:10px; color:#6B7280;">Spot Balance</div>
                             </div>
                         </div>
-                        <div style="font-size:18px; font-weight:700; color:#1B1E21;">${Number(balances[currency]).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
-                        <div style="font-size:10px; color:#6B7280;">≈ $0.00 USDT</div>
+
+                        <div style="font-size:18px; font-weight:700; color:#1B1E21;">
+                            ${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
+                        <div style="font-size:10px; color:#6B7280;">
+                            ≈ $${usdEquivalent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDT
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:8px;">
+                            <span style="font-size:11px; color:#6B7280;">Rate: $${rate.toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}</span>
+                            <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
+                                ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                            </span>
+                        </div>
+
+                        <!-- Transaction history placeholder -->
+                        <div style="margin-top:10px; padding-top:8px; border-top:1px solid #F0F2F5;">
+                            <div style="font-size:10px; color:#6B7280; font-weight:600;">History</div>
+                            <div id="history-${currency}" style="font-size:9px; color:#6B7280;">
+                                No transactions yet
+                            </div>
+                        </div>
+
+                        <!-- Action buttons -->
+                        <div style="display:flex; gap:6px; margin-top:auto; padding-top:10px;">
+                            <button onclick="openAddAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">+ Add</button>
+                            <button onclick="openSendAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">Send</button>
+                            <button onclick="openTransferAsset('${currency}')" style="flex:1; padding:6px 0; border:1px solid #E2E4E8; border-radius:6px; background:#F8F9FA; font-size:10px; cursor:pointer;">Transfer</button>
+                        </div>
                     </div>
                 </div>
             `;
@@ -592,7 +651,55 @@
     }
 
 
+    function openAddAsset(currency) {
+        document.getElementById('addAssetSymbol').value = currency;
+        document.getElementById('addAssetAmount').value = '';
+        document.getElementById('addAssetModal').style.display = 'flex';
+    }
 
+    function closeAddAssetModal() {
+        document.getElementById('addAssetModal').style.display = 'none';
+    }
+
+    async function confirmAddAsset() {
+        var symbol = document.getElementById('addAssetSymbol').value;
+        var amount = parseFloat(document.getElementById('addAssetAmount').value);
+
+        if (!amount || amount <= 0) {
+            alert('Enter amount');
+            return;
+        }
+
+        try {
+            var token = localStorage.getItem('access_token');
+            var resp = await fetch('/api/ea/swap/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + token
+                },
+                body: JSON.stringify({
+                    from_currency: 'USD',
+                    to_currency: symbol,
+                    amount: amount
+                })
+            });
+            var data = await resp.json();
+            if (data.success) {
+                alert('Added ' + symbol + ' successfully!');
+                closeAddAssetModal();
+                loadForexBalances();
+            } else {
+                alert(data.error || 'Failed');
+            }
+        } catch(e) {
+            alert('Network error');
+        }
+    }
+
+
+    function openSendAsset(currency) { alert('Send ' + currency); }
+    function openTransferAsset(currency) { alert('Transfer ' + currency); }
 
 
 
