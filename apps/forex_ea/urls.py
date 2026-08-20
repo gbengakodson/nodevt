@@ -1,11 +1,13 @@
 from django.urls import path
 from .swap_views import ForexSwapView, ForexBalancesView, SpotRatesView
+from .stock_views import StockBalancesView
 from .api_views import (
     AuthenticateView, BalanceView, ReportTradeView,
     ForexProfileView, ActivateForexView, ForexForecastView,
     TradeOpenedView, TradeClosedView, SlaveDeleteView,
     SlaveAccountView, SlaveTradeStatusView, SignalView
 )
+
 
 
 urlpatterns = [
@@ -24,4 +26,5 @@ urlpatterns = [
     path('swap/', ForexSwapView.as_view(), name='forex_swap'),
     path('balances/', ForexBalancesView.as_view(), name='forex_balances'),
     path('spot-rates/', SpotRatesView.as_view(), name='spot_rates'),
+    path('stocks/', StockBalancesView.as_view(), name='stock_balances'),
 ]
