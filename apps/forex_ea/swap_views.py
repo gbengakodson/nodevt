@@ -113,3 +113,11 @@ class ForexBalancesView(APIView):
             balances[currency] = float(balance)
 
         return Response({'balances': balances})
+
+    from .rates_service import get_spot_rates
+
+    class SpotRatesView(APIView):
+        permission_classes = [IsAuthenticated]
+
+        def get(self, request):
+            return Response({'rates': get_spot_rates()})

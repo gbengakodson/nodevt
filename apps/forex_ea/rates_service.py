@@ -51,3 +51,39 @@ def get_commodity_price(symbol):
     if data.get('status') == 'error':
         raise Exception(data.get('message'))
     return Decimal(data['price'])
+
+
+def get_spot_rates():
+    """Return current USD price and 24h change for supported assets."""
+    data = {}
+
+    # Fiat rates via open.er-api.com
+    try:
+        resp = requests.get(FREE_RATES_URL)
+        rates = resp.json().get('rates', {})
+        for symbol in ['EUR', 'GBP', 'NGN']:
+            if symbol in rates:
+                data[symbol] = {
+                    'price': float(rates[symbol]),
+                    'change_24h': 0.0   # not provided by this API; we'll set 0 for now
+                }
+    except Exception:
+        pass
+
+    # Commodities via Twelve Data
+    for symbol, twelve_symbol in [('GOLD', 'XAU/USD'), ('USOIL', 'WTI/USD')]:
+        try:
+            url = f"https://api.twelvedata.com/price?symbol={twelve_symbol}&apikey={TWELVE_DATA_KEY}"
+            r = requests.get(url).json()
+            if 'price' in r:
+                data[symbol] = {
+                    'price': float(r['price']),
+                    'change_24h': 0.0
+                }
+        except Exception:
+            pass
+
+    # USD always = 1
+    data['USD'] = {'price': 1.0, 'change_24h': 0.0}
+
+    return data
