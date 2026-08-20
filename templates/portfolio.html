@@ -527,118 +527,7 @@
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    function calculateCompoundGrowth(initial, months, monthlyAdd) {
-        var balance = initial;
-        var monthlyRate = 0.10;
-        for (var m = 0; m < months; m++) {
-            balance += balance * monthlyRate;
-            if (monthlyAdd > 0) balance += monthlyAdd;
-        }
-        return balance;
-    }
 
-    function calculateProjectedValue(currentBalance, years, monthlyAdd) {
-        return calculateCompoundGrowth(currentBalance, years * 12, monthlyAdd);
-    }
-
-    function drawJourneyMap(progressPercent) {
-        var canvas = document.getElementById('journeyCanvas');
-        if (!canvas) return;
-        var width = canvas.parentElement.clientWidth;
-        var height = 100;
-        canvas.width = width;
-        canvas.height = height;
-        var ctx = canvas.getContext('2d');
-        ctx.clearRect(0, 0, width, height);
-
-        var startX = 50;
-        var endX = width - 30;
-        var y = height / 2;
-
-        // Background path
-        ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(endX, y);
-        ctx.strokeStyle = 'rgba(255,255,255,0.08)';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        // Progress
-        var progressX = startX + (progressPercent / 100) * (endX - startX);
-        var gradient = ctx.createLinearGradient(startX, 0, progressX, 0);
-        gradient.addColorStop(0, '#F0B90B');
-        gradient.addColorStop(1, '#FCD535');
-        ctx.beginPath();
-        ctx.moveTo(startX, y);
-        ctx.lineTo(progressX, y);
-        ctx.strokeStyle = gradient;
-        ctx.lineWidth = 4;
-        ctx.stroke();
-
-        // Start dot
-        ctx.beginPath();
-        ctx.arc(startX, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#0ECB81';
-        ctx.fill();
-
-        // Current position dot
-        ctx.beginPath();
-        ctx.arc(progressX, y, 7, 0, 2 * Math.PI);
-        ctx.fillStyle = '#F0B90B';
-        ctx.fill();
-        ctx.shadowColor = 'rgba(240,185,11,0.5)';
-        ctx.shadowBlur = 8;
-        ctx.fill();
-        ctx.shadowBlur = 0;
-
-        // Target dot
-        ctx.beginPath();
-        ctx.arc(endX, y, 5, 0, 2 * Math.PI);
-        ctx.fillStyle = '#0ECB81';
-        ctx.fill();
-    }
-
-    function updateGoalTracker() {
-        var target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-        var progressPercent = target > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0;
-
-        document.getElementById('portfolioValue').textContent = formatCurrency(portfolioValue);
-        document.getElementById('goalTargetDisplay').textContent = formatCurrency(target);
-        document.getElementById('progressFill').style.width = progressPercent + '%';
-        document.getElementById('progressPercent').textContent = progressPercent.toFixed(1);
-
-
-        // Calculate projected years
-        var currentYear = new Date().getFullYear();
-        var totalMonths = targetYears * 12;
-
-        // Milestone values at different time points
-        var nowValue = portfolioValue;
-        var y1Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.25), monthlyAddition);
-        var y2Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.5), monthlyAddition);
-        var y3Value = calculateCompoundGrowth(portfolioValue, Math.round(totalMonths * 0.75), monthlyAddition);
-
-        // Calculate actual years
-        var y1Year = currentYear + Math.round(targetYears * 0.25);
-        var y2Year = currentYear + Math.round(targetYears * 0.5);
-        var y3Year = currentYear + Math.round(targetYears * 0.75);
-        var targetYear = currentYear + targetYears;
-
-        // Update values
-        document.getElementById('mNow').textContent = formatCurrency(nowValue);
-        document.getElementById('mY1').textContent = formatCurrency(y1Value);
-        document.getElementById('mY2').textContent = formatCurrency(y2Value);
-        document.getElementById('mY3').textContent = formatCurrency(y3Value);
-        document.getElementById('mTarget').textContent = formatCurrency(target);
-
-        // Update year labels
-        document.getElementById('mY1Label').textContent = y1Year;
-        document.getElementById('mY2Label').textContent = y2Year;
-        document.getElementById('mY3Label').textContent = y3Year;
-        document.getElementById('mTargetLabel').textContent = targetYear + ' 🎯';
-
-        drawJourneyMap(progressPercent);
-    }
 
     var currentTab = 'trackers';
 
@@ -702,24 +591,11 @@
         }).join('');
     }
 
-    // Goal update
-    document.getElementById('updateGoalBtn').addEventListener('click', function() {
-        targetYears = parseInt(document.getElementById('goalYears').value) || 2;
-        monthlyAddition = parseFloat(document.getElementById('monthlyAddition').value) || 0;
-        updateGoalTracker();
-    });
 
-    document.getElementById('goalYears').addEventListener('change', function() {
-        targetYears = parseInt(this.value);
-        updateGoalTracker();
-    });
 
-    window.addEventListener('resize', function() {
-        if (portfolioValue >= 0) {
-            var target = calculateProjectedValue(portfolioValue, targetYears, monthlyAddition);
-            drawJourneyMap(target > 0 ? Math.min(100, (portfolioValue / target) * 100) : 0);
-        }
-    });
+
+
+
 
     var currentPurseName = '';
 var userType = 'MICRO';
