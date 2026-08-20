@@ -184,22 +184,24 @@ class ForexForecast(models.Model):
 
 
 class FiatBalance(models.Model):
-    CURRENCY_CHOICES = [
+    ASSET_CHOICES = [
         ('USD', 'US Dollar'),
         ('EUR', 'Euro'),
         ('GBP', 'British Pound'),
         ('NGN', 'Nigerian Naira'),
         ('GOLD', 'Gold (XAU)'),
         ('USOIL', 'US Oil (WTI)'),
+        # Add stock symbols later as we finalise the list
+        # e.g. ('AAPL', 'Apple Inc.'), ('TSLA', 'Tesla'), etc.
     ]
 
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='fiat_balances')
-    currency = models.CharField(max_length=6, choices=CURRENCY_CHOICES)   # increased length to 6 for USOIL
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='spot_balances')
+    currency = models.CharField(max_length=10, choices=ASSET_CHOICES)
     balance = models.DecimalField(max_digits=15, decimal_places=2, default=Decimal('0'))
 
     class Meta:
         unique_together = ('user', 'currency')
-        verbose_name_plural = 'Fiat balances'
+        verbose_name_plural = 'Spot balances'
 
     def __str__(self):
         return f"{self.user.email} - {self.currency}: {self.balance}"
