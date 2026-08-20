@@ -599,6 +599,7 @@
             'USOIL': '🛢️'
         };
 
+        if (!balances) return;
         container.innerHTML = Object.keys(balances).map(function(currency) {
             var balance = Number(balances[currency]) || 0;
             var rate = rates[currency]?.price || 0;
