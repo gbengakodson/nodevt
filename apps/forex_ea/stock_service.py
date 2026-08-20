@@ -1,3 +1,4 @@
+
 STOCK_UNIVERSE = {
     # Nigerian stocks
     'ZENITHBANK': 'Zenith Bank Plc',
