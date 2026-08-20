@@ -102,9 +102,8 @@ class ForexBalancesView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        # Always include all six supported assets
         balances = {}
-        for currency in SUPPORTED_CURRENCIES:
+        for currency, _ in FiatBalance.ASSET_CHOICES:
             if currency == 'USD':
                 wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
                 balance = wallet.balance if wallet else Decimal('0')
