@@ -423,54 +423,30 @@
 <div class="portfolio-container">
 
     <!-- Stats Row -->
-    <div class="stats-row">
-        <div class="stat-card">
-            <div class="stat-label">Portfolio Value</div>
-            <div class="stat-value" id="portfolioValue">$0</div>
-            <div class="stat-subtitle">Total holdings</div>
+    <div class="row g-3 mb-4">
+        <div class="col-6">
+            <div class="stat-card">
+                <div class="stat-label">FOREX</div>
+                <div class="stat-value" id="forexSpotValue">$0</div>
+                <div class="stat-subtitle">Spot FX & Commodities</div>
+            </div>
         </div>
-        <div class="stat-card">
-            <div class="stat-label">Goal Target</div>
-            <div class="stat-value green" id="goalTargetDisplay">$10,000</div>
-            <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%;"></div></div>
-            <div class="stat-subtitle"><span id="progressPercent">0</span>% complete</div>
-        </div>
-        <div class="stat-card" id="purseCard" style="cursor:default;">
-            <div class="stat-label" id="purseCardTitle">💰 Funding</div>
-            <div id="purseCardContent" style="font-size:10px;color:var(--text-secondary);">Loading...</div>
+        <div class="col-6">
+            <div class="stat-card">
+                <div class="stat-label">STOCKS</div>
+                <div class="stat-value" id="stocksSpotValue">$0</div>
+                <div class="stat-subtitle">Global & Nigerian Shares</div>
+            </div>
         </div>
     </div>
 
     <!-- Goal Planner -->
     <div class="info-card">
-        <div class="info-title">🎯 Financial Planning</div>
-        <div class="goal-row">
-            <span style="font-size:10px;color:var(--text-secondary);">Target:</span>
-            <input type="number" id="goalTarget" class="goal-input" value="10000" step="1000">
-            <span style="font-size:10px;color:var(--text-secondary);">in</span>
-            <select id="goalYears" class="goal-select">
-                <option value="1">1 Year</option>
-                <option value="2" selected>2 Years</option>
-                <option value="3">3 Years</option>
-                <option value="5">5 Years</option>
-            </select>
-            <span style="font-size:10px;color:var(--text-secondary);">adding</span>
-            <input type="number" id="monthlyAddition" class="goal-input" value="0" step="50" placeholder="Monthly add">
-            <button class="btn-goal" id="updateGoalBtn">Update</button>
-        </div>
-        <div class="milestone-row" id="milestoneRow">
-            <div class="milestone-chip"><div class="m-value" id="mNow">$0</div><div class="m-label">Now</div></div>
-            <div class="milestone-chip"><div class="m-value" id="mY1">$0</div><div class="m-label" id="mY1Label">2027</div></div>
-            <div class="milestone-chip"><div class="m-value" id="mY2">$0</div><div class="m-label" id="mY2Label">2028</div></div>
-            <div class="milestone-chip"><div class="m-value" id="mY3">$0</div><div class="m-label" id="mY3Label">2029</div></div>
-            <div class="milestone-chip goal"><div class="m-value" id="mTarget">$0</div><div class="m-label" id="mTargetLabel">Goal 🎯</div></div>
-        </div>
-        <div class="journey-canvas-wrap">
-            <canvas id="journeyCanvas"></canvas>
-        </div>
+        <div class="info-title">🌍 Spot Assets</div>
+        <div id="forexSpot" class="row g-3"></div>
     </div>
 
-    <!-- Position Trackers & Pension -->
+
 
     <!-- Purse Withdraw Modal -->
     <div class="modal-overlay" id="purseModal" style="display:none !important;">
@@ -679,6 +655,53 @@
         } catch(e) { alert('Error'); }
     }
 
+    async function loadForexBalances() {
+        try {
+            var token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            var resp = await fetch('/api/ea/balances/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            renderForexCards(data.balances);
+        } catch(e) {
+            console.error('Forex balances error:', e);
+        }
+    }
+
+    function renderForexCards(balances) {
+        var container = document.getElementById('forexSpot');
+        if (!container) return;
+
+        var symbols = {
+            'USD': '💵',
+            'EUR': '💶',
+            'GBP': '💷',
+            'NGN': '🇳🇬',
+            'GOLD': '🥇',
+            'USOIL': '🛢️'
+        };
+
+        container.innerHTML = Object.keys(balances).map(function(currency) {
+            return `
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:12px; padding:12px;">
+                        <div style="display:flex; align-items:center; gap:8px; margin-bottom:8px;">
+                            <span style="font-size:20px;">${symbols[currency] || '💱'}</span>
+                            <div>
+                                <div style="font-size:12px; font-weight:700; color:#1B1E21;">${currency}</div>
+                                <div style="font-size:10px; color:#6B7280;">Spot Balance</div>
+                            </div>
+                        </div>
+                        <div style="font-size:18px; font-weight:700; color:#1B1E21;">${Number(balances[currency]).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</div>
+                        <div style="font-size:10px; color:#6B7280;">≈ $0.00 USDT</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
     // Goal update
     document.getElementById('updateGoalBtn').addEventListener('click', function() {
         targetYears = parseInt(document.getElementById('goalYears').value) || 2;
@@ -862,12 +885,12 @@ async function loadPurseCard() {
 
     // Call on load
     loadPurseCard();
+    loadForexBalances();
 
 
-    // Init
+    // Init – Portfolio page has no active auto‑loading functions now
     document.addEventListener('DOMContentLoaded', function() {
-        loadPortfolio();
-        setInterval(loadPortfolio, 120000);
+        // No automatic actions required on this page.
     });
 </script>
 {% endblock %}
