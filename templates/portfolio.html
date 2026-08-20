@@ -651,12 +651,12 @@
         if (!balances) return;
 
         var assets = {
-            'USD': { flag: '🇺🇸', symbol: '$', name: 'US Dollar' },
-            'EUR': { flag: '🇪🇺', symbol: '€', name: 'Euro' },
-            'GBP': { flag: '🇬🇧', symbol: '£', name: 'British Pound' },
-            'NGN': { flag: '🇳🇬', symbol: '₦', name: 'Nigerian Naira' },
-            'GOLD': { flag: '🥇', symbol: 'XAU', name: 'Gold' },
-            'USOIL': { flag: '🛢️', symbol: 'WTI', name: 'US Oil' }
+            'USD': { flag: '/static/usflag.png', symbol: '$', name: 'US Dollar' },
+            'EUR': { flag: '/static/EU.jpg', symbol: '€', name: 'Euro' },
+            'GBP': { flag: '/static/UK.png', symbol: '£', name: 'British Pound' },
+            'NGN': { flag: '/static/NG.jpg', symbol: '₦', name: 'Nigerian Naira' },
+            'GOLD': { flag: '/static/gold.jpg', symbol: 'XAU', name: 'Gold' },
+            'USOIL': { flag: '/static/OIL.jpg', symbol: 'WTI', name: 'US Oil' }
         };
 
         container.innerHTML = Object.keys(balances).map(function(currency) {
@@ -674,7 +674,7 @@
 
                         <!-- Asset header -->
                         <div style="display:flex; align-items:center; gap:10px;">
-                            <span style="font-size:32px;">${info.flag}</span>
+                            <img src="${info.flag}" alt="${currency}" style="width:36px; height:36px; border-radius:8px; object-fit:cover;">
                             <div>
                                 <div style="font-size:16px; font-weight:700; color:#1B1E21;">${currency}</div>
                                 <div style="font-size:11px; color:#6B7280;">${info.name}</div>
