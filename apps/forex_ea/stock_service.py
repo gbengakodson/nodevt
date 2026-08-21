@@ -1,9 +1,17 @@
 import requests
-
-TWELVE_DATA_KEY = "0e71d2b553d44d7da9915a1d1c97bf45"
+from django.conf import settings
 
 STOCK_UNIVERSE = {
-    # Nigerian stocks (NGX) – Twelve Data may not support some; we'll handle missing gracefully
+    # Binance Stock Tokens
+    'NVDA': 'NVIDIA Corporation',
+    'SPCX': 'SpaceX (Private Equity Index)',
+    'AAPL': 'Apple Inc.',
+    'MSFT': 'Microsoft Corporation',
+    'WMT': 'Walmart Inc.',
+    'META': 'Meta Platforms Inc.',
+    'AMZN': 'Amazon.com Inc.',
+    'GOOG': 'Alphabet Inc. Class C',
+    # Nigerian stocks (NGX)
     'ZENITHBANK': 'Zenith Bank Plc',
     'GTCO': 'Guaranty Trust Holding Co',
     'MTNN': 'MTN Nigeria Communications Plc',
@@ -11,49 +19,35 @@ STOCK_UNIVERSE = {
     'ACCESSCORP': 'Access Holdings Plc',
     'UBA': 'United Bank for Africa Plc',
     'SEPLAT': 'Seplat Energy Plc',
-    'BUAFOODS': 'BUA Foods Plc',
-    'ARADEL': 'Aradel Holdings Plc',
-    'TRANSCORP': 'Transnational Corporation Plc',
-    # Foreign stocks
-    'AAPL': 'Apple Inc.',
-    'MSFT': 'Microsoft Corporation',
-    'TSLA': 'Tesla Inc.',
-    'NVDA': 'NVIDIA Corporation',
-    'AMZN': 'Amazon.com Inc.',
-    'GOOGL': 'Alphabet Inc. Class A',
-    'META': 'Meta Platforms Inc.',
-    'KO': 'Coca-Cola Company',
-    'VOO': 'S&P 500 ETF',
-    'NFLX': 'Netflix Inc.',
 }
 
-# Mapping for Twelve Data symbols
-TWELVE_SYMBOL_MAP = {
-    'AAPL': 'AAPL',
-    'MSFT': 'MSFT',
-    'TSLA': 'TSLA',
-    'NVDA': 'NVDA',
-    'AMZN': 'AMZN',
-    'GOOGL': 'GOOGL',
-    'META': 'META',
-    'KO': 'KO',
-    'VOO': 'VOO',
-    'NFLX': 'NFLX',
-    # Nigerian stocks may not be available on free tier; we can add placeholders
+BINANCE_STOCK_PAIRS = {
+    'NVDA': 'NVDAUSDT',
+    'SPCX': 'SPCXUSDT',
+    'AAPL': 'AAPLUSDT',
+    'MSFT': 'MSFTUSDT',
+    'WMT': 'WMTUSDT',
+    'META': 'METAUSDT',
+    'AMZN': 'AMZNUSDT',
+    'GOOG': 'GOOGUSDT',
 }
 
 def get_stock_quote(symbol):
-    """Fetch latest price and 24h change for a stock."""
-    twelve_symbol = TWELVE_SYMBOL_MAP.get(symbol)
-    if not twelve_symbol:
+    """Fetch live price and 24h change from Binance for stock tokens."""
+    pair = BINANCE_STOCK_PAIRS.get(symbol)
+    if not pair:
         return {'price': 0, 'change_24h': 0}
 
-    url = f"https://api.twelvedata.com/quote?symbol={twelve_symbol}&apikey={TWELVE_DATA_KEY}"
-    resp = requests.get(url)
-    data = resp.json()
-    if data.get('status') == 'ok':
-        return {
-            'price': float(data.get('close', 0)),
-            'change_24h': float(data.get('change_percent', 0))
-        }
+    try:
+        url = "https://api.binance.com/api/v3/ticker/24hr"
+        resp = requests.get(url, params={'symbol': pair}, timeout=10)
+        data = resp.json()
+        if 'lastPrice' in data:
+            return {
+                'price': float(data['lastPrice']),
+                'change_24h': float(data.get('priceChangePercent', 0))
+            }
+    except Exception:
+        pass
+
     return {'price': 0, 'change_24h': 0}
