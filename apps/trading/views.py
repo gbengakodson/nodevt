@@ -232,14 +232,13 @@ class TradingViewSet(viewsets.ViewSet):
             order_type='GRID'
         )
 
-        # Distribute node fee to referrals
+        # ── Referral distributions PAUSED ──
         referral_count = 0
-        from apps.referrals.services.referral_service import ReferralService
-        try:
-            distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
-            referral_count = len(distributions) if distributions else 0
-        except Exception as e:
-            print(f"Error distributing referral fees: {e}")
+        # try:
+        #     distributions = ReferralService.distribute_node_fee(request.user, node_fee, purchase)
+        #     referral_count = len(distributions) if distributions else 0
+        # except Exception as e:
+        #     print(f"Error distributing referral fees: {e}")
 
         Transaction.objects.create(
             user=request.user,
