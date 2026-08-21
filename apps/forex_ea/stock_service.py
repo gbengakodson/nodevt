@@ -83,6 +83,7 @@ def get_stock_quote(symbol):
                 result = {'price': 0, 'change_24h': 0}
         except Exception:
             result = {'price': 0, 'change_24h': 0}
+        time.sleep(12)
 
     _price_cache[symbol] = result
     return result
