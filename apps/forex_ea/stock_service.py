@@ -1,5 +1,6 @@
 import requests
 from datetime import date
+import time
 
 ALPHA_VANTAGE_KEY = "GJB9YUD6E6ACTXKC"
 ITICK_TOKEN = "373ac1195a174064bf4f3c0c5c551395fe5d733854d94247b801b20207716c99"
