@@ -1,8 +1,9 @@
 import requests
-from django.conf import settings
+
+ALPHA_VANTAGE_KEY = "GJB9YUD6E6ACTXKC"
 
 STOCK_UNIVERSE = {
-    # Binance Stock Tokens
+    # Binance Stock Tokens (for display; price from Alpha Vantage)
     'NVDA': 'NVIDIA Corporation',
     'SPCX': 'SpaceX (Private Equity Index)',
     'AAPL': 'Apple Inc.',
@@ -21,31 +22,35 @@ STOCK_UNIVERSE = {
     'SEPLAT': 'Seplat Energy Plc',
 }
 
-BINANCE_STOCK_PAIRS = {
-    'NVDA': 'NVDAUSDT',
-    'SPCX': 'SPCXUSDT',
-    'AAPL': 'AAPLUSDT',
-    'MSFT': 'MSFTUSDT',
-    'WMT': 'WMTUSDT',
-    'META': 'METAUSDT',
-    'AMZN': 'AMZNUSDT',
-    'GOOG': 'GOOGUSDT',
+ALPHA_SYMBOLS = {
+    'NVDA': 'NVDA',
+    'AAPL': 'AAPL',
+    'MSFT': 'MSFT',
+    'WMT': 'WMT',
+    'META': 'META',
+    'AMZN': 'AMZN',
+    'GOOG': 'GOOG',
+    # SPCX not available on Alpha Vantage
 }
 
 def get_stock_quote(symbol):
-    """Fetch live price and 24h change from Binance for stock tokens."""
-    pair = BINANCE_STOCK_PAIRS.get(symbol)
-    if not pair:
+    """Fetch live price and 24h change from Alpha Vantage."""
+    alpha_symbol = ALPHA_SYMBOLS.get(symbol)
+    if not alpha_symbol:
         return {'price': 0, 'change_24h': 0}
 
+    url = (
+        f"https://www.alphavantage.co/query"
+        f"?function=GLOBAL_QUOTE&symbol={alpha_symbol}&apikey={ALPHA_VANTAGE_KEY}"
+    )
     try:
-        url = "https://api.binance.com/api/v3/ticker/24hr"
-        resp = requests.get(url, params={'symbol': pair}, timeout=10)
+        resp = requests.get(url, timeout=10)
         data = resp.json()
-        if 'lastPrice' in data:
+        quote = data.get('Global Quote')
+        if quote:
             return {
-                'price': float(data['lastPrice']),
-                'change_24h': float(data.get('priceChangePercent', 0))
+                'price': float(quote.get('05. price', 0)),
+                'change_24h': float(quote.get('10. change percent', '0%').replace('%', ''))
             }
     except Exception:
         pass
