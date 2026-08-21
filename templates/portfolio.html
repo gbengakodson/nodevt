@@ -648,8 +648,75 @@
         var container = document.getElementById('stocksSpot');
         if (!container) return;
 
-        // Temporary empty state until we build the stock data
-        container.innerHTML = '<div style="color:#848E9C; padding:20px; text-align:center;">Stocks coming soon</div>';
+        try {
+            var token = localStorage.getItem('access_token');
+            if (!token) return;
+
+            var resp = await fetch('/api/ea/stocks/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            renderStockCards(data.stocks || []);
+        } catch(e) {
+            console.error('Stocks error:', e);
+            container.innerHTML = '<div style="color:#848E9C; padding:20px; text-align:center;">Error loading stocks</div>';
+        }
+    }
+
+    function renderStockCards(stocks) {
+        var container = document.getElementById('stocksSpot');
+        if (!container) return;
+
+        if (!stocks || stocks.length === 0) {
+            container.innerHTML = '<div style="color:#848E9C; padding:20px; text-align:center;">No stocks available</div>';
+            return;
+        }
+
+        container.innerHTML = stocks.map(function(stock) {
+            var balance = Number(stock.balance) || 0;
+            var price = Number(stock.price) || 0;
+            var change = Number(stock.change_24h) || 0;
+            var usdEquivalent = balance * price;
+
+            return `
+                <div class="col-12 col-md-6 col-lg-4">
+                    <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px;">
+                        <div style="display:flex; align-items:center; justify-content:space-between;">
+                            <div>
+                                <div style="font-size:15px; font-weight:700; color:#1B1E21;">${stock.symbol}</div>
+                                <div style="font-size:10px; color:#6B7280;">${stock.name}</div>
+                            </div>
+                            <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
+                                ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                            </span>
+                        </div>
+
+                        <div style="font-size:28px; font-weight:700; color:#1B1E21;">
+                            ${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                        </div>
+                        <div style="font-size:12px; color:#6B7280;">
+                            ≈ $${usdEquivalent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDT
+                        </div>
+
+                        <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
+                            <span style="font-size:11px; color:#6B7280;">Stock Price</span>
+                            <span style="font-size:12px; font-weight:700; color:#1B1E21;">$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                        </div>
+
+                        <div style="font-size:10px; color:#6B7280; font-weight:600;">Transaction History</div>
+                        <div style="font-size:9px; color:#6B7280; background:#F8F9FA; border-radius:8px; padding:8px; height:70px; overflow-y:auto;">
+                            No transactions yet
+                        </div>
+
+                        <div style="display:flex; gap:8px; margin-top:auto;">
+                            <button onclick="openAddAsset('${stock.symbol}')" style="flex:1; padding:8px 0; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; font-size:11px; cursor:pointer;">+ Add</button>
+                            <button onclick="openSendAsset('${stock.symbol}')" style="flex:1; padding:8px 0; border:1px solid #E2E4E8; border-radius:8px; background:#F8F9FA; color:#1B1E21; font-size:11px; cursor:pointer;">Send</button>
+                            <button onclick="openTransferAsset('${stock.symbol}')" style="flex:1; padding:8px 0; border:1px solid #E2E4E8; border-radius:8px; background:#F8F9FA; color:#1B1E21; font-size:11px; cursor:pointer;">Transfer</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
     }
 
 
