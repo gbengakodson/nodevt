@@ -683,7 +683,7 @@
             </div>
         </div>
 
-        <!-- PROVIDER/DIASPORA: Pension & Goal Purses -->
+
         <div id="providerPurses" style="display:none;">
             <div class="yield-card">
                 <div class="yield-card-title">🏦 Pension Fund</div>
@@ -1000,12 +1000,19 @@
 
     async function closeGridBot(botId) {
         if (!confirm('Close this Position Tracker and return funds to your wallet?')) return;
-        const result = await apiCall('/trading/close_grid/', 'POST', { bot_id: botId });
-        if (result.success) {
-            showModal(`✅ Closed! ${formatCurrency(result.total_return || result.amount)} returned to your wallet.`, 'success');
-            loadDashboard();
-        } else {
-            showModal('❌ ' + (result.error || 'Close failed. Try again.'), 'error');
+
+        try {
+            const result = await apiCall('/trading/close_grid/', 'POST', { bot_id: botId });
+
+            // `apiCall` returns the JSON body even on non-200, so check `result`
+            if (result.success) {
+                showModal(`✅ Closed! ${formatCurrency(result.total_return || result.amount)} returned to your wallet.`, 'success');
+                loadDashboard();
+            } else {
+                showModal('❌ ' + (result.error || 'Close failed. Try again.'), 'error');
+            }
+        } catch(e) {
+            showModal('❌ Network error: ' + e.message, 'error');
         }
     }
 

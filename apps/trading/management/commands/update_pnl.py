@@ -114,7 +114,7 @@ class Command(BaseCommand):
                         amount=new_invested,
                         lower_price=lower_price,
                         upper_price=upper_price,
-                        grids=100,
+                        grids = bot.grids + 1,
                         status='ACTIVE',
                         grid_profit=Decimal('0'),
                         pnl=Decimal('0'),
