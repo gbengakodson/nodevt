@@ -170,7 +170,7 @@ class TradingViewSet(viewsets.ViewSet):
             amount=amount_after_fee,
             lower_price=lower_price,
             upper_price=upper_price,
-            grids=100,
+            grids=1,
             status='ACTIVE',
             grid_profit=Decimal('0'),
             price_at_creation=token.current_price,
