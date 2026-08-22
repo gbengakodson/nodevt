@@ -292,7 +292,7 @@
     <div class="login-card">
         <div class="login-logo">
         <div style="display: flex; align-items: center; justify-content: center; margin-bottom: 16px;">
-        <img src="{% static 'icon-512-circular.png' %}" alt="NODE" style="max-width: 160px; width: 100%; height: auto; display: block; margin: 0 auto;">
+        <img src="{% static 'icon-512-circular.png' %}" alt="NODE" style="height: 90px; width: auto; cursor:pointer;" onclick="installNODE()" title="Download NODE App">
     </div>
     <p style="color: #8A8F9E;">Welcome back! Please login to your account</p>
 </div>
@@ -340,6 +340,26 @@
 </div>
 
 <script>
+    // PWA install prompt
+    let deferredPrompt;
+
+    window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+
+    function installNODE() {
+        if (!deferredPrompt) {
+            alert('App is already installed or not installable yet.');
+            return;
+        }
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(function(result) {
+            deferredPrompt = null;
+        });
+    }
+
+    // Login form
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
 
