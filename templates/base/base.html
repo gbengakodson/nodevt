@@ -257,38 +257,71 @@
 
         /* Page Loader */
         .page-loader {
-            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: #0B0E11; z-index: 9999;
-            display: flex; align-items: center; justify-content: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0B0E11;
+            z-index: 9999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             transition: opacity 0.3s ease;
         }
-        .page-loader.hidden { opacity: 0; pointer-events: none; }
+        .page-loader.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .loader-pulse-wrapper {
+            position: relative;
+            width: 110px;
+            height: 110px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .loader-logo {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            z-index: 2;
+        }
+
         .loader-pulse {
-            width: 50px; height: 50px;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
             border: 3px solid rgba(240,185,11,0.2);
             border-top-color: #F0B90B;
             border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+            animation: spin 1.2s linear infinite;
         }
-        @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Click ripple */
-        .ripple {
-            position: relative; overflow: hidden;
+        @keyframes spin {
+            to { transform: rotate(360deg); }
         }
-        .ripple::after {
-            content: ''; position: absolute;
-            top: 50%; left: 50%; width: 0; height: 0;
-            border-radius: 50%; background: rgba(240,185,11,0.2);
-            transform: translate(-50%, -50%); transition: all 0.4s ease;
+
+        @keyframes tickClockwise {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
         }
-        .ripple:active::after { width: 200px; height: 200px; }
+        .slow-rotate {
+            animation: tickClockwise 12s linear infinite;
+        }
     </style>
     {% block extra_css %}{% endblock %}
 </head>
 <body>
     <div class="page-loader" id="pageLoader">
-        <div class="loader-pulse"></div>
+        <div class="loader-pulse-wrapper">
+            <img src="{% static 'favicon.png' %}" alt="NODE" class="loader-logo">
+            <div class="loader-pulse"></div>
+        </div>
     </div>
     <nav class="navbar" style="position:fixed;top:0;left:0;right:0;z-index:1030;background:#1A1C23;border-bottom:1px solid rgba(240,185,11,0.15);padding:0 16px;height:56px;display:flex;align-items:center;justify-content:space-between;">
         <!-- Logo -->
@@ -447,13 +480,13 @@
 
     // ============ LOADING FUNCTIONS ============
     function showLoading() {
-        const loader = document.querySelector('.loading');
-        if (loader) loader.style.display = 'flex';
+        const loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.remove('hidden');
     }
 
     function hideLoading() {
-        const loader = document.querySelector('.loading');
-        if (loader) loader.style.display = 'none';
+        const loader = document.getElementById('pageLoader');
+        if (loader) loader.classList.add('hidden');
     }
 
     if (document.readyState === 'loading') {
