@@ -120,7 +120,7 @@ class Command(BaseCommand):
                         pnl=Decimal('0'),
                         pnl_percent=Decimal('0'),
                         price_at_creation=current_price,
-                        created_at=timezone.now(),
+                        created_at=bot.created_at,
                     )
 
                     # ── Record the 10% management fee ──
