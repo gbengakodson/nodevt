@@ -261,8 +261,18 @@
         </div>
 
         <!-- Tab 1: Chart -->
-        <div id="ttab-chart" style="height:260px;">
-            <canvas id="cashflowChart"></canvas>
+        <div id="ttab-chart">
+            <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <div style="flex:1; background:#0ECB8110; border:1px solid #0ECB81; border-radius:8px; padding:8px;">
+                    <div style="font-size:10px; color:#0ECB81;">Incoming</div>
+                    <div style="font-size:16px; font-weight:700; color:#EAECEF;" id="totalIncoming">$0</div>
+                </div>
+                <div style="flex:1; background:#F6465D10; border:1px solid #F6465D; border-radius:8px; padding:8px;">
+                    <div style="font-size:10px; color:#F6465D;">Outgoing</div>
+                    <div style="font-size:16px; font-weight:700; color:#EAECEF;" id="totalOutgoing">$0</div>
+                </div>
+            </div>
+            <canvas id="cashflowChart" style="height:200px;"></canvas>
         </div>
 
         <!-- Tab 2: Web3 -->
@@ -451,6 +461,8 @@
     async function loadCashflowChart() {
         try {
             var d = await apiCall('/admin/cashflow-audit/');
+            document.getElementById('totalIncoming').textContent = '$' + Number(d.total_incoming).toLocaleString();
+            document.getElementById('totalOutgoing').textContent = '$' + Number(d.total_outgoing).toLocaleString();
             var ctx = document.getElementById('cashflowChart').getContext('2d');
             if (cashflowChart) cashflowChart.destroy();
             cashflowChart = new Chart(ctx, {

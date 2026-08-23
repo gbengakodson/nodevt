@@ -28,4 +28,15 @@ class CashflowAuditView(APIView):
             incoming.append(float(row['incoming'] or 0))
             outgoing.append(float(row['outgoing'] or 0))
 
-        return Response({'labels': labels, 'incoming': incoming, 'outgoing': outgoing})
+        total_incoming = Transaction.objects.filter(transaction_type__in=INCOMING_TYPES).aggregate(s=Sum('amount'))[
+                             's'] or 0
+        total_outgoing = Transaction.objects.filter(transaction_type__in=OUTGOING_TYPES).aggregate(s=Sum('amount'))[
+                             's'] or 0
+
+        return Response({
+            'labels': labels,
+            'incoming': incoming,
+            'outgoing': outgoing,
+            'total_incoming': float(total_incoming),
+            'total_outgoing': float(total_outgoing),
+        })
