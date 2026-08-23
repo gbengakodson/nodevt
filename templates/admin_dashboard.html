@@ -460,13 +460,18 @@
 
 
 
+    let cashflowChart = null;
+
     async function loadCashflowChart() {
         try {
             var d = await apiCall('/admin/cashflow-audit/');
+
             document.getElementById('totalIncoming').textContent = '$' + Number(d.total_incoming).toLocaleString();
             document.getElementById('totalOutgoing').textContent = '$' + Number(d.total_outgoing).toLocaleString();
+
             var ctx = document.getElementById('cashflowChart').getContext('2d');
             if (cashflowChart) cashflowChart.destroy();
+
             cashflowChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -477,7 +482,8 @@
                     ]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
                     plugins: { legend: { labels: { color: '#848E9C', font: { size: 10 } } } },
                     scales: {
                         x: { ticks: { color: '#848E9C', font: { size: 9 } }, grid: { display: false } },
