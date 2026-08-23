@@ -6,8 +6,8 @@ from django.db.models.functions import TruncMonth
 from apps.wallets.models import Transaction
 from decimal import Decimal
 
-INCOMING_TYPES = ['DEPOSIT', 'PURCHASE', 'SALE']
-OUTGOING_TYPES = ['WITHDRAWAL', 'GRID_CLOSE', 'REFERRAL', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW']
+INCOMING_TYPES = ['PURCHASE']
+OUTGOING_TYPES = ['GRID_CLOSE', 'REFERRAL', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW']
 
 class CashflowAuditView(APIView):
     permission_classes = [IsAdminUser]
