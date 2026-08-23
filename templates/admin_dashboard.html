@@ -261,8 +261,8 @@
         </div>
 
         <!-- Tab 1: Chart -->
-        <div id="ttab-chart" style="height:200px;">
-            <canvas id="buySellChart"></canvas>
+        <div id="ttab-chart" style="height:260px;">
+            <canvas id="cashflowChart"></canvas>
         </div>
 
         <!-- Tab 2: Web3 -->
@@ -411,6 +411,7 @@
 <script>
     const API = '/api';
     let buySellChart = null;
+    let cashflowChart = null;
     let currentChatUser = null;
 
     function getToken() { return localStorage.getItem('access_token'); }
@@ -445,19 +446,20 @@
         } catch(e) { console.error(e); }
     }
 
-    // Buy/Sell Chart
-    async function loadChart() {
+
+
+    async function loadCashflowChart() {
         try {
-            var d = await apiCall('/admin/buy-sell-activity/');
-            var ctx = document.getElementById('buySellChart').getContext('2d');
-            if (buySellChart) buySellChart.destroy();
-            buySellChart = new Chart(ctx, {
+            var d = await apiCall('/admin/cashflow-audit/');
+            var ctx = document.getElementById('cashflowChart').getContext('2d');
+            if (cashflowChart) cashflowChart.destroy();
+            cashflowChart = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: d.days,
+                    labels: d.labels,
                     datasets: [
-                        { label: 'Buys', data: d.buys, borderColor: '#0ECB81', backgroundColor: 'rgba(14,203,129,0.1)', tension: 0.4, pointRadius: 0 },
-                        { label: 'Sells', data: d.sells, borderColor: '#F6465D', backgroundColor: 'rgba(246,70,93,0.1)', tension: 0.4, pointRadius: 0 }
+                        { label: 'Incoming', data: d.incoming, borderColor: '#0ECB81', backgroundColor: 'rgba(14,203,129,0.1)', tension: 0.4, pointRadius: 0 },
+                        { label: 'Outgoing', data: d.outgoing, borderColor: '#F6465D', backgroundColor: 'rgba(246,70,93,0.1)', tension: 0.4, pointRadius: 0 }
                     ]
                 },
                 options: {
@@ -481,7 +483,7 @@
             document.getElementById('ttab-chart').style.display = tab === 'chart' ? 'block' : 'none';
             document.getElementById('ttab-web3').style.display = tab === 'web3' ? 'block' : 'none';
             document.getElementById('ttab-forex').style.display = tab === 'forex' ? 'block' : 'none';
-            if (tab === 'chart') loadChart();
+            if (tab === 'chart') loadCashflowChart();
             if (tab === 'web3') loadWeb3Treasury();
             if (tab === 'forex') loadMasterEAStatus();
         });
