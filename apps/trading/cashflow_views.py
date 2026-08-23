@@ -5,6 +5,8 @@ from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from apps.wallets.models import Transaction
 from decimal import Decimal
+from rest_framework import status
+from .models import CashflowSource
 
 TEST_ACCOUNTS = [
     'trading@qualityservice.com',
@@ -62,3 +64,30 @@ class CashflowAuditView(APIView):
             'total_incoming': total_incoming,
             'total_outgoing': total_outgoing,
         })
+
+
+
+
+class CashflowSourceView(APIView):
+    permission_classes = [IsAdminUser]
+
+    def get(self, request):
+        sources = CashflowSource.objects.all()
+        data = [{'name': s.name, 'balance': float(s.balance)} for s in sources]
+        return Response({'sources': data})
+
+    def post(self, request):
+        name = request.data.get('name', '').strip()
+        balance = request.data.get('balance', '0')
+        if not name:
+            return Response({'error': 'Name required'}, status=400)
+        try:
+            balance = Decimal(str(balance))
+        except:
+            return Response({'error': 'Invalid balance'}, status=400)
+
+        source, _ = CashflowSource.objects.update_or_create(
+            name=name,
+            defaults={'balance': balance}
+        )
+        return Response({'success': True, 'name': source.name, 'balance': float(source.balance)})

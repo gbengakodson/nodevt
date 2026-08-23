@@ -25,7 +25,7 @@ from apps.forex_ea.public_views import DailyIntelligenceView
 from apps.forex_ea.public_views import FadakkaDiscountsView
 from apps.forex_ea.public_views import CoinReactionView, CoinReactionCountsView
 from apps.forex_ea.forex_api import ForexDailyView, ForexForecastDetailView
-from apps.trading.cashflow_views import CashflowAuditView
+from apps.trading.cashflow_views import CashflowAuditView, CashflowSourceView
 
 
 
@@ -74,6 +74,7 @@ urlpatterns = [
     path('api/admin/broadcast/', AdminBroadcastView.as_view(), name='admin_broadcast'),
     path('api/trigger/platform-report/', platform_report_webhook, name='platform_report'),
     path('api/admin/cashflow-audit/', CashflowAuditView.as_view(), name='cashflow_audit'),
+    path('api/admin/cashflow-sources/', CashflowSourceView.as_view(), name='cashflow_sources'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
