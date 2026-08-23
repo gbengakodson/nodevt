@@ -7,7 +7,7 @@ from apps.wallets.models import Transaction
 from decimal import Decimal
 
 INCOMING_TYPES = ['PURCHASE']
-OUTGOING_TYPES = ['GRID_CLOSE', 'REFERRAL', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW']
+OUTGOING_TYPES = ['GRID_CLOSE', 'REFERRAL', 'YIELD_WITHDRAW', 'PURSE_WITHDRAW', 'SWEEP']
 
 class CashflowAuditView(APIView):
     permission_classes = [IsAdminUser]
