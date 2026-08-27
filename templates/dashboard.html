@@ -1391,7 +1391,13 @@
                             </div>
                             <div class="holding-stats">
                                 <div class="stat-item"><label>Investment</label><span>${formatCurrency(bot.amount)}</span></div>
-                                <div class="stat-item clickable-profit" onclick="${hasProfit ? `openCollectProfitModal('${bot.id}', ${bot.grid_profit})` : ''}" style="${hasProfit ? '' : 'opacity:0.5;cursor:not-allowed;'}"><label>Grid Profit</label><span class="positive">${formatCurrency(bot.grid_profit)}</span>${hasProfit ? '<div class="collect-hint">Click to collect →</div>' : ''}</div>
+                                <div class="stat-item ${hasProfit && !bot.is_above_fair_value ? 'clickable-profit' : ''}" onclick="${hasProfit && !bot.is_above_fair_value ? `openCollectProfitModal('${bot.id}', ${bot.grid_profit})` : ''}" style="${hasProfit && !bot.is_above_fair_value ? '' : 'opacity:0.5;cursor:not-allowed;'}">
+                                    <label>Grid Profit</label>
+                                    <span class="positive">${formatCurrency(bot.grid_profit)}</span>
+                                    ${bot.is_above_fair_value
+                                        ? '<div style="font-size:9px;color:#F0B90B;">🔒 Add Profits only until below fair value</div>'
+                                        : (hasProfit ? '<div class="collect-hint">Click to collect →</div>' : '')}
+                                </div>
                                 <div class="stat-item"><label>PNL</label><span class="${pnlClass}">${pnlSymbol}${formatCurrency(Math.abs(bot.pnl))} (${pnlSymbol}${bot.pnl_percent.toFixed(2)}%)</span></div>
                             </div>
                             ${bot.pnl_percent >= 20 ? '<div class="auto-close-tag">🏁 Ready to close (20%+ PNL)</div>' : ''}

@@ -177,6 +177,13 @@ class TradingViewSet(viewsets.ViewSet):
             created_at=timezone.now(),
         )
 
+        # ── Fair value rule: restrict profit collection when above Fadakka Index ──
+        from apps.trading.services.fadakka_service import FadakkaService
+        fair_value = FadakkaService.get_fadakka_k(token.symbol)
+        if fair_value and token.current_price > fair_value:
+            bot.is_above_fair_value = True
+            bot.save(update_fields=['is_above_fair_value'])
+
         # ── Savings‑lock logic for USDC ──
         lock_months = request.data.get('lock_months')  # from frontend
         if token.symbol == 'USDC' and lock_months:
@@ -327,6 +334,8 @@ class TradingViewSet(viewsets.ViewSet):
             })
         return Response(data)
 
+
+
     @action(detail=False, methods=['post'])
     def collect_grid_profit(self, request):
         """Move grid profit from a specific bot to yield wallet"""
@@ -338,6 +347,15 @@ class TradingViewSet(viewsets.ViewSet):
             bot = GridBot.objects.get(id=bot_id, user=request.user, status='ACTIVE')
         except GridBot.DoesNotExist:
             return Response({'error': 'Active grid bot not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        # ── Fair value restriction ──
+        if bot.is_above_fair_value:
+            from apps.trading.services.fadakka_service import FadakkaService
+            fair_value = FadakkaService.get_fadakka_k(bot.token.symbol)
+            if fair_value and bot.token.current_price > fair_value:
+                return Response({
+                    'error': 'Price is above fair value. You can only Add Profit, not withdraw.'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
         if bot.grid_profit <= 0:
             return Response({'error': 'No grid profit to collect'}, status=status.HTTP_400_BAD_REQUEST)
