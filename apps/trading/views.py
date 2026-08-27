@@ -21,6 +21,7 @@ from apps.trading.models import GridBot
 from apps.core.models import PlatformSetting
 from datetime import timedelta
 from apps.core.notifications import notify_user
+from apps.trading.services.fadakka_service import FadakkaService
 
 
 
@@ -315,6 +316,9 @@ class TradingViewSet(viewsets.ViewSet):
         grid_bots = GridBot.objects.filter(user=request.user).exclude(status='COMPLETED').select_related('token')
         data = []
         for bot in grid_bots:
+            fadakka_k = None
+            if bot.token:
+                fadakka_k = FadakkaService.get_fadakka_k(bot.token.symbol)
             data.append({
                 'id': str(bot.id),
                 'token_symbol': bot.token.symbol if bot.token else 'UNKNOWN',
@@ -331,6 +335,7 @@ class TradingViewSet(viewsets.ViewSet):
                 'total_yield_earned': float(bot.total_yield_earned) if hasattr(bot, 'total_yield_earned') else 0,
                 'created_at': bot.created_at.isoformat(),
                 'status': bot.status,
+                'fadakka_k': float(fadakka_k) if fadakka_k else 0,
             })
         return Response(data)
 
