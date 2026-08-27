@@ -510,18 +510,48 @@ class TradingViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def add_profits(self, request):
-        """Reinvest grid profit into tracker capital without fee."""
+        """Reinvest grid profit into tracker capital with 5% charge and minimum 10% rule."""
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
 
         if bot.grid_profit <= 0:
             return Response({'error': 'No grid profit to add'}, status=400)
 
-        bot.amount += bot.grid_profit
+        min_addable = bot.amount * Decimal('0.10')  # 10% of capital
+        if bot.grid_profit < min_addable:
+            return Response({
+                'error': f'Minimum addable profit is {float(min_addable):.2f} USDC'
+            }, status=400)
+
+        addable = bot.grid_profit
+        charge = addable * Decimal('0.05')  # 5% charge
+        net_to_add = addable - charge
+
+        bot.amount += net_to_add
         bot.grid_profit = Decimal('0')
         bot.save(update_fields=['amount', 'grid_profit'])
 
-        return Response({'success': True, 'new_amount': float(bot.amount)})
+        # Record the 5% charge as platform fee
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='PLATFORM_FEE',
+            amount=charge,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'grid_bot_id': str(bot.id),
+                'reason': 'add_profit_charge',
+                'addable_profit': float(addable),
+            },
+            completed_at=timezone.now()
+        )
+
+        return Response({
+            'success': True,
+            'new_amount': float(bot.amount),
+            'charge_deducted': float(charge),
+            'net_added': float(net_to_add),
+        })
 
     @action(detail=False, methods=['post'])
     def start_grid(self, request):
