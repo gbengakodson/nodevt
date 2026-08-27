@@ -986,10 +986,18 @@
 
 
     // ============ GRID BOT ACTIONS ============
-    async function stopGridBot(botId) {
-        if (!confirm('Stop this grid bot?')) return;
-        const result = await apiCall('/trading/stop_grid/', 'POST', { bot_id: botId });
-        if (result.success) { showModal('Grid bot stopped.', 'warning'); loadDashboard(); }
+    async function addProfits(botId) {
+        try {
+            const result = await apiCall('/trading/add_profits/', 'POST', { bot_id: botId });
+            if (result.success) {
+                showModal('✅ Profits added to capital. New amount: ' + formatCurrency(result.new_amount), 'success');
+                loadDashboard();
+            } else {
+                showModal('❌ ' + (result.error || 'Failed'), 'error');
+            }
+        } catch(e) {
+            showModal('❌ Network error', 'error');
+        }
     }
 
     async function startGridBot(botId) {
@@ -1389,7 +1397,7 @@
                             ${bot.pnl_percent >= 20 ? '<div class="auto-close-tag">🏁 Ready to close (20%+ PNL)</div>' : ''}
                             ${bot.pnl_percent >= 15 && bot.pnl_percent < 20 ? '<div class="end-grid-tag">⚠️ Near 20% PNL</div>' : ''}
                             <div class="bot-actions">
-                                ${bot.status === 'ACTIVE' ? `<button class="btn-stop-bot" onclick="stopGridBot('${bot.id}')">⏸️ Stop</button>` : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`}
+                                ${bot.status === 'ACTIVE' ? `<button class="btn-stop-bot" onclick="addProfits('${bot.id}')">💰 Add Profits</button>` : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`}
                                 <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>💰 Close</button>
                             </div>
                         </div>

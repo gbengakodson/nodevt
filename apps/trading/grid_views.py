@@ -6,15 +6,24 @@ from apps.wallets.models import Wallet
 from decimal import Decimal
 
 
-class StopGridView(APIView):
+
+
+
+class AddProfitsView(APIView):
     permission_classes = [IsAuthenticated]
 
     def post(self, request):
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
-        bot.status = 'STOPPED'
-        bot.save()
-        return Response({'success': True})
+
+        if bot.grid_profit <= 0:
+            return Response({'error': 'No grid profit to add'}, status=400)
+
+        bot.amount += bot.grid_profit
+        bot.grid_profit = Decimal('0')
+        bot.save(update_fields=['amount', 'grid_profit'])
+
+        return Response({'success': True, 'new_amount': float(bot.amount)})
 
 
 class StartGridView(APIView):

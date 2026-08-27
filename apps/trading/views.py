@@ -486,12 +486,19 @@ class TradingViewSet(viewsets.ViewSet):
         })
 
     @action(detail=False, methods=['post'])
-    def stop_grid(self, request):
+    def add_profits(self, request):
+        """Reinvest grid profit into tracker capital without fee."""
         bot_id = request.data.get('bot_id')
         bot = GridBot.objects.get(id=bot_id, user=request.user)
-        bot.status = 'STOPPED'
-        bot.save()
-        return Response({'success': True})
+
+        if bot.grid_profit <= 0:
+            return Response({'error': 'No grid profit to add'}, status=400)
+
+        bot.amount += bot.grid_profit
+        bot.grid_profit = Decimal('0')
+        bot.save(update_fields=['amount', 'grid_profit'])
+
+        return Response({'success': True, 'new_amount': float(bot.amount)})
 
     @action(detail=False, methods=['post'])
     def start_grid(self, request):

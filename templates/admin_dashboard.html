@@ -302,22 +302,21 @@
 
     <!-- Tabs -->
     <div class="tabs">
-        <button class="tab-btn active" data-tab="deposits">Deposits</button>
-        <button class="tab-btn" data-tab="withdrawals">Withdrawals</button>
+        <button class="tab-btn active" data-tab="cashflow">Cashflow</button>
         <button class="tab-btn" data-tab="users">Users</button>
         <button class="tab-btn" data-tab="holders">Holders</button>
         <button class="tab-btn" data-tab="chat">Messages</button>
         <button class="tab-btn" data-tab="kyc">KYC</button>
     </div>
 
-    <!-- Deposits -->
-    <div id="panel-deposits" class="card">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>TX Hash</th><th>Status</th><th>Actions</th></tr></thead><tbody id="depositsList"></tbody></table></div>
-    </div>
-
-    <!-- Withdrawals -->
-    <div id="panel-withdrawals" class="card" style="display:none;">
-        <div class="table-wrap"><table class="compact-table"><thead><tr><th>Date</th><th>User</th><th>Amount</th><th>Address</th><th>Status</th><th>Actions</th></tr></thead><tbody id="withdrawalsList"></tbody></table></div>
+    <!-- Cashflow -->
+    <div id="panel-cashflow" class="card">
+        <div class="table-wrap">
+            <table class="compact-table">
+                <thead><tr><th>Source</th><th>Balance</th><th>Last Updated</th></tr></thead>
+                <tbody id="cashflowSourcesBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- Users -->
@@ -576,20 +575,20 @@
         }
     }
 
-    // Deposits
-    async function loadDeposits() {
-        var data = await apiCall('/admin/deposits/');
-        document.getElementById('depositsList').innerHTML = data.map(function(d) {
-            return '<tr><td>' + d.created_at + '</td><td>' + d.user + '</td><td>' + fc(d.amount) + '</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">' + d.tx_hash + '</td><td><span class="badge ' + (d.status === 'PENDING' ? 'badge-yellow' : d.status === 'CONFIRMED' ? 'badge-green' : 'badge-red') + '">' + d.status + '</span></td><td>' + (d.status === 'PENDING' ? '<button class="btn-sm btn-confirm" onclick="processDeposit(\'' + d.id + '\',\'confirm\')">✓</button> <button class="btn-sm btn-reject" onclick="processDeposit(\'' + d.id + '\',\'reject\')">✕</button>' : '-') + '</td></tr>';
-        }).join('');
-    }
-
-    // Withdrawals
-    async function loadWithdrawals() {
-        var data = await apiCall('/admin/withdrawals/');
-        document.getElementById('withdrawalsList').innerHTML = data.map(function(w) {
-            return '<tr><td>' + w.created_at + '</td><td>' + w.user + '</td><td>' + fc(w.amount) + '</td><td style="max-width:120px;overflow:hidden;text-overflow:ellipsis;">' + w.wallet_address + '</td><td><span class="badge ' + (w.status === 'PENDING' ? 'badge-yellow' : w.status === 'PROCESSED' ? 'badge-green' : 'badge-red') + '">' + w.status + '</span></td><td>' + (w.status === 'PENDING' ? '<button class="btn-sm btn-confirm" onclick="processWithdrawal(\'' + w.id + '\',\'process\')">✓</button> <button class="btn-sm btn-reject" onclick="processWithdrawal(\'' + w.id + '\',\'reject\')">✕</button>' : '-') + '</td></tr>';
-        }).join('');
+    async function loadCashflowSources() {
+        try {
+            var res = await apiCall('/admin/cashflow-sources/');
+            var tbody = document.getElementById('cashflowSourcesBody');
+            if (res.sources && res.sources.length > 0) {
+                tbody.innerHTML = res.sources.map(function(s) {
+                    return '<tr><td>' + s.name + '</td><td>' + fc(s.balance) + '</td><td>—</td></tr>';
+                }).join('');
+            } else {
+                tbody.innerHTML = '<tr><td colspan="3">No sources</td></tr>';
+            }
+        } catch(e) {
+            console.error(e);
+        }
     }
 
     // Users with spot/grid breakdown
