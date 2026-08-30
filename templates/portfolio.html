@@ -905,6 +905,18 @@
                 </div>
             `;
         }).join('');
+          // ── Update FOREX tab total ──
+        var totalForexUSDT = 0;
+        Object.keys(balances).forEach(function(currency) {
+            var b = Number(balances[currency]) || 0;
+            var r = rates[currency]?.price || 0;
+            if (currency === 'GOLD' || currency === 'USOIL') {
+                totalForexUSDT += b * r;
+            } else {
+                totalForexUSDT += b / r;
+            }
+        });
+        document.getElementById('forexSpotValue').textContent = '$' + totalForexUSDT.toFixed(2);
     }
 
 
