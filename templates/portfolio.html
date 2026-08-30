@@ -950,20 +950,21 @@
 
 
     function openAddAsset(currency) {
-        var symbolHidden = document.getElementById('addAssetSymbol');
-        var symbolDisplay = document.getElementById('addAssetSymbolDisplay');
+        var hidden = document.getElementById('addAssetSymbol');
+        var display = document.getElementById('addAssetSymbolDisplay');
+        var amount = document.getElementById('addAssetAmount');
 
-        if (symbolHidden) symbolHidden.value = currency;
-        if (symbolDisplay) symbolDisplay.value = currency;
+        if (hidden) hidden.value = currency;
+        if (display) display.value = currency;
+        if (amount) amount.value = '';
 
-        var amountEl = document.getElementById('addAssetAmount');
-        if (amountEl) amountEl.value = '';
+        if (typeof loadAddAssetBalance === 'function') loadAddAssetBalance();
+        if (typeof loadSpotRatesForModal === 'function') loadSpotRatesForModal();
 
-        loadAddAssetBalance();
-        loadSpotRatesForModal();
         var modal = document.getElementById('addAssetModal');
         if (modal) modal.style.display = 'flex';
-        updateAddAssetPreview();
+
+        if (typeof updateAddAssetPreview === 'function') updateAddAssetPreview();
     }
 
     function closeAddAssetModal() {
