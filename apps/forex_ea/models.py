@@ -229,3 +229,16 @@ class StockPriceHistory(models.Model):
         return f"{self.symbol} @ {self.price} ({self.recorded_at:%Y-%m-%d %H:%M})"
 
 
+class ForexRateHistory(models.Model):
+    base_currency = models.CharField(max_length=10)      # e.g., USD
+    quote_currency = models.CharField(max_length=10)     # e.g., EUR
+    rate = models.DecimalField(max_digits=15, decimal_places=6, default=0)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.base_currency}/{self.quote_currency} = {self.rate}"
+
+
