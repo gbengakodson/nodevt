@@ -1,7 +1,8 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
-from .stock_service import STOCK_UNIVERSE, get_stock_quote
+from .stock_service import STOCK_UNIVERSE
+from .models import StockPrice, FiatBalance
 from .models import FiatBalance
 from decimal import Decimal
 import requests
@@ -18,12 +19,14 @@ class StockBalancesView(APIView):
                 currency=symbol,
                 defaults={'balance': Decimal('0')}
             )
-            quote = get_stock_quote(symbol)
+            stock_price = StockPrice.objects.filter(symbol=symbol).first()
+            price = stock_price.price if stock_price else 0
+            change = stock_price.change_24h if stock_price else 0
             data.append({
                 'symbol': symbol,
                 'name': name,
                 'balance': float(balance_obj.balance),
-                'price': quote.get('price', 0),
-                'change_24h': quote.get('change_24h', 0),
+                'price': float(price),
+                'change_24h': float(change),
             })
         return Response({'stocks': data})

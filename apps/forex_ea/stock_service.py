@@ -36,6 +36,24 @@ ALPHA_SYMBOLS = {
     'GOOG': 'GOOG',
 }
 
+FALLBACK_STOCK_PRICES = {
+    'NVDA': 115.00,
+    'SPCX': 150.00,   # private proxy, estimated
+    'AAPL': 312.00,
+    'MSFT': 490.00,
+    'WMT': 95.00,
+    'META': 580.00,
+    'AMZN': 210.00,
+    'GOOG': 175.00,
+    'ZENITHBANK': 45.00,
+    'GTCO': 55.00,
+    'MTNN': 280.00,
+    'DANGCEM': 650.00,
+    'ACCESSCORP': 30.00,
+    'UBA': 28.00,
+    'SEPLAT': 2500.00,
+}
+
 NG_STOCKS = ['ZENITHBANK','GTCO','MTNN','DANGCEM','ACCESSCORP','UBA','SEPLAT']
 
 _price_cache = {}
@@ -85,6 +103,13 @@ def get_stock_quote(symbol):
         except Exception:
             result = {'price': 0, 'change_24h': 0}
         time.sleep(12)
+
+    if result.get('price', 0) == 0 and symbol in FALLBACK_STOCK_PRICES:
+        result = {
+            'price': FALLBACK_STOCK_PRICES[symbol],
+            'change_24h': 0.0,
+            'source': 'estimated'
+        }
 
     _price_cache[symbol] = result
     return result
