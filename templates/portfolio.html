@@ -491,37 +491,11 @@
         </div>
 
         <label style="font-size:11px; color:#6B7280;">Asset</label>
-        <select id="addAssetSymbol" class="form-control" style="margin-bottom:10px;">
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="NGN">NGN</option>
-            <option value="GOLD">GOLD</option>
-            <option value="USOIL">USOIL</option>
-            <!-- Stocks -->
-            <option value="AAPL">AAPL - Apple Inc.</option>
-            <option value="MSFT">MSFT - Microsoft</option>
-            <option value="TSLA">TSLA - Tesla</option>
-            <option value="NVDA">NVDA - NVIDIA</option>
-            <option value="AMZN">AMZN - Amazon</option>
-            <option value="GOOGL">GOOGL - Alphabet</option>
-            <option value="META">META - Meta</option>
-            <option value="KO">KO - Coca-Cola</option>
-            <option value="VOO">VOO - S&P 500 ETF</option>
-            <option value="NFLX">NFLX - Netflix</option>
-            <option value="ZENITHBANK">ZENITHBANK</option>
-            <option value="GTCO">GTCO</option>
-            <option value="MTNN">MTNN</option>
-            <option value="DANGCEM">DANGCEM</option>
-            <option value="ACCESSCORP">ACCESSCORP</option>
-            <option value="UBA">UBA</option>
-            <option value="SEPLAT">SEPLAT</option>
-            <option value="BUAFOODS">BUAFOODS</option>
-            <option value="ARADEL">ARADEL</option>
-            <option value="TRANSCORP">TRANSCORP</option>
-        </select>
+        <label style="font-size:11px; color:#6B7280;">Asset</label>
+        <input type="text" id="addAssetSymbolDisplay" class="form-control" readonly style="margin-bottom:10px; background:#F8F9FA;">
 
         <label style="font-size:11px; color:#6B7280;">Amount (USDC)</label>
-        <input type="number" id="addAssetAmount" class="form-control" placeholder="10.00" step="0.01" style="margin-bottom:16px;">
+        <input type="hidden" id="addAssetSymbol">
 
         <!-- NEW INFO BOX -->
         <div style="font-size:11px; color:#6B7280; margin-bottom:12px;">
@@ -945,11 +919,12 @@
 
         var rate = currentRates[symbol]?.price || 0;
         var fee = amount * 0.01;
-        var receive = amount - fee;
+        var receiveUsdc = amount - fee;
+        var receiveAsset = receiveUsdc * rate;
 
-        document.getElementById('addAssetRate').textContent = rate ? rate.toFixed(4) : 'N/A';
+        document.getElementById('addAssetRate').textContent = rate ? '1 USDC = ' + rate.toFixed(4) + ' ' + symbol : 'N/A';
         document.getElementById('addAssetFee').textContent = fee.toFixed(2) + ' USDC';
-        document.getElementById('addAssetReceive').textContent = receive.toFixed(2) + ' USDC worth';
+        document.getElementById('addAssetReceive').textContent = receiveAsset.toFixed(4) + ' ' + symbol;
     }
 
     document.getElementById('addAssetSymbol').addEventListener('change', updateAddAssetPreview);
@@ -973,9 +948,12 @@
 
     function openAddAsset(currency) {
         document.getElementById('addAssetSymbol').value = currency;
+        document.getElementById('addAssetSymbolDisplay').value = currency;
         document.getElementById('addAssetAmount').value = '';
         loadAddAssetBalance();
+        loadSpotRatesForModal();
         document.getElementById('addAssetModal').style.display = 'flex';
+        updateAddAssetPreview();
     }
 
     function closeAddAssetModal() {
