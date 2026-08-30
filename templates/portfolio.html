@@ -927,8 +927,11 @@
         document.getElementById('addAssetReceive').textContent = receiveAsset.toFixed(4) + ' ' + symbol;
     }
 
-    document.getElementById('addAssetSymbol').addEventListener('change', updateAddAssetPreview);
-    document.getElementById('addAssetAmount').addEventListener('input', updateAddAssetPreview);
+    var symbolEl = document.getElementById('addAssetSymbol');
+    if (symbolEl) symbolEl.addEventListener('change', updateAddAssetPreview);
+
+    var amountEl = document.getElementById('addAssetAmount');
+    if (amountEl) amountEl.addEventListener('input', updateAddAssetPreview);
 
 
     async function loadAddAssetBalance() {
