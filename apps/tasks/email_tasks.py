@@ -123,10 +123,12 @@ NODE! — Asset Automation Engine on the Go.
 """
 
             # Send as HTML so flag images show
+            html_content = f"<div style='font-family:Arial; max-width:600px; white-space:pre-line;'>{message}</div>"
+
             send_mail(
                 subject=subject,
                 message='',
-                html_message=message,
+                html_message=html_content,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 recipient_list=[user.email],
                 fail_silently=True,
