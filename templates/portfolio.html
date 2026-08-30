@@ -693,19 +693,27 @@
         return icons[symbol] || 'https://assets.coingecko.com/coins/images/1/small/bitcoin.png';
     }
 
-    var logoDomain = {
-        'AAPL': 'apple.com',
-        'MSFT': 'microsoft.com',
-        'NVDA': 'nvidia.com',
-        'TSLA': 'tesla.com',
-        'AMZN': 'amazon.com',
-        'GOOGL': 'google.com',
-        'META': 'meta.com',
-        'WMT': 'walmart.com',
-        'KO': 'coca-cola.com',
-        'NFLX': 'netflix.com',
-        'VOO': 'vanguard.com'
+    var stockLogos = {
+        'ZENITHBANK': '/static/zenith.png',
+        'UBA': '/static/UBA2.png',
+        'SEPLAT': '/static/SEPLAT2.png',
+        'MTNN': '/static/MTN.png',
+        'GTCO': '/static/GTCO.png',
+        'DANGCEM': '/static/DANGCEM2.png',
+        'ACCESSCORP': '/static/ACCESSCORP.png',
+        'AAPL': 'https://logo.clearbit.com/apple.com',
+        'MSFT': 'https://logo.clearbit.com/microsoft.com',
+        'NVDA': 'https://logo.clearbit.com/nvidia.com',
+        'TSLA': 'https://logo.clearbit.com/tesla.com',
+        'AMZN': 'https://logo.clearbit.com/amazon.com',
+        'GOOGL': 'https://logo.clearbit.com/google.com',
+        'META': 'https://logo.clearbit.com/meta.com',
+        'WMT': 'https://logo.clearbit.com/walmart.com',
+        'KO': 'https://logo.clearbit.com/coca-cola.com',
+        'NFLX': 'https://logo.clearbit.com/netflix.com',
+        'VOO': 'https://logo.clearbit.com/vanguard.com'
     };
+
 
     function switchSpotTab(tab) {
         var forexTab = document.getElementById('tabForex');
@@ -767,7 +775,7 @@
                     <div class="spot-card" style="background:#FFFFFF; border:1px solid #E2E4E8; border-radius:14px; padding:16px; display:flex; flex-direction:column; gap:10px;">
                         <div style="display:flex; align-items:center; justify-content:space-between;">
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <img src="https://logo.clearbit.com/${logoDomain[stock.symbol]}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
+                                <img src="${stockLogos[stock.symbol] || ''}" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" style="width:40px; height:40px; border-radius:50%; object-fit:cover;">
                                 <div style="width:40px; height:40px; border-radius:50%; background:#1B1E21; color:#F0B90B; display:none; align-items:center; justify-content:center; font-weight:700; font-size:14px;">
                                     ${stock.symbol.substring(0,2)}
                                 </div>
