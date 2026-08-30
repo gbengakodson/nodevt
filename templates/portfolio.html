@@ -932,7 +932,7 @@
         var feeEl = document.getElementById('addAssetFee');
         var receiveEl = document.getElementById('addAssetReceive');
 
-        if (rateEl) rateEl.textContent = rate ? '1 USDC = ' + rate.toFixed(4) + ' ' + symbol : 'N/A';
+        if (rateEl) rateEl.textContent = rate ? '1 ' + symbol + ' = ' + (1/rate).toFixed(4) + ' USDC' : 'N/A';
         if (feeEl) feeEl.textContent = fee.toFixed(2) + ' USDC';
         if (receiveEl) receiveEl.textContent = receiveAsset.toFixed(4) + ' ' + symbol;
     }
