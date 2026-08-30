@@ -850,7 +850,12 @@
             var balance = Number(balances[currency]) || 0;
             var rate = rates && rates[currency] ? rates[currency].price : 0;
             var change = rates && rates[currency] ? rates[currency].change_24h : 0;
-            var usdEquivalent = balance * rate;
+            var usdEquivalent;
+            if (currency === 'GOLD' || currency === 'USOIL') {
+                usdEquivalent = balance * rate;
+            } else {
+                usdEquivalent = balance / rate;
+            }
 
             return `
                 <div class="col-12 col-md-6 col-lg-4">
