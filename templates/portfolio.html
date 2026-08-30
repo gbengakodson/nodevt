@@ -950,12 +950,19 @@
 
 
     function openAddAsset(currency) {
-        document.getElementById('addAssetSymbol').value = currency;
-        document.getElementById('addAssetSymbolDisplay').value = currency;
-        document.getElementById('addAssetAmount').value = '';
+        var symbolHidden = document.getElementById('addAssetSymbol');
+        var symbolDisplay = document.getElementById('addAssetSymbolDisplay');
+
+        if (symbolHidden) symbolHidden.value = currency;
+        if (symbolDisplay) symbolDisplay.value = currency;
+
+        var amountEl = document.getElementById('addAssetAmount');
+        if (amountEl) amountEl.value = '';
+
         loadAddAssetBalance();
         loadSpotRatesForModal();
-        document.getElementById('addAssetModal').style.display = 'flex';
+        var modal = document.getElementById('addAssetModal');
+        if (modal) modal.style.display = 'flex';
         updateAddAssetPreview();
     }
 
