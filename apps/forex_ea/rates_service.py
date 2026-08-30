@@ -12,78 +12,68 @@ CURRENCY_ALIASES = {
 }
 
 def get_fiat_rate(base_currency, quote_currency):
-    """Return 1 base = X quote for fiat currencies using open.er-api.com."""
+    """Return 1 base = X quote using stored history rates."""
+    from .models import ForexRateHistory
+
     if base_currency == quote_currency:
         return Decimal('1.0')
 
-    # Fetch latest rates with USD as base
-    resp = requests.get(FREE_RATES_URL)
-    data = resp.json()
-    if data.get('result') != 'success':
-        raise Exception("Rate fetch failed")
-
-    rates = data['rates']
-    # Convert through USD
-    if base_currency == 'USD':
-        return Decimal(str(rates[quote_currency]))
-    elif quote_currency == 'USD':
-        return Decimal('1.0') / Decimal(str(rates[base_currency]))
-    else:
-        # Cross rate: base -> USD -> quote
-        base_to_usd = Decimal('1.0') / Decimal(str(rates[base_currency]))
-        usd_to_quote = Decimal(str(rates[quote_currency]))
-        return base_to_usd * usd_to_quote
-
-def get_commodity_price(symbol):
-    """Return USD price for one unit of GOLD or USOIL using Twelve Data."""
-    if symbol == 'GOLD':
-        twelve_symbol = 'XAU/USD'
-    elif symbol == 'USOIL':
-        twelve_symbol = 'WTI/USD'   # approximate; adjust if needed
-    else:
-        raise Exception("Unsupported commodity")
-
-    url = (
-        f"https://api.twelvedata.com/price?symbol={twelve_symbol}&apikey={TWELVE_DATA_KEY}"
-    )
-    resp = requests.get(url)
-    data = resp.json()
-    if data.get('status') == 'error':
-        raise Exception(data.get('message'))
-    return Decimal(data['price'])
-
-
-def get_spot_rates():
-    """Return current USD price and 24h change for supported assets."""
-    data = {}
-
-    # Fiat rates via open.er-api.com
+    # Get latest rates for USD base from history
+    latest_rates = {}
     try:
-        resp = requests.get(FREE_RATES_URL)
-        rates = resp.json().get('rates', {})
-        for symbol in ['EUR', 'GBP', 'NGN']:
-            if symbol in rates:
-                data[symbol] = {
-                    'price': float(rates[symbol]),
-                    'change_24h': 0.0   # not provided by this API; we'll set 0 for now
-                }
+        for h in ForexRateHistory.objects.filter(base_currency='USD').order_by('recorded_at'):
+            latest_rates[h.quote_currency] = Decimal(str(h.rate))
     except Exception:
         pass
 
-    # Commodities via Twelve Data
-    for symbol, twelve_symbol in [('GOLD', 'XAU/USD'), ('USOIL', 'WTI/USD')]:
-        try:
-            url = f"https://api.twelvedata.com/price?symbol={twelve_symbol}&apikey={TWELVE_DATA_KEY}"
-            r = requests.get(url).json()
-            if 'price' in r:
-                data[symbol] = {
-                    'price': float(r['price']),
-                    'change_24h': 0.0
-                }
-        except Exception:
-            pass
+    # If no history, use fallback (same as spot)
+    fallback = {'EUR': Decimal('1.16'), 'GBP': Decimal('1.35'), 'NGN': Decimal('1348'), 'GOLD': Decimal('4560'), 'USOIL': Decimal('83.40')}
 
-    # USD always = 1
+    if base_currency == 'USD':
+        rate = latest_rates.get(quote_currency, fallback.get(quote_currency, Decimal('0')))
+        return rate
+    elif quote_currency == 'USD':
+        rate = latest_rates.get(base_currency, fallback.get(base_currency, Decimal('0')))
+        if rate == 0:
+            return Decimal('0')
+        return Decimal('1') / rate
+    else:
+        base_to_usd = Decimal('1') / latest_rates.get(base_currency, fallback.get(base_currency, Decimal('0')))
+        usd_to_quote = latest_rates.get(quote_currency, fallback.get(quote_currency, Decimal('0')))
+        return base_to_usd * usd_to_quote
+
+def get_commodity_price(symbol):
+    """Return USD price for GOLD or USOIL from history."""
+    from .models import ForexRateHistory
+
+    latest = ForexRateHistory.objects.filter(
+        base_currency='USD', quote_currency=symbol
+    ).order_by('-recorded_at').first()
+
+    if latest:
+        return latest.rate
+
+    # Fallback
+    fallback = {'GOLD': Decimal('4560'), 'USOIL': Decimal('83.40')}
+    return fallback.get(symbol, Decimal('0'))
+
+
+def get_spot_rates():
+    from .models import ForexRateHistory
+
+    data = {}
+    latest_rates = {}
+    try:
+        for h in ForexRateHistory.objects.filter(base_currency='USD').order_by('recorded_at'):
+            latest_rates[h.quote_currency] = float(h.rate)
+    except Exception:
+        pass
+
+    for symbol in ['EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']:
+        data[symbol] = {
+            'price': latest_rates.get(symbol, 0),
+            'change_24h': 0.0
+        }
+
     data['USD'] = {'price': 1.0, 'change_24h': 0.0}
-
     return data
