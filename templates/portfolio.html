@@ -1267,7 +1267,10 @@ async function loadPurseCard() {
 
     // Init – Portfolio page has no active auto‑loading functions now
     document.addEventListener('DOMContentLoaded', function() {
-        // No automatic actions required on this page.
+        var notifModal = document.getElementById('notifModal');
+        if (notifModal) {
+            notifModal.style.setProperty('display', 'none', 'important');
+        }
     });
 </script>
 {% endblock %}

@@ -76,12 +76,10 @@ class ForexSwapView(APIView):
         final_amount = converted_amount - fee
 
         # 4. Deduct source balance
-        if from_currency == 'USD':
-            wallet.balance -= amount
-            wallet.save()
-        else:
+        if from_currency != 'USD':
             fiat.balance -= amount
             fiat.save()
+        # For USD, we don't deduct here; actual on-chain sweep is separate.
 
         # 5. Credit target balance
         if to_currency == 'USD':
