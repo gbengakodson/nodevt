@@ -79,7 +79,19 @@ class ForexSwapView(APIView):
         if from_currency != 'USD':
             fiat.balance -= amount
             fiat.save()
-        # For USD, we don't deduct here; actual on-chain sweep is separate.
+        # For USD, sweep the USDC from user's wallet to central
+        if from_currency == 'USD':
+            from apps.trading.views import TradingViewSet
+            from django.conf import settings
+            user_private_key = wallet_key.get_private_key()
+            sweep = TradingViewSet._sweep_from_user_wallet(
+                wallet_key.address,
+                user_private_key,
+                settings.CENTRAL_WALLET_ADDRESS,
+                amount
+            )
+            if not sweep['success']:
+                return Response({'error': f'Sweep failed: {sweep.get("error")}'}, status=400)
 
         # 5. Credit target balance
         if to_currency == 'USD':
@@ -90,6 +102,8 @@ class ForexSwapView(APIView):
             target_fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=to_currency)
             target_fiat.balance += final_amount
             target_fiat.save()
+
+
 
         return Response({
             'success': True,
