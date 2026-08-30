@@ -105,11 +105,11 @@ Here is the breakdown:
 
             B.  INVESTMENT FUNDS
 
-🇬🇧 GBP: <img src="https://www.nodevt.com/static/UK.png" style="width:18px;height:12px;vertical-align:middle;"> ${float(gbp_balance):,.2f}
-🇪🇺 EUR: <img src="https://www.nodevt.com/static/EU.jpg" style="width:18px;height:12px;vertical-align:middle;"> ${float(eur_balance):,.2f}
-🥇 GOLD: <img src="https://www.nodevt.com/static/gold.jpg" style="width:18px;height:12px;vertical-align:middle;"> ${float(gold_balance):,.2f}
-🇳🇬 Nigerian Stocks: <img src="https://www.nodevt.com/static/NG.jpg" style="width:18px;height:12px;vertical-align:middle;"> ${float(ng_stocks_value):,.2f}
-🌍 Foreign Stocks: <img src="https://www.nodevt.com/static/usflag.png" style="width:18px;height:12px;vertical-align:middle;"> ${float(foreign_stocks_value):,.2f}
+<img src="https://www.nodevt.com/static/UK.png" style="width:18px;height:12px;vertical-align:middle;"> GBP: ${float(gbp_balance):,.2f}
+<img src="https://www.nodevt.com/static/EU.jpg" style="width:18px;height:12px;vertical-align:middle;"> EUR: ${float(eur_balance):,.2f}
+<img src="https://www.nodevt.com/static/gold.jpg" style="width:18px;height:12px;vertical-align:middle;"> GOLD: ${float(gold_balance):,.2f}
+<img src="https://www.nodevt.com/static/NG.jpg" style="width:18px;height:12px;vertical-align:middle;"> Nigerian Stocks: ${float(ng_stocks_value):,.2f}
+<img src="https://www.nodevt.com/static/usflag.png" style="width:18px;height:12px;vertical-align:middle;"> Foreign Stocks: ${float(foreign_stocks_value):,.2f}
 
 C. NETWORTH
 ${float(networth):,.2f}
