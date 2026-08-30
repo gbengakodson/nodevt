@@ -486,39 +486,49 @@
             <div style="font-size:14px; font-weight:700;">Add Asset</div>
             <button onclick="closeAddAssetModal()" style="background:none; border:none; font-size:22px; cursor:pointer;">×</button>
         </div>
+        <div style="font-size:11px; color:#6B7280; margin-bottom:12px;">
+            Available USDC: <span id="addAssetBalance" style="font-weight:700; color:#1B1E21;">Loading...</span>
+        </div>
 
         <label style="font-size:11px; color:#6B7280;">Asset</label>
         <select id="addAssetSymbol" class="form-control" style="margin-bottom:10px;">
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-        <option value="NGN">NGN</option>
-        <option value="GOLD">GOLD</option>
-        <option value="USOIL">USOIL</option>
-        <!-- Stocks -->
-        <option value="AAPL">AAPL - Apple Inc.</option>
-        <option value="MSFT">MSFT - Microsoft</option>
-        <option value="TSLA">TSLA - Tesla</option>
-        <option value="NVDA">NVDA - NVIDIA</option>
-        <option value="AMZN">AMZN - Amazon</option>
-        <option value="GOOGL">GOOGL - Alphabet</option>
-        <option value="META">META - Meta</option>
-        <option value="KO">KO - Coca-Cola</option>
-        <option value="VOO">VOO - S&P 500 ETF</option>
-        <option value="NFLX">NFLX - Netflix</option>
-        <option value="ZENITHBANK">ZENITHBANK</option>
-        <option value="GTCO">GTCO</option>
-        <option value="MTNN">MTNN</option>
-        <option value="DANGCEM">DANGCEM</option>
-        <option value="ACCESSCORP">ACCESSCORP</option>
-        <option value="UBA">UBA</option>
-        <option value="SEPLAT">SEPLAT</option>
-        <option value="BUAFOODS">BUAFOODS</option>
-        <option value="ARADEL">ARADEL</option>
-        <option value="TRANSCORP">TRANSCORP</option>
-    </select>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+            <!-- Stocks -->
+            <option value="AAPL">AAPL - Apple Inc.</option>
+            <option value="MSFT">MSFT - Microsoft</option>
+            <option value="TSLA">TSLA - Tesla</option>
+            <option value="NVDA">NVDA - NVIDIA</option>
+            <option value="AMZN">AMZN - Amazon</option>
+            <option value="GOOGL">GOOGL - Alphabet</option>
+            <option value="META">META - Meta</option>
+            <option value="KO">KO - Coca-Cola</option>
+            <option value="VOO">VOO - S&P 500 ETF</option>
+            <option value="NFLX">NFLX - Netflix</option>
+            <option value="ZENITHBANK">ZENITHBANK</option>
+            <option value="GTCO">GTCO</option>
+            <option value="MTNN">MTNN</option>
+            <option value="DANGCEM">DANGCEM</option>
+            <option value="ACCESSCORP">ACCESSCORP</option>
+            <option value="UBA">UBA</option>
+            <option value="SEPLAT">SEPLAT</option>
+            <option value="BUAFOODS">BUAFOODS</option>
+            <option value="ARADEL">ARADEL</option>
+            <option value="TRANSCORP">TRANSCORP</option>
+        </select>
 
         <label style="font-size:11px; color:#6B7280;">Amount (USDC)</label>
         <input type="number" id="addAssetAmount" class="form-control" placeholder="10.00" step="0.01" style="margin-bottom:16px;">
+
+        <!-- NEW INFO BOX -->
+        <div style="font-size:11px; color:#6B7280; margin-bottom:12px;">
+            Rate: <span id="addAssetRate">—</span> per 1 USDC<br>
+            Fee (1%): <span id="addAssetFee">—</span><br>
+            You receive: <span id="addAssetReceive">—</span>
+        </div>
 
         <button onclick="confirmAddAsset()" style="width:100%; padding:10px; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; cursor:pointer;">Buy</button>
     </div>
@@ -534,33 +544,33 @@
 
         <label style="font-size:11px; color:#6B7280;">Asset</label>
         <select id="sendAssetSymbol" class="form-control" style="margin-bottom:10px;">
-        <option value="EUR">EUR</option>
-        <option value="GBP">GBP</option>
-        <option value="NGN">NGN</option>
-        <option value="GOLD">GOLD</option>
-        <option value="USOIL">USOIL</option>
-        <!-- Stocks -->
-        <option value="AAPL">AAPL - Apple Inc.</option>
-        <option value="MSFT">MSFT - Microsoft</option>
-        <option value="TSLA">TSLA - Tesla</option>
-        <option value="NVDA">NVDA - NVIDIA</option>
-        <option value="AMZN">AMZN - Amazon</option>
-        <option value="GOOGL">GOOGL - Alphabet</option>
-        <option value="META">META - Meta</option>
-        <option value="KO">KO - Coca-Cola</option>
-        <option value="VOO">VOO - S&P 500 ETF</option>
-        <option value="NFLX">NFLX - Netflix</option>
-        <option value="ZENITHBANK">ZENITHBANK</option>
-        <option value="GTCO">GTCO</option>
-        <option value="MTNN">MTNN</option>
-        <option value="DANGCEM">DANGCEM</option>
-        <option value="ACCESSCORP">ACCESSCORP</option>
-        <option value="UBA">UBA</option>
-        <option value="SEPLAT">SEPLAT</option>
-        <option value="BUAFOODS">BUAFOODS</option>
-        <option value="ARADEL">ARADEL</option>
-        <option value="TRANSCORP">TRANSCORP</option>
-    </select>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="NGN">NGN</option>
+            <option value="GOLD">GOLD</option>
+            <option value="USOIL">USOIL</option>
+            <!-- Stocks -->
+            <option value="AAPL">AAPL - Apple Inc.</option>
+            <option value="MSFT">MSFT - Microsoft</option>
+            <option value="TSLA">TSLA - Tesla</option>
+            <option value="NVDA">NVDA - NVIDIA</option>
+            <option value="AMZN">AMZN - Amazon</option>
+            <option value="GOOGL">GOOGL - Alphabet</option>
+            <option value="META">META - Meta</option>
+            <option value="KO">KO - Coca-Cola</option>
+            <option value="VOO">VOO - S&P 500 ETF</option>
+            <option value="NFLX">NFLX - Netflix</option>
+            <option value="ZENITHBANK">ZENITHBANK</option>
+            <option value="GTCO">GTCO</option>
+            <option value="MTNN">MTNN</option>
+            <option value="DANGCEM">DANGCEM</option>
+            <option value="ACCESSCORP">ACCESSCORP</option>
+            <option value="UBA">UBA</option>
+            <option value="SEPLAT">SEPLAT</option>
+            <option value="BUAFOODS">BUAFOODS</option>
+            <option value="ARADEL">ARADEL</option>
+            <option value="TRANSCORP">TRANSCORP</option>
+        </select>
 
         <label style="font-size:11px; color:#6B7280;">Recipient Wallet</label>
         <input type="text" id="sendAssetAddress" class="form-control" placeholder="0x..." style="margin-bottom:10px;">
@@ -607,7 +617,7 @@
             <option value="BUAFOODS">BUAFOODS</option>
             <option value="ARADEL">ARADEL</option>
             <option value="TRANSCORP">TRANSCORP</option>
-    </select>
+        </select>
 
         <label style="font-size:11px; color:#6B7280;">Destination</label>
         <select id="transferAssetTarget" class="form-control" style="margin-bottom:10px;">
@@ -654,6 +664,7 @@
     let targetYears = 2;
     let monthlyAddition = 0;
     let allTokens = [];
+    let currentRates = {};
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -842,6 +853,8 @@
         }
     }
 
+
+
     function renderForexCards(balances, rates) {
         var container = document.getElementById('forexSpot');
         if (!container) return;
@@ -914,9 +927,54 @@
     }
 
 
+
+    async function loadSpotRatesForModal() {
+        try {
+            var token = localStorage.getItem('access_token');
+            var resp = await fetch('/api/ea/spot-rates/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            currentRates = data.rates || {};
+        } catch(e) { console.error(e); }
+    }
+
+    function updateAddAssetPreview() {
+        var symbol = document.getElementById('addAssetSymbol').value;
+        var amount = parseFloat(document.getElementById('addAssetAmount').value) || 0;
+
+        var rate = currentRates[symbol]?.price || 0;
+        var fee = amount * 0.01;
+        var receive = amount - fee;
+
+        document.getElementById('addAssetRate').textContent = rate ? rate.toFixed(4) : 'N/A';
+        document.getElementById('addAssetFee').textContent = fee.toFixed(2) + ' USDC';
+        document.getElementById('addAssetReceive').textContent = receive.toFixed(2) + ' USDC worth';
+    }
+
+    document.getElementById('addAssetSymbol').addEventListener('change', updateAddAssetPreview);
+    document.getElementById('addAssetAmount').addEventListener('input', updateAddAssetPreview);
+
+
+    async function loadAddAssetBalance() {
+        try {
+            var token = localStorage.getItem('access_token');
+            var resp = await fetch('/api/trading/my_balance/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var data = await resp.json();
+            var balance = data.blockchain_balance || 0;
+            document.getElementById('addAssetBalance').textContent = Number(balance).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDC';
+        } catch(e) {
+            document.getElementById('addAssetBalance').textContent = 'Error';
+        }
+    }
+
+
     function openAddAsset(currency) {
         document.getElementById('addAssetSymbol').value = currency;
         document.getElementById('addAssetAmount').value = '';
+        loadAddAssetBalance();
         document.getElementById('addAssetModal').style.display = 'flex';
     }
 
@@ -1205,6 +1263,7 @@ async function loadPurseCard() {
     // Call on load
     loadPurseCard();
     loadForexBalances();
+    loadSpotRatesForModal()
 
 
     // Init – Portfolio page has no active auto‑loading functions now

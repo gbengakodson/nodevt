@@ -29,8 +29,14 @@ class ForexSwapView(APIView):
 
         # 1. Fetch source balance
         if from_currency == 'USD':
-            wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
-            source_balance = wallet.balance if wallet else Decimal('0')
+            from apps.wallets.models import WalletKey
+            from apps.wallets.services.web3_service import Web3Service
+            try:
+                wallet_key = WalletKey.objects.get(user=request.user)
+                ws = Web3Service()
+                source_balance = Decimal(str(ws.get_usdc_balance(wallet_key.address)))
+            except WalletKey.DoesNotExist:
+                return Response({'error': 'No wallet found'}, status=400)
         else:
             fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=from_currency)
             source_balance = fiat.balance
