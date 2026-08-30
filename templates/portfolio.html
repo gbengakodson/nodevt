@@ -914,17 +914,25 @@
     }
 
     function updateAddAssetPreview() {
-        var symbol = document.getElementById('addAssetSymbol').value;
-        var amount = parseFloat(document.getElementById('addAssetAmount').value) || 0;
+        var symbolEl = document.getElementById('addAssetSymbol');
+        var amountEl = document.getElementById('addAssetAmount');
+        if (!symbolEl || !amountEl) return;
+
+        var symbol = symbolEl.value;
+        var amount = parseFloat(amountEl.value) || 0;
 
         var rate = currentRates[symbol]?.price || 0;
         var fee = amount * 0.01;
         var receiveUsdc = amount - fee;
         var receiveAsset = receiveUsdc * rate;
 
-        document.getElementById('addAssetRate').textContent = rate ? '1 USDC = ' + rate.toFixed(4) + ' ' + symbol : 'N/A';
-        document.getElementById('addAssetFee').textContent = fee.toFixed(2) + ' USDC';
-        document.getElementById('addAssetReceive').textContent = receiveAsset.toFixed(4) + ' ' + symbol;
+        var rateEl = document.getElementById('addAssetRate');
+        var feeEl = document.getElementById('addAssetFee');
+        var receiveEl = document.getElementById('addAssetReceive');
+
+        if (rateEl) rateEl.textContent = rate ? '1 USDC = ' + rate.toFixed(4) + ' ' + symbol : 'N/A';
+        if (feeEl) feeEl.textContent = fee.toFixed(2) + ' USDC';
+        if (receiveEl) receiveEl.textContent = receiveAsset.toFixed(4) + ' ' + symbol;
     }
 
     var symbolEl = document.getElementById('addAssetSymbol');
