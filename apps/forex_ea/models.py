@@ -217,3 +217,15 @@ class StockPrice(models.Model):
         return f"{self.symbol}: ${self.price}"
 
 
+class StockPriceHistory(models.Model):
+    symbol = models.CharField(max_length=20)
+    price = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    recorded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-recorded_at']
+
+    def __str__(self):
+        return f"{self.symbol} @ {self.price} ({self.recorded_at:%Y-%m-%d %H:%M})"
+
+
