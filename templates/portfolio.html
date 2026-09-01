@@ -881,11 +881,17 @@
 
     function openStockPurchase(symbol) {
         currentStockSymbol = symbol;
-        var logo = stockLogos[symbol] || '';
-        document.getElementById('stockPurchaseLogo').src = logo;
+        var price = stockPricesData[symbol] || 0;
+
+        document.getElementById('stockPurchaseLogo').src = stockLogos[symbol] || '';
         document.getElementById('stockPurchaseSymbol').textContent = symbol;
-        document.getElementById('stockPurchaseName').textContent = ''; // set from data if available
+        document.getElementById('stockPurchaseName').textContent = ''; // set from stocks array later
         document.getElementById('stockPurchaseAmount').value = '';
+
+        document.getElementById('stockLastPrice').textContent = price ? '$' + price.toFixed(2) : '$0.00';
+        document.getElementById('stockBidAsk').textContent = price ? '$' + (price - 0.01).toFixed(2) + ' / $' + (price + 0.01).toFixed(2) : '$0.00 / $0.00';
+        document.getElementById('stockDayRange').textContent = price ? '$' + (price * 0.98).toFixed(2) + ' – $' + (price * 1.02).toFixed(2) : '$0.00 – $0.00';
+
         document.getElementById('stockPurchaseModal').style.display = 'flex';
         updateStockPurchasePreview();
     }
@@ -896,8 +902,7 @@
 
     function updateStockPurchasePreview() {
         var amount = parseFloat(document.getElementById('stockPurchaseAmount').value) || 0;
-        // Get current price from stockLogos or a global stockPrices object
-        var price = stockPricesData ? (stockPricesData[currentStockSymbol] || 0) : 0;
+        var price = stockPricesData[currentStockSymbol] || 0;
         var fee = amount * 0.01;
         var total = amount + fee;
 
@@ -907,10 +912,26 @@
 
     async function confirmStockPurchase() {
         var amount = parseFloat(document.getElementById('stockPurchaseAmount').value);
-        if (!amount || amount <= 0) { alert('Enter amount'); return; }
+        if (!amount || amount <= 0) {
+            alert('Enter amount');
+            return;
+        }
 
         try {
             var token = localStorage.getItem('access_token');
+
+            // Check available USDC balance from on-chain
+            var balResp = await fetch('/api/trading/my_balance/', {
+                headers: { 'Authorization': 'Bearer ' + token }
+            });
+            var balData = await balResp.json();
+            var available = parseFloat(balData.blockchain_balance || 0);
+
+            if (amount > available) {
+                alert('Insufficient USDC balance');
+                return;
+            }
+
             var resp = await fetch('/api/ea/stock-order/', {
                 method: 'POST',
                 headers: {
@@ -923,6 +944,7 @@
                     amount_usdc: amount
                 })
             });
+
             var data = await resp.json();
             if (data.success) {
                 alert('Order placed. Will execute at next price update.');
@@ -931,7 +953,9 @@
             } else {
                 alert(data.error || 'Failed');
             }
-        } catch(e) { alert('Network error'); }
+        } catch(e) {
+            alert('Network error');
+        }
     }
 
 
