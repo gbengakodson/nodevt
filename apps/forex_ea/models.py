@@ -242,3 +242,28 @@ class ForexRateHistory(models.Model):
         return f"{self.base_currency}/{self.quote_currency} = {self.rate}"
 
 
+
+
+class StockOrder(models.Model):
+    SIDE_CHOICES = [
+        ('BUY', 'Buy'),
+        ('SELL', 'Sell'),
+    ]
+    STATUS_CHOICES = [
+        ('PENDING', 'Pending'),
+        ('EXECUTED', 'Executed'),
+        ('CANCELLED', 'Cancelled'),
+    ]
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='stock_orders')
+    symbol = models.CharField(max_length=20)
+    side = models.CharField(max_length=4, choices=SIDE_CHOICES)
+    amount_usdc = models.DecimalField(max_digits=15, decimal_places=2)
+    status = models.CharField(max_length=10, choices=STATUS_CHOICES, default='PENDING')
+    created_at = models.DateTimeField(auto_now_add=True)
+    executed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.user.email} {self.side} {self.symbol} {self.amount_usdc} ({self.status})"
+
+
