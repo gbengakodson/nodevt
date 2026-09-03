@@ -1046,7 +1046,7 @@
                         <!-- Rate & PNL -->
                         <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
                             <span style="font-size:11px; color:#6B7280;">Rate</span>
-                            ${currency === 'GOLD' || currency === 'USOIL'? `1 ${currency} = $${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: currency === 'NGN'? `$1 = ₦${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: `1 ${currency} = $${(rate ? (1/rate) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
+                            ${currency === 'GOLD' || currency === 'USOIL'? `1 ${currency} = $${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: currency === 'NGN'? `$1 = ₦${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: (currency === 'EUR' || currency === 'GBP') ? `1 ${currency} = $${(rate ? (1/rate) : 0).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}` : `1 ${currency} = $${(rate ? (1/rate) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
                             <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
                                 ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
                             </span>
