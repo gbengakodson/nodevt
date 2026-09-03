@@ -1738,11 +1738,7 @@ def send_daily_email_webhook(request):
         print(f"Forecast pipeline error: {e}")
 
     # ── NEW: Send forecast email to all users ──
-    try:
-        #from apps.tasks.email_tasks import send_daily_forecast_email_to_all_users
-        #send_daily_forecast_email_to_all_users()
-    except Exception as e:
-        print(f"Forecast email error: {e}")
+
 
     # ── EXISTING: original daily portfolio email (keep unchanged) ──
     from apps.tasks.email_tasks import send_daily_email_to_all_users
