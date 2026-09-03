@@ -1730,17 +1730,17 @@ def yield_rate_view(request):
 def send_daily_email_webhook(request):
     # ── NEW: Daily forecast pipeline ──
     try:
-        from apps.forex_ea.services import generate_daily_forecast_cards
+        #from apps.forex_ea.services import generate_daily_forecast_cards
         from django.core.management import call_command
         call_command('update_forex_cache')
-        generate_daily_forecast_cards()
+        #generate_daily_forecast_cards()
     except Exception as e:
         print(f"Forecast pipeline error: {e}")
 
     # ── NEW: Send forecast email to all users ──
     try:
-        from apps.tasks.email_tasks import send_daily_forecast_email_to_all_users
-        send_daily_forecast_email_to_all_users()
+        #from apps.tasks.email_tasks import send_daily_forecast_email_to_all_users
+        #send_daily_forecast_email_to_all_users()
     except Exception as e:
         print(f"Forecast email error: {e}")
 
