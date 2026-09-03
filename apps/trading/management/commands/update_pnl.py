@@ -39,13 +39,18 @@ class Command(BaseCommand):
                 updated += 1
 
                 # Notify if nearing 20%
-                if 15 <= float(pnl_percent) < 20:
+                if 15 <= float(pnl_percent) < 20 and not bot.near_close_notified:
                     notify_user(
                         bot.user,
                         f'📈 {token.symbol} Nearing Auto-Close',
                         f'Your {token.symbol} tracker is at +{float(pnl_percent):.1f}% PNL. At 20% it will auto-close and return funds to your wallet.',
                         'INFO'
                     )
+                    bot.near_close_notified = True
+                    bot.save(update_fields=['near_close_notified'])
+                elif float(pnl_percent) < 15 and bot.near_close_notified:
+                    bot.near_close_notified = False
+                    bot.save(update_fields=['near_close_notified'])
 
                 # Auto-close at 20%+ PNL
                 # Auto-close at 20%+ PNL and automatically reactivate

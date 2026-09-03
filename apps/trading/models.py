@@ -24,6 +24,7 @@ class GridBot(models.Model):
     pnl_percent = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_yield_earned = models.DecimalField(max_digits=20, decimal_places=8, default=0)  # NEW
     is_above_fair_value = models.BooleanField(default=False)
+    near_close_notified = models.BooleanField(default=False)
 
 
     # ADD THESE FIELDS
