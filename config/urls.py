@@ -26,6 +26,9 @@ from apps.forex_ea.public_views import FadakkaDiscountsView
 from apps.forex_ea.public_views import CoinReactionView, CoinReactionCountsView
 from apps.forex_ea.forex_api import ForexDailyView, ForexForecastDetailView
 from apps.trading.cashflow_views import CashflowAuditView, CashflowSourceView
+from django.views.generic import RedirectView
+
+
 
 
 
@@ -75,6 +78,7 @@ urlpatterns = [
     path('api/trigger/platform-report/', platform_report_webhook, name='platform_report'),
     path('api/admin/cashflow-audit/', CashflowAuditView.as_view(), name='cashflow_audit'),
     path('api/admin/cashflow-sources/', CashflowSourceView.as_view(), name='cashflow_sources'),
+    path('favicon.ico', RedirectView.as_view(url='/static/favicon.png', permanent=True)),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
