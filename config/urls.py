@@ -79,6 +79,7 @@ urlpatterns = [
     path('api/admin/cashflow-audit/', CashflowAuditView.as_view(), name='cashflow_audit'),
     path('api/admin/cashflow-sources/', CashflowSourceView.as_view(), name='cashflow_sources'),
     path('favicon.ico', RedirectView.as_view(url='/static/favicon.png', permanent=True)),
+    path('faq/', TemplateView.as_view(template_name='chat.html'), name='faq'),
 
 
     path('api/admin/statistics/', AdminStatisticsView.as_view(), name='admin_statistics'),
