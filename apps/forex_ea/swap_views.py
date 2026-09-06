@@ -7,7 +7,8 @@ from .rates_service import get_fiat_rate, get_commodity_price, get_spot_rates
 from apps.wallets.models import Wallet
 
 SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']
-FEE_PERCENT = Decimal('0.01')   # 1% fee
+FEE_PERCENT = Decimal('0.02')   # 2% fee
+
 
 class ForexSwapView(APIView):
     permission_classes = [IsAuthenticated]

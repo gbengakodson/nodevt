@@ -903,7 +903,7 @@
     function updateStockPurchasePreview() {
         var amount = parseFloat(document.getElementById('stockPurchaseAmount').value) || 0;
         var price = stockPricesData[currentStockSymbol] || 0;
-        var fee = amount * 0.01;
+        var fee = amount * 0.02;
         var total = amount + fee;
 
         document.getElementById('stockPurchaseFee').textContent = fee.toFixed(2) + ' USDC';
