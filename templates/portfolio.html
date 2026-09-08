@@ -926,7 +926,7 @@
     async function confirmStockPurchase() {
         var amount = parseFloat(document.getElementById('stockPurchaseAmount').value);
         if (!amount || amount <= 0) {
-            alert('Enter amount');
+            showModal('Enter amount', 'warning');
             return;
         }
 
@@ -941,7 +941,7 @@
             var available = parseFloat(balData.grand_balance || 0);
 
             if (amount > available) {
-                alert('Insufficient USDC balance');
+                showModal('Insufficient USDC balance', 'error');
                 return;
             }
 
@@ -960,14 +960,15 @@
 
             var data = await resp.json();
             if (data.success) {
-                alert('Order placed. Will execute at next price update.');
                 closeStockPurchaseModal();
-                loadStocks();
+                showModal('Order placed successfully. It will execute at the next price update.', 'success');
+                loadForexBalances();   // refresh forex USDC balance
+                loadStocks();          // refresh stocks
             } else {
-                alert(data.error || 'Failed');
+                showModal('❌ ' + (data.error || 'Failed'), 'error');
             }
         } catch(e) {
-            alert('Network error');
+            showModal('Network error', 'error');
         }
     }
 
