@@ -106,9 +106,24 @@ class DepositMonitor:
                 from django.core.mail import send_mail
                 from django.conf import settings
                 try:
+                    html_message = f"""
+                    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+                        <h2 style="color:#0B0E11;">Deposit Received</h2>
+                        <p>Hello {user.username or user.email},</p>
+                        <p>Your deposit has been credited to your NODE wallet.</p>
+                        <table style="width:100%; border-collapse: collapse; margin-top: 20px;">
+                            <tr><td style="padding:8px; border-bottom:1px solid #E2E4E8; color:#6B7280;">Amount</td><td style="padding:8px; border-bottom:1px solid #E2E4E8; font-weight:700;">${float(deposit_amount):.2f} USDC</td></tr>
+                            <tr><td style="padding:8px; border-bottom:1px solid #E2E4E8; color:#6B7280;">Source</td><td style="padding:8px; border-bottom:1px solid #E2E4E8;">{tx_hash[:20]}...</td></tr>
+                            <tr><td style="padding:8px; color:#6B7280;">Status</td><td style="padding:8px; color:#0ECB81; font-weight:700;">Completed</td></tr>
+                        </table>
+                        <p style="margin-top:20px; font-size:11px; color:#6B7280;">You can now use this balance to invest or swap assets on NODE.</p>
+                        <p>— NODE Support</p>
+                    </div>
+                    """
                     send_mail(
-                        subject='💵 Deposit Received',
-                        message=f'Hello {user.username or user.email},\n\n${float(deposit_amount):.2f} USDC has been deposited to your NODE wallet.',
+                        subject='Deposit Received',
+                        message='',
+                        html_message=html_message,
                         from_email=settings.DEFAULT_FROM_EMAIL,
                         recipient_list=[user.email],
                         fail_silently=True,
