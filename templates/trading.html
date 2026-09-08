@@ -1283,7 +1283,7 @@
             const blockchainBalance = parseFloat(balance.blockchain_balance) || 0;
 
             // Display real wallet balance
-            document.getElementById('userBalance').textContent = formatCurrency(blockchainBalance);
+            document.getElementById('userBalance').textContent = formatCurrency(userGrandBalance);
 
             const buyBtn = document.getElementById('buyBtnMarket');
             const sellBtn = document.getElementById('sellBtnMarket');
