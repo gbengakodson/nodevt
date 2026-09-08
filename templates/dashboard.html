@@ -1278,7 +1278,7 @@
             try { portfolioData = await apiCall('/trading/portfolio_summary/'); } catch(e) { portfolioData = null; }
 
             const balance = await apiCall('/trading/my_balance/');
-            userGrandBalance = parseFloat(balance.blockchain_balance) || 0;  // Changed from grand_balance
+            userGrandBalance = parseFloat(balance.grand_balance) || 0;
             userYieldBalance = parseFloat(balance.yield_balance) || 0;
 
             document.getElementById('grandBalance').textContent = formatCurrency(userGrandBalance);
