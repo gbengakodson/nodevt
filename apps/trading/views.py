@@ -153,14 +153,21 @@ class TradingViewSet(viewsets.ViewSet):
                 'error': 'No wallet found. Please deposit first.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        ws = Web3Service()
-        real_balance = ws.get_usdc_balance(user_address)
-        if real_balance < amount_usdc:
+        grand_wallet, _ = Wallet.objects.get_or_create(
+            user=request.user,
+            wallet_type='GRAND',
+            defaults={'balance': Decimal('0')}
+        )
+        if grand_wallet.balance < amount_usdc:
             return Response({
-                'error': 'Insufficient wallet balance',
-                'your_wallet_balance': str(real_balance),
+                'error': 'Insufficient GRAND balance',
+                'your_grand_balance': str(grand_wallet.balance),
                 'required': str(amount_usdc)
             }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Deduct from GRAND immediately
+        grand_wallet.balance -= amount_usdc
+        grand_wallet.save()
 
         # Create GridBot BEFORE sweep
         upper_price = token.current_price * Decimal('1.8')

@@ -30,14 +30,10 @@ class ForexSwapView(APIView):
 
         # 1. Fetch source balance
         if from_currency == 'USD':
-            from apps.wallets.models import WalletKey
-            from apps.wallets.services.web3_service import Web3Service
-            try:
-                wallet_key = WalletKey.objects.get(user=request.user)
-                ws = Web3Service()
-                source_balance = Decimal(str(ws.get_usdc_balance(wallet_key.address)))
-            except WalletKey.DoesNotExist:
-                return Response({'error': 'No wallet found'}, status=400)
+            grand_wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+            if not grand_wallet:
+                return Response({'error': 'No GRAND wallet found'}, status=400)
+            source_balance = grand_wallet.balance
         else:
             fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=from_currency)
             source_balance = fiat.balance
@@ -77,28 +73,20 @@ class ForexSwapView(APIView):
         final_amount = converted_amount - fee
 
         # 4. Deduct source balance
-        if from_currency != 'USD':
+        if from_currency == 'USD':
+            grand_wallet.balance -= amount
+            grand_wallet.save()
+        else:
             fiat.balance -= amount
             fiat.save()
-        # For USD, sweep the USDC from user's wallet to central
-        if from_currency == 'USD':
-            from apps.trading.views import TradingViewSet
-            from django.conf import settings
-            user_private_key = wallet_key.get_private_key()
-            sweep = TradingViewSet._sweep_from_user_wallet(
-                wallet_key.address,
-                user_private_key,
-                settings.CENTRAL_WALLET_ADDRESS,
-                amount
-            )
-            if not sweep['success']:
-                return Response({'error': f'Sweep failed: {sweep.get("error")}'}, status=400)
 
         # 5. Credit target balance
         if to_currency == 'USD':
-            wallet = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND', defaults={'balance': Decimal('0')})[0]
-            wallet.balance += final_amount
-            wallet.save()
+            target_wallet = Wallet.objects.get_or_create(
+                user=request.user, wallet_type='GRAND', defaults={'balance': Decimal('0')}
+            )[0]
+            target_wallet.balance += final_amount
+            target_wallet.save()
         else:
             target_fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=to_currency)
             target_fiat.balance += final_amount
