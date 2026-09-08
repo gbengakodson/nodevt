@@ -193,7 +193,7 @@
         <div class="hero-avatar-wrap">
             <div class="hero-avatar" id="avatarDisplay" onclick="document.getElementById('avatarInput').click()">
                 <span id="avatarText">U</span>
-                <img id="avatarImg" style="display:none;">
+                <img id="avatarImg" style="display:none;" onerror="this.style.display='none'; document.getElementById('avatarText').style.display='flex';">
             </div>
             <div class="hero-avatar-edit" onclick="document.getElementById('avatarInput').click()">📷</div>
             <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="handleAvatar(event)">
