@@ -687,11 +687,7 @@ class TradingViewSet(viewsets.ViewSet):
         from apps.wallets.services.deposit_service import DepositService
         from apps.wallets.services.web3_service import Web3Service
 
-        if not request.user.wallet_address:
-            try:
-                DepositService.get_deposit_address(request.user)
-            except Exception as e:
-                print(f"Error creating wallet: {e}")
+        # Wallet creation disabled – using Binance deposit address
 
         grand_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='GRAND', defaults={'balance': 0})
         yield_wallet, _ = Wallet.objects.get_or_create(user=request.user, wallet_type='YIELD', defaults={'balance': 0})
@@ -1033,7 +1029,7 @@ class TradingViewSet(viewsets.ViewSet):
     def deposit_address(self, request):
         from apps.wallets.services.deposit_service import DepositService
         try:
-            address = DepositService.get_deposit_address(request.user)
+            address = settings.BINANCE_USDC_DEPOSIT_ADDRESS
             return Response({'address': address})
         except Exception as e:
             return Response({'error': str(e)}, status=status.HTTP_400_BAD_REQUEST)
