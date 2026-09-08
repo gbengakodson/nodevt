@@ -1161,7 +1161,7 @@ class TradingViewSet(viewsets.ViewSet):
             wallet_key = WalletKey.objects.get(user=request.user)
             return Response({
                 'address': wallet_key.address,
-                'private_key': wallet_key.get_private_key(),
+                # No private key exposure
             })
         except WalletKey.DoesNotExist:
             return Response({

@@ -236,8 +236,7 @@
         <!-- WALLET + ACCOUNT -->
         <div class="panel">
             <div class="panel-title">💳 Wallet</div>
-            <div class="panel-row"><span class="lbl">Address</span><span class="val" id="depositAddr" onclick="copyAddress()">—</span></div>
-            <div class="panel-row"><span class="lbl">Private Key</span><span class="val" id="privateKey" onclick="toggleKey()">••••••••••••••••</span></div>
+            <div class="panel-row"><span class="lbl">Deposit Address</span><span class="val" id="depositAddr" onclick="copyAddress()">0x1610a914fc0df204c70f727e5e576cdbb5abea35</span></div>
             <div class="panel-row"><span class="lbl">Network</span><span class="val">BSC (BEP20) · USDC</span></div>
 
             <div class="panel-title" style="margin-top:18px;">👤 Account</div>
@@ -307,7 +306,7 @@
 
 <script>
     const API = '/api';
-    var userData = {}, privateKeyShown = false, actualPrivateKey = '';
+    var userData = {};
 
     function getToken() { return localStorage.getItem('access_token'); }
     async function apiCall(url, method, data) {
@@ -348,7 +347,7 @@
             }
 
             document.getElementById('depositAddr').textContent = wallet.address || 'No wallet';
-            actualPrivateKey = wallet.private_key || '';
+
 
             var ks = userData.kyc_status || 'NONE';
             var kc = ks === 'APPROVED' ? 'badge-verified' : 'badge-pending';
@@ -374,11 +373,7 @@
         } catch(e) { console.error(e); }
     }
 
-    function toggleKey() {
-        var el = document.getElementById('privateKey');
-        if (privateKeyShown) { el.textContent = '••••••••••••••••'; privateKeyShown = false; }
-        else { el.textContent = actualPrivateKey || 'No key loaded'; privateKeyShown = true; }
-    }
+
 
     function updateToggle(id, state) { var el = document.getElementById(id); if (state) el.classList.add('active'); else el.classList.remove('active'); }
     function toggleNotification(type) {
