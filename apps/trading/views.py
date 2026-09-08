@@ -1150,23 +1150,13 @@ class TradingViewSet(viewsets.ViewSet):
             tx_record.save()
             return Response({'error': str(e)}, status=500)
 
-
-
     @action(detail=False, methods=['get'])
     def wallet_key(self, request):
-        """Return user's wallet address and decrypted private key"""
-        from apps.wallets.models import WalletKey
-
-        try:
-            wallet_key = WalletKey.objects.get(user=request.user)
-            return Response({
-                'address': wallet_key.address,
-                # No private key exposure
-            })
-        except WalletKey.DoesNotExist:
-            return Response({
-                'error': 'No wallet found. Please deposit first to generate a wallet.'
-            }, status=status.HTTP_404_NOT_FOUND)
+        """Return NODE Binance deposit address."""
+        from django.conf import settings
+        return Response({
+            'address': settings.BINANCE_USDC_DEPOSIT_ADDRESS,
+        })
 
 
 
