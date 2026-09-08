@@ -773,6 +773,7 @@
         'UBA': 45.80,
         'SEPLAT': 12320.60,
     };
+    var NG_STOCK_SYMBOLS = ['ZENITHBANK','GTCO','MTNN','DANGCEM','ACCESSCORP','UBA','SEPLAT'];
 
 
     function switchSpotTab(tab) {
@@ -824,11 +825,23 @@
             return;
         }
 
+        var NG_SYMBOLS = ['ZENITHBANK','GTCO','MTNN','DANGCEM','ACCESSCORP','UBA','SEPLAT'];
+
         container.innerHTML = stocks.map(function(stock) {
+            var isNG = NG_SYMBOLS.includes(stock.symbol);
             var balance = Number(stock.balance) || 0;
             var price = Number(stock.price) || 0;
             var change = Number(stock.change_24h) || 0;
-            var usdEquivalent = balance * price;
+            var currencySymbol = isNG ? '₦' : '$';
+            var priceDisplay = isNG
+                ? '₦' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                : '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            var balanceDisplay = isNG
+                ? '₦' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
+                : balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            var equivalentText = isNG
+                ? 'NGX Stock • Naira'
+                : '≈ $' + (balance * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
 
             return `
                 <div class="col-12 col-md-6 col-lg-4">
@@ -850,15 +863,15 @@
                         </div>
 
                         <div style="font-size:28px; font-weight:700; color:#1B1E21;">
-                            ${balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}
+                            ${balanceDisplay}
                         </div>
                         <div style="font-size:12px; color:#6B7280;">
-                            ≈ $${usdEquivalent.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})} USDT
+                            ${equivalentText}
                         </div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
                             <span style="font-size:11px; color:#6B7280;">Stock Price</span>
-                            <span style="font-size:12px; font-weight:700; color:#1B1E21;">$${price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                            <span style="font-size:12px; font-weight:700; color:#1B1E21;">${priceDisplay}</span>
                         </div>
 
                         <div style="font-size:10px; color:#6B7280; font-weight:600;">Transaction History</div>
@@ -925,7 +938,7 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             var balData = await balResp.json();
-            var available = parseFloat(balData.blockchain_balance || 0);
+            var available = parseFloat(balData.grand_balance || 0);
 
             if (amount > available) {
                 alert('Insufficient USDC balance');
