@@ -966,9 +966,9 @@
         if (!amount || amount <= 0) { showModal('Enter a valid amount', 'warning'); return; }
         try {
             const res = await apiCall('/trading/withdraw_yield/', 'POST', { amount: amount });
-            if (res.success) {
+             if (res.success) {
                 closeWithdrawYieldModal();
-                showModal(`✅ ${formatCurrency(res.amount)} sent to your wallet! TX: ${res.tx_hash?.substring(0, 10)}...`, 'success');
+                showModal('Transfer Processing', 'info');
                 loadDashboard();
             } else {
                 showModal('❌ ' + (res.error || 'Withdrawal failed'), 'error');
@@ -1009,18 +1009,33 @@
     async function closeGridBot(botId) {
         if (!confirm('Close this Position Tracker and return funds to your wallet?')) return;
 
+        const btn = document.getElementById('close-btn-' + botId);
+        if (btn) {
+            btn.textContent = 'Deactivating...';
+            btn.disabled = true;
+        }
+
+        // Call API to mark as PENDING and notify admin
         try {
             const result = await apiCall('/trading/close_grid/', 'POST', { bot_id: botId });
-
-            // `apiCall` returns the JSON body even on non-200, so check `result`
             if (result.success) {
-                showModal(`✅ Closed! ${formatCurrency(result.total_return || result.amount)} returned to your wallet.`, 'success');
-                loadDashboard();
+                // After 30 minutes, change to Liquidating...
+                setTimeout(() => {
+                    if (btn) btn.textContent = 'Liquidating...';
+                }, 30 * 60 * 1000);   // 30 minutes in ms
             } else {
-                showModal('❌ ' + (result.error || 'Close failed. Try again.'), 'error');
+                if (btn) {
+                    btn.textContent = 'Close';
+                    btn.disabled = false;
+                }
+                showModal('❌ ' + (result.error || 'Close failed'), 'error');
             }
         } catch(e) {
-            showModal('❌ Network error: ' + e.message, 'error');
+            if (btn) {
+                btn.textContent = 'Close';
+                btn.disabled = false;
+            }
+            showModal('❌ Network error', 'error');
         }
     }
 
@@ -1404,7 +1419,7 @@
                             ${bot.pnl_percent >= 15 && bot.pnl_percent < 20 ? '<div class="end-grid-tag">⚠️ Near 20% PNL</div>' : ''}
                             <div class="bot-actions">
                                 ${bot.status === 'ACTIVE' ? `<button class="btn-stop-bot" onclick="addProfits('${bot.id}')">💰 Add Profits</button>` : `<button class="btn-start-bot" onclick="startGridBot('${bot.id}')">▶️ Start</button>`}
-                                <button class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>💰 Close</button>
+                                <button id="close-btn-${bot.id}" class="btn-close-bot" onclick="closeGridBot('${bot.id}')" ${!canClose ? 'disabled' : ''}>💰 Close</button>
                             </div>
                         </div>
                     `;

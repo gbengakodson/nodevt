@@ -561,96 +561,75 @@ class TradingViewSet(viewsets.ViewSet):
         bot.save()
         return Response({'success': True})
 
-    @action(detail=False, methods=['post'])
-    def close_grid(self, request):
-        """Close Position Tracker and sweep funds to user's real wallet"""
-        bot_id = request.data.get('bot_id')
-        bot = GridBot.objects.get(id=bot_id, user=request.user)
+        @action(detail=False, methods=['post'])
+        def close_grid(self, request):
+            """Close Position Tracker – mark for manual sweep and notify admin."""
+            bot_id = request.data.get('bot_id')
+            bot = GridBot.objects.get(id=bot_id, user=request.user)
 
-        # ── NEW: Prevent closing a locked savings tracker ──
-        if bot.is_savings and bot.lock_until and timezone.now() < bot.lock_until:
-            remaining = bot.lock_until - timezone.now()
-            days_left = remaining.days
-            return Response({
-                'error': f'🔒 Savings tracker is locked. {days_left} days remaining until {bot.lock_until.strftime("%Y-%m-%d")}.'
-            }, status=status.HTTP_400_BAD_REQUEST)
-        # ────────────────────────────────────────────────
+            # Savings lock check
+            if bot.is_savings and bot.lock_until and timezone.now() < bot.lock_until:
+                remaining = bot.lock_until - timezone.now()
+                days_left = remaining.days
+                return Response({
+                    'error': f'🔒 Savings tracker is locked. {days_left} days remaining until {bot.lock_until.strftime("%Y-%m-%d")}.'
+                }, status=400)
 
-        # Correct return: investment + uncollected profit + market PNL
-        total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
+            # Optional: enforce positive PNL? We'll keep same as before: no explicit backend check, frontend disables if negative.
+            total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
 
-        # Check platform liquidity
-        from apps.wallets.services.web3_service import Web3Service
-        ws = Web3Service()
-        central_balance = ws.get_usdc_balance(settings.CENTRAL_WALLET_ADDRESS)
+            # Get user wallet address (for email)
+            from apps.wallets.models import WalletKey
+            try:
+                wallet_key = WalletKey.objects.get(user=request.user)
+                user_address = wallet_key.address
+            except WalletKey.DoesNotExist:
+                return Response({'error': 'No wallet found'}, status=400)
 
-        if central_balance < total_return:
-            return Response({
-                'error': 'Liquidity Gap! Please try again in 24 hours.'
-            }, status=status.HTTP_400_BAD_REQUEST)
+            # Send email notification to admin
+            admin_email = 'nodevt.notify@gmail.com'
+            subject = f'🔔 Tracker Close Request – {bot.user.email}'
+            message = f"""User: {bot.user.email}
+    Token: {bot.token.symbol}
+    Bot ID: {bot.id}
+    Total Return: ${total_return:.2f}
+    User Wallet: {user_address}
 
-        # Get user's wallet address
-        from apps.wallets.models import WalletKey
-        try:
-            wallet_key = WalletKey.objects.get(user=request.user)
-            user_address = wallet_key.address
-        except WalletKey.DoesNotExist:
-            return Response({'error': 'No wallet found'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Sweep from NODE Web3 to user's real wallet
-        from django.conf import settings
-        sweep_result = TradingViewSet._sweep_from_user_wallet(
-            settings.CENTRAL_WALLET_ADDRESS,
-            settings.CENTRAL_WALLET_PRIVATE_KEY,
-            user_address,
-            total_return
-        )
-
-        if not sweep_result['success']:
-            return Response({
-                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        Transaction.objects.create(
-            user=request.user,
-            transaction_type='GRID_CLOSE',
-            amount=total_return,
-            fee=0,
-            status='COMPLETED',
-            tx_hash=sweep_result.get('tx_hash', ''),
-            metadata={
-                'grid_bot_id': str(bot.id),
-                'token': bot.token.symbol,
-                'investment': str(bot.amount),
-                'grid_profit': str(bot.grid_profit),
-                'pnl': str(bot.pnl),
-                'to_address': user_address
-            },
-            completed_at=timezone.now()
-        )
-        from apps.tokens.services.token_service import TokenService
-        activated = TokenService.activate_pending_tokens(request.user)
-        if activated > 0:
-            notify_user(
-                request.user,
-                '🎉 Tokens Activated!',
-                f'{int(activated)} NODE tokens have been activated and are now permanent.',
-                'PORTFOLIO'
+    Please manually sweep these funds to the user's wallet from the Render shell.
+    """
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[admin_email],
+                fail_silently=True,
             )
 
-        bot.status = 'COMPLETED'
-        bot.save()
+            # Record PENDING transaction
+            Transaction.objects.create(
+                user=bot.user,
+                transaction_type='GRID_CLOSE',
+                amount=total_return,
+                fee=0,
+                status='PENDING',
+                tx_hash=None,
+                metadata={
+                    'grid_bot_id': str(bot.id),
+                    'token': bot.token.symbol,
+                    'to_address': user_address,
+                    'manual_sweep': True,
+                },
+                completed_at=timezone.now()
+            )
 
-        return Response({
-            'success': True,
-            'total_return': float(total_return),
-            'tx_hash': sweep_result.get('tx_hash', ''),
-            'breakdown': {
-                'investment': float(bot.amount),
-                'grid_profit': float(bot.grid_profit),
-                'pnl': float(bot.pnl)
-            }
-        })
+            bot.status = 'COMPLETED'
+            bot.save()
+
+            return Response({
+                'success': True,
+                'total_return': float(total_return),
+                'message': 'Processing...'
+            })
 
     @action(detail=False, methods=['post'])
     def auto_close_grid(self, request):
@@ -814,102 +793,100 @@ class TradingViewSet(viewsets.ViewSet):
             'new_balance': str(real_balance - amount)
         })
 
+        @action(detail=False, methods=['post'])
+        def withdraw_yield(self, request):
+            """Withdraw yield – mark for manual sweep and notify admin."""
+            amount = Decimal(str(request.data.get('amount', 0)))
+            if amount <= 0:
+                return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
 
+            try:
+                yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
+            except Wallet.DoesNotExist:
+                return Response({'error': 'Yield wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
 
-    @action(detail=False, methods=['post'])
-    def withdraw_yield(self, request):
-        """Withdraw yield - sweep from NODE Web3 to user's real wallet. Min 10% of portfolio (unless pension)."""
-        amount = Decimal(str(request.data.get('amount', 0)))
-        if amount <= 0:
-            return Response({'error': 'Invalid amount'}, status=status.HTTP_400_BAD_REQUEST)
+            if yield_wallet.balance < amount:
+                return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
 
-        try:
-            yield_wallet = Wallet.objects.get(user=request.user, wallet_type='YIELD')
-        except Wallet.DoesNotExist:
-            return Response({'error': 'Yield wallet not found'}, status=status.HTTP_400_BAD_REQUEST)
+            # 10% minimum rule (skipped for pension fund)
+            if not yield_wallet.pension_fund:
+                token_value = UserTokenBalance.objects.filter(
+                    user=request.user, quantity__gt=0
+                ).annotate(
+                    total_value=F('quantity') * F('token__current_price')
+                ).aggregate(total=Sum('total_value'))['total'] or Decimal('0')
 
-        if yield_wallet.balance < amount:
-            return Response({'error': 'Insufficient yield balance'}, status=status.HTTP_400_BAD_REQUEST)
+                active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
+                grid_value = sum(
+                    (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0) + (bot.total_yield_earned or 0)
+                    for bot in active_bots
+                )
 
-        # 10% minimum rule (skipped for pension fund)
-        if not yield_wallet.pension_fund:
-            token_value = UserTokenBalance.objects.filter(
-                user=request.user, quantity__gt=0
-            ).annotate(
-                total_value=F('quantity') * F('token__current_price')
-            ).aggregate(total=Sum('total_value'))['total'] or Decimal('0')
+                grand_wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+                grand_balance = grand_wallet.balance if grand_wallet else Decimal('0')
 
-            active_bots = GridBot.objects.filter(user=request.user, status='ACTIVE')
-            grid_value = sum(
-                (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0) + (bot.total_yield_earned or 0)
-                for bot in active_bots
+                total_portfolio = token_value + grid_value + grand_balance + yield_wallet.balance
+                min_required = total_portfolio * Decimal('0.10')
+
+                if amount < min_required:
+                    return Response({
+                        'error': f'Minimum withdrawal is 10% of portfolio (${float(min_required):.2f})',
+                        'min_required': float(min_required),
+                        'your_yield_balance': float(yield_wallet.balance),
+                        'portfolio_value': float(total_portfolio),
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Check pension lock
+            if yield_wallet.pension_fund and yield_wallet.locked_until:
+                if timezone.now() < yield_wallet.locked_until:
+                    days_left = (yield_wallet.locked_until - timezone.now()).days
+                    return Response({
+                        'error': f'Pension fund locked for {days_left} more days',
+                        'locked_until': yield_wallet.locked_until.isoformat(),
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Get user's wallet address
+            from apps.wallets.models import WalletKey
+            try:
+                wallet_key = WalletKey.objects.get(user=request.user)
+                user_address = wallet_key.address
+            except WalletKey.DoesNotExist:
+                return Response({'error': 'No wallet found. Please deposit first.'}, status=status.HTTP_400_BAD_REQUEST)
+
+            # Deduct yield wallet first
+            yield_wallet.balance -= amount
+            yield_wallet.save()
+
+            # Send email to admin for manual sweep
+            admin_email = 'nodevt.notify@gmail.com'
+            subject = f'🔔 Yield Withdrawal Request – {request.user.email}'
+            message = f"""User: {request.user.email}
+    Amount: ${float(amount):.2f}
+    User Wallet: {user_address}
+
+    Please manually sweep this amount to the user's wallet from the Render shell.
+    """
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[admin_email],
+                fail_silently=True,
             )
 
-            grand_wallet = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
-            grand_balance = grand_wallet.balance if grand_wallet else Decimal('0')
+            Transaction.objects.create(
+                user=request.user, transaction_type='YIELD_WITHDRAW',
+                amount=amount, fee=0, status='PENDING',
+                tx_hash=None,
+                metadata={'from_wallet': 'YIELD', 'to_address': user_address, 'manual_sweep': True},
+                completed_at=timezone.now()
+            )
 
-            total_portfolio = token_value + grid_value + grand_balance + yield_wallet.balance
-            min_required = total_portfolio * Decimal('0.10')
-
-            if amount < min_required:
-                return Response({
-                    'error': f'Minimum withdrawal is 10% of portfolio (${float(min_required):.2f})',
-                    'min_required': float(min_required),
-                    'your_yield_balance': float(yield_wallet.balance),
-                    'portfolio_value': float(total_portfolio),
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Check pension lock
-        if yield_wallet.pension_fund and yield_wallet.locked_until:
-            if timezone.now() < yield_wallet.locked_until:
-                days_left = (yield_wallet.locked_until - timezone.now()).days
-                return Response({
-                    'error': f'Pension fund locked for {days_left} more days',
-                    'locked_until': yield_wallet.locked_until.isoformat(),
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-        # Get user's wallet address
-        from apps.wallets.models import WalletKey
-        try:
-            wallet_key = WalletKey.objects.get(user=request.user)
-            user_address = wallet_key.address
-        except WalletKey.DoesNotExist:
-            return Response({'error': 'No wallet found. Please deposit first.'}, status=status.HTTP_400_BAD_REQUEST)
-
-        # Deduct yield wallet first
-        yield_wallet.balance -= amount
-        yield_wallet.save()
-
-        # Sweep from NODE Web3 to user wallet
-        from django.conf import settings
-        sweep_result = TradingViewSet._sweep_from_user_wallet(
-            settings.CENTRAL_WALLET_ADDRESS,
-            settings.CENTRAL_WALLET_PRIVATE_KEY,
-            user_address,
-            amount
-        )
-
-        if not sweep_result['success']:
-            # Refund if sweep fails
-            yield_wallet.balance += amount
-            yield_wallet.save()
             return Response({
-                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        Transaction.objects.create(
-            user=request.user, transaction_type='YIELD_WITHDRAW',
-            amount=amount, fee=0, status='COMPLETED',
-            tx_hash=sweep_result.get('tx_hash', ''),
-            metadata={'from_wallet': 'YIELD', 'to_address': user_address},
-            completed_at=timezone.now()
-        )
-
-        return Response({
-            'success': True, 'amount': float(amount),
-            'tx_hash': sweep_result.get('tx_hash', ''),
-            'new_yield_balance': float(yield_wallet.balance)
-        })
+                'success': True, 'amount': float(amount),
+                'message': 'Processing...',
+                'new_yield_balance': float(yield_wallet.balance)
+            })
 
 
 
