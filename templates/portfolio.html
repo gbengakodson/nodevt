@@ -1047,9 +1047,15 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
                             <span style="font-size:11px; color:#6B7280;">Rate</span>
                             ${currency === 'GOLD' || currency === 'USOIL'? `1 ${currency} = $${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: currency === 'NGN'? `$1 = ₦${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`: (currency === 'EUR' || currency === 'GBP') ? `1 ${currency} = $${(rate ? (1/rate) : 0).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}` : `1 ${currency} = $${(rate ? (1/rate) : 0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}`}
-                            <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
-                                ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
-                            </span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
+                                    ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                                </span>
+                                <div style="display:flex; align-items:center; gap:4px;">
+                                    <span style="font-size:20px; font-weight:900; color:${change >= 0 ? '#0ECB81' : '#B0B8C1'};">↗</span>
+                                    <span style="font-size:20px; font-weight:900; color:${change < 0 ? '#F6465D' : '#B0B8C1'};">↘</span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- History -->
@@ -1096,25 +1102,26 @@
     }
 
     function updateAddAssetPreview() {
-        var symbolEl = document.getElementById('addAssetSymbol');
-        var amountEl = document.getElementById('addAssetAmount');
-        if (!symbolEl || !amountEl) return;
-
-        var symbol = symbolEl.value;
-        var amount = parseFloat(amountEl.value) || 0;
-
+        var symbol = document.getElementById('addAssetSymbol').value;
+        var amount = parseFloat(document.getElementById('addAssetAmount').value) || 0;
         var rate = currentRates[symbol]?.price || 0;
-        var fee = amount * 0.01;
+        var fee = amount * 0.02;   // updated fee 2%
         var receiveUsdc = amount - fee;
-        var receiveAsset = receiveUsdc * rate;
+        var receiveAsset;
 
-        var rateEl = document.getElementById('addAssetRate');
-        var feeEl = document.getElementById('addAssetFee');
-        var receiveEl = document.getElementById('addAssetReceive');
+        if (symbol === 'GOLD' || symbol === 'USOIL') {
+            receiveAsset = receiveUsdc / rate;
+            document.getElementById('addAssetRate').textContent = rate ? `1 ${symbol} = $${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
+        } else if (symbol === 'NGN') {
+            receiveAsset = receiveUsdc * rate;
+            document.getElementById('addAssetRate').textContent = rate ? `$1 = ₦${Number(rate).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}` : 'N/A';
+        } else {
+            receiveAsset = receiveUsdc / rate;
+            document.getElementById('addAssetRate').textContent = rate ? `1 ${symbol} = $${(1/rate).toLocaleString(undefined, {minimumFractionDigits: 4, maximumFractionDigits: 4})}` : 'N/A';
+        }
 
-        if (rateEl) rateEl.textContent = rate ? '1 ' + symbol + ' = ' + (1/rate).toFixed(4) + ' USDC' : 'N/A';
-        if (feeEl) feeEl.textContent = fee.toFixed(2) + ' USDC';
-        if (receiveEl) receiveEl.textContent = receiveAsset.toFixed(4) + ' ' + symbol;
+        document.getElementById('addAssetFee').textContent = fee.toFixed(2) + ' USDC';
+        document.getElementById('addAssetReceive').textContent = receiveAsset.toFixed(4) + ' ' + symbol;
     }
 
     var symbolEl = document.getElementById('addAssetSymbol');
