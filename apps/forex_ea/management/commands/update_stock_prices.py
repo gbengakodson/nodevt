@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from apps.forex_ea.models import StockPrice, FiatBalance
+from apps.forex_ea.models import StockPrice, FiatBalance, ForexRateHistory
 from django.utils import timezone
 from decimal import Decimal
 
@@ -44,15 +44,29 @@ class Command(BaseCommand):
 
         # Execute pending buy orders
         pending_buys = StockOrder.objects.filter(side='BUY', status='PENDING')
+        ngn_rate = None
         for order in pending_buys:
             price = StockPrice.objects.filter(symbol=order.symbol).first()
             if not price or price.price == 0:
                 continue
 
-            # Calculate shares/units
-            shares = order.amount_usdc / price.price
+            # Check if Nigerian stock
+            if order.symbol in NIGERIAN_STOCKS:
+                if ngn_rate is None:
+                    latest_ngn = ForexRateHistory.objects.filter(
+                        base_currency='USD', quote_currency='NGN'
+                    ).order_by('-recorded_at').first()
+                    if latest_ngn:
+                        ngn_rate = latest_ngn.rate
+                    else:
+                        continue  # no rate available, skip until later
 
-            # Credit user's stock balance
+                usd_amount = order.amount_usdc
+                ngn_amount = usd_amount * ngn_rate
+                shares = ngn_amount / price.price
+            else:
+                shares = order.amount_usdc / price.price
+
             FiatBalance.objects.update_or_create(
                 user=order.user,
                 currency=order.symbol,
@@ -66,4 +80,4 @@ class Command(BaseCommand):
             order.executed_at = timezone.now()
             order.save()
 
-            self.stdout.write(f'Executed {order.side} {order.symbol} for {order.user.email}')
+            self.stdout.write(f'Executed {order.side} {order.symbol} for {order.user.email} – {shares:.6f} shares')
