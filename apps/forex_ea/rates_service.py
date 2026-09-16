@@ -62,17 +62,29 @@ def get_spot_rates():
     from .models import ForexRateHistory
 
     data = {}
-    latest_rates = {}
+    latest = {}
+    previous = {}
+
     try:
+        # Walk history oldest → newest, so 'previous' is the one before 'latest'
         for h in ForexRateHistory.objects.filter(base_currency='USD').order_by('recorded_at'):
-            latest_rates[h.quote_currency] = float(h.rate)
+            key = h.quote_currency
+            if key in latest:
+                previous[key] = latest[key]
+            latest[key] = float(h.rate)
     except Exception:
         pass
 
     for symbol in ['EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']:
+        price = latest.get(symbol, 0)
+        prev = previous.get(symbol, 0)
+        if prev and prev > 0:
+            change = ((price - prev) / prev) * 100
+        else:
+            change = 0.0
         data[symbol] = {
-            'price': latest_rates.get(symbol, 0),
-            'change_24h': 0.0
+            'price': price,
+            'change_24h': change,
         }
 
     data['USD'] = {'price': 1.0, 'change_24h': 0.0}

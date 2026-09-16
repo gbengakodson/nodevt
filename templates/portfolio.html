@@ -797,51 +797,75 @@
         }
     }
 
+    var liveStocks = {};
+
     async function loadStocks() {
         var container = document.getElementById('stocksSpot');
         if (!container) return;
-
         try {
             var token = localStorage.getItem('access_token');
             if (!token) return;
-
             var resp = await fetch('/api/ea/stocks/', {
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             var data = await resp.json();
-            renderStockCards(data.stocks || []);
+            renderStockCards(data.stocks || [], data.history || []);
         } catch(e) {
             console.error('Stocks error:', e);
             container.innerHTML = '<div style="color:#848E9C; padding:20px; text-align:center;">Error loading stocks</div>';
         }
     }
 
-    function renderStockCards(stocks) {
+    function renderStockCards(stocks, history) {
         var container = document.getElementById('stocksSpot');
         if (!container) return;
-
         if (!stocks || stocks.length === 0) {
             container.innerHTML = '<div style="color:#848E9C; padding:20px; text-align:center;">No stocks available</div>';
             return;
         }
 
-        var NG_SYMBOLS = ['ZENITHBANK','GTCO','MTNN','DANGCEM','ACCESSCORP','UBA','SEPLAT'];
+        var historyBySymbol = {};
+        (history || []).forEach(function(h) {
+            (historyBySymbol[h.symbol] = historyBySymbol[h.symbol] || []).push(h);
+        });
+
+        var totalUSD = 0;
 
         container.innerHTML = stocks.map(function(stock) {
-            var isNG = NG_SYMBOLS.includes(stock.symbol);
+            liveStocks[stock.symbol] = stock;
+
+            var isNG = stock.currency === 'NGN';
             var balance = Number(stock.balance) || 0;
             var price = Number(stock.price) || 0;
             var change = Number(stock.change_24h) || 0;
-            var currencySymbol = isNG ? '₦' : '$';
-            var priceDisplay = isNG
-                ? '₦' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                : '$' + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            var balanceDisplay = isNG
-                ? '₦' + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})
-                : balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            var cur = isNG ? '₦' : '$';
+            var priceDisplay = cur + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            var balanceDisplay = cur + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            var usdValue = isNG ? 0 : balance * price;
+            totalUSD += usdValue;
+
             var equivalentText = isNG
                 ? 'NGX Stock • Naira'
-                : '≈ $' + (balance * price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
+                : '≈ $' + usdValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
+
+            var arrowColor = change > 0 ? '#0ECB81' : (change < 0 ? '#F6465D' : '#B0B8C1');
+            var arrow = change > 0 ? '▲' : (change < 0 ? '▼' : '▬');
+            var changeColor = change > 0 ? '#0ECB81' : (change < 0 ? '#F6465D' : '#6B7280');
+
+            var myOrders = historyBySymbol[stock.symbol] || [];
+            var historyHtml = myOrders.length === 0
+                ? '<div style="color:#9CA3AF; font-size:9px; text-align:center; padding-top:24px;">No transactions yet</div>'
+                : myOrders.map(function(o) {
+                    var sideColor = o.side === 'BUY' ? '#0ECB81' : '#F6465D';
+                    var statusLabel = o.status === 'EXECUTED' ? '' : ' <span style="color:#F0B90B;">(' + o.status + ')</span>';
+                    return '<div style="display:flex; justify-content:space-between; padding:3px 0; border-bottom:1px solid #EEF0F3;">' +
+                        '<span style="color:' + sideColor + '; font-weight:700;">' + o.side + '</span>' +
+                        '<span>$' + Number(o.amount_usdc).toFixed(2) + '</span>' +
+                        '<span style="color:#9CA3AF;">' + o.created_at + '</span>' + statusLabel +
+                    '</div>';
+                }).join('');
 
             return `
                 <div class="col-12 col-md-6 col-lg-4">
@@ -857,17 +881,16 @@
                                     <div style="font-size:10px; color:#6B7280;">${stock.name}</div>
                                 </div>
                             </div>
-                            <span style="font-size:11px; font-weight:700; color:${change >= 0 ? '#0ECB81' : '#F6465D'};">
-                                ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
-                            </span>
+                            <div style="display:flex; align-items:center; gap:6px;">
+                                <span style="font-size:13px; font-weight:900; color:${arrowColor};">${arrow}</span>
+                                <span style="font-size:11px; font-weight:700; color:${changeColor};">
+                                    ${change >= 0 ? '+' : ''}${change.toFixed(2)}%
+                                </span>
+                            </div>
                         </div>
 
-                        <div style="font-size:28px; font-weight:700; color:#1B1E21;">
-                            ${balanceDisplay}
-                        </div>
-                        <div style="font-size:12px; color:#6B7280;">
-                            ${equivalentText}
-                        </div>
+                        <div style="font-size:28px; font-weight:700; color:#1B1E21;">${balanceDisplay}</div>
+                        <div style="font-size:12px; color:#6B7280;">${equivalentText}</div>
 
                         <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 0; border-top:1px solid #F0F2F5;">
                             <span style="font-size:11px; color:#6B7280;">Stock Price</span>
@@ -875,9 +898,7 @@
                         </div>
 
                         <div style="font-size:10px; color:#6B7280; font-weight:600;">Transaction History</div>
-                        <div style="font-size:9px; color:#6B7280; background:#F8F9FA; border-radius:8px; padding:8px; height:70px; overflow-y:auto;">
-                            No transactions yet
-                        </div>
+                        <div style="font-size:9px; color:#6B7280; background:#F8F9FA; border-radius:8px; padding:8px; height:70px; overflow-y:auto;">${historyHtml}</div>
 
                         <div style="display:flex; gap:8px; margin-top:auto;">
                             <button onclick="openStockPurchase('${stock.symbol}')" style="flex:1; padding:8px 0; border:none; border-radius:8px; background:#F0B90B; color:#1B1E21; font-weight:700; font-size:11px; cursor:pointer;">+ Add</button>
@@ -888,26 +909,34 @@
                 </div>
             `;
         }).join('');
+
+        var statEl = document.getElementById('stocksSpotValue');
+        if (statEl) statEl.textContent = '$' + totalUSD.toFixed(2);
     }
 
     let currentStockSymbol = '';
 
     function openStockPurchase(symbol) {
         currentStockSymbol = symbol;
-        var price = stockPricesData[symbol] || 0;
+        var s = liveStocks[symbol] || {};
+        var price = Number(s.price) || 0;
+        var isNG = s.currency === 'NGN';
+        var cur = isNG ? '₦' : '$';
 
         document.getElementById('stockPurchaseLogo').src = stockLogos[symbol] || '';
         document.getElementById('stockPurchaseSymbol').textContent = symbol;
-        document.getElementById('stockPurchaseName').textContent = ''; // set from stocks array later
+        document.getElementById('stockPurchaseName').textContent = s.name || '';
         document.getElementById('stockPurchaseAmount').value = '';
 
-        document.getElementById('stockLastPrice').textContent = price ? '$' + price.toFixed(2) : '$0.00';
-        document.getElementById('stockBidAsk').textContent = price ? '$' + (price - 0.01).toFixed(2) + ' / $' + (price + 0.01).toFixed(2) : '$0.00 / $0.00';
-        document.getElementById('stockDayRange').textContent = price ? '$' + (price * 0.98).toFixed(2) + ' – $' + (price * 1.02).toFixed(2) : '$0.00 – $0.00';
+        document.getElementById('stockLastPrice').textContent = cur + price.toFixed(2);
+        document.getElementById('stockBidAsk').textContent = cur + (price - 0.01).toFixed(2) + ' / ' + cur + (price + 0.01).toFixed(2);
+        document.getElementById('stockDayRange').textContent = cur + (price * 0.98).toFixed(2) + ' – ' + cur + (price * 1.02).toFixed(2);
 
         document.getElementById('stockPurchaseModal').style.display = 'flex';
         updateStockPurchasePreview();
     }
+
+
 
     function closeStockPurchaseModal() {
         document.getElementById('stockPurchaseModal').style.display = 'none';
