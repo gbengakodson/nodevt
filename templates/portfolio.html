@@ -683,6 +683,8 @@
     let monthlyAddition = 0;
     let allTokens = [];
     let currentRates = {};
+    var currentNgnRate = 0;
+    var liveStocks = {};
 
     function getToken() { return localStorage.getItem('access_token'); }
 
@@ -797,7 +799,6 @@
         }
     }
 
-    var liveStocks = {};
 
     async function loadStocks() {
         var container = document.getElementById('stocksSpot');
@@ -809,6 +810,7 @@
                 headers: { 'Authorization': 'Bearer ' + token }
             });
             var data = await resp.json();
+            currentNgnRate = Number(data.ngn_rate) || 0;   // <-- no 'var'
             renderStockCards(data.stocks || [], data.history || []);
         } catch(e) {
             console.error('Stocks error:', e);
