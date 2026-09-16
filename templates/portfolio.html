@@ -840,15 +840,25 @@
             var change = Number(stock.change_24h) || 0;
 
             var cur = isNG ? '₦' : '$';
+
+            // Quantity: plain number, no currency
+            var balanceDisplay = balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+
+            // Price line: currency prefix
             var priceDisplay = cur + price.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
-            var balanceDisplay = cur + balance.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 
-            var usdValue = isNG ? 0 : balance * price;
-            totalUSD += usdValue;
-
+            // Position value: local currency
+            var positionValue = balance * price;
             var equivalentText = isNG
-                ? 'NGX Stock • Naira'
-                : '≈ $' + usdValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
+                ? '≈ ₦' + positionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' NGN'
+                : '≈ $' + positionValue.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}) + ' USDT';
+
+            // Top stat total is always USD
+            if (isNG) {
+                totalUSD += currentNgnRate > 0 ? (positionValue / currentNgnRate) : 0;
+            } else {
+                totalUSD += positionValue;
+            }
 
             var arrowColor = change > 0 ? '#0ECB81' : (change < 0 ? '#F6465D' : '#B0B8C1');
             var arrow = change > 0 ? '▲' : (change < 0 ? '▼' : '▬');

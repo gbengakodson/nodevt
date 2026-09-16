@@ -2,7 +2,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated
 from .stock_service import STOCK_UNIVERSE, NG_STOCKS
-from .models import StockPrice, FiatBalance, StockOrder
+from .models import StockPrice, FiatBalance, StockOrder, ForexRateHistory
 from decimal import Decimal
 
 
@@ -45,4 +45,9 @@ class StockBalancesView(APIView):
                 'currency': currency,
             })
 
-        return Response({'stocks': data, 'history': history})
+        latest_ngn = ForexRateHistory.objects.filter(
+            base_currency='USD', quote_currency='NGN'
+        ).order_by('-recorded_at').first()
+        ngn_rate = float(latest_ngn.rate) if latest_ngn else 0.0
+
+        return Response({'stocks': data, 'history': history, 'ngn_rate': ngn_rate})
