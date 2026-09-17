@@ -8,7 +8,7 @@ from .api_views import (
     TradeOpenedView, TradeClosedView, SlaveDeleteView,
     SlaveAccountView, SlaveTradeStatusView, SignalView
 )
-
+from .public_views import AllAssetsView, NgnHistoryView
 
 
 urlpatterns = [
@@ -29,4 +29,6 @@ urlpatterns = [
     path('spot-rates/', SpotRatesView.as_view(), name='spot_rates'),
     path('stocks/', StockBalancesView.as_view(), name='stock_balances'),
     path('stock-order/', StockOrderView.as_view(), name='stock_order'),
+    path('all-assets/', AllAssetsView.as_view(), name='all_assets'),
+    path('ngn-history/', NgnHistoryView.as_view(), name='ngn_history'),
 ]
