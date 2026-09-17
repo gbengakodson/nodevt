@@ -230,16 +230,17 @@ class StockPriceHistory(models.Model):
 
 
 class ForexRateHistory(models.Model):
-    base_currency = models.CharField(max_length=10)      # e.g., USD
-    quote_currency = models.CharField(max_length=10)     # e.g., EUR
+    base_currency = models.CharField(max_length=10)
+    quote_currency = models.CharField(max_length=10)
     rate = models.DecimalField(max_digits=15, decimal_places=6, default=0)
+    source_rate = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    source = models.CharField(max_length=20, default='MANUAL')
+    buy_rate = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
+    sell_rate = models.DecimalField(max_digits=15, decimal_places=6, null=True, blank=True)
     recorded_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         ordering = ['-recorded_at']
-
-    def __str__(self):
-        return f"{self.base_currency}/{self.quote_currency} = {self.rate}"
 
 
 

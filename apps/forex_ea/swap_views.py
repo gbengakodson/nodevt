@@ -5,6 +5,7 @@ from decimal import Decimal
 from .models import FiatBalance
 from .rates_service import get_fiat_rate, get_commodity_price, get_spot_rates
 from apps.wallets.models import Wallet
+from .rates_service import get_fiat_rate, get_commodity_price, get_spot_rates, get_ngn_dealing_rate
 
 SUPPORTED_CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']
 FEE_PERCENT = Decimal('0.02')   # 2% fee
@@ -53,6 +54,7 @@ class ForexSwapView(APIView):
                 # amount_currency -> USD -> units of commodity
                 amount_usd = amount * rate_to_usd
                 converted_amount = amount_usd / commodity_usd_price
+
             elif from_currency in ['GOLD', 'USOIL']:
                 # Convert from commodity to fiat
                 commodity_usd_price = get_commodity_price(from_currency)
@@ -62,13 +64,30 @@ class ForexSwapView(APIView):
                 else:
                     rate = get_fiat_rate('USD', to_currency)
                     converted_amount = amount_usd * rate
+
+            # ── USD ↔ NGN uses CBN-derived dealing rates (buy/sell spread) ──
+            elif from_currency == 'USD' and to_currency == 'NGN':
+                # User buys NGN with USD → charge SELL rate
+                dealing = get_ngn_dealing_rate('sell')
+                if dealing is None:
+                    return Response({'error': 'NGN rate not set'}, status=503)
+                converted_amount = amount * dealing
+
+            elif from_currency == 'NGN' and to_currency == 'USD':
+                # User sells NGN → receives USD → use BUY rate
+                dealing = get_ngn_dealing_rate('buy')
+                if dealing is None:
+                    return Response({'error': 'NGN rate not set'}, status=503)
+                converted_amount = amount / dealing
+
             else:
                 rate = get_fiat_rate(from_currency, to_currency)
                 converted_amount = amount * rate
+
         except Exception as e:
             return Response({'error': f'Rate fetch failed: {str(e)}'}, status=500)
 
-        # 3. Apply 1% fee on the converted amount
+        # 3. Apply 2% fee on the converted amount
         fee = converted_amount * FEE_PERCENT
         final_amount = converted_amount - fee
 
@@ -91,8 +110,6 @@ class ForexSwapView(APIView):
             target_fiat, _ = FiatBalance.objects.get_or_create(user=request.user, currency=to_currency)
             target_fiat.balance += final_amount
             target_fiat.save()
-
-
 
         return Response({
             'success': True,

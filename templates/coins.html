@@ -727,6 +727,13 @@
         white-space: nowrap;
         margin-top: 1px;
     }
+    .ngn-date {
+        font-size: 9px;
+        color: #A0A6B1;
+        margin-top: 2px;
+        white-space: nowrap;
+        letter-spacing: 0.2px;
+    }
 
     .ngn-spark-wrap {
         height: 44px;
@@ -738,6 +745,33 @@
         width: 100% !important;
         height: 100% !important;
         display: block;
+    }
+    .ngn-buy-sell {
+        display: flex;
+        gap: 10px;
+        margin-top: 8px;
+        margin-bottom: 6px;
+    }
+    .ngn-side {
+        flex: 1;
+        background: #F8F9FB;
+        border-radius: 8px;
+        padding: 8px 10px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .ngn-side-label {
+        font-size: 10px;
+        color: #707A8A;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        font-weight: 600;
+    }
+    .ngn-side-value {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1E2329;
     }
 
     @media (max-width: 480px) {
@@ -865,12 +899,23 @@
                     <img src="/static/NG.jpg" alt="NGN" class="ngn-flag">
                     <div class="ngn-labels">
                         <div class="ngn-pair">USD / NGN</div>
-                        <div class="ngn-sub">US Dollar · Nigerian Naira</div>
+                        <div class="ngn-sub">CBN rate + spread</div>
                     </div>
                 </div>
                 <div class="ngn-numbers">
                     <div class="ngn-rate" id="ngnRate">₦—</div>
                     <div class="ngn-change" id="ngnChange">—</div>
+                    <div class="ngn-date" id="ngnDate">—</div>
+                </div>
+            </div>
+            <div class="ngn-buy-sell">
+                <div class="ngn-side">
+                    <span class="ngn-side-label">Buy</span>
+                    <span class="ngn-side-value" id="ngnBuy">₦—</span>
+                </div>
+                <div class="ngn-side">
+                    <span class="ngn-side-label">Sell</span>
+                    <span class="ngn-side-value" id="ngnSell">₦—</span>
                 </div>
             </div>
             <div class="ngn-spark-wrap">
@@ -946,6 +991,7 @@
     let allCoins = [];
     let currentFilter = 'all';
     let reviewRating = 0;
+    var coinGeckoCache = null;   // { SYMBOL: { change_24h, market_cap, volume_24h } }
 
     // ───────── Token icons & ID mapping ─────────
     function getTokenIcon(symbol) {
@@ -1054,13 +1100,54 @@
         }
     }
 
+
+    async function refreshCoinGeckoCache() {
+        if (coinGeckoCache) return coinGeckoCache;
+        try {
+            var ids = Object.values(symbolToId).join(',');
+            var url = 'https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=' + ids
+                + '&order=market_cap_desc&per_page=50&page=1&sparkline=false&price_change_percentage=24h';
+            var res = await fetch(url);
+            var data = await res.json();
+            var map = {};
+            for (var i = 0; i < data.length; i++) {
+                var c = data[i];
+                // find symbol for this id
+                for (var sym in symbolToId) {
+                    if (symbolToId[sym] === c.id) {
+                        map[sym] = {
+                            change_24h: c.price_change_percentage_24h || 0,
+                            market_cap: c.market_cap || 0,
+                            volume_24h: c.total_volume || 0,
+                        };
+                        break;
+                    }
+                }
+            }
+            coinGeckoCache = map;
+            return map;
+        } catch(e) {
+            return {};
+        }
+    }
+
     var allAssets = [];
     var currentAssetFilter = 'all';
 
     async function updateMarketData() {
         try {
-            var res = await fetch('/api/ea/all-assets/');
+            var [res, cg] = await Promise.all([
+                fetch('/api/ea/all-assets/'),
+                refreshCoinGeckoCache(),
+            ]);
             allAssets = await res.json();
+            // Merge CoinGecko 24h for coins
+            allAssets = allAssets.map(function(a) {
+                if (a.category === 'coin' && cg[a.symbol]) {
+                    a.change_24h = cg[a.symbol].change_24h;
+                }
+                return a;
+            });
             renderAssetList();
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
@@ -1136,6 +1223,16 @@
                 </div>
             `;
         }).join('');
+        // Re-apply search filter after render
+        var searchEl = document.getElementById('searchInput');
+        if (searchEl && searchEl.value.trim()) {
+            var q = searchEl.value.trim().toLowerCase();
+            container.querySelectorAll('.asset-row').forEach(function(row) {
+                if (row.textContent.toLowerCase().indexOf(q) === -1) {
+                    row.style.display = 'none';
+                }
+            });
+        }
     }
 
     function filterAssets(filter, btn) {
@@ -1298,7 +1395,15 @@
 
             var rateEl = document.getElementById('ngnRate');
             var changeEl = document.getElementById('ngnChange');
-            if (rateEl) rateEl.textContent = '₦' + Number(r.price).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            var dateEl = document.getElementById('ngnDate');
+
+            if (rateEl) {
+                rateEl.textContent = '₦' + Number(r.price).toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                });
+            }
+
             if (changeEl) {
                 var c = Number(r.change_24h) || 0;
                 var color = c > 0 ? '#0ECB81' : (c < 0 ? '#F6465D' : '#707A8A');
@@ -1306,6 +1411,21 @@
                 changeEl.textContent = arrow + ' ' + (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
                 changeEl.style.color = color;
             }
+
+            if (dateEl) {
+                var d = new Date();
+                var dateStr = d.toLocaleDateString(undefined, {
+                    day: '2-digit', month: 'short', year: 'numeric'
+                });
+                var timeStr = d.toLocaleTimeString(undefined, {
+                    hour: '2-digit', minute: '2-digit'
+                });
+                dateEl.textContent = dateStr + ' · ' + timeStr;
+            }
+            var buyEl = document.getElementById('ngnBuy');
+            var sellEl = document.getElementById('ngnSell');
+            if (buyEl) buyEl.textContent = '₦' + Number(r.buy_rate || r.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            if (sellEl) sellEl.textContent = '₦' + Number(r.sell_rate || r.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
         } catch(e) {}
     }
 
@@ -1478,19 +1598,21 @@
         } catch(e) {}
     }
 
-    // ───────── Filtering & Search ─────────
-    document.getElementById('searchInput').addEventListener('input', function() {
-        renderCoins(allCoins);
-    });
-
-    document.querySelectorAll('.filter-btn').forEach(btn => {
-        btn.addEventListener('click', function() {
-            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            this.classList.add('active');
-            currentFilter = this.getAttribute('data-filter');
-            renderCoins(allCoins);
-        });
-    });
+        // ───────── Filtering & Search ─────────
+        // Filter buttons use onclick="filterAssets(...)".
+        // Search input filters the unified list.
+        var searchEl = document.getElementById('searchInput');
+        if (searchEl) {
+            searchEl.addEventListener('input', function() {
+                var q = this.value.trim().toLowerCase();
+                var container = document.getElementById('coinsGrid');
+                var rows = container.querySelectorAll('.asset-row');
+                rows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    row.style.display = (!q || text.indexOf(q) !== -1) ? '' : 'none';
+                });
+            });
+        }
 
     // ───────── INIT ─────────
     document.getElementById('coinsGrid').innerHTML = '<div class="loading-state"><i class="fas fa-spinner fa-spin"></i> Loading market data...</div>';

@@ -66,26 +66,59 @@ def get_spot_rates():
     previous = {}
 
     try:
-        # Walk history oldest → newest, so 'previous' is the one before 'latest'
         for h in ForexRateHistory.objects.filter(base_currency='USD').order_by('recorded_at'):
             key = h.quote_currency
             if key in latest:
                 previous[key] = latest[key]
-            latest[key] = float(h.rate)
+            latest[key] = h
     except Exception:
         pass
 
     for symbol in ['EUR', 'GBP', 'NGN', 'GOLD', 'USOIL']:
-        price = latest.get(symbol, 0)
-        prev = previous.get(symbol, 0)
-        if prev and prev > 0:
-            change = ((price - prev) / prev) * 100
-        else:
-            change = 0.0
-        data[symbol] = {
-            'price': price,
-            'change_24h': change,
-        }
+        row = latest.get(symbol)
+        if not row:
+            data[symbol] = {'price': 0, 'change_24h': 0.0}
+            continue
+
+        price = float(row.rate)
+        prev_row = previous.get(symbol)
+        prev = float(prev_row.rate) if prev_row else 0
+        change = ((price - prev) / prev * 100) if prev else 0.0
+
+        entry = {'price': price, 'change_24h': change}
+
+        if symbol == 'NGN':
+            entry['buy_rate'] = float(row.buy_rate) if row.buy_rate else price
+            entry['sell_rate'] = float(row.sell_rate) if row.sell_rate else price
+            entry['source_rate'] = float(row.source_rate) if row.source_rate else price
+            entry['recorded_at'] = row.recorded_at.isoformat()
+
+        data[symbol] = entry
 
     data['USD'] = {'price': 1.0, 'change_24h': 0.0}
     return data
+
+
+def get_ngn_dealing_rate(direction):
+    """
+    direction: 'buy'  → user sells NGN, gets USD (you pay buy_rate)
+               'sell' → user buys NGN with USD (you charge sell_rate)
+    Returns Decimal NGN per USD.
+    """
+    from .models import ForexRateHistory
+
+    latest = ForexRateHistory.objects.filter(
+        base_currency='USD', quote_currency='NGN'
+    ).order_by('-recorded_at').first()
+
+    if not latest:
+        return None
+
+    if direction == 'buy' and latest.buy_rate:
+        return latest.buy_rate
+    if direction == 'sell' and latest.sell_rate:
+        return latest.sell_rate
+    return latest.rate
+
+
+
