@@ -1592,11 +1592,20 @@ async function loadPurseCard() {
     loadSpotRatesForModal()
 
 
-    // Init – Portfolio page has no active auto‑loading functions now
+        // Init – Portfolio page has no active auto‑loading functions now
     document.addEventListener('DOMContentLoaded', function() {
         var notifModal = document.getElementById('notifModal');
         if (notifModal) {
             notifModal.style.setProperty('display', 'none', 'important');
+        }
+
+        // Auto-switch tab based on ?tab= query param
+        var params = new URLSearchParams(window.location.search);
+        var tab = params.get('tab');
+        if (tab === 'stocks') {
+            switchSpotTab('stocks');
+        } else if (tab === 'forex') {
+            switchSpotTab('forex');
         }
     });
 </script>

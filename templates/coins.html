@@ -644,39 +644,168 @@
     .filter-btn:hover { border-color: #F0B90B; }
     .filter-btn.active { background: #F0B90B; color: #1B1E21; border-color: #F0B90B; }
 
+    /* ===== USD/NGN Section ===== */
+    .ngn-section {
+        padding: 0 20px;
+        margin-bottom: 14px;
+    }
+
+    .ngn-card {
+        background: #FFFFFF;
+        border: 1px solid #E2E4E8;
+        border-radius: 10px;
+        padding: 14px 16px 10px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+
+    .ngn-card:hover {
+        border-color: #F0B90B;
+        box-shadow: 0 3px 10px rgba(240,185,11,0.10);
+        transform: translateY(-1px);
+    }
+
+    .ngn-row-top {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 8px;
+    }
+
+    .ngn-asset {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-width: 0;
+        flex: 1 1 auto;
+    }
+
+    .ngn-flag {
+        width: 34px; height: 34px;
+        border-radius: 8px;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+
+    .ngn-labels { min-width: 0; }
+
+    .ngn-pair {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1E2329;
+        white-space: nowrap;
+    }
+
+    .ngn-sub {
+        font-size: 10px;
+        color: #707A8A;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .ngn-numbers {
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .ngn-rate {
+        font-size: 17px;
+        font-weight: 700;
+        color: #1E2329;
+        white-space: nowrap;
+        line-height: 1.1;
+    }
+
+    .ngn-change {
+        font-size: 11px;
+        font-weight: 600;
+        color: #707A8A;
+        white-space: nowrap;
+        margin-top: 1px;
+    }
+
+    .ngn-spark-wrap {
+        height: 44px;
+        width: 100%;
+        position: relative;
+    }
+
+    .ngn-spark-wrap canvas {
+        width: 100% !important;
+        height: 100% !important;
+        display: block;
+    }
+
+    @media (max-width: 480px) {
+        .ngn-section { padding: 0 12px; }
+        .ngn-card { padding: 12px 14px 8px; }
+        .ngn-flag { width: 30px; height: 30px; }
+        .ngn-pair { font-size: 12px; }
+        .ngn-sub { font-size: 9px; }
+        .ngn-rate { font-size: 15px; }
+        .ngn-spark-wrap { height: 36px; }
+    }
+
     .asset-row {
         display: flex;
         align-items: center;
-        gap: 14px;
+        gap: 12px;
         background: #FFFFFF;
-        border: 1px solid #E2E4E8;
-        border-radius: 12px;
-        padding: 14px 18px;
-        transition: background 0.15s;
+        border: 1px solid #E9ECF1;
+        border-radius: 10px;
+        padding: 12px 14px;
+        cursor: pointer;
+        transition: all 0.15s ease;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.02);
     }
-    .asset-row:hover { background: #FAFBFC; }
+    .asset-row:hover {
+        border-color: #F0B90B;
+        box-shadow: 0 3px 10px rgba(240,185,11,0.08);
+        transform: translateY(-1px);
+    }
     .asset-row .a-icon {
-        width: 40px; height: 40px;
+        width: 36px; height: 36px;
         border-radius: 50%;
         object-fit: cover;
         flex-shrink: 0;
     }
     .asset-row .a-info { flex: 1; min-width: 0; }
-    .asset-row .a-symbol { font-size: 14px; font-weight: 700; color: #1E2329; }
-    .asset-row .a-name { font-size: 11px; color: #707A8A; margin-top: 2px; }
+    .asset-row .a-symbol { font-size: 13px; font-weight: 700; color: #1E2329; }
+    .asset-row .a-name {
+        font-size: 11px; color: #707A8A; margin-top: 2px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
     .asset-row .a-cat {
-        font-size: 9px; font-weight: 600;
+        font-size: 9px; font-weight: 700;
         text-transform: uppercase;
         letter-spacing: 0.4px;
         color: #707A8A;
-        padding: 2px 8px;
+        padding: 2px 7px;
         background: #F5F7FA;
         border-radius: 4px;
         margin-left: 8px;
     }
-    .asset-row .a-price { text-align: right; min-width: 120px; }
-    .asset-row .a-price-value { font-size: 15px; font-weight: 700; color: #1E2329; }
+    .asset-row .a-price { text-align: right; min-width: 110px; flex-shrink: 0; }
+    .asset-row .a-price-value { font-size: 14px; font-weight: 700; color: #1E2329; }
     .asset-row .a-price-change { font-size: 11px; font-weight: 600; margin-top: 2px; }
+
+    @media (max-width: 480px) {
+        .asset-row { padding: 10px 12px; gap: 10px; border-radius: 9px; }
+        .asset-row .a-icon { width: 32px; height: 32px; }
+        .asset-row .a-symbol { font-size: 12px; }
+        .asset-row .a-name { font-size: 10px; }
+        .asset-row .a-price { min-width: 92px; }
+        .asset-row .a-price-value { font-size: 13px; }
+        .asset-row .a-price-change { font-size: 10px; }
+    }
+    @media (max-width: 480px) {
+        #coinsGrid { padding: 0 12px !important; gap: 7px !important; }
+        #assetFilters { padding: 0 12px !important; }
+    }
 </style>
 {% endblock %}
 
@@ -727,24 +856,26 @@
             <div style="font-size:10px;color:#707A8A;text-transform:uppercase;margin-bottom:4px;">📊 Market Cap Distribution</div>
             <canvas id="marketCapChart" style="max-height:100px;width:100%;"></canvas>
         </div>
-
-        <!-- NVT Token Card -->
-                <!-- USD/NGN Rate Card -->
-        <div class="stat-card" style="padding:14px 16px;cursor:default;">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
-                <div style="display:flex;align-items:center;gap:10px;">
-                    <img src="/static/NG.jpg" alt="NGN" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">
-                    <div>
-                        <div style="font-size:14px;font-weight:700;color:#1E2329;">USD / NGN</div>
-                        <div style="font-size:10px;color:#707A8A;">US Dollar / Nigerian Naira</div>
+    </div>
+        <!-- USD/NGN Rate Card (full width) -->
+    <div class="ngn-section">
+        <div class="ngn-card" id="ngnCard">
+            <div class="ngn-row-top">
+                <div class="ngn-asset">
+                    <img src="/static/NG.jpg" alt="NGN" class="ngn-flag">
+                    <div class="ngn-labels">
+                        <div class="ngn-pair">USD / NGN</div>
+                        <div class="ngn-sub">US Dollar · Nigerian Naira</div>
                     </div>
                 </div>
-                <div style="text-align:right;">
-                    <div id="ngnRate" style="font-size:18px;font-weight:700;color:#1E2329;">₦—</div>
-                    <div id="ngnChange" style="font-size:11px;font-weight:600;color:#707A8A;">—</div>
+                <div class="ngn-numbers">
+                    <div class="ngn-rate" id="ngnRate">₦—</div>
+                    <div class="ngn-change" id="ngnChange">—</div>
                 </div>
             </div>
-            <canvas id="ngnSparkline" style="width:100%;height:50px;"></canvas>
+            <div class="ngn-spark-wrap">
+                <canvas id="ngnSparkline"></canvas>
+            </div>
         </div>
     </div>
     <div class="tabs" style="margin-bottom: 12px; padding: 0 20px;">
@@ -759,7 +890,7 @@
             <button class="filter-btn" data-filter="commodity" onclick="filterAssets('commodity',this)">Commodities</button>
             <button class="filter-btn" data-filter="stock" onclick="filterAssets('stock',this)">Stocks</button>
         </div>
-        <div id="coinsGrid" style="display:flex;flex-direction:column;gap:10px;padding:0 20px;"></div>
+        <div id="coinsGrid" style="display:flex;flex-direction:column;gap:8px;padding:0 20px;"></div>
     </div>
     <div id="ttab-community" style="display: none;">
         <div class="community-wrapper">
@@ -989,7 +1120,7 @@
             }
 
             return `
-                <div class="asset-row">
+                <div class="asset-row" onclick="handleAssetClick('${a.category}', '${a.symbol}')">
                     <img class="a-icon" src="${iconUrl}" onerror="this.src='/static/icon-512-circular.png';">
                     <div class="a-info">
                         <div>
@@ -1012,6 +1143,15 @@
         document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
         if (btn) btn.classList.add('active');
         renderAssetList();
+    }
+    function handleAssetClick(category, symbol) {
+        if (category === 'coin') {
+            window.location.href = '/trading/?coin=' + encodeURIComponent(symbol);
+        } else if (category === 'stock') {
+            window.location.href = '/portfolio/?tab=stocks#stock-' + encodeURIComponent(symbol);
+        } else if (category === 'forex' || category === 'commodity') {
+            window.location.href = '/portfolio/?tab=forex#fx-' + encodeURIComponent(symbol);
+        }
     }
 
     function updateMarketStats(coins) {
