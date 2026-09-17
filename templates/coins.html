@@ -840,6 +840,60 @@
         #coinsGrid { padding: 0 12px !important; gap: 7px !important; }
         #assetFilters { padding: 0 12px !important; }
     }
+    /* ───── Tabs (full-width, slim segmented control) ───── */
+    .tabs {
+        display: flex;
+        align-items: center;
+        gap: 3px;
+        padding: 3px;
+        background: #F5F7FA;
+        border: 1px solid #E2E4E8;
+        border-radius: 9px;
+        margin: 0 20px 12px;
+        position: relative;
+        width: calc(100% - 40px);
+        box-sizing: border-box;
+    }
+
+    .tab-btn {
+        flex: 1;
+        position: relative;
+        padding: 5px 12px;
+        background: transparent;
+        border: none;
+        border-radius: 6px;
+        font-size: 11px;
+        font-weight: 600;
+        color: #707A8A;
+        cursor: pointer;
+        transition: all 0.18s ease;
+        letter-spacing: 0.2px;
+        white-space: nowrap;
+        font-family: inherit;
+    }
+
+    .tab-btn:hover {
+        color: #1E2329;
+    }
+
+    .tab-btn.active {
+        background: #FFFFFF;
+        color: #1E2329;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+
+    @media (max-width: 480px) {
+        .tabs {
+            margin: 0 12px 10px;
+            width: calc(100% - 24px);
+            padding: 2px;
+            border-radius: 8px;
+        }
+        .tab-btn {
+            padding: 5px 10px;
+            font-size: 10px;
+        }
+    }
 </style>
 {% endblock %}
 
@@ -923,7 +977,7 @@
             </div>
         </div>
     </div>
-    <div class="tabs" style="margin-bottom: 12px; padding: 0 20px;">
+    <div class="tabs">
         <button class="tab-btn active" data-ttab="market">Market Data</button>
         <button class="tab-btn" data-ttab="community">Community</button>
     </div>
