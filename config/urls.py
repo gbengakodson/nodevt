@@ -19,14 +19,19 @@ from apps.chat.views import TransparencyLikeView
 from apps.accounts.views import TrendlyExchangeView, ReferrerProfileView, ProfilePictureUploadView
 from django.conf.urls.static import static
 from django.views.static import serve
-from apps.forex_ea.public_views import MarketIntelligenceView
 from django.views.generic.base import RedirectView
-from apps.forex_ea.public_views import DailyIntelligenceView
-from apps.forex_ea.public_views import FadakkaDiscountsView
-from apps.forex_ea.public_views import CoinReactionView, CoinReactionCountsView
 from apps.forex_ea.forex_api import ForexDailyView, ForexForecastDetailView
 from apps.trading.cashflow_views import CashflowAuditView, CashflowSourceView
 from django.views.generic import RedirectView
+from apps.forex_ea.public_views import (
+    MarketIntelligenceView,
+    DailyIntelligenceView,
+    FadakkaDiscountsView,
+    CoinReactionView,
+    CoinReactionCountsView,
+    NgnHistoryView,          # NEW
+    AllAssetsView,           # NEW
+)
 
 
 
@@ -155,6 +160,8 @@ urlpatterns = [
     path('api/public/coin-reaction/toggle/', CoinReactionView.as_view(), name='coin_reaction_toggle'),
     path('api/forex/daily/', ForexDailyView.as_view(), name='forex_daily'),
     path('api/forex/forecast/', ForexForecastDetailView.as_view(), name='forex_forecast_detail'),
+    path('ngn-history/', NgnHistoryView.as_view(), name='ngn_history'),
+    path('all-assets/', AllAssetsView.as_view(), name='all_assets'),
 ]
 
 urlpatterns += [

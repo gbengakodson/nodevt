@@ -630,6 +630,53 @@
         background: #ffffff;
         border-radius: 16px;
     }
+    .filter-btn {
+        padding: 6px 14px;
+        border-radius: 20px;
+        border: 1px solid #E2E4E8;
+        background: #FFFFFF;
+        color: #1E2329;
+        font-size: 11px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .filter-btn:hover { border-color: #F0B90B; }
+    .filter-btn.active { background: #F0B90B; color: #1B1E21; border-color: #F0B90B; }
+
+    .asset-row {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: #FFFFFF;
+        border: 1px solid #E2E4E8;
+        border-radius: 12px;
+        padding: 14px 18px;
+        transition: background 0.15s;
+    }
+    .asset-row:hover { background: #FAFBFC; }
+    .asset-row .a-icon {
+        width: 40px; height: 40px;
+        border-radius: 50%;
+        object-fit: cover;
+        flex-shrink: 0;
+    }
+    .asset-row .a-info { flex: 1; min-width: 0; }
+    .asset-row .a-symbol { font-size: 14px; font-weight: 700; color: #1E2329; }
+    .asset-row .a-name { font-size: 11px; color: #707A8A; margin-top: 2px; }
+    .asset-row .a-cat {
+        font-size: 9px; font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.4px;
+        color: #707A8A;
+        padding: 2px 8px;
+        background: #F5F7FA;
+        border-radius: 4px;
+        margin-left: 8px;
+    }
+    .asset-row .a-price { text-align: right; min-width: 120px; }
+    .asset-row .a-price-value { font-size: 15px; font-weight: 700; color: #1E2329; }
+    .asset-row .a-price-change { font-size: 11px; font-weight: 600; margin-top: 2px; }
 </style>
 {% endblock %}
 
@@ -682,53 +729,22 @@
         </div>
 
         <!-- NVT Token Card -->
-        <div class="stat-card nvt-card" style="padding:0;overflow:hidden;cursor:default;">
-            <div style="background: linear-gradient(135deg, #1A1C23, #2B3139); padding:14px 16px; display:flex;align-items:center;gap:12px;">
-                <img src="/static/icon-512-circular.png" alt="NVT" style="width:40px;height:40px;border-radius:50%;border:2px solid #F0B90B;">
-                <div>
-                    <div style="font-size:16px;font-weight:700;color:#F0B90B;">NVT</div>
-                    <div style="font-size:10px;color:#848E9C;">NODE Token</div>
-                </div>
-                <button id="btnConvertToken"
-                        style="margin-left:auto;padding:6px 14px;border-radius:16px;border:1px solid #F0B90B;background:transparent;color:#F0B90B;font-size:11px;font-weight:600;cursor:not-allowed;opacity:0.4;"
-                        disabled
-                        title="Conversion available at 10,000 active users">
-                    Convert
-                </button>
-            </div>
-
-            <div style="padding:14px 16px;">
-                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <!-- USD/NGN Rate Card -->
+        <div class="stat-card" style="padding:14px 16px;cursor:default;">
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <img src="/static/NG.jpg" alt="NGN" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">
                     <div>
-                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Market Price</div>
-                        <div style="font-size:18px;font-weight:700;color:#F0B90B;" id="tokenMarketPrice">$0.0005</div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Total Supply</div>
-                        <div style="font-size:13px;font-weight:600;color:#EAECEF;">10,000,000</div>
+                        <div style="font-size:14px;font-weight:700;color:#1E2329;">USD / NGN</div>
+                        <div style="font-size:10px;color:#707A8A;">US Dollar / Nigerian Naira</div>
                     </div>
                 </div>
-
-                <div style="height:1px;background:rgba(255,255,255,0.06);margin-bottom:12px;"></div>
-
-                <div style="display:flex;justify-content:space-between;align-items:flex-end;">
-                    <div>
-                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Your Balance</div>
-                        <div style="display:flex;align-items:baseline;gap:8px;">
-                            <div style="font-size:18px;font-weight:700;color:#0ECB81;" id="tokenActivated">0</div>
-                            <div style="font-size:10px;color:#848E9C;">activated</div>
-                        </div>
-                        <div style="display:flex;align-items:baseline;gap:8px;margin-top:2px;">
-                            <div style="font-size:13px;font-weight:600;color:#F0B90B;" id="tokenPending">0</div>
-                            <div style="font-size:9px;color:#848E9C;">pending</div>
-                        </div>
-                    </div>
-                    <div style="text-align:right;">
-                        <div style="font-size:9px;color:#848E9C;text-transform:uppercase;">Value</div>
-                        <div style="font-size:16px;font-weight:700;color:#EAECEF;" id="tokenWalletValue">$0.00</div>
-                    </div>
+                <div style="text-align:right;">
+                    <div id="ngnRate" style="font-size:18px;font-weight:700;color:#1E2329;">₦—</div>
+                    <div id="ngnChange" style="font-size:11px;font-weight:600;color:#707A8A;">—</div>
                 </div>
             </div>
+            <canvas id="ngnSparkline" style="width:100%;height:50px;"></canvas>
         </div>
     </div>
     <div class="tabs" style="margin-bottom: 12px; padding: 0 20px;">
@@ -736,7 +752,14 @@
         <button class="tab-btn" data-ttab="community">Community</button>
     </div>
     <div id="ttab-market" style="display: block;">
-        <div id="coinsGrid" class="coins-grid"></div>
+        <div id="assetFilters" style="display:flex;gap:8px;padding:0 20px;margin-bottom:12px;flex-wrap:wrap;">
+            <button class="filter-btn active" data-filter="all" onclick="filterAssets('all',this)">All</button>
+            <button class="filter-btn" data-filter="coin" onclick="filterAssets('coin',this)">Coins</button>
+            <button class="filter-btn" data-filter="forex" onclick="filterAssets('forex',this)">Forex</button>
+            <button class="filter-btn" data-filter="commodity" onclick="filterAssets('commodity',this)">Commodities</button>
+            <button class="filter-btn" data-filter="stock" onclick="filterAssets('stock',this)">Stocks</button>
+        </div>
+        <div id="coinsGrid" style="display:flex;flex-direction:column;gap:10px;padding:0 20px;"></div>
     </div>
     <div id="ttab-community" style="display: none;">
         <div class="community-wrapper">
@@ -900,30 +923,95 @@
         }
     }
 
+    var allAssets = [];
+    var currentAssetFilter = 'all';
+
     async function updateMarketData() {
         try {
-            // Fetch daily intelligence (Forex, Crypto Economy, Economic Cycle)
-            let dailyIntel = [];
-            try {
-                const resp = await fetch('/api/public/daily-intelligence/');
-                if (resp.ok) dailyIntel = await resp.json();
-            } catch(e) {}
-
-            // Fetch reaction counts (optional, for like/love on daily cards)
-            let reactionCounts = {};
-            try {
-                const resp = await fetch('/api/public/coin-reactions/');
-                if (resp.ok) reactionCounts = await resp.json();
-            } catch(e) {}
-
-            // Render only daily intelligence cards
-            renderDailyCardsOnly(dailyIntel, reactionCounts);
-
-            // Update last-updated timestamp
+            var res = await fetch('/api/ea/all-assets/');
+            allAssets = await res.json();
+            renderAssetList();
             document.getElementById('lastUpdated').innerHTML = `Last updated: ${new Date().toLocaleTimeString()}`;
         } catch (e) {
             document.getElementById('coinsGrid').innerHTML = '<div class="empty-state">Failed to load market data.</div>';
         }
+    }
+
+    function renderAssetList() {
+        var container = document.getElementById('coinsGrid');
+        if (!container) return;
+
+        var filtered = allAssets.filter(function(a) {
+            return currentAssetFilter === 'all' || a.category === currentAssetFilter;
+        });
+
+        if (!filtered.length) {
+            container.innerHTML = '<div class="empty-state">No assets to display.</div>';
+            return;
+        }
+
+        var categoryLabels = {
+            'coin': 'Coin',
+            'forex': 'Forex',
+            'commodity': 'Commodity',
+            'stock': 'Stock',
+        };
+
+        container.innerHTML = filtered.map(function(a) {
+            var cur = a.currency === 'NGN' ? '₦' : '$';
+            var priceStr;
+            if (a.currency === 'NGN') {
+                priceStr = cur + Number(a.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            } else if (a.price < 0.01) {
+                priceStr = cur + Number(a.price).toFixed(6);
+            } else {
+                priceStr = cur + Number(a.price).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2});
+            }
+
+            var c = Number(a.change_24h) || 0;
+            var color = c > 0 ? '#0ECB81' : (c < 0 ? '#F6465D' : '#707A8A');
+            var arrow = c > 0 ? '▲' : (c < 0 ? '▼' : '▬');
+            var changeStr = arrow + ' ' + (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
+
+            var iconUrl = getTokenIcon(a.symbol);
+            if (a.category === 'forex' || a.category === 'commodity') {
+                var flagMap = { 'EUR':'/static/EU.jpg', 'GBP':'/static/UK.png', 'NGN':'/static/NG.jpg', 'GOLD':'/static/gold.jpg', 'USOIL':'/static/OIL.jpg' };
+                iconUrl = flagMap[a.symbol] || iconUrl;
+            } else if (a.category === 'stock') {
+                var stockLogos = {
+                    'AAPL':'/static/AAPL.png','MSFT':'/static/MSFT.png','NVDA':'/static/NVIDIA.png',
+                    'SPCX':'/static/SPCX.png','META':'/static/META.png','GOOG':'/static/GOOG.png',
+                    'AMZN':'/static/AMAZN.png','WMT':'/static/wmt.png','ZENITHBANK':'/static/zenith.png',
+                    'UBA':'/static/UBA2.png','SEPLAT':'/static/SEPLAT2.png','MTNN':'/static/MTN.png',
+                    'GTCO':'/static/GTCO.png','DANGCEM':'/static/DANGCEM2.png','ACCESSCORP':'/static/ACCESSCORP.png'
+                };
+                iconUrl = stockLogos[a.symbol] || iconUrl;
+            }
+
+            return `
+                <div class="asset-row">
+                    <img class="a-icon" src="${iconUrl}" onerror="this.src='/static/icon-512-circular.png';">
+                    <div class="a-info">
+                        <div>
+                            <span class="a-symbol">${a.symbol}</span>
+                            <span class="a-cat">${categoryLabels[a.category] || a.category}</span>
+                        </div>
+                        <div class="a-name">${a.name}</div>
+                    </div>
+                    <div class="a-price">
+                        <div class="a-price-value">${priceStr}</div>
+                        <div class="a-price-change" style="color:${color};">${changeStr}</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function filterAssets(filter, btn) {
+        currentAssetFilter = filter;
+        document.querySelectorAll('.filter-btn').forEach(function(b){ b.classList.remove('active'); });
+        if (btn) btn.classList.add('active');
+        renderAssetList();
     }
 
     function updateMarketStats(coins) {
@@ -973,83 +1061,7 @@
         });
     }
 
-    function renderDailyCardsOnly(dailyIntel, reactionCounts) {
-        const container = document.getElementById('coinsGrid');
-        const now = new Date();
 
-        if (!dailyIntel || dailyIntel.length === 0) {
-            container.innerHTML = '<div class="empty-state">No daily intelligence available yet.</div>';
-            return;
-        }
-
-        let cards = dailyIntel.map(item => {
-            const createdTime = item.created_at ? new Date(item.created_at).getTime() : now.getTime();
-            const isSavings = item.symbol === 'USDC';   // ← special savings card
-
-            return {
-                symbol: item.symbol,
-                name: item.name || item.symbol,
-                category: isSavings
-                    ? 'Savings'
-                    : (item.category === 'forex' ? 'Forex Market' :
-                       item.category === 'crypto' ? 'Crypto Economy' :
-                       item.category === 'economic' ? 'Economic Cycle' : 'Market Intel'),
-                caption: isSavings ? 'Lock & Earn 3%/mo' : item.caption,
-                price: isSavings ? 1.00 : (item.price || null),   // always $1 for USDC
-                imageUrl: isSavings
-                    ? 'https://cryptologos.cc/logos/usd-coin-usdc-logo.png'
-                    : (item.image_url || ''),
-                reactionCounts: reactionCounts[item.symbol] || { likes: 0, loves: 0 },
-                timestamp: createdTime
-            };
-        });
-
-        // Sort newest first
-        cards.sort((a, b) => b.timestamp - a.timestamp);
-
-        container.innerHTML = cards.map(card => `
-            <div class="coin-card" onclick="${card.category === 'Savings' || card.category === 'Forex Market' ? `goToTrading('${card.symbol}')` : `viewDetails('${card.symbol}')`}">
-                <div class="card-top">
-                    ${card.imageUrl
-                        ? `<img src="${card.imageUrl}" class="card-picture" alt="${card.symbol}"
-                               onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">`
-                        : ''}
-                    <div class="card-picture-placeholder" style="display:${card.imageUrl ? 'none' : 'flex'};">
-                        📷
-                    </div>
-                    <div class="card-top-right">
-                        <div class="card-category-label">${card.category}</div>
-                        ${card.price ? `
-                        <div class="coin-price-section">
-                            <div class="coin-current-price">${formatCurrency(card.price)}</div>
-                            <div class="coin-change"></div>
-                        </div>` : ''}
-                    </div>
-                </div>
-                <div class="card-middle">
-                    <div class="coin-info">
-                        <div class="coin-details">
-                            <h3>${card.symbol}</h3>
-                            <p>${card.name}</p>
-                        </div>
-                    </div>
-                    <div class="card-caption">${card.caption}</div>
-                </div>
-                <div class="trade-btn">
-                    <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'like')" title="Like">
-                        <i class="fas fa-thumbs-up"></i> <span class="reaction-count">${card.reactionCounts.likes}</span>
-                    </button>
-                    <button class="card-icon-btn" onclick="event.stopPropagation(); toggleReaction('${card.symbol}', 'love')" title="Love">
-                        <i class="fas fa-heart"></i> <span class="reaction-count">${card.reactionCounts.loves}</span>
-                    </button>
-                    <button class="card-icon-btn" onclick="event.stopPropagation(); shareCard('${card.symbol}')" title="Share">
-                        <i class="fas fa-share-alt"></i>
-                    </button>
-                    <span class="card-time-right">${timeAgo(card.timestamp)}</span>
-                </div>
-            </div>
-        `).join('');
-    }
 
     function getFadakkaCaption(symbol, fadakkaDiscounts, volume) {
         const discountData = fadakkaDiscounts[symbol];
@@ -1136,30 +1148,60 @@
         }
     }
 
-    // ───────── NVT Token Wallet (logged‑in only) ─────────
-    async function loadTokenWallet() {
+
+    async function loadNgnRate() {
         try {
-            var token = getToken();
-            if (!token) return;
-
-            var res = await fetch('/api/tokens/wallet/', {
-                headers: { 'Authorization': 'Bearer ' + token }
-            });
+            var res = await fetch('/api/ea/spot-rates/');
             var data = await res.json();
+            var r = data.rates && data.rates.NGN;
+            if (!r) return;
 
-            document.getElementById('tokenMarketPrice').textContent = '$' + data.token_price.toFixed(6);
-            document.getElementById('tokenActivated').textContent = data.activated_tokens.toLocaleString();
-            document.getElementById('tokenPending').textContent = data.pending_tokens.toLocaleString();
-            document.getElementById('tokenWalletValue').textContent = '$' + data.activated_value.toFixed(4);
-
-            var btn = document.getElementById('btnConvertToken');
-            if (data.can_convert) {
-                btn.disabled = false;
-                btn.style.cursor = 'pointer';
-                btn.style.opacity = '1';
-                btn.title = 'Convert tokens to USDC';
-                btn.onclick = function() { window.location.href = '/convert/'; };
+            var rateEl = document.getElementById('ngnRate');
+            var changeEl = document.getElementById('ngnChange');
+            if (rateEl) rateEl.textContent = '₦' + Number(r.price).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2});
+            if (changeEl) {
+                var c = Number(r.change_24h) || 0;
+                var color = c > 0 ? '#0ECB81' : (c < 0 ? '#F6465D' : '#707A8A');
+                var arrow = c > 0 ? '▲' : (c < 0 ? '▼' : '▬');
+                changeEl.textContent = arrow + ' ' + (c >= 0 ? '+' : '') + c.toFixed(2) + '%';
+                changeEl.style.color = color;
             }
+        } catch(e) {}
+    }
+
+    async function loadNgnSparkline() {
+        try {
+            var res = await fetch('/api/ea/ngn-history/');
+            var data = await res.json();
+            if (!data || !data.length) return;
+
+            var ctx = document.getElementById('ngnSparkline');
+            if (!ctx) return;
+
+            var labels = data.map(function(d){ return ''; });
+            var values = data.map(function(d){ return d.rate; });
+            var color = values[values.length - 1] >= values[0] ? '#0ECB81' : '#F6465D';
+
+            new Chart(ctx.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: values,
+                        borderColor: color,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        tension: 0.35
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                }
+            });
         } catch(e) {}
     }
 
@@ -1316,7 +1358,8 @@
     updateMarketData();      // coin grid + market stats
     loadReviews();           // community reviews
     loadFeed();              // community posts
-    loadTokenWallet();       // NVT card (if logged in)
+    loadNgnRate();
+    loadNgnSparkline();
 
     setInterval(updateMarketData, 120000);   // refresh market data every 2 min
     setInterval(loadFeed, 180000);            // refresh community posts every 30 sec

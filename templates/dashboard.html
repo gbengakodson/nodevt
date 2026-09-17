@@ -696,7 +696,7 @@
                     <span class="card-value">6 months</span>
                 </div>
                 <button class="btn-transfer-yield" onclick="activatePension()" id="btnPension" style="margin-top:8px;">🔒 Activate Pension Fund</button>
-                <div style="font-size:10px;color:#F6465D;margin-top:6px;">⚠️ Irreversible: Creates a new Grid Bot every 6 months from your Yield Wallet.</div>
+                <div style="font-size:10px;color:#F6465D;margin-top:6px;">⚠️ Irreversible: Creates a new Cycle every 6 months from your Yield Wallet.</div>
             </div>
             <div class="yield-card">
                 <div class="yield-card-title">🎯 Goal Wallets</div>
@@ -729,25 +729,25 @@
     </div>
 </div>
 
-<!-- Collect Grid Profit Modal -->
+<!-- Collect NVT Bonus Modal -->
 <div id="collectProfitModal" class="modal-overlay" style="display:none;">
     <div class="modal-container">
         <div class="modal-header">
-            <h5>💰 Collect Grid Profit</h5>
+            <h5>💰 Collect NVT Bonus</h5>
             <button class="modal-close" onclick="closeCollectProfitModal()">×</button>
         </div>
         <div class="modal-body">
             <div class="profit-highlight">
                 <div class="amount" id="modalProfitAmount">$0.00</div>
-                <div class="label">Available Grid Profit</div>
+                <div class="label">Available NVT Bonus</div>
             </div>
             <p style="font-size:12px;color:#707A8A;margin-bottom:0;">
-                This profit will be moved to your <strong>Yield Wallet</strong>. You can later transfer up to <strong>10% of your portfolio</strong> from Yield to Grand Wallet.
+                This fund will be moved to your <strong>Wallet</strong>. You can later transfer up to <strong>10% of your portfolio</strong> from Yield to Grand Wallet.
             </p>
         </div>
         <div class="modal-footer">
             <button class="btn-secondary" onclick="closeCollectProfitModal()" style="flex:1;">Cancel</button>
-            <button class="btn-primary" id="btnCollectProfit" onclick="collectProfit()" style="flex:2;">📥 Collect to Yield Wallet</button>
+            <button class="btn-primary" id="btnCollectProfit" onclick="collectProfit()" style="flex:2;">📥 Collect to Wallet</button>
         </div>
     </div>
 </div>
@@ -756,12 +756,12 @@
 <div id="withdrawYieldModal" class="modal-overlay" style="display:none;">
     <div class="modal-container">
         <div class="modal-header">
-            <h5>💰 Withdraw Yield to Wallet</h5>
+            <h5>💰 Withdraw Bonus to Wallet</h5>
             <button class="modal-close" onclick="closeWithdrawYieldModal()">×</button>
         </div>
         <div class="modal-body">
             <div style="margin-bottom:16px;">
-                <div class="info-row"><span class="label">Yield Balance:</span><span class="value" id="wYieldBalance">$0.00</span></div>
+                <div class="info-row"><span class="label">NVT Balance:</span><span class="value" id="wYieldBalance">$0.00</span></div>
                 <div class="info-row"><span class="label">Min Required (10%):</span><span class="value" style="color:#0ECB81;" id="wMinRequired">$0.00</span></div><div class="info-row"><span class="label">Portfolio Value:</span><span class="value" id="wPortfolioValue">$0.00</span></div>
                 <div class="info-row"><span class="label">Wallet Address:</span><span class="value" id="wWalletAddress" style="font-size:10px;">—</span></div>
             </div>
@@ -781,13 +781,13 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <div>
                     <div style="font-size:14px; font-weight:700;">📊 Growth Projector</div>
-                    <div style="font-size:11px; color:#6B7280;">See how your money grows</div>
+                    <div style="font-size:11px; color:#6B7280;">See how your Funds grows</div>
                 </div>
                 <button onclick="closeGrowthModal()" style="background:none; border:none; font-size:22px; color:#6B7280; cursor:pointer;">×</button>
             </div>
 
             <!-- Amount input -->
-            <label style="font-size:10px; color:#6B7280; text-transform:uppercase; letter-spacing:0.05em;">Investment Amount</label>
+            <label style="font-size:10px; color:#6B7280; text-transform:uppercase; letter-spacing:0.05em;">Capital Value</label>
             <input type="number" id="manualInvestment" class="form-control" value="100" placeholder="100"
                    oninput="updateGrowthProjection()"
                    style="font-size:16px; font-weight:700; border:1px solid #E2E4E8; border-radius:8px; padding:8px 10px; margin-bottom:8px;">
@@ -923,7 +923,7 @@
             const res = await apiCall('/trading/collect_grid_profit/', 'POST', { bot_id: currentBotId });
             if (res.success) {
                 closeCollectProfitModal();
-                showModal(`✅ ${formatCurrency(res.amount_collected)} collected to Yield Wallet!`, 'success');
+                showModal(`✅ ${formatCurrency(res.amount_collected)} transfered!`, 'success');
                 loadDashboard();
             } else {
                 showModal('❌ ' + (res.error || 'Failed'), 'error');
@@ -931,7 +931,7 @@
         } catch(e) {
             showModal('❌ Network error', 'error');
         } finally {
-            btn.textContent = '📥 Collect to Yield Wallet';
+            btn.textContent = '📥 Transfered';
             btn.disabled = false;
         }
     }
@@ -990,7 +990,7 @@
         try {
             const result = await apiCall('/trading/add_profits/', 'POST', { bot_id: botId });
             if (result.success) {
-                showModal('✅ Profits added to capital. New amount: ' + formatCurrency(result.new_amount), 'success');
+                showModal('✅ Bonus added to capital. New amount: ' + formatCurrency(result.new_amount), 'success');
                 loadDashboard();
             } else {
                 showModal('❌ ' + (result.error || 'Failed'), 'error');
@@ -1001,9 +1001,9 @@
     }
 
     async function startGridBot(botId) {
-        if (!confirm('Restart this grid bot?')) return;
+        if (!confirm('Restart this Position Tracker?')) return;
         const result = await apiCall('/trading/start_grid/', 'POST', { bot_id: botId });
-        if (result.success) { showModal('Grid bot restarted.', 'success'); loadDashboard(); }
+        if (result.success) { showModal('Tracker restarted.', 'success'); loadDashboard(); }
     }
 
     async function closeGridBot(botId) {
@@ -1367,7 +1367,7 @@
             let totalPortfolioValue = 0;
 
             if (!gridBots || gridBots.length === 0) {
-                container.innerHTML = '<div class="empty-holdings">📭 No active grid bots. <a href="/trading/" style="color:#F0B90B">Activate a grid bot</a> to start earning.</div>';
+                container.innerHTML = '<div class="empty-holdings">📭 No active Position Tracker. <a href="/trading/" style="color:#F0B90B">Activate a Tracker</a> to start.</div>';
             } else {
                 container.innerHTML = gridBots.map(bot => {
                     const pnlClass = bot.pnl >= 0 ? 'pnl-positive' : 'pnl-negative';
@@ -1396,7 +1396,7 @@
                             </div>
                             <div class="grid-params">
                                 <div class="param-row"><span>Range:</span><span>${formatCurrency(bot.lower_price)} – ${formatCurrency(bot.upper_price)}</span></div>
-                                <div class="param-row"><span>Grids:</span><span>${bot.grids} (geometric)</span></div>
+                                <div class="param-row"><span>Cycles:</span><span>${(bot.grids || 100) - 100} completed</span></div>
                                 <div class="param-row"><span>Fair Value:</span><span style="font-weight:700; font-size:14px; color:#1B1E21;">${formatCurrency(bot.fadakka_k || 0)}</span></div>
                             </div>
                             <div class="price-info">
