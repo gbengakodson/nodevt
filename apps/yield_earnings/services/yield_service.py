@@ -8,10 +8,10 @@ from apps.wallets.models import Wallet, Transaction
 
 
 class YieldService:
-    YIELD_PERCENTAGE = Decimal('3')  # 3% monthly
+    YIELD_PERCENTAGE = Decimal('2')  # 2% monthly
     DISTRIBUTIONS_PER_MONTH = 720  # Hourly distributions
-    HOURLY_RATE = Decimal('0.0000416666666666667')  # 3% / 720
-    SAVINGS_MONTHLY_RATE = Decimal('0.03')  # 3% per month for locked savings
+    HOURLY_RATE = Decimal('0.0000277777777777778')  # 2% / 720
+    SAVINGS_MONTHLY_RATE = Decimal('0.02')  # 2% per month for locked savings
 
     @classmethod
     def calculate_monthly_yield(cls, token_balance):
