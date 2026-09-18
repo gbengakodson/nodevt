@@ -28,7 +28,7 @@ class SettingsService:
     @classmethod
     def get_yield_rate(cls):
         """Get current monthly yield rate (default 10%)"""
-        return cls.get('monthly_yield_rate', 10)
+        return cls.get('monthly_yield_rate', 2)
 
     @classmethod
     def get_hourly_yield_rate(cls):

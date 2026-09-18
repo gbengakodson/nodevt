@@ -1656,7 +1656,7 @@ class AdminYieldRateView(APIView):
     permission_classes = [IsAdminUser]
 
     def get(self, request):
-        setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate', defaults={'value': 10})
+        setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate', defaults={'value': 2})
         return Response({'current_rate': float(setting.value)})
 
     def post(self, request):
@@ -1707,7 +1707,7 @@ def credit_yield_only(request):
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def yield_rate_view(request):
-    setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate', defaults={'value': 10})
+    setting, _ = PlatformSetting.objects.get_or_create(key='monthly_yield_rate', defaults={'value': 2})
     monthly_rate = float(setting.value)
     return Response({'monthly': monthly_rate, 'hourly': monthly_rate / 720})
 
