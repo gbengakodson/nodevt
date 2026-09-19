@@ -687,7 +687,15 @@
                 <div class="fee-info">
                     <i class="fas fa-info-circle"></i> Fee: 10% Management Fee Apply!
                 </div>
-
+                <label style="display:flex;gap:8px;align-items:flex-start;font-size:11px;color:#848E9C;margin:14px 0 8px;line-height:1.5;">
+                    <input type="checkbox" id="agreeTrackerTerms" required style="margin-top:2px;flex-shrink:0;">
+                    <span>
+                        I understand this is a <strong style="color:#EAECEF;">5-year minimum perpetual contract</strong>.
+                        Early exit incurs a penalty declining from <strong style="color:#F6465D;">40% (year 1)</strong>
+                        to <strong style="color:#0ECB81;">0% (year 5+)</strong>.
+                        Accrued NVT bonus is never penalized.
+                    </span>
+                </label>
                 <button class="btn-buy" id="activateGridBtn">Activate</button>
             </div>
         </div>
@@ -1642,6 +1650,13 @@
 
     // Grid Bot Activation with animated loader
     async function activateGridBot() {
+
+        const termsCheckbox = document.getElementById('agreeTrackerTerms');
+        if (!termsCheckbox || !termsCheckbox.checked) {
+            showModal('You must accept the tracker terms by ticking the box to continue.', 'warning');
+            return;
+        }
+
         const amount = parseFloat(document.getElementById('gridAmount').value);
         if (!amount || amount < 10) { showModal('Please enter a valid investment amount (minimum $10 USDC)', 'warning'); return; }
         const token = tokens.find(t => t.symbol === currentSymbol);
