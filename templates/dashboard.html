@@ -1028,9 +1028,11 @@
             ? `Exit penalty (${info.penalty_pct.toFixed(0)}%)`
             : 'Exit penalty';
 
-        const tierHint = (info.penalty_pct > 0 && info.days_to_next_tier)
-            ? `<div style="font-size:11px;color:#F0B90B;background:rgba(240,185,11,0.08);padding:10px;border-radius:6px;margin-bottom:14px;">
-                💡 Wait <strong>${info.days_to_next_tier} days</strong> and your exit penalty drops to <strong>${info.next_penalty_pct.toFixed(0)}%</strong>.
+        const yearsToZero = info.penalty_pct > 0 ? (5 - info.years_held) : 0;
+        const tierHint = (info.penalty_pct > 0)
+            ? `<div style="font-size:11px;color:#F0B90B;background:rgba(240,185,11,0.08);padding:10px;border-radius:6px;margin-bottom:14px;line-height:1.6;">
+                💡 Keep your position and your exit penalty drops to <strong>0%</strong> in <strong>${yearsToZero.toFixed(1)} years</strong>.<br>
+                Next reduction: <strong>${info.next_penalty_pct.toFixed(0)}%</strong> in <strong>${info.days_to_next_tier} days</strong>.
                </div>`
             : '';
 
