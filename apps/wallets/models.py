@@ -45,6 +45,7 @@ class Transaction(models.Model):
         ('SALE', 'Sale'),
         ('YIELD', 'Yield'),
         ('REFERRAL', 'Referral'),
+        ('PENALTY', 'Early Exit Penalty'),
     ]
     
     STATUS_CHOICES = [

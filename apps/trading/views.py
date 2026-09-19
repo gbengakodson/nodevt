@@ -570,7 +570,7 @@ class TradingViewSet(viewsets.ViewSet):
 
         @action(detail=False, methods=['post'])
         def close_grid(self, request):
-            """Close Position Tracker – mark for manual sweep and notify admin."""
+            """Close Position Tracker – computes exit penalty, marks for manual sweep, notifies admin."""
             bot_id = request.data.get('bot_id')
             bot = GridBot.objects.get(id=bot_id, user=request.user)
 
@@ -582,8 +582,29 @@ class TradingViewSet(viewsets.ViewSet):
                     'error': f'🔒 Savings tracker is locked. {days_left} days remaining until {bot.lock_until.strftime("%Y-%m-%d")}.'
                 }, status=400)
 
-            # Optional: enforce positive PNL? We'll keep same as before: no explicit backend check, frontend disables if negative.
-            total_return = (bot.amount or 0) + (bot.grid_profit or 0) + (bot.pnl or 0)
+            # ── Compute exit penalty ──
+            years_held = (timezone.now() - bot.created_at).days / 365.25
+            if years_held < 1:
+                penalty_pct = Decimal('40')
+            elif years_held < 2:
+                penalty_pct = Decimal('30')
+            elif years_held < 3:
+                penalty_pct = Decimal('20')
+            elif years_held < 4:
+                penalty_pct = Decimal('10')
+            elif years_held < 5:
+                penalty_pct = Decimal('5')
+            else:
+                penalty_pct = Decimal('0')
+
+            capital = bot.amount or Decimal('0')
+            penalty_amount = capital * (penalty_pct / Decimal('100'))
+            net_payout = capital - penalty_amount
+
+            total_return = capital + (bot.grid_profit or 0) + (bot.pnl or 0)
+            # Note: total_return is what the user *would* have received pre-penalty.
+            # net_payout is what they actually receive post-penalty (if years_held < 5).
+            actual_payout = net_payout + (bot.grid_profit or 0) + (bot.pnl or 0)
 
             # Get user wallet address (for email)
             from apps.wallets.models import WalletKey
@@ -597,13 +618,22 @@ class TradingViewSet(viewsets.ViewSet):
             admin_email = 'nodevt.notify@gmail.com'
             subject = f'🔔 Tracker Close Request – {bot.user.email}'
             message = f"""User: {bot.user.email}
-    Token: {bot.token.symbol}
-    Bot ID: {bot.id}
-    Total Return: ${total_return:.2f}
-    User Wallet: {user_address}
+        Token: {bot.token.symbol}
+        Bot ID: {bot.id}
+        Years Held: {years_held:.2f}
 
-    Please manually sweep these funds to the user's wallet from the Render shell.
-    """
+        Capital: ${capital:.2f}
+        Grid Profit: ${(bot.grid_profit or 0):.2f}
+        PNL: ${(bot.pnl or 0):.2f}
+
+        Exit Penalty ({penalty_pct:.0f}%): ${penalty_amount:.2f}
+        Net Payout (post-penalty): ${actual_payout:.2f}
+
+        User Wallet: {user_address}
+
+        Please manually sweep ${actual_payout:.2f} to the user's wallet from the Render shell.
+        (Retain ${penalty_amount:.2f} as platform PENALTY revenue.)
+        """
             send_mail(
                 subject=subject,
                 message=message,
@@ -612,11 +642,11 @@ class TradingViewSet(viewsets.ViewSet):
                 fail_silently=True,
             )
 
-            # Record PENDING transaction
+            # Record PENDING transaction for the net payout
             Transaction.objects.create(
                 user=bot.user,
                 transaction_type='GRID_CLOSE',
-                amount=total_return,
+                amount=actual_payout,
                 fee=0,
                 status='PENDING',
                 tx_hash=None,
@@ -625,9 +655,32 @@ class TradingViewSet(viewsets.ViewSet):
                     'token': bot.token.symbol,
                     'to_address': user_address,
                     'manual_sweep': True,
+                    'years_held': years_held,
+                    'penalty_pct': float(penalty_pct),
+                    'penalty_amount': float(penalty_amount),
+                    'net_payout': float(actual_payout),
                 },
                 completed_at=timezone.now()
             )
+
+            # If penalty applied, record it separately for audit
+            if penalty_amount > 0:
+                Transaction.objects.create(
+                    user=bot.user,
+                    transaction_type='PENALTY',
+                    amount=penalty_amount,
+                    fee=0,
+                    status='COMPLETED',
+                    tx_hash=None,
+                    metadata={
+                        'grid_bot_id': str(bot.id),
+                        'token': bot.token.symbol,
+                        'years_held': years_held,
+                        'penalty_pct': float(penalty_pct),
+                        'reason': 'early_exit_penalty',
+                    },
+                    completed_at=timezone.now()
+                )
 
             bot.status = 'COMPLETED'
             bot.save()
@@ -635,7 +688,11 @@ class TradingViewSet(viewsets.ViewSet):
             return Response({
                 'success': True,
                 'total_return': float(total_return),
-                'message': 'Processing...'
+                'penalty_applied': float(penalty_amount),
+                'penalty_pct': float(penalty_pct),
+                'net_payout': float(actual_payout),
+                'years_held': round(years_held, 2),
+                'message': f'Processing... ${actual_payout:.2f} will be sent to your wallet.',
             })
 
     @action(detail=False, methods=['post'])
@@ -1667,6 +1724,64 @@ class AdminYieldRateView(APIView):
             setting.save()
             return Response({'success': True, 'new_rate': new_rate})
         return Response({'error': 'Rate required'}, status=400)
+
+
+class TrackerExitPenaltyView(APIView):
+    """Preview exit penalty for a tracker before user commits to closing it."""
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        from datetime import timezone as dt_tz
+        bot_id = request.query_params.get('bot_id')
+        try:
+            bot = GridBot.objects.get(id=bot_id, user=request.user)
+        except GridBot.DoesNotExist:
+            return Response({'error': 'Tracker not found'}, status=404)
+
+        years_held = (timezone.now() - bot.created_at).days / 365.25
+
+        if years_held < 1:
+            penalty_pct = Decimal('40')
+        elif years_held < 2:
+            penalty_pct = Decimal('30')
+        elif years_held < 3:
+            penalty_pct = Decimal('20')
+        elif years_held < 4:
+            penalty_pct = Decimal('10')
+        elif years_held < 5:
+            penalty_pct = Decimal('5')
+        else:
+            penalty_pct = Decimal('0')
+
+        capital = bot.amount or Decimal('0')
+        penalty_amount = capital * (penalty_pct / Decimal('100'))
+        net_payout = (capital - penalty_amount) + (bot.grid_profit or 0) + (bot.pnl or 0)
+
+        # Hint: how many days until the next penalty tier?
+        days_to_next_tier = None
+        if penalty_pct > 0:
+            milestones = [1, 2, 3, 4, 5]
+            next_year = None
+            for m in milestones:
+                if years_held < m:
+                    next_year = m
+                    break
+            if next_year:
+                days_to_next_tier = max(0, int((next_year - years_held) * 365.25))
+
+        return Response({
+            'bot_id': str(bot.id),
+            'token_symbol': bot.token.symbol,
+            'years_held': round(years_held, 2),
+            'capital': float(capital),
+            'grid_profit': float(bot.grid_profit or 0),
+            'pnl': float(bot.pnl or 0),
+            'penalty_pct': float(penalty_pct),
+            'penalty_amount': float(penalty_amount),
+            'net_payout': float(net_payout),
+            'days_to_next_tier': days_to_next_tier,
+            'next_penalty_pct': float(max(0, penalty_pct - Decimal('10'))) if penalty_pct > 0 else 0,
+        })
 
 
 @csrf_exempt

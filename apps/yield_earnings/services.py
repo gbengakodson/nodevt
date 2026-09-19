@@ -4,7 +4,7 @@ from apps.wallets.models import Wallet, Transaction
 
 
 class YieldService:
-    HOURLY_RATE = Decimal('0.0001388888888888889')  # 10% / 720 = 0.0001388889
+    HOURLY_RATE = Decimal('0.0000277777777777778')  # 2% / 720
 
     @classmethod
     def credit_hourly_yield(cls, user):

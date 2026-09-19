@@ -1,7 +1,7 @@
 from django.urls import path, include
 from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
-from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook, credit_yield_only, AdminYieldRateView
+from .views import TradingViewSet, check_deposits_webhook, update_prices_webhook, credit_yield_only, AdminYieldRateView, TrackerExitPenaltyView
 #from .grid_views import StopGridView, StartGridView, CloseGridView, MyAllGridsView
 
 
@@ -17,5 +17,6 @@ urlpatterns = [
     path('update-prices/', update_prices_webhook, name='update_prices'),
     path('credit-yield/', credit_yield_only, name='credit_yield'),
     path('admin/yield-rate/', AdminYieldRateView.as_view(), name='admin_yield_rate'),
+    path('tracker-exit-penalty/', TrackerExitPenaltyView.as_view(), name='tracker_exit_penalty'),
 
 ]
