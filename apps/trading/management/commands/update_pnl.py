@@ -127,6 +127,9 @@ class Command(BaseCommand):
                         price_at_creation=current_price,
                         created_at=bot.created_at,
                     )
+                    # Preserve the parent's created_at (auto_now_add ignores the arg)
+                    GridBot.objects.filter(id=new_bot.id).update(created_at=bot.created_at)
+                    new_bot.refresh_from_db()
 
                     # ── Record the 10% management fee ──
                     Transaction.objects.create(
