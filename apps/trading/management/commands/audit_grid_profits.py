@@ -1,65 +1,85 @@
 from django.core.management.base import BaseCommand
 from django.utils import timezone
+from django.db.models import Sum
 from decimal import Decimal
+
 from apps.trading.models import GridBot
-from apps.core.notifications import notify_user
+from apps.wallets.models import Transaction
 
 
 class Command(BaseCommand):
-    help = 'Audit all active Position Trackers for profit inflation and correct if needed'
+    help = 'READ-ONLY audit of grid_profit. Reports deviations only, never modifies.'
 
-    THRESHOLD = Decimal('1.00')  # $1 minimum discrepancy to trigger correction
+    HOURLY_RATE = Decimal('0.0000277777777777778')  # 2% / 720
+    THRESHOLD = Decimal('1.00')
+
+    def add_arguments(self, parser):
+        parser.add_argument('--email', type=str, default=None)
 
     def handle(self, *args, **options):
-        bots = GridBot.objects.filter(status='ACTIVE').select_related('token', 'user')
-        corrected = 0
-        skipped = 0
+        qs = GridBot.objects.filter(status='ACTIVE').select_related('token', 'user').order_by('user__email', 'created_at')
+        if options['email']:
+            qs = qs.filter(user__email=options['email'])
 
-        for bot in bots:
+        total_exp = Decimal('0')
+        total_act = Decimal('0')
+        total_dev = Decimal('0')
+        over = under = ok = 0
+
+        self.stdout.write('=' * 90)
+        self.stdout.write('GRID PROFIT AUDIT — READ-ONLY (no data modified)')
+        self.stdout.write('=' * 90)
+
+        for bot in qs:
             hours = (timezone.now() - bot.created_at).total_seconds() / 3600
-            earning_hours = max(0, hours - 24)  # 24h delay
-
+            earning_hours = max(0, hours - 24)
             if earning_hours <= 0:
-                skipped += 1
                 continue
 
-            # Correct formula: current_value × hourly_rate × earning_hours × 90% user share
-            current_value = bot.amount + bot.pnl
-            hourly_rate = Decimal('0.0001388888888888889')
-            expected_profit = current_value * hourly_rate * Decimal(str(int(earning_hours))) * Decimal('0.9')
+            current_value = (bot.amount or Decimal('0')) + (bot.pnl or Decimal('0'))
+            expected_lifetime = current_value * self.HOURLY_RATE * Decimal(str(int(earning_hours)))
 
-            # Subtract what user already collected
-            from apps.wallets.models import Transaction
-            from django.db.models import Sum
-            collected = Transaction.objects.filter(
-                user=bot.user,
-                transaction_type='YIELD',
-                metadata__grid_bot_id=str(bot.id)
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            manual = Transaction.objects.filter(
+                user=bot.user, transaction_type='YIELD',
+                metadata__source='grid_profit_collection',
+                metadata__grid_bot_id=str(bot.id),
+            ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
 
-            already_collected = max(collected, bot.total_yield_earned or Decimal('0'))
-            correct_remaining = expected_profit - already_collected
-            if correct_remaining < 0:
-                correct_remaining = Decimal('0')
+            cycle = Transaction.objects.filter(
+                user=bot.user, transaction_type='YIELD',
+                metadata__reason='auto_reactivate_grid_profit',
+                metadata__grid_bot_id=str(bot.id),
+            ).aggregate(t=Sum('amount'))['t'] or Decimal('0')
 
-            deviation = bot.grid_profit - correct_remaining
+            lifetime = bot.total_yield_earned or Decimal('0')
+            already_out = max(manual + cycle, lifetime)
 
-            if abs(deviation) > self.THRESHOLD:
-                old = bot.grid_profit
-                bot.grid_profit = correct_remaining
-                bot.save()
+            correct_remaining = max(Decimal('0'), expected_lifetime - already_out)
+            actual = bot.grid_profit or Decimal('0')
+            dev = actual - correct_remaining
 
-                self.stdout.write(
-                    f'🔧 {bot.user.email}: {bot.token.symbol} — '
-                    f'\${float(old):.2f} → \${float(correct_remaining):.2f} '
-                    f'(deviation: \${float(deviation):+.2f})'
-                )
-                corrected += 1
+            total_exp += correct_remaining
+            total_act += actual
+            total_dev += dev
+
+            if abs(dev) < self.THRESHOLD:
+                ok += 1
+                continue
+
+            if dev > 0:
+                over += 1
+                flag = 'OVER '
             else:
-                skipped += 1
+                under += 1
+                flag = 'UNDER'
 
-        self.stdout.write(
-            self.style.SUCCESS(
-                f'Audit complete: {corrected} corrected, {skipped} within threshold'
+            self.stdout.write(
+                f'{flag} | {bot.user.email[:26]:26} | {bot.token.symbol:6} | '
+                f'exp ${float(correct_remaining):>10.4f} | act ${float(actual):>10.4f} | dev ${float(dev):>+10.4f}'
             )
-        )
+
+        self.stdout.write('=' * 90)
+        self.stdout.write(f'Bots: {qs.count()} | OK: {ok} | OVER: {over} | UNDER: {under}')
+        self.stdout.write(f'Expected: ${float(total_exp):,.4f} | Actual: ${float(total_act):,.4f} | Deviation: ${float(total_dev):+,.4f}')
+        self.stdout.write('⚠️  READ-ONLY. No data modified.')
+        self.stdout.write('=' * 90)
