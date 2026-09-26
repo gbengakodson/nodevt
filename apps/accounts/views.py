@@ -17,6 +17,7 @@ from datetime import timedelta
 from django.conf import settings
 from apps.trading.views import TradingViewSet
 from .models import ExchangeRequest
+from django.views.decorators.csrf import csrf_exempt
 
 
 import logging
