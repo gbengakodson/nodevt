@@ -1947,6 +1947,26 @@ def platform_report_webhook(request):
 
 
 
+@csrf_exempt
+def audit_profits_webhook(request):
+    """Read-only audit of grid_profit. Never modifies data."""
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+
+    from django.core.management import call_command
+    from io import StringIO
+
+    out = StringIO()
+    call_command('audit_grid_profits', stdout=out)
+    return JsonResponse({
+        'status': 'success',
+        'note': 'read-only audit complete',
+        'report': out.getvalue()[-5000:],
+    })
+
+
+
+
 @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
 def create_promo_code(self, request):
     """Admin creates a promo code"""
