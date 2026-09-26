@@ -194,7 +194,7 @@ EMAIL_HOST_USER = 'nodevt.notify@gmail.com'
 EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'guio ybcn kkxy lnpp')
 DEFAULT_FROM_EMAIL = 'nodevt.notify@gmail.com'
 
-
+TRIGGER_API_KEY = os.environ.get('TRIGGER_API_KEY', '')
 # VAPID Keys for Web Push
 VAPID_PRIVATE_KEY = 'MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQgedO9RkbzVbc62hO1x//ip95QmqoiGFiVTgu/+RmfknShRANCAAQkAXqt5mMXSySM1PkxKfaK7aFokqDwwwjiD0WNIyy0Qs31uikNdhxpGxIb1Gm6Ns7OKO8GPC9ZteFIcER3f+7'
 VAPID_PUBLIC_KEY = 'MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEJAF6reZjF0skjNT5MSn2iu2haJKg8MMI4g9FjSMstELN9bopDXYcaRsSG9RpujbOzijvBjwvWbXhSHBEd3/u4A=='

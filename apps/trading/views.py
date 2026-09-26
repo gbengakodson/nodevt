@@ -25,6 +25,17 @@ from apps.trading.services.fadakka_service import FadakkaService
 
 
 
+from django.conf import settings as _settings
+
+def _check_trigger_auth(request):
+    """Shared auth for /api/trigger/* endpoints. Returns True if authorized."""
+    expected = getattr(_settings, 'TRIGGER_API_KEY', None)
+    if not expected:
+        # Refuse all if key is not configured — force env var setup
+        return False
+    provided = request.headers.get('X-Trigger-Key') or request.GET.get('key')
+    return provided == expected
+
 def update_prices_webhook(request):
     """Webhook endpoint to trigger price updates"""
     from django.core.management import call_command
@@ -1823,6 +1834,8 @@ def yield_rate_view(request):
 
 
 def send_daily_email_webhook(request):
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
     # ── NEW: Daily forecast pipeline ──
     try:
         #from apps.forex_ea.services import generate_daily_forecast_cards
@@ -1842,6 +1855,9 @@ def send_daily_email_webhook(request):
 
 
 def sweep_webhook(request):
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+
     from apps.tokens.services.price_service import PriceService
     from apps.forex_ea.services import generate_daily_intelligence_if_needed
     #generate_daily_intelligence_if_needed()
@@ -1921,15 +1937,14 @@ def _record_weekly_closes():
 
 @csrf_exempt
 def platform_report_webhook(request):
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
     """Trigger daily platform report"""
     from apps.tasks.platform_report import send_daily_platform_report
     send_daily_platform_report()
     return JsonResponse({'status': 'success'})
 
-def audit_profits_webhook(request):
-    from django.core.management import call_command
-    call_command('audit_grid_profits')
-    return JsonResponse({'status': 'success'})
+
 
 
 @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])

@@ -548,9 +548,21 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
             'actions': actions
         })
 
+@csrf_exempt
+def audit_profits_webhook(request):
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+    from django.core.management import call_command
+    call_command('audit_grid_profits')
+    return JsonResponse({'status': 'success'})
 
 
+
+@csrf_exempt
 def charge_aum_fees_webhook(request):
+    from apps.trading.views import _check_trigger_auth
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
     from django.core.management import call_command
     call_command('charge_aum_fees')
     return JsonResponse({'status': 'success'})
