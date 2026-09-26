@@ -37,54 +37,41 @@ class YieldService:
     @classmethod
     @transaction.atomic
     def credit_hourly_yield(cls, user):
-        """Credit hourly yield based on ACTIVE GRID BOTS - current value (variable)"""
-        from decimal import Decimal
+        """
+        Accrue hourly earnings to each active bot's grid_profit.
+        Idempotent per hour per bot: skips bots whose last_yield_credited_at
+        is within the current hour. Callable multiple times per hour safely.
+        Does NOT credit the YIELD wallet — that happens only when the user
+        collects (collect_grid_profit) or when a cycle fires (update_pnl).
+        """
         from apps.trading.models import GridBot
-        from django.utils import timezone
 
-        # Check if we already credited this hour
-        last_hour = timezone.now().replace(minute=0, second=0, microsecond=0)
-        last_transaction = Transaction.objects.filter(
-            user=user,
-            transaction_type='YIELD',
-            created_at__gte=last_hour
-        ).exists()
-
-        if last_transaction:
-            return Decimal('0')
-
-        # Get active grid bots only
         active_bots = GridBot.objects.filter(user=user, status='ACTIVE')
-
         if not active_bots.exists():
             return Decimal('0')
+
+        now = timezone.now()
+        current_hour_start = now.replace(minute=0, second=0, microsecond=0)
 
         total_hourly_yield = Decimal('0')
 
         for bot in active_bots:
+            # Skip if already credited this hour
+            if bot.last_yield_credited_at and bot.last_yield_credited_at >= current_hour_start:
+                continue
+
             # 24-hour delay before profits start
-            hours_since_creation = (timezone.now() - bot.created_at).total_seconds() / 3600
+            hours_since_creation = (now - bot.created_at).total_seconds() / 3600
             if hours_since_creation < 24:
                 continue
 
             # Current value = investment + PNL (no compounding)
             current_value = bot.amount + bot.pnl
             bot_hourly_profit = current_value * cls.HOURLY_RATE
-            bot.grid_profit += bot_hourly_profit  # 100% to user
-            bot.save()
+            bot.grid_profit += bot_hourly_profit
+            bot.last_yield_credited_at = now
+            bot.save(update_fields=['grid_profit', 'last_yield_credited_at', 'updated_at'])
             total_hourly_yield += bot_hourly_profit
-
-        # Create ONE transaction for the hourly guard
-        if total_hourly_yield > 0:
-            Transaction.objects.create(
-                user=user,
-                transaction_type='YIELD',
-                amount=total_hourly_yield,
-                fee=0,
-                status='COMPLETED',
-                metadata={'source': 'hourly_credit'},
-                completed_at=timezone.now()
-            )
 
         return total_hourly_yield
 

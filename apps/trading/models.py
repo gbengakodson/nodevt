@@ -32,6 +32,7 @@ class GridBot(models.Model):
     stopped_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+    last_yield_credited_at = models.DateTimeField(null=True, blank=True)
 
     is_savings = models.BooleanField(default=False)  # marks it as a savings tracker
     lock_until = models.DateTimeField(null=True, blank=True)  # unlock date
