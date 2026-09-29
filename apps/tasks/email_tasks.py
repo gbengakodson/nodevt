@@ -33,19 +33,20 @@ def send_daily_email_to_all_users():
             # Days since joining
             days_active = (timezone.now() - user.date_joined).days
 
-            # Total invested capital
+            # Total invested capital (active + stopped, not completed)
             active_bots = GridBot.objects.filter(user=user, status='ACTIVE')
             stopped_bots = GridBot.objects.filter(user=user, status='STOPPED')
+            completed_bots = GridBot.objects.filter(user=user, status='COMPLETED')
             total_invested = sum(b.amount for b in active_bots) + sum(b.amount for b in stopped_bots)
 
-            # Income today
-            yesterday = timezone.now() - timedelta(days=1)
-            income_today = Transaction.objects.filter(
-                user=user, transaction_type='YIELD', created_at__gte=yesterday
-            ).aggregate(total=Sum('amount'))['total'] or Decimal('0')
+            # Income yesterday — accrued grid_profit from the last snapshot
+            income_yesterday = Decimal('0')
+            for b in active_bots:
+                income_yesterday += b.grid_profit_yesterday or Decimal('0')
 
-            # Current grid value
+            # Current grid value — active bots + unswept capital from completed bots
             grid_value = sum((b.amount + b.grid_profit + b.pnl) for b in active_bots) or Decimal('0')
+            grid_value += sum((b.amount + (b.grid_profit or Decimal('0'))) for b in completed_bots) or Decimal('0')
 
             # Forex spot value (from crypto token balances)
             spot_value = Decimal('0')
@@ -75,8 +76,25 @@ def send_daily_email_to_all_users():
                 elif fb.currency in ['AAPL', 'MSFT', 'TSLA', 'NVDA', 'AMZN', 'GOOGL', 'META', 'KO', 'VOO', 'NFLX']:
                     foreign_stocks_value += fb.balance
 
-            # Networth
-            networth = spot_value + grid_value + grand_balance + yield_balance
+            # Purse balances
+            from apps.wallets.models import Purse
+            purse_total = sum(
+                (p.balance or Decimal('0')) for p in Purse.objects.filter(user=user)
+            ) or Decimal('0')
+
+            # Networth — includes fiat, stocks, purses
+            networth = (
+                    spot_value
+                    + grid_value
+                    + grand_balance
+                    + yield_balance
+                    + gbp_balance
+                    + eur_balance
+                    + gold_balance
+                    + ng_stocks_value
+                    + foreign_stocks_value
+                    + purse_total
+            )
 
             # Live clock
             now = datetime.now()
@@ -87,7 +105,7 @@ def send_daily_email_to_all_users():
             message = f"""Hello {user.username or user.email},
 
 {days_active} days have passed, ${float(total_invested):,.2f} has been working for you.
-Your income today is ${float(income_today):,.2f}.
+Your income yesterday was ${float(income_yesterday):,.2f}.
 Your current Networth is ${float(networth):,.2f}.
 
 Here is the breakdown:
