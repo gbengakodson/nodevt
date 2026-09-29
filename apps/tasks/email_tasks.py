@@ -106,7 +106,7 @@ def send_daily_email_to_all_users():
 
 {days_active} days have passed, ${float(total_invested):,.2f} has been working for you.
 Your income yesterday was ${float(income_yesterday):,.2f}.
-Your current Networth is ${float(networth):,.2f}.
+Your current Total Portfolio is ${float(networth):,.2f}.
 
 Here is the breakdown:
 
@@ -114,7 +114,7 @@ Here is the breakdown:
 
 💰 Wallet Balance: ${float(grand_balance):,.2f}
 💎 Yield Balance: ${float(yield_balance):,.2f}
-🤖 Position Tracker (active): ${float(grid_value):,.2f}
+🤖 Active Trackers: ${float(grid_value):,.2f}
 📊 Forex Spot: ${float(spot_value):,.2f}
 🌍 Stocks: ${float(stock_value):,.2f}
 ━━━━━━━━━━━━━━━━━
@@ -129,7 +129,7 @@ Here is the breakdown:
 <img src="https://www.nodevt.com/static/NG.jpg" style="width:18px;height:12px;vertical-align:middle;"> Nigerian Stocks: ${float(ng_stocks_value):,.2f}
 <img src="https://www.nodevt.com/static/usflag.png" style="width:18px;height:12px;vertical-align:middle;"> Foreign Stocks: ${float(foreign_stocks_value):,.2f}
 
-C. NETWORTH
+C. TOTAL PORTFOLIO
 ${float(networth):,.2f}
 
 ⏱️ Report Time: {live_clock}
