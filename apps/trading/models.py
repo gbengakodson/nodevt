@@ -33,6 +33,9 @@ class GridBot(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_yield_credited_at = models.DateTimeField(null=True, blank=True)
+    grid_profit_snapshot = models.DecimalField(max_digits=20, decimal_places=8, default=0)
+    grid_profit_snapshot_at = models.DateTimeField(null=True, blank=True)
+    grid_profit_yesterday = models.DecimalField(max_digits=20, decimal_places=8, default=0)
 
     is_savings = models.BooleanField(default=False)  # marks it as a savings tracker
     lock_until = models.DateTimeField(null=True, blank=True)  # unlock date

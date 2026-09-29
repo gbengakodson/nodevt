@@ -8,7 +8,7 @@ from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView,AdminBroadcastView
 from apps.wallets.admin_views import AdminTreasuryView, AdminKYCActions, PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
-from apps.trading.views import send_daily_email_webhook, sweep_webhook, audit_profits_webhook, TradingViewSet, platform_report_webhook, yield_rate_view, send_daily_email_webhook
+from apps.trading.views import send_daily_email_webhook, sweep_webhook, audit_profits_webhook, TradingViewSet, platform_report_webhook, yield_rate_view, send_daily_email_webhook, snapshot_grid_profit_webhook
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
@@ -140,6 +140,7 @@ urlpatterns = [
     path('api/public/grid-live/', TradingViewSet.as_view({'get': 'public_grid_live'}), name='public_grid_live'),
     path('transparency/like/', TransparencyLikeView.as_view(), name='transparency_like'),
     path('api/trigger/audit-profits/', audit_profits_webhook, name='audit_profits'),
+    path('api/trigger/snapshot-grid-profit/', snapshot_grid_profit_webhook, name='snapshot_grid_profit'),
     path('api/exchange/trendly/', TrendlyExchangeView.as_view(), name='trendly_exchange'),
 
     path('api/referrer-profile/', ReferrerProfileView.as_view(), name='referrer_profile'),

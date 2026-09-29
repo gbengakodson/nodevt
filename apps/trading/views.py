@@ -1965,6 +1965,23 @@ def audit_profits_webhook(request):
     })
 
 
+@csrf_exempt
+def snapshot_grid_profit_webhook(request):
+    """Trigger nightly grid_profit snapshot."""
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+
+    from django.core.management import call_command
+    from io import StringIO
+
+    out = StringIO()
+    call_command('snapshot_grid_profit', stdout=out)
+    return JsonResponse({
+        'status': 'success',
+        'output': out.getvalue(),
+    })
+
+
 
 
 @action(detail=False, methods=['post'], permission_classes=[IsAdminUser])
