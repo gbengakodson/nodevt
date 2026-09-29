@@ -46,7 +46,7 @@ def send_daily_email_to_all_users():
 
             # Current grid value — active bots + unswept capital from completed bots
             grid_value = sum((b.amount + b.grid_profit + b.pnl) for b in active_bots) or Decimal('0')
-            grid_value += sum((b.amount + (b.grid_profit or Decimal('0'))) for b in completed_bots) or Decimal('0')
+
 
             # Forex spot value (from crypto token balances)
             spot_value = Decimal('0')
