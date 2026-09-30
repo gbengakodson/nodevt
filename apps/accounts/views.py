@@ -271,12 +271,24 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
 
     @action(detail=False, methods=['post'])
     def connect_exchange(self, request):
-        """Connect a new exchange API"""
-        exchange = request.data.get('exchange')
+        """
+        Connect a new exchange API.
+
+        Flow:
+        1. Verify credentials work (fetch balance)
+        2. Verify withdrawal is disabled
+        3. Fetch stablecoin balance and compute 10% fee
+        4. Check user's NODE GRAND wallet has enough to pay the fee
+        5. Deduct fee, mark connection active
+        """
+        from decimal import Decimal
+        from django.utils import timezone
+        from apps.wallets.models import Wallet, Transaction
+
+        exchange = (request.data.get('exchange') or '').upper()
         api_key = request.data.get('api_key')
         api_secret = request.data.get('api_secret')
         label = request.data.get('label', '')
-        min_capital = request.data.get('min_capital', 1000)
 
         if not exchange or not api_key or not api_secret:
             return Response({'error': 'Exchange, API key, and secret required'}, status=400)
@@ -284,27 +296,110 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
         if exchange not in dict(ExchangeAPIConnection.EXCHANGE_CHOICES):
             return Response({'error': 'Invalid exchange'}, status=400)
 
+        # Prevent duplicate connections to the same exchange for the same user
+        if ExchangeAPIConnection.objects.filter(user=request.user, exchange=exchange, is_active=True).exists():
+            return Response({'error': f'You already have an active {exchange} connection'}, status=400)
+
+        # Create the connection in an inactive state
         conn = ExchangeAPIConnection.objects.create(
             user=request.user,
             exchange=exchange,
             label=label,
-            min_capital=min_capital,
         )
         conn.set_api_key(api_key)
         conn.set_api_secret(api_secret)
+        conn.is_active = False
         conn.save()
 
-        # Test connection
+        # Step 1: Test connection
         test = conn.test_connection()
-
         if not test['success']:
-            conn.is_active = False  # Mark inactive if verification failed
+            conn.delete()
+            return Response({
+                'error': f"Could not verify credentials: {test.get('error', 'unknown error')}"
+            }, status=400)
+
+        # Step 2: Verify withdrawal is disabled
+        withdrawal_ok = conn.check_withdrawal_disabled()
+        conn.withdrawal_disabled = withdrawal_ok
+        conn.save(update_fields=['withdrawal_disabled'])
+
+        if not withdrawal_ok and exchange.upper() in ('BINANCE', 'OKX'):
+            # We can reliably check these two — refuse if withdrawal is enabled
+            conn.delete()
+            return Response({
+                'error': (
+                    'Withdrawal permission must be DISABLED on your API key. '
+                    'Please regenerate the key with trading-only permissions and try again.'
+                )
+            }, status=400)
+
+        # Step 3: Compute the 10% fee from the stablecoin balance
+        broker_balance = Decimal(str(test.get('stable_balance', 0)))
+        if broker_balance <= 0:
+            conn.delete()
+            return Response({
+                'error': (
+                    'No USDT or USDC balance found on the connected account. '
+                    'Deposit stablecoins to your exchange account before connecting.'
+                )
+            }, status=400)
+
+        fee = (broker_balance * Decimal('0.10')).quantize(Decimal('0.01'))
+
+        # Step 4: Check user's NODE wallet
+        grand = Wallet.objects.filter(user=request.user, wallet_type='GRAND').first()
+        if not grand:
+            conn.delete()
+            return Response({'error': 'No NODE wallet found'}, status=400)
+
+        if grand.balance < fee:
+            # Save the connection so the user can retry after depositing
             conn.save()
+            return Response({
+                'error': (
+                    f'Insufficient NODE wallet balance. '
+                    f'You need ${float(fee):.2f} to activate this connection. '
+                    f'Your current balance: ${float(grand.balance):.2f}.'
+                ),
+                'requires_deposit': True,
+                'fee_required': float(fee),
+                'broker_balance': float(broker_balance),
+                'connection_id': str(conn.id),
+            }, status=402)  # Payment Required
+
+        # Step 5: Deduct fee and activate
+        grand.balance -= fee
+        grand.save()
+
+        Transaction.objects.create(
+            user=request.user,
+            transaction_type='PURCHASE',
+            amount=fee,
+            fee=0,
+            status='COMPLETED',
+            metadata={
+                'reason': 'external_broker_activation',
+                'exchange': exchange,
+                'connection_id': str(conn.id),
+                'broker_balance': str(broker_balance),
+            },
+            completed_at=timezone.now(),
+        )
+
+        conn.is_active = True
+        conn.fee_paid_at = timezone.now()
+        conn.min_capital = broker_balance
+        conn.save()
 
         return Response({
-            'success': test['success'],
+            'success': True,
             'id': str(conn.id),
-            'message': 'Connected' if test['success'] else f"Stored but test failed: {test.get('error', '')}",
+            'message': f'{exchange} connected and activated.',
+            'fee_charged': float(fee),
+            'broker_balance': float(broker_balance),
+            'stable_balance_usdt': test.get('usdt', 0),
+            'stable_balance_usdc': test.get('usdc', 0),
         })
 
     @action(detail=False, methods=['post'])

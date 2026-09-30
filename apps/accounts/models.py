@@ -126,6 +126,11 @@ class ExchangeAPIConnection(models.Model):
     grids_paused = models.BooleanField(default=False)
     warning_sent_at = models.DateTimeField(null=True, blank=True)  # When first warning was sent
 
+    # New fields for the redesigned service
+    fee_paid_at = models.DateTimeField(null=True, blank=True)
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    withdrawal_disabled = models.BooleanField(default=False)
+
     def set_api_secret(self, secret):
         from apps.wallets.security.encryption import EncryptionService
         self.api_secret = EncryptionService.encrypt(secret)
@@ -142,26 +147,95 @@ class ExchangeAPIConnection(models.Model):
         from apps.wallets.security.encryption import EncryptionService
         return EncryptionService.decrypt(self.api_key)
 
+    def get_client(self):
+        """Return a unified CCXT client for the connection's exchange."""
+        import ccxt
+        exchange_id = self.exchange.lower()
+        if not hasattr(ccxt, exchange_id):
+            return None
+        exchange_class = getattr(ccxt, exchange_id)
+        return exchange_class({
+            'apiKey': self.get_api_key(),
+            'secret': self.get_api_secret(),
+            'enableRateLimit': True,
+            'options': {'defaultType': 'spot'},
+        })
+
     def test_connection(self):
-        """Test if the API credentials work"""
+        """
+        Verify API credentials work and return the stablecoin balance.
+        Returns: success, can_trade, stable_balance (USDT + USDC), and error if any.
+        """
         try:
-            if self.exchange == 'BINANCE':
-                from binance.client import Client
-                client = Client(self.get_api_key(), self.get_api_secret())
-                account = client.get_account()
-                return {'success': True, 'can_trade': account.get('canTrade', False)}
-            else:
-                return {'success': True, 'message': f'{self.exchange} connection stored'}
+            client = self.get_client()
+            if not client:
+                return {'success': False, 'error': f'Unsupported exchange: {self.exchange}'}
+
+            # Fetch balance — proves credentials are valid
+            balance = client.fetch_balance()
+
+            # Extract stablecoin balance
+            total = balance.get('total', {}) or {}
+            usdt = float(total.get('USDT', 0) or 0)
+            usdc = float(total.get('USDC', 0) or 0)
+            stable = usdt + usdc
+
+            # Confirm trading capability
+            can_trade = client.has.get('createOrder', False)
+
+            # Update last sync time
+            from django.utils import timezone
+            self.last_sync_at = timezone.now()
+            self.save(update_fields=['last_sync_at'])
+
+            return {
+                'success': True,
+                'can_trade': can_trade,
+                'stable_balance': stable,
+                'usdt': usdt,
+                'usdc': usdc,
+            }
         except Exception as e:
             return {'success': False, 'error': str(e)}
 
-    def get_client(self):
-        """Get exchange client instance"""
-        if self.exchange == 'BINANCE':
-            from binance.client import Client
-            return Client(self.get_api_key(), self.get_api_secret())
-        # Add other exchanges as needed
-        return None
+    def check_withdrawal_disabled(self):
+        """
+        Verify that the API key does not have withdrawal permission.
+        Returns True if we can confirm withdrawal is disabled, False otherwise.
+        """
+        try:
+            client = self.get_client()
+            if not client:
+                return False
+
+            exchange = self.exchange.lower()
+
+            if exchange == 'binance':
+                try:
+                    resp = client.sapi_get_account_apirestrictions()
+                    return not resp.get('enableWithdrawals', True)
+                except Exception:
+                    return False
+
+            if exchange == 'okx':
+                try:
+                    resp = client.private_get_account_config()
+                    perms = resp.get('data', [{}])[0].get('perm', '')
+                    return 'withdraw' not in perms
+                except Exception:
+                    return False
+
+            # Bybit, KuCoin, Gate.io, MEXC, Bitget — CCXT doesn't expose a
+            # unified permission check. Attempt a probe where possible.
+            if exchange in ('bybit', 'kucoin', 'gateio', 'mexc', 'bitget'):
+                # Attempt to read the API key's info. Most of these exchanges
+                # will not allow a "read-only" method that reveals permissions,
+                # so we default to unverified (False).
+                return False
+
+            return False
+        except Exception:
+            return False
 
 
 class ExchangeRequest(models.Model):

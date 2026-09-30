@@ -1833,25 +1833,34 @@ def yield_rate_view(request):
     return Response({'monthly': monthly_rate, 'hourly': monthly_rate / 720})
 
 
+@csrf_exempt
 def send_daily_email_webhook(request):
     if not _check_trigger_auth(request):
         return JsonResponse({'error': 'unauthorized'}, status=401)
-    # ── NEW: Daily forecast pipeline ──
+
+    from django.core.management import call_command
+    from io import StringIO
+
+    # ── Forecast pipeline ──
     try:
-        #from apps.forex_ea.services import generate_daily_forecast_cards
-        from django.core.management import call_command
         call_command('update_forex_cache')
-        #generate_daily_forecast_cards()
     except Exception as e:
         print(f"Forecast pipeline error: {e}")
 
-    # ── NEW: Send forecast email to all users ──
+    # ── Snapshot grid_profit BEFORE email so income_yesterday is accurate ──
+    snapshot_out = StringIO()
+    call_command('snapshot_grid_profit', stdout=snapshot_out)
+    print(snapshot_out.getvalue())
 
-
-    # ── EXISTING: original daily portfolio email (keep unchanged) ──
+    # ── Send daily portfolio email ──
     from apps.tasks.email_tasks import send_daily_email_to_all_users
-    send_daily_email_to_all_users()
-    return JsonResponse({'status': 'ok'})
+    result = send_daily_email_to_all_users()
+
+    return JsonResponse({
+        'status': 'ok',
+        'snapshot': snapshot_out.getvalue(),
+        'email_result': str(result),
+    })
 
 
 def sweep_webhook(request):
