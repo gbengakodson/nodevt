@@ -288,6 +288,7 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
         exchange = (request.data.get('exchange') or '').upper()
         api_key = request.data.get('api_key')
         api_secret = request.data.get('api_secret')
+        api_passphrase = request.data.get('api_passphrase', '')
         label = request.data.get('label', '')
 
         if not exchange or not api_key or not api_secret:
@@ -308,6 +309,7 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
         )
         conn.set_api_key(api_key)
         conn.set_api_secret(api_secret)
+        conn.set_api_passphrase(api_passphrase)
         conn.is_active = False
         conn.save()
 

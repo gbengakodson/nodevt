@@ -619,24 +619,66 @@
 
         <div class="order-card">
             <div class="order-tabs">
-                <button class="order-tab" data-tab="forex">🔗 Forex Expert Advisor</button>
-                <button class="order-tab active" data-tab="grid">🤖 Crypto Position Tracker</button>
+                <button class="order-tab" data-tab="forex">🔗 Expert Advisor</button>
+                <button class="order-tab active" data-tab="grid">🤖 Cryptocurrency Tracker</button>
             </div>
 
-            <!-- External Exchange Connection Panel -->
+
+            <!-- Expert Advisor — External Crypto Broker Connections -->
             <div id="forexPanel" style="display:none;">
                 <div class="card-body">
-                    <h5>Nodev16 EA – Forex Auto‑Trading</h5>
-                    <div id="forexStatus">
-                        <p>Add your MT5 account.</p>
-                        <div id="slaveList"></div>
-                        <hr>
-                        <div class="row">
-                            <div class="col-md-3"><input type="text" id="newMT5Account" class="form-control mb-2" placeholder="MT5 Account"></div>
-                            <div class="col-md-3"><input type="password" id="newMT5Password" class="form-control mb-2" placeholder="MT5 Password"></div>
-                            <div class="col-md-3"><input type="text" id="newBrokerServer" class="form-control mb-2" placeholder="Broker Server (e.g. ICMarkets-Demo)"></div>
-                            <div class="col-md-3"><button onclick="addSlaveAccount()" class="btn btn-primary w-100">Add Account</button></div>
+                    <h5>External Crypto Broker Management</h5>
+                    <p style="font-size:12px; color:#848E9C; margin-bottom:12px;">
+                        Connect your exchange account via API. NODE will trade for you with trade-only access.
+                        Withdrawal permission must be disabled on your API key.
+                    </p>
+
+                    <!-- Exchange selector -->
+                    <div style="margin-bottom:14px;">
+                        <label style="font-size:11px; color:#848E9C; display:block; margin-bottom:6px;">Select Exchange</label>
+                        <div style="display:flex; flex-wrap:wrap; gap:6px;">
+                            <button class="ex-btn active" data-ex="BINANCE" onclick="selectExchange('BINANCE')">🔶 Binance</button>
+                            <button class="ex-btn" data-ex="BYBIT" onclick="selectExchange('BYBIT')">🔷 Bybit</button>
+                            <button class="ex-btn" data-ex="OKX" onclick="selectExchange('OKX')">⚫ OKX</button>
+                            <button class="ex-btn" data-ex="KUCOIN" onclick="selectExchange('KUCOIN')">🟢 KuCoin</button>
+                            <button class="ex-btn" data-ex="GATEIO" onclick="selectExchange('GATEIO')">🔵 Gate.io</button>
+                            <button class="ex-btn" data-ex="MEXC" onclick="selectExchange('MEXC')">🟣 MEXC</button>
+                            <button class="ex-btn" data-ex="BITGET" onclick="selectExchange('BITGET')">🟠 Bitget</button>
                         </div>
+                    </div>
+
+                    <!-- Credentials -->
+                    <div class="row g-2">
+                        <div class="col-md-6">
+                            <input type="text" id="apiKey" class="form-control mb-2" placeholder="API Key">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="password" id="apiSecret" class="form-control mb-2" placeholder="API Secret">
+                        </div>
+                        <div class="col-md-6" id="passphraseRow" style="display:none;">
+                            <input type="password" id="apiPassphrase" class="form-control mb-2" placeholder="API Passphrase (required for OKX, KuCoin, Bitget)">
+                        </div>
+                        <div class="col-md-6">
+                            <input type="text" id="apiLabel" class="form-control mb-2" placeholder="Label (optional)">
+                        </div>
+                    </div>
+
+                    <button onclick="connectExchange()" class="btn btn-primary w-100" style="margin-top:8px;">
+                        🔗 Connect Exchange
+                    </button>
+
+                    <div style="font-size:10px; color:#848E9C; margin-top:8px; line-height:1.5;">
+                        By connecting, you authorize NODE to execute trades on your behalf.
+                        NODE cannot withdraw your funds. A 10% activation fee (of your stablecoin balance)
+                        will be deducted from your NODE wallet.
+                    </div>
+
+                    <hr style="margin:16px 0; border-color:#2B3139;">
+
+                    <!-- Connected exchanges list -->
+                    <div id="exchangeStatus">
+                        <div style="font-size:11px; color:#848E9C;">Loading connections...</div>
+                        <div id="connectedExchanges"></div>
                     </div>
                 </div>
             </div>
@@ -1473,28 +1515,42 @@
     }
 
     var selectedExchange = 'BINANCE';
+    var PASSPHRASE_EXCHANGES = ['OKX', 'KUCOIN', 'BITGET'];
 
     function selectExchange(ex) {
         selectedExchange = ex;
         document.querySelectorAll('.ex-btn').forEach(function(b) {
             b.classList.toggle('active', b.getAttribute('data-ex') === ex);
         });
+        // Show/hide passphrase field
+        var passRow = document.getElementById('passphraseRow');
+        if (passRow) {
+            passRow.style.display = PASSPHRASE_EXCHANGES.includes(ex) ? 'block' : 'none';
+        }
     }
 
     async function connectExchange() {
         var apiKey = document.getElementById('apiKey').value.trim();
         var apiSecret = document.getElementById('apiSecret').value.trim();
+        var apiPassphrase = document.getElementById('apiPassphrase') ? document.getElementById('apiPassphrase').value.trim() : '';
         var label = document.getElementById('apiLabel').value.trim();
-        var minCapital = document.getElementById('minCapital').value;
 
         if (!apiKey || !apiSecret) {
-            showModal('Please enter API Key and Secret', 'error');
+            showModal('Please enter your API Key and Secret', 'error');
+            return;
+        }
+        if (PASSPHRASE_EXCHANGES.includes(selectedExchange) && !apiPassphrase) {
+            showModal('This exchange requires an API passphrase', 'error');
             return;
         }
 
-        var btn = document.querySelector('#exchangeForm .btn-buy');
-        btn.textContent = '⏳ Connecting...';
-        btn.disabled = true;
+        var body = {
+            exchange: selectedExchange,
+            api_key: apiKey,
+            api_secret: apiSecret,
+            label: label || selectedExchange + ' Managed Account'
+        };
+        if (apiPassphrase) body.api_passphrase = apiPassphrase;
 
         try {
             var res = await fetch('/api/exchange/connect/', {
@@ -1503,34 +1559,39 @@
                     'Content-Type': 'application/json',
                     'Authorization': 'Bearer ' + getToken()
                 },
-                body: JSON.stringify({
-                    exchange: selectedExchange,
-                    api_key: apiKey,
-                    api_secret: apiSecret,
-                    label: label || selectedExchange + ' Bot',
-                    min_capital: parseFloat(minCapital) || 1000
-                })
+                body: JSON.stringify(body)
             });
             var data = await res.json();
 
-            if (data.success) {
-                showModal('✅ Connected to ' + selectedExchange + '! Your grid bot is ready.', 'success');
+            if (res.ok && data.success) {
+                showModal(
+                    '✅ ' + selectedExchange + ' connected and activated. ' +
+                    'Fee charged: $' + data.fee_charged.toFixed(2) + '. ' +
+                    'Broker balance: $' + data.broker_balance.toFixed(2) + '.',
+                    'success'
+                );
                 document.getElementById('apiKey').value = '';
                 document.getElementById('apiSecret').value = '';
+                if (document.getElementById('apiPassphrase')) document.getElementById('apiPassphrase').value = '';
+                document.getElementById('apiLabel').value = '';
                 loadExchangeConnections();
+            } else if (res.status === 402 && data.requires_deposit) {
+                showModal(
+                    '⚠️ Insufficient NODE wallet balance. ' +
+                    'You need $' + data.fee_required.toFixed(2) + ' to activate this connection. ' +
+                    'Your broker balance: $' + data.broker_balance.toFixed(2) + '. ' +
+                    'Please deposit to your NODE wallet and try again.',
+                    'error'
+                );
             } else {
-                showModal('⚠️ Keys saved but verification failed.\n\n' + (data.message || 'Check your API key and secret. Ensure trading is enabled.'), 'warning');
+                showModal('❌ ' + (data.error || 'Connection failed'), 'error');
             }
-        } catch(e) {
-            showModal('❌ Network error', 'error');
+        } catch (e) {
+            showModal('Network error: ' + e.message, 'error');
         }
-
-        btn.textContent = '🔗 Connect Exchange';
-        btn.disabled = false;
     }
 
     async function loadExchangeConnections() {
-        // Guard: exit if the external exchange panel no longer exists
         const container = document.getElementById('connectedExchanges');
         const statusEl = document.getElementById('exchangeStatus');
         if (!container || !statusEl) return;
@@ -1540,59 +1601,64 @@
                 headers: { 'Authorization': 'Bearer ' + getToken() }
             });
             var connections = await res.json();
-            connections = connections.filter(function(c) { return c.is_active !== false; });
 
-            if (connections.length > 0) {
-                statusEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(14,203,129,0.05);border:1px solid rgba(14,203,129,0.2);border-radius:8px;">' +
-                    '<div style="width:8px;height:8px;border-radius:50%;background:var(--success);animation:pulse 1.5s infinite;"></div>' +
-                    '<span style="font-size:11px;color:var(--success);">' + connections.length + ' exchange(s) connected</span></div>';
+            if (!connections || connections.length === 0) {
+                statusEl.innerHTML = '<div style="font-size:11px;color:#848E9C;">No exchanges connected yet.</div>';
+                return;
+            }
 
-                container.style.display = 'block';
-                container.innerHTML = connections.map(function(c) {
-                    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:rgba(240,185,11,0.03);border:1px solid var(--border);border-radius:6px;margin-bottom:4px;">' +
-                        '<div style="display:flex;align-items:center;gap:6px;">' +
-                        '<span style="font-size:16px;">' + (c.exchange === 'BINANCE' ? '🔶' : c.exchange === 'BYBIT' ? '🔷' : '💱') + '</span>' +
-                        '<div><div style="font-size:11px;font-weight:600;color:var(--text-primary);">' + c.label + '</div>' +
-                        '<div style="font-size:9px;color:var(--text-secondary);">' + c.exchange + ' • Min: $' + c.min_capital.toLocaleString() + '</div></div></div>' +
-                        '<button onclick="disconnectExchange(\'' + c.id + '\')" style="background:transparent;border:1px solid var(--danger);color:var(--danger);padding:3px 10px;border-radius:4px;font-size:10px;cursor:pointer;">Disconnect</button>' +
+            statusEl.innerHTML = '<div style="font-size:11px;color:#0ECB81;margin-bottom:8px;">' +
+                connections.length + ' connection(s)</div>';
+
+            container.innerHTML = connections.map(function(c) {
+                var statusColor = c.is_active ? '#0ECB81' : '#F0B90B';
+                var statusText = c.is_active ? 'Active' : 'Pending';
+                var icons = {
+                    'BINANCE': '🔶', 'BYBIT': '🔷', 'OKX': '⚫', 'KUCOIN': '🟢',
+                    'GATEIO': '🔵', 'MEXC': '🟣', 'BITGET': '🟠'
+                };
+                return '<div style="display:flex;justify-content:space-between;align-items:center;' +
+                    'background:rgba(255,255,255,0.02);border:1px solid #2B3139;border-radius:6px;' +
+                    'padding:10px;margin-bottom:6px;">' +
+                    '<div style="display:flex;align-items:center;gap:8px;">' +
+                    '<span style="font-size:16px;">' + (icons[c.exchange] || '💱') + '</span>' +
+                    '<div>' +
+                    '<div style="font-size:12px;font-weight:700;">' + c.label + '</div>' +
+                    '<div style="font-size:10px;color:#848E9C;">' + c.exchange + ' • <span style="color:' + statusColor + ';">' + statusText + '</span></div>' +
+                    '</div></div>' +
+                    '<button onclick="disconnectExchange(\'' + c.id + '\')" style="background:transparent;border:1px solid #F6465D;color:#F6465D;padding:4px 10px;border-radius:4px;font-size:10px;cursor:pointer;">Disconnect</button>' +
                     '</div>';
-                }).join('');
-            } else {
-                statusEl.innerHTML = '<div style="display:flex;align-items:center;gap:8px;padding:10px;background:rgba(14,203,129,0.05);border:1px solid rgba(14,203,129,0.2);border-radius:8px;">' +
-                    '<div style="width:8px;height:8px;border-radius:50%;background:var(--text-secondary);"></div>' +
-                    '<span style="font-size:11px;color:var(--text-secondary);">No exchange connected</span></div>';
-                container.style.display = 'none';
-            }
-        } catch(e) { console.error(e); }
-
-        var gridForm = document.getElementById('exchangeGridForm');
-        if (gridForm && connections.length > 0) {
-            gridForm.style.display = 'block';
-            var sel = document.getElementById('activeConnection');
-            if (sel) {
-                sel.innerHTML = connections.map(function(c) {
-                    return '<option value="' + c.id + '">' + c.label + ' (' + c.exchange + ')</option>';
-                }).join('');
-            }
-            var minCapEl = document.getElementById('externalMinCapital');
-            if (minCapEl) {
-                minCapEl.textContent = connections[0].min_capital;
-            }
+            }).join('');
+        } catch(e) {
+            statusEl.innerHTML = '<div style="font-size:11px;color:#F6465D;">Error loading connections.</div>';
         }
     }
 
     async function disconnectExchange(id) {
-        if (!confirm('Disconnect this exchange?')) return;
-        await fetch('/api/exchange/disconnect/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + getToken()
-            },
-            body: JSON.stringify({ connection_id: id })
-        });
-        loadExchangeConnections();
+        if (!confirm('Disconnect this exchange? The NODE grid bot will stop managing it.')) return;
+        try {
+            await fetch('/api/exchange/disconnect/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + getToken()
+                },
+                body: JSON.stringify({ connection_id: id })
+            });
+            loadExchangeConnections();
+        } catch(e) {
+            showModal('Failed to disconnect', 'error');
+        }
     }
+
+    // Load connections when the Expert Advisor tab is opened
+    document.querySelectorAll('.order-tab').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            if (this.getAttribute('data-tab') === 'forex') {
+                setTimeout(loadExchangeConnections, 100);
+            }
+        });
+    });
 
     async function activateFadakkaExternal() {
         var connectionId = document.getElementById('activeConnection').value;

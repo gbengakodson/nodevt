@@ -114,6 +114,7 @@ class ExchangeAPIConnection(models.Model):
     exchange = models.CharField(max_length=20, choices=EXCHANGE_CHOICES)
     api_key = models.TextField()
     api_secret = models.TextField()
+    api_passphrase = models.TextField(blank=True, default='')
     label = models.CharField(max_length=100, blank=True)
     is_active = models.BooleanField(default=True)
     min_capital = models.DecimalField(max_digits=20, decimal_places=8, default=1000)
@@ -139,6 +140,16 @@ class ExchangeAPIConnection(models.Model):
         from apps.wallets.security.encryption import EncryptionService
         return EncryptionService.decrypt(self.api_secret)
 
+    def set_api_passphrase(self, passphrase):
+        from apps.wallets.security.encryption import EncryptionService
+        self.api_passphrase = EncryptionService.encrypt(passphrase or '')
+
+    def get_api_passphrase(self):
+        from apps.wallets.security.encryption import EncryptionService
+        if not self.api_passphrase:
+            return ''
+        return EncryptionService.decrypt(self.api_passphrase)
+
     def set_api_key(self, key):
         from apps.wallets.security.encryption import EncryptionService
         self.api_key = EncryptionService.encrypt(key)
@@ -154,12 +165,19 @@ class ExchangeAPIConnection(models.Model):
         if not hasattr(ccxt, exchange_id):
             return None
         exchange_class = getattr(ccxt, exchange_id)
-        return exchange_class({
+
+        params = {
             'apiKey': self.get_api_key(),
             'secret': self.get_api_secret(),
             'enableRateLimit': True,
             'options': {'defaultType': 'spot'},
-        })
+        }
+
+        # OKX, KuCoin, Bitget require an API passphrase
+        if self.exchange in ('OKX', 'KUCOIN', 'BITGET'):
+            params['password'] = self.get_api_passphrase()
+
+        return exchange_class(params)
 
     def test_connection(self):
         """
