@@ -132,9 +132,6 @@ class ExchangeAPIConnection(models.Model):
     last_sync_at = models.DateTimeField(null=True, blank=True)
     withdrawal_disabled = models.BooleanField(default=False)
 
-    def set_api_secret(self, secret):
-        from apps.wallets.security.encryption import EncryptionService
-        self.api_secret = EncryptionService.encrypt(secret)
 
     def get_api_secret(self):
         from apps.wallets.security.encryption import EncryptionService
@@ -142,7 +139,10 @@ class ExchangeAPIConnection(models.Model):
 
     def set_api_passphrase(self, passphrase):
         from apps.wallets.security.encryption import EncryptionService
-        self.api_passphrase = EncryptionService.encrypt(passphrase or '')
+        if passphrase:
+            self.api_passphrase = EncryptionService.encrypt(passphrase)
+        else:
+            self.api_passphrase = ''
 
     def get_api_passphrase(self):
         from apps.wallets.security.encryption import EncryptionService
@@ -152,7 +152,17 @@ class ExchangeAPIConnection(models.Model):
 
     def set_api_key(self, key):
         from apps.wallets.security.encryption import EncryptionService
-        self.api_key = EncryptionService.encrypt(key)
+        if key:
+            self.api_key = EncryptionService.encrypt(key)
+        else:
+            self.api_key = ''
+
+    def set_api_secret(self, secret):
+        from apps.wallets.security.encryption import EncryptionService
+        if secret:
+            self.api_secret = EncryptionService.encrypt(secret)
+        else:
+            self.api_secret = ''
 
     def get_api_key(self):
         from apps.wallets.security.encryption import EncryptionService
