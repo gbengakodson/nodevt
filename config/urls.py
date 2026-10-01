@@ -8,7 +8,7 @@ from apps.wallets.views import AdminChatMessagesView
 from apps.wallets.admin_views import AdminDepositsView, AdminWithdrawalsView, AdminUsersView
 from apps.chatbot.views import ChatbotAPIView, NotificationsAPIView, MarkAllNotificationsReadAPIView, SubscribePushAPIView,UnsubscribePushAPIView,AdminBroadcastView
 from apps.wallets.admin_views import AdminTreasuryView, AdminKYCActions, PublicStatsView, PublicDepositsView, PublicWithdrawalsView, PublicHoldersView, PublicUsersView
-from apps.trading.views import send_daily_email_webhook, sweep_webhook, audit_profits_webhook, TradingViewSet, platform_report_webhook, yield_rate_view, send_daily_email_webhook, snapshot_grid_profit_webhook
+from apps.trading.views import send_daily_email_webhook, send_independence_email_webhook, sweep_webhook, audit_profits_webhook, TradingViewSet, platform_report_webhook, yield_rate_view, send_daily_email_webhook, snapshot_grid_profit_webhook
 from django.conf import settings
 from django.views.static import serve
 from django.urls import re_path
@@ -163,6 +163,7 @@ urlpatterns = [
     path('api/forex/forecast/', ForexForecastDetailView.as_view(), name='forex_forecast_detail'),
     path('ngn-history/', NgnHistoryView.as_view(), name='ngn_history'),
     path('all-assets/', AllAssetsView.as_view(), name='all_assets'),
+    path('api/trigger/independence-email/', send_independence_email_webhook, name='independence_email'),
 ]
 
 urlpatterns += [

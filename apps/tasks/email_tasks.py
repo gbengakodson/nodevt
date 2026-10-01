@@ -239,3 +239,100 @@ def send_email_notification(user, subject, message):
             print(f"Email notification error for {user.email}: {e}")
 
     threading.Thread(target=_send).start()
+
+
+
+def send_independence_day_email():
+    """
+    One-off Independence Day campaign email.
+    Idempotent: will not send twice. Uses TaskCampaignLog to prevent re-sends.
+    """
+    from apps.chatbot.models import TaskCampaignLog
+    from django.utils import timezone
+
+    campaign_key = 'independence_day_2026'
+
+    # Prevent double-send
+    log, created = TaskCampaignLog.objects.get_or_create(
+        key=campaign_key,
+        defaults={'status': 'RUNNING', 'started_at': timezone.now()}
+    )
+    if not created and log.status == 'COMPLETED':
+        return f'Already sent at {log.completed_at}. Skipping.'
+
+    log.status = 'RUNNING'
+    log.started_at = timezone.now()
+    log.save()
+
+    users = User.objects.filter(is_active=True)
+    sent = 0
+    failed = 0
+
+    for user in users:
+        try:
+            greeting_name = user.username or user.email.split('@')[0]
+
+            html = f"""
+            <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px;background:#ffffff;">
+                <img src="https://www.nodevt.com/static/independence.jpg"
+                     alt="Happy Independence Day"
+                     style="width:100%;border-radius:12px;margin-bottom:24px;display:block;">
+
+                <p style="font-size:15px;color:#1E2329;line-height:1.7;">
+                    Dear {greeting_name},
+                </p>
+
+                <p style="font-size:14px;color:#1E2329;line-height:1.7;">
+                    On this 66th Independence Day, we at NODE want to take a moment
+                    to wish you and your family a joyful and peaceful celebration.
+                </p>
+
+                <p style="font-size:14px;color:#1E2329;line-height:1.7;">
+                    Nigeria's journey has been one of resilience, ambition, and the
+                    relentless pursuit of a better future. Those are the same values
+                    we try to live by at NODE every day — building tools that help
+                    you grow your wealth with discipline and patience.
+                </p>
+
+                <p style="font-size:14px;color:#1E2329;line-height:1.7;">
+                    Thank you for being part of the NODE community. We are proud
+                    to grow with you.
+                </p>
+
+                <p style="font-size:14px;color:#1E2329;line-height:1.7;">
+                    From all of us at NODE — <strong>Happy Independence Day.</strong>
+                </p>
+
+                <p style="font-size:14px;color:#1E2329;font-weight:700;margin-top:24px;">
+                    🇳🇬 NODE Team
+                </p>
+
+                <hr style="border:none;border-top:1px solid #E2E4E8;margin:24px 0;">
+                <p style="font-size:11px;color:#848E9C;text-align:center;">
+                    NODE — Asset Automation Engine on the Go.<br>
+                    <a href="https://www.nodevt.com/dashboard/" style="color:#F0B90B;">Visit your dashboard</a>
+                </p>
+            </div>
+            """
+
+            send_mail(
+                subject='Happy Independence Day from NODE 🇳🇬',
+                message='Happy Independence Day from NODE. Visit https://www.nodevt.com/dashboard/ to continue.',
+                html_message=html,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[user.email],
+                fail_silently=True,
+            )
+            sent += 1
+        except Exception as e:
+            print(f"Failed for {user.email}: {e}")
+            failed += 1
+            continue
+
+    log.status = 'COMPLETED'
+    log.completed_at = timezone.now()
+    log.sent_count = sent
+    log.failed_count = failed
+    log.save()
+
+    return f"Sent {sent} independence day emails, {failed} failed"

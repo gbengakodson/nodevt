@@ -1862,6 +1862,15 @@ def send_daily_email_webhook(request):
         'email_result': str(result),
     })
 
+@csrf_exempt
+def send_independence_email_webhook(request):
+    if not _check_trigger_auth(request):
+        return JsonResponse({'error': 'unauthorized'}, status=401)
+
+    from apps.tasks.email_tasks import send_independence_day_email
+    result = send_independence_day_email()
+    return JsonResponse({'status': 'success', 'result': result})
+
 
 def sweep_webhook(request):
     if not _check_trigger_auth(request):

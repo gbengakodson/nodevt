@@ -65,3 +65,24 @@ class PushSubscription(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.created_at}"
+
+
+class TaskCampaignLog(models.Model):
+    """
+    Tracks one-off campaign executions to prevent double-sends.
+    """
+    STATUS_CHOICES = [
+        ('RUNNING', 'Running'),
+        ('COMPLETED', 'Completed'),
+        ('FAILED', 'Failed'),
+    ]
+
+    key = models.CharField(max_length=100, unique=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='RUNNING')
+    started_at = models.DateTimeField(null=True, blank=True)
+    completed_at = models.DateTimeField(null=True, blank=True)
+    sent_count = models.IntegerField(default=0)
+    failed_count = models.IntegerField(default=0)
+
+    def __str__(self):
+        return f'{self.key} — {self.status} ({self.sent_count} sent)'
