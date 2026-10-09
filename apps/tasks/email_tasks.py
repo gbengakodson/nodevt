@@ -105,7 +105,7 @@ def send_daily_email_to_all_users():
             # ── Promo banner (active Oct 10-20, 2026 only) ──
             from datetime import date as _date
             today = _date.today()
-            promo_active = _date(2026, 10, 10) <= today <= _date(2026, 10, 20)
+            promo_active = _date(2026, 10, 9) <= today <= _date(2026, 10, 20)
 
             if promo_active:
                 promo_html = """
