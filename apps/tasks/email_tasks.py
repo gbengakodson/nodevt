@@ -102,6 +102,33 @@ def send_daily_email_to_all_users():
 
             subject = f"Daily Portfolio Update - {timezone.now().strftime('%b %d, %Y')}"
 
+            # ── Promo banner (active Oct 10-20, 2026 only) ──
+            from datetime import date as _date
+            today = _date.today()
+            promo_active = _date(2026, 10, 10) <= today <= _date(2026, 10, 20)
+
+            if promo_active:
+                promo_html = """
+            <div style="background:linear-gradient(90deg,#F0B90B 0%,#FCD535 100%);
+                        padding:14px 18px;border-radius:10px;margin-bottom:18px;text-align:center;">
+                <div style="font-size:15px;font-weight:700;color:#1B1E21;margin-bottom:4px;">
+                    🎁 LIMITED PROMO
+                </div>
+                <div style="font-size:13px;color:#1B1E21;line-height:1.5;">
+                    Get <strong>20% CASH BACK</strong> on new investments of $500 or more.<br>
+                    Valid October 10th – 20th.
+                </div>
+                <a href="https://www.nodevt.com/trading/"
+                   style="display:inline-block;margin-top:10px;padding:8px 20px;
+                          background:#1B1E21;color:#F0B90B;text-decoration:none;
+                          border-radius:6px;font-weight:700;font-size:12px;">
+                    Invest Now →
+                </a>
+            </div>
+            """
+            else:
+                promo_html = ""
+
             message = f"""Hello {user.username or user.email},
 
 {days_active} days have passed, ${float(total_invested):,.2f} has been working for you.
@@ -137,11 +164,14 @@ ${float(networth):,.2f}
 Visit your dashboard: https://www.nodevt.com/dashboard/
 
 Have a wonderful Investing Experience! 🚀
-NODE! — Asset Automation Engine on the Go.
+NODE! — Asset Management Automation on the Go.
 """
 
             # Send as HTML so flag images show
-            html_content = f"<div style='font-family:Arial; max-width:600px; white-space:pre-line;'>{message}</div>"
+            html_content = (
+                    promo_html +
+                    f"<div style='font-family:Arial; max-width:600px; white-space:pre-line;'>{message}</div>"
+            )
 
             send_mail(
                 subject=subject,
