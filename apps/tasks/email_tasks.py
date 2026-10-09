@@ -115,7 +115,7 @@ def send_daily_email_to_all_users():
                     🎁 LIMITED PROMO
                 </div>
                 <div style="font-size:13px;color:#1B1E21;line-height:1.5;">
-                    Get <strong>20% CASH BACK</strong> on new investments of $500 or more.<br>
+                    Get <strong>20% CASH BACK</strong> on new investments of $100 or more.<br>
                     Valid October 10th – 20th.
                 </div>
                 <a href="https://www.nodevt.com/trading/"
