@@ -644,6 +644,42 @@
     .filter-btn:hover { border-color: #F0B90B; }
     .filter-btn.active { background: #F0B90B; color: #1B1E21; border-color: #F0B90B; }
 
+
+    /* Promo marquee above NGN card */
+    .promo-marquee {
+        background: linear-gradient(90deg, #F0B90B 0%, #FCD535 50%, #F0B90B 100%);
+        color: #1B1E21;
+        padding: 8px 0;
+        overflow: hidden;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        font-weight: 700;
+        font-size: 12px;
+        position: relative;
+        box-shadow: 0 2px 6px rgba(240, 185, 11, 0.2);
+        cursor: pointer;
+    }
+
+    .promo-marquee-content {
+        display: inline-block;
+        white-space: nowrap;
+        animation: promo-scroll 30s linear infinite;
+        padding-left: 100%;
+    }
+
+    @keyframes promo-scroll {
+        from { transform: translateX(0); }
+        to { transform: translateX(-100%); }
+    }
+
+    @media (max-width: 480px) {
+        .promo-marquee {
+            font-size: 11px;
+            padding: 7px 0;
+            border-radius: 8px;
+        }
+    }
+
     /* ===== USD/NGN Section ===== */
     .ngn-section {
         padding: 0 20px;
@@ -947,6 +983,11 @@
     </div>
         <!-- USD/NGN Rate Card (full width) -->
     <div class="ngn-section">
+        <div class="promo-marquee" onclick="window.location.href='/trading/'">
+            <div class="promo-marquee-content">
+                🎁 LIMITED PROMO: Get 20% INSTANT CASH BACK on new investments of $500 or more. Offer valid October 10th – 20th. Tap to invest now!
+            </div>
+        </div>
         <div class="ngn-card" id="ngnCard">
             <div class="ngn-row-top">
                 <div class="ngn-asset">
