@@ -152,17 +152,7 @@ class TradingViewSet(viewsets.ViewSet):
         amount_after_fee = amount_usdc - node_fee
         token_quantity = amount_after_fee / token.current_price
 
-        # Sweep from user wallet to NODE central
-        from apps.wallets.models import WalletKey
-        from apps.wallets.services.web3_service import Web3Service
 
-        try:
-            wallet_key = WalletKey.objects.get(user=request.user)
-            user_address = wallet_key.address
-        except WalletKey.DoesNotExist:
-            return Response({
-                'error': 'No wallet found. Please deposit first.'
-            }, status=status.HTTP_400_BAD_REQUEST)
 
         grand_wallet, _ = Wallet.objects.get_or_create(
             user=request.user,
@@ -216,22 +206,10 @@ class TradingViewSet(viewsets.ViewSet):
             bot.lock_until = timezone.now() + timedelta(days=lock_months * 30)
             bot.save(update_fields=['is_savings', 'lock_until'])
 
-        # Sweep
-        user_private_key = wallet_key.get_private_key()
-        sweep_result = TradingViewSet._sweep_from_user_wallet(
-            user_address, user_private_key,
-            settings.CENTRAL_WALLET_ADDRESS,
-            amount_usdc
-        )
-
-        if not sweep_result['success']:
-            bot.delete()
-            return Response({
-                'error': f"Sweep failed: {sweep_result.get('error', 'Unknown error')}"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        bot.metadata = {'sweep_tx': sweep_result.get('tx_hash', '')}
-        bot.save()
+        # Note: No on-chain sweep needed. Users deposit to NODE's central wallet,
+        # GRAND balance represents their funds. Sweep from user wallet was
+        # removed after the September 2026 migration to the custodial central model.
+        # The 10% fee has already been deducted from GRAND above.
 
         # Award NODE tokens for Position Tracker activation (auto-activated)
         try:
