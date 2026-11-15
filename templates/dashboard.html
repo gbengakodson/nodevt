@@ -781,7 +781,8 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <div>
                     <div style="font-size:14px; font-weight:700;">📊 Growth Projector</div>
-                    <div style="font-size:11px; color:#6B7280;">See how your Funds grows</div>
+                                        <div style="font-size:11px; color:#6B7280;">See how your Funds grows</div>
+                    <div style="font-size:9px; color:#F6465D; margin-top:2px;">*Based on 3 cycles/year & bonus reinvestment</div>
                 </div>
                 <button onclick="closeGrowthModal()" style="background:none; border:none; font-size:22px; color:#6B7280; cursor:pointer;">×</button>
             </div>
@@ -801,11 +802,25 @@
             </div>
 
             <!-- Years -->
-            <div style="display:flex; gap:6px; margin-bottom:16px;">
-                <button class="growth-year-btn active" data-years="2" onclick="setGrowthYears(this)">2Y</button>
-                <button class="growth-year-btn" data-years="3" onclick="setGrowthYears(this)">3Y</button>
-                <button class="growth-year-btn" data-years="4" onclick="setGrowthYears(this)">4Y</button>
-                <button class="growth-year-btn" data-years="5" onclick="setGrowthYears(this)">5Y</button>
+                        <!-- Years Slider -->
+            <label style="font-size:10px; color:#6B7280; text-transform:uppercase; letter-spacing:0.05em; display:flex; justify-content:space-between;">
+                <span>Investment Duration</span>
+                <span id="yearsDisplay" style="color:#F0B90B; font-weight:700;">5 Years</span>
+            </label>
+            <input type="range" id="growthYearsSlider" min="1" max="30" value="5"
+                   oninput="document.getElementById('yearsDisplay').textContent = this.value + ' Years'; updateGrowthProjection();"
+                   style="width:100%; margin-bottom:16px; accent-color:#F0B90B;">
+
+            <!-- Interactive Toggles -->
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px; background:#F8F9FA; padding:10px; border-radius:8px; border:1px solid #E2E4E8;">
+                <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#1B1E21; cursor:pointer;">
+                    <input type="checkbox" id="toggleReinvestBonus" checked onchange="updateGrowthProjection()" style="accent-color:#F0B90B;">
+                    Reinvest Monthly Bonus
+                </label>
+                <label style="display:flex; align-items:center; gap:8px; font-size:11px; color:#1B1E21; cursor:pointer;">
+                    <input type="checkbox" id="toggleCycles" checked onchange="updateGrowthProjection()" style="accent-color:#F0B90B;">
+                    Include 20% Market Cycles (3/yr)
+                </label>
             </div>
 
             <!-- Summary -->
@@ -1136,41 +1151,74 @@
         } catch(e) { return 10; }
     }
 
-    // ============ GROWTH PROJECTOR ============
+        // ============ GROWTH PROJECTOR ============
+    // NODE ENGINE: 10% upfront fee, then +8% net per cycle (3 cycles/yr), plus 2% monthly bonus reinvested.
     function calculateCompoundGrowth(initial, years) {
-        let balance = initial;
-        const monthlyRate = currentYieldRate / 100;
-        for (let m = 0; m < years * 12; m++) balance += balance * monthlyRate;
+        let balance = initial * 0.90;
+        let reinvestBonus = document.getElementById('toggleReinvestBonus')?.checked ?? true;
+        let includeCycles = document.getElementById('toggleCycles')?.checked ?? true;
+        let cyclesPerYear = 3;
+
+        for (let m = 0; m < years * 12; m++) {
+            if (reinvestBonus) {
+                balance += balance * 0.02;
+            }
+            if (includeCycles && (m % (12 / cyclesPerYear) === 0)) {
+                balance += balance * 0.08;
+            }
+        }
         return { finalBalance: balance, totalYield: balance - initial };
     }
 
     function findYearsToTarget(initial, target) {
-        let balance = initial, months = 0;
-        const monthlyRate = currentYieldRate / 100;
-        while (balance < target && months < 600) { balance += balance * monthlyRate; months++; }
+        let balance = initial * 0.90;
+        let reinvestBonus = document.getElementById('toggleReinvestBonus')?.checked ?? true;
+        let includeCycles = document.getElementById('toggleCycles')?.checked ?? true;
+        let cyclesPerYear = 3;
+        let months = 0;
+
+        while (balance < target && months < 1200) {
+            if (reinvestBonus) { balance += balance * 0.02; }
+            if (includeCycles && (months % (12 / cyclesPerYear) === 0)) { balance += balance * 0.08; }
+            months++;
+        }
         return months / 12;
     }
 
     function updateGrowthProjection() {
         const amountInput = document.getElementById('manualInvestment');
-        if (!amountInput) return;
+        const slider = document.getElementById('growthYearsSlider');
+        if (!amountInput || !slider) return;
 
         let initial = parseFloat(amountInput.value) || 100;
-        let activeYearBtn = document.querySelector('.growth-year-btn.active') ||
-                            document.querySelector('.year-btn.active');
-        let years = parseInt(activeYearBtn?.getAttribute('data-years') || '3');
+        let years = parseInt(slider.value) || 5;
 
         const result = calculateCompoundGrowth(initial, years);
-        document.getElementById('finalValue').textContent = formatCurrency(result.finalBalance);
-        document.getElementById('totalYieldEarned').textContent = formatCurrency(result.totalYield);
 
-        document.getElementById('timeTo10k').textContent = findYearsToTarget(initial, 10000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 10000)) + 'y';
-        document.getElementById('timeTo50k').textContent = findYearsToTarget(initial, 50000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 50000)) + 'y';
-        document.getElementById('timeTo100k').textContent = findYearsToTarget(initial, 100000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 100000)) + 'y';
-        document.getElementById('timeTo1M').textContent = findYearsToTarget(initial, 1000000) < 1 ? '<1y' : Math.floor(findYearsToTarget(initial, 1000000)) + 'y';
+        if (document.getElementById('finalValue')) {
+            document.getElementById('finalValue').textContent = formatCurrency(result.finalBalance);
+        }
+        if (document.getElementById('totalYieldEarned')) {
+            document.getElementById('totalYieldEarned').textContent = formatCurrency(result.totalYield);
+        }
+
+        const updateMilestone = (id, target) => {
+            let el = document.getElementById(id);
+            if (el) {
+                let time = findYearsToTarget(initial, target);
+                el.textContent = time < 1 ? '<1y' : (time > 99 ? '>100y' : Math.floor(time) + 'y');
+            }
+        };
+
+        updateMilestone('timeTo10k', 10000);
+        updateMilestone('timeTo50k', 50000);
+        updateMilestone('timeTo100k', 100000);
+        updateMilestone('timeTo1M', 1000000);
 
         updateGrowthChart(initial, years);
     }
+
+
     function openGrowthModal() {
         var modal = document.getElementById('compoundGrowthModal');
         if (modal) {
