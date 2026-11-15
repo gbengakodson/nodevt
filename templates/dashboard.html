@@ -781,7 +781,7 @@
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
                 <div>
                     <div style="font-size:14px; font-weight:700;">📊 Growth Projector</div>
-                                        <div style="font-size:11px; color:#6B7280;">See how your Funds grows</div>
+                                        <div style="font-size:11px; color:#6B7280;">See how your Funds grow</div>
                     <div style="font-size:9px; color:#F6465D; margin-top:2px;">*Based on 3 cycles/year & bonus reinvestment</div>
                 </div>
                 <button onclick="closeGrowthModal()" style="background:none; border:none; font-size:22px; color:#6B7280; cursor:pointer;">×</button>
@@ -1196,10 +1196,10 @@
         const result = calculateCompoundGrowth(initial, years);
 
         if (document.getElementById('finalValue')) {
-            document.getElementById('finalValue').textContent = formatCurrency(result.finalBalance);
+            document.getElementById('finalValue').textContent = '$' + Math.round(result.finalBalance).toLocaleString();
         }
         if (document.getElementById('totalYieldEarned')) {
-            document.getElementById('totalYieldEarned').textContent = formatCurrency(result.totalYield);
+            document.getElementById('totalYieldEarned').textContent = '$' + Math.round(result.totalYield).toLocaleString();
         }
 
         const updateMilestone = (id, target) => {
