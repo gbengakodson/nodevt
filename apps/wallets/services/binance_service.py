@@ -78,6 +78,14 @@ class BinanceService:
                     order_ids.append(str(order['orderId']))
                     placed += 1
 
+                    # ── Broadcast this BUY to all connected external users ──
+                    try:
+                        from apps.trading.services.external_trading_service import ExternalTradingService
+                        # We pass the specific quantity and price for this grid level
+                        ExternalTradingService.broadcast_buy_order(symbol, quantity, str(price))
+                    except Exception as e:
+                        print(f"External buy broadcast failed: {e}")
+
                     if placed % 10 == 0:
                         import time
                         time.sleep(0.1)
@@ -196,7 +204,16 @@ class BinanceService:
 
             print(
                 f"📈 Placed sell: {sell_qty} @ ${sell_price:.6f} (bought at ${float(buy_price):.6f}, spread {spread_pct}%)")
+
+            # ── Broadcast this trade to all connected external users ──
+            try:
+                from apps.trading.services.external_trading_service import ExternalTradingService
+                ExternalTradingService.broadcast_sell_order(symbol, sell_qty, str(sell_price))
+            except Exception as e:
+                print(f"External broadcast failed: {e}")
+
             return str(order['orderId'])
+
 
         except Exception as e:
             print(f"Sell placement error: {e}")
