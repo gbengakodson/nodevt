@@ -316,9 +316,30 @@ class ExchangeConnectionViewSet(viewsets.ViewSet):
         # Step 1: Test connection
         test = conn.test_connection()
         if not test['success']:
+            error_msg = str(test.get('error', ''))
             conn.delete()
+
+            # Handle IP Restriction errors (Bybit, MEXC, Gate.io)
+            if '10010' in error_msg or 'Unmatched IP' in error_msg or 'IP' in error_msg:
+                return Response({
+                    'error': (
+                        'Your exchange blocked the connection because the API key is restricted to a specific IP address. '
+                        'How to fix this:\n'
+                        '1. Go back to your exchange API settings.\n'
+                        '2. Edit your API key.\n'
+                        '3. Change "IP Restriction" to UNRESTRICTED (or "No IP Restriction").\n'
+                        '4. Save and try connecting again.'
+                    )
+                }, status=400)
+
+            # Handle Invalid Credentials
+            if 'invalid' in error_msg.lower() or '401' in error_msg or 'signature' in error_msg.lower():
+                return Response({
+                    'error': 'Invalid API credentials. Please double-check your API Key and Secret.'
+                }, status=400)
+
             return Response({
-                'error': f"Could not verify credentials: {test.get('error', 'unknown error')}"
+                'error': f"Could not verify credentials: {error_msg}"
             }, status=400)
 
         # Step 2: Verify withdrawal is disabled
