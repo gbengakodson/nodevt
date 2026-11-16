@@ -180,8 +180,11 @@ class ExchangeAPIConnection(models.Model):
             'apiKey': self.get_api_key(),
             'secret': self.get_api_secret(),
             'enableRateLimit': True,
-            'options': {'defaultType': 'spot'},
         }
+
+        # Only Binance requires the defaultType option in CCXT
+        if self.exchange == 'BINANCE':
+            params['options'] = {'defaultType': 'spot'}
 
         # OKX, KuCoin, Bitget require an API passphrase
         if self.exchange in ('OKX', 'KUCOIN', 'BITGET'):
